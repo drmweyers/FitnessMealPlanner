@@ -158,17 +158,30 @@ export default function AdminRecipeGenerator() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            AI Recipe Generator
-          </CardTitle>
-          <CardDescription>
-            Generate custom recipes using AI based on specific dietary requirements and nutritional targets.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              <CardTitle>AI Recipe Generator</CardTitle>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="h-8 w-8 p-0"
+            >
+              <i className={`fas ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'} text-sm`}></i>
+            </Button>
+          </div>
+          {!isCollapsed && (
+            <CardDescription>
+              Generate custom recipes using AI based on specific dietary requirements and nutritional targets.
+            </CardDescription>
+          )}
         </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {!isCollapsed && (
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               
               {/* Generation Settings */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -528,11 +541,13 @@ export default function AdminRecipeGenerator() {
               </Button>
             </form>
           </Form>
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
 
       {/* Quick Bulk Generation */}
-      <Card>
+      {!isCollapsed && (
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
@@ -558,7 +573,8 @@ export default function AdminRecipeGenerator() {
             ))}
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      )}
 
       {/* Generation Status */}
       {lastGeneration && (
