@@ -11,6 +11,7 @@ import {
   decimal,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 // Session storage table for Replit Auth
@@ -24,19 +25,116 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User roles enum
+export const userRoles = ["admin", "trainer", "client"] as const;
+export type UserRole = typeof userRoles[number];
+
+// User storage table for Replit Auth with role-based access
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  role: varchar("role", { enum: userRoles }).notNull().default("client"),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Fitness trainers table for additional trainer-specific data
+export const trainers = pgTable("trainers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  businessName: varchar("business_name"),
+  certifications: jsonb("certifications").$type<string[]>().default([]),
+  specializations: jsonb("specializations").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Clients table for client-specific data
+export const clients = pgTable("clients", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  trainerId: uuid("trainer_id").references(() => trainers.id, { onDelete: "set null" }),
+  fitnessGoals: jsonb("fitness_goals").$type<string[]>().default([]),
+  dietaryRestrictions: jsonb("dietary_restrictions").$type<string[]>().default([]),
+  currentWeight: decimal("current_weight", { precision: 5, scale: 2 }),
+  targetWeight: decimal("target_weight", { precision: 5, scale: 2 }),
+  activityLevel: varchar("activity_level"), // sedentary, lightly_active, moderately_active, very_active, extremely_active
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Meal plans table to store generated meal plans
+export const mealPlans = pgTable("meal_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  planName: varchar("plan_name", { length: 255 }).notNull(),
+  fitnessGoal: varchar("fitness_goal", { length: 255 }).notNull(),
+  description: text("description"),
+  dailyCalorieTarget: integer("daily_calorie_target").notNull(),
+  days: integer("days").notNull(),
+  mealsPerDay: integer("meals_per_day").notNull(),
+  clientId: uuid("client_id").references(() => clients.id, { onDelete: "cascade" }),
+  trainerId: uuid("trainer_id").references(() => trainers.id, { onDelete: "cascade" }),
+  generatedBy: varchar("generated_by").notNull(), // User ID
+  isActive: boolean("is_active").default(true),
+  mealsData: jsonb("meals_data").$type<any[]>().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations
+export const usersRelations = relations(users, ({ one }) => ({
+  trainer: one(trainers, {
+    fields: [users.id],
+    references: [trainers.userId],
+  }),
+  client: one(clients, {
+    fields: [users.id],
+    references: [clients.userId],
+  }),
+}));
+
+export const trainersRelations = relations(trainers, ({ one, many }) => ({
+  user: one(users, {
+    fields: [trainers.userId],
+    references: [users.id],
+  }),
+  clients: many(clients),
+  mealPlans: many(mealPlans),
+}));
+
+export const clientsRelations = relations(clients, ({ one, many }) => ({
+  user: one(users, {
+    fields: [clients.userId],
+    references: [users.id],
+  }),
+  trainer: one(trainers, {
+    fields: [clients.trainerId],
+    references: [trainers.id],
+  }),
+  mealPlans: many(mealPlans),
+}));
+
+export const mealPlansRelations = relations(mealPlans, ({ one }) => ({
+  client: one(clients, {
+    fields: [mealPlans.clientId],
+    references: [clients.id],
+  }),
+  trainer: one(trainers, {
+    fields: [mealPlans.trainerId],
+    references: [trainers.id],
+  }),
+}));
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type InsertTrainer = typeof trainers.$inferInsert;
+export type Trainer = typeof trainers.$inferSelect;
+export type InsertClient = typeof clients.$inferInsert;
+export type Client = typeof clients.$inferSelect;
+export type InsertMealPlan = typeof mealPlans.$inferInsert;
+export type StoredMealPlan = typeof mealPlans.$inferSelect;
 
 // Recipes table
 export const recipes = pgTable("recipes", {
@@ -119,14 +217,13 @@ export const mealPlanGenerationSchema = z.object({
 
 export type MealPlanGeneration = z.infer<typeof mealPlanGenerationSchema>;
 
-// Meal Plan Schema
+// Meal Plan Schema for API responses (includes meals array)
 export const mealPlanSchema = z.object({
   id: z.string(),
   planName: z.string(),
   fitnessGoal: z.string(),
   description: z.string().optional(),
   dailyCalorieTarget: z.number(),
-  clientName: z.string().optional(),
   days: z.number(),
   mealsPerDay: z.number(),
   generatedBy: z.string(), // User ID
