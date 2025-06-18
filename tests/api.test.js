@@ -455,7 +455,7 @@ class APITestSuite {
 }
 
 // Run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const testSuite = new APITestSuite();
   testSuite.runAllTests()
     .then(result => {
@@ -467,4 +467,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { APITestSuite };
+export { APITestSuite };

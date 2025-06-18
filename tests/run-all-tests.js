@@ -3,9 +3,9 @@
  * Runs all test suites and provides comprehensive reporting
  */
 
-const { runAllTests: runBasicTests } = require('./backend.test.js');
-const { DatabaseTestSuite } = require('./database.test.js');
-const { APITestSuite } = require('./api.test.js');
+import { runAllTests as runBasicTests } from './backend.test.js';
+import { DatabaseTestSuite } from './database.test.js';
+import { APITestSuite } from './api.test.js';
 
 class MasterTestRunner {
   constructor() {
@@ -212,7 +212,7 @@ async function quickHealthCheck() {
 }
 
 // Run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   
   if (args.includes('--quick') || args.includes('-q')) {
@@ -237,4 +237,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { MasterTestRunner, quickHealthCheck };
+export { MasterTestRunner, quickHealthCheck };
