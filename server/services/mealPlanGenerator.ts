@@ -7,7 +7,16 @@ export class MealPlanGeneratorService {
     params: MealPlanGeneration,
     generatedBy: string
   ): Promise<MealPlan> {
-    const { days, mealsPerDay, clientName, ...filterParams } = params;
+    const { 
+      planName, 
+      fitnessGoal, 
+      description, 
+      dailyCalorieTarget, 
+      days, 
+      mealsPerDay, 
+      clientName, 
+      ...filterParams 
+    } = params;
 
     // Create filter for recipe search - start with basic approved filter
     let recipeFilter: RecipeFilter = {

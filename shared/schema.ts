@@ -97,6 +97,10 @@ export type RecipeFilter = z.infer<typeof recipeFilterSchema>;
 
 // Meal Plan Generation Schema
 export const mealPlanGenerationSchema = z.object({
+  planName: z.string().min(1, "Plan name is required"),
+  fitnessGoal: z.string().min(1, "Fitness goal is required"),
+  description: z.string().optional(),
+  dailyCalorieTarget: z.number().min(800).max(5000),
   days: z.number().min(1).max(30),
   mealsPerDay: z.number().min(1).max(6).default(3),
   clientName: z.string().optional(),

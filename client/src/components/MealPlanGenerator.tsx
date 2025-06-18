@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { mealPlanGenerationSchema, type MealPlanGeneration, type MealPlan } from "@shared/schema";
-import { ChefHat, Calendar, Users, Utensils, Clock, Zap, Target } from "lucide-react";
+import { ChefHat, Calendar, Users, Utensils, Clock, Zap, Target, Activity, FileText } from "lucide-react";
 
 interface MealPlanResult {
   mealPlan: MealPlan;
@@ -32,6 +33,10 @@ export default function MealPlanGenerator() {
   const form = useForm<MealPlanGeneration>({
     resolver: zodResolver(mealPlanGenerationSchema),
     defaultValues: {
+      planName: "",
+      fitnessGoal: "",
+      description: "",
+      dailyCalorieTarget: 2000,
       days: 7,
       mealsPerDay: 3,
       clientName: "",
@@ -102,8 +107,81 @@ export default function MealPlanGenerator() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Basic Settings */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Plan Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="planName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Target className="h-4 w-4" />
+                        Plan Name *
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="7-Day Weight Loss Plan" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fitnessGoal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Activity className="h-4 w-4" />
+                        Fitness Goal *
+                      </FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select fitness goal" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weight_loss">Weight Loss</SelectItem>
+                            <SelectItem value="muscle_gain">Muscle Gain</SelectItem>
+                            <SelectItem value="maintenance">Weight Maintenance</SelectItem>
+                            <SelectItem value="athletic_performance">Athletic Performance</SelectItem>
+                            <SelectItem value="general_health">General Health</SelectItem>
+                            <SelectItem value="cutting">Cutting</SelectItem>
+                            <SelectItem value="bulking">Bulking</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="dailyCalorieTarget"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Zap className="h-4 w-4" />
+                        Daily Calorie Target *
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="800"
+                          max="5000"
+                          placeholder="2000"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="clientName"
@@ -120,6 +198,31 @@ export default function MealPlanGenerator() {
                     </FormItem>
                   )}
                 />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Plan Description (Optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe the purpose and details of this meal plan for your client..."
+                        className="min-h-[80px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Basic Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                 <FormField
                   control={form.control}
