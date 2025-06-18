@@ -1,0 +1,47 @@
+You are Replit Agent. Build a complete backend service for the Fitness Meal Plan Generator on Replit:
+
+1. Project Setup
+   - Initialize a new Replit App with Node.js (v18+) and Express.js (or Python 3.10+ with Flask) using clean-code architecture directories: Common, Domain, Repository, UseCase, Service, HTTP.
+   - Configure .replit with a run command pointing to src/index.js (or main.py), and replit.nix to include all required system dependencies.
+
+2. Environment & Secrets
+   - Read environment variables from Replit Secrets: OPENAI_API_KEY, IMAGE_API_KEY, DATABASE_URL, EDAMAM_API_ID, EDAMAM_API_KEY.
+   - Ensure all API keys and database credentials are stored in environment variables; do not hard-code any secrets.
+
+3. Database Provisioning
+   - Provision a PostgreSQL database via Replit Cloud SQL; generate migration files for a `recipes` table with fields:
+     recipe_id (UUID), name, description, meal_types (array), dietary_tags (array), main_ingredient_tags (array),
+     ingredients_json (JSON), instructions_text, prep_time_minutes, cook_time_minutes, servings,
+     calories_kcal, protein_grams, carbs_grams, fat_grams, image_url, source_reference,
+     creation_timestamp, last_updated_timestamp, is_approved (boolean).
+
+4. Data Population Scripts
+   - Create a script (`scripts/generateRecipes.js` or `.py`) that:
+     a) Calls OpenAI’s API to generate 2,000 unique recipe JSON objects (name, ingredients list, instructions, times, servings).
+     b) Sends ingredient lists to Edamam Nutrition Analysis API (or USDA) to compute macros.
+     c) Uses the provided Go `imagePrompt` snippet (with IMAGE_API_KEY) to generate and upload high-resolution dish images.
+
+5. API Endpoints
+   - **Admin** routes (protected):
+     • POST `/admin/generate` ► triggers the population script.
+     • GET `/admin/recipes?approved=false` ► lists unapproved recipes.
+     • PATCH `/admin/recipes/:id/approve` ► marks a recipe as approved.
+   - **Trainer** routes (public):
+     • GET `/recipes` ► lists approved recipes with pagination.
+     • GET `/recipes/search` ► filter by ingredients (include/exclude), meal_type, dietary_tags, main_ingredient_tags, macro ranges (calories, protein, etc.), prep_time_minutes, cook_time_minutes.
+
+6. Authentication & Security
+   - Integrate Replit Auth to restrict `/admin/*` routes to admin users only.
+   - Validate and sanitize all request inputs; handle errors gracefully.
+
+7. Deployment
+   - Configure a Replit Deployment as a Web Server on port 3000 (Express) or 5000 (Flask), linking to environment secrets.
+   - Ensure continuous deployment so code updates auto-deploy.
+
+8. Documentation
+   - Generate a `README.md` documenting project structure, environment setup, how to run population scripts, and API usage.
+
+9. Iteration
+   - If any requirement is unclear, ask clarifying questions before implementation.
+
+Provide only the code files, configuration, migration scripts, and documentation in your response. Do not include any additional explanatory commentary.
