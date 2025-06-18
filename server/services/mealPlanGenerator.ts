@@ -130,11 +130,14 @@ export class MealPlanGeneratorService {
 
         // Generate unique image for this meal
         let imageUrl: string | undefined;
+        const recipeDescription = selectedRecipe.description || `Delicious ${mealType} meal`;
+        const recipeMealTypes = selectedRecipe.mealTypes || [mealType];
+        
         try {
           imageUrl = await generateMealImage({
             name: selectedRecipe.name,
-            description: selectedRecipe.description,
-            mealTypes: selectedRecipe.mealTypes,
+            description: recipeDescription,
+            mealTypes: recipeMealTypes,
           });
         } catch (error) {
           console.error(`Failed to generate image for ${selectedRecipe.name}:`, error);
@@ -148,14 +151,14 @@ export class MealPlanGeneratorService {
           recipe: {
             id: selectedRecipe.id,
             name: selectedRecipe.name,
-            description: selectedRecipe.description,
+            description: recipeDescription,
             caloriesKcal: selectedRecipe.caloriesKcal,
-            proteinGrams: selectedRecipe.proteinGrams,
-            carbsGrams: selectedRecipe.carbsGrams,
-            fatGrams: selectedRecipe.fatGrams,
+            proteinGrams: selectedRecipe.proteinGrams || "0",
+            carbsGrams: selectedRecipe.carbsGrams || "0",
+            fatGrams: selectedRecipe.fatGrams || "0",
             prepTimeMinutes: selectedRecipe.prepTimeMinutes,
             servings: selectedRecipe.servings,
-            mealTypes: selectedRecipe.mealTypes,
+            mealTypes: recipeMealTypes,
             imageUrl,
           },
         });
