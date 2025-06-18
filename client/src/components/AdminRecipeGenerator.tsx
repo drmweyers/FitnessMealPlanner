@@ -43,6 +43,7 @@ export default function AdminRecipeGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [lastGeneration, setLastGeneration] = useState<GenerationResult | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const form = useForm<AdminRecipeGeneration>({
     resolver: zodResolver(adminRecipeGenerationSchema),
