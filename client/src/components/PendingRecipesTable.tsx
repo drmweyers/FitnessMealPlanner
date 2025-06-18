@@ -171,7 +171,7 @@ export default function PendingRecipesTable() {
 
   return (
     <>
-    <div className="overflow-x-auto">
+    <div className="table-container">
       {/* Batch Actions Header */}
       {recipes.length > 0 && (
         <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">

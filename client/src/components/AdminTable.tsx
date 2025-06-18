@@ -47,7 +47,7 @@ export default function AdminTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="table-container">
       <table className="w-full min-w-[800px]">
         <thead className="bg-slate-50">
           <tr>
