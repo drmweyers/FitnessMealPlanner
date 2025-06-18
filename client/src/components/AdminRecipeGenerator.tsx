@@ -68,12 +68,26 @@ export default function AdminRecipeGenerator() {
     },
     onSuccess: (data: GenerationResult) => {
       setLastGeneration(data);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
       toast({
         title: "Recipe Generation Started",
         description: data.message,
       });
+      
+      // Poll for completion and refresh data
+      const pollForCompletion = () => {
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+          
+          // Continue polling for a few more refreshes to catch any delayed updates
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+          }, 5000);
+        }, 10000); // Wait 10 seconds for generation to complete
+      };
+      
+      pollForCompletion();
     },
     onError: (error: Error) => {
       toast({
@@ -101,12 +115,26 @@ export default function AdminRecipeGenerator() {
     },
     onSuccess: (data: GenerationResult) => {
       setLastGeneration(data);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
       toast({
         title: "Bulk Generation Started",
         description: data.message,
       });
+      
+      // Poll for completion and refresh data
+      const pollForCompletion = () => {
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+          
+          // Continue polling for a few more refreshes to catch any delayed updates
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+          }, 5000);
+        }, 10000); // Wait 10 seconds for generation to complete
+      };
+      
+      pollForCompletion();
     },
     onError: (error: Error) => {
       toast({
@@ -123,6 +151,15 @@ export default function AdminRecipeGenerator() {
 
   const handleBulkGenerate = (count: number) => {
     bulkGenerate.mutate(count);
+  };
+
+  const handleRefreshStats = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+    toast({
+      title: "Stats Refreshed",
+      description: "Recipe counts have been updated",
+    });
   };
 
   return (
@@ -540,9 +577,19 @@ export default function AdminRecipeGenerator() {
               <span className="font-medium">Generation Status</span>
             </div>
             <p className="text-green-600 mt-2">{lastGeneration.message}</p>
-            <Badge variant="secondary" className="mt-2">
-              {lastGeneration.count} recipes requested
-            </Badge>
+            <div className="flex items-center gap-3 mt-3">
+              <Badge variant="secondary">
+                {lastGeneration.count} recipes requested
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshStats}
+                className="text-xs"
+              >
+                Refresh Stats
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
