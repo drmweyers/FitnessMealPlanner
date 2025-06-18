@@ -139,8 +139,13 @@ POST /api/admin/generate            # Generate new recipes with AI
 ?dietaryTag=vegetarian|vegan|keto|paleo|gluten-free
 ?maxPrepTime=30                     # Maximum prep time in minutes
 ?maxCalories=500                    # Maximum calories per serving
+?minCalories=200                    # Minimum calories per serving
 ?minProtein=20                      # Minimum protein in grams
-?maxCarbs=30                        # Maximum carbs in grams
+?maxProtein=50                      # Maximum protein in grams
+?minCarbs=10                        # Minimum carbohydrates in grams
+?maxCarbs=30                        # Maximum carbohydrates in grams
+?minFat=5                           # Minimum fat in grams
+?maxFat=25                          # Maximum fat in grams
 ?page=1&limit=12                    # Pagination
 ?approved=true|false                # Filter by approval status (admin only)
 ```
