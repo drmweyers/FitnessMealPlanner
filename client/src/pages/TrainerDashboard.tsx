@@ -69,7 +69,7 @@ export default function TrainerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Meal Plans</p>
-                  <p className="text-2xl font-bold">{mealPlans?.length || 0}</p>
+                  <p className="text-2xl font-bold">{mealPlans.length || 0}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-green-600" />
               </div>
@@ -81,7 +81,7 @@ export default function TrainerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Available Recipes</p>
-                  <p className="text-2xl font-bold">{recipes?.recipes?.length || 0}</p>
+                  <p className="text-2xl font-bold">{recipes.recipes.length || 0}</p>
                 </div>
                 <ChefHat className="h-8 w-8 text-purple-600" />
               </div>
@@ -127,7 +127,7 @@ export default function TrainerDashboard() {
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
-                ) : mealPlans && mealPlans.length > 0 ? (
+                ) : mealPlans.length > 0 ? (
                   <div className="space-y-4">
                     {mealPlans.map((plan: any) => (
                       <div key={plan.id} className="border rounded-lg p-4">
@@ -199,7 +199,7 @@ export default function TrainerDashboard() {
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
-                ) : clients && clients.length > 0 ? (
+                ) : clients.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {clients.map((client: any) => (
                       <div key={client.id} className="border rounded-lg p-4">
@@ -258,7 +258,7 @@ export default function TrainerDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {recipes?.recipes && recipes.recipes.length > 0 ? (
+                {recipes.recipes.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {recipes.recipes.slice(0, 12).map((recipe: any) => (
                       <div key={recipe.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
