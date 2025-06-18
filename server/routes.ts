@@ -390,14 +390,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Meal Plan Generation
-  app.post('/api/generate-meal-plan', isAuthenticated, async (req, res) => {
+  // Meal Plan Generation (Trainers only)
+  app.post('/api/trainer/generate-meal-plan', isAuthenticated, requireTrainer, async (req, res) => {
     try {
       const userId = (req.user as any)?.claims?.sub;
       const validatedData = mealPlanGenerationSchema.parse(req.body);
       
+      // Get trainer profile
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer profile not found" });
+      }
+      
+      // Generate the meal plan
       const mealPlan = await mealPlanGenerator.generateMealPlan(validatedData, userId);
       const nutrition = mealPlanGenerator.calculateMealPlanNutrition(mealPlan);
+      
+      // Store the meal plan in database if client is specified
+      if (validatedData.clientName) {
+        // Find client by name (simplified - in production you'd want client ID)
+        const clients = await storage.getTrainerClients(trainer.id);
+        const client = clients.find(c => 
+          `${c.userId}`.toLowerCase().includes(validatedData.clientName!.toLowerCase())
+        );
+        
+        if (client) {
+          await storage.createMealPlan({
+            planName: mealPlan.planName,
+            fitnessGoal: mealPlan.fitnessGoal,
+            description: mealPlan.description,
+            dailyCalorieTarget: mealPlan.dailyCalorieTarget,
+            days: mealPlan.days,
+            mealsPerDay: mealPlan.mealsPerDay,
+            clientId: client.id,
+            trainerId: trainer.id,
+            generatedBy: userId,
+            mealsData: mealPlan.meals,
+          });
+        }
+      }
       
       res.json({
         mealPlan,
