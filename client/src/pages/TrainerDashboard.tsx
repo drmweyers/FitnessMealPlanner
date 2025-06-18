@@ -15,15 +15,15 @@ export default function TrainerDashboard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+  const { data: clients = [], isLoading: clientsLoading } = useQuery<any[]>({
     queryKey: ["/api/trainer/clients"],
   });
 
-  const { data: mealPlans = [], isLoading: mealPlansLoading } = useQuery({
+  const { data: mealPlans = [], isLoading: mealPlansLoading } = useQuery<any[]>({
     queryKey: ["/api/trainer/meal-plans"],
   });
 
-  const { data: recipes } = useQuery({
+  const { data: recipes = { recipes: [], total: 0 } } = useQuery<{ recipes: any[], total: number }>({
     queryKey: ["/api/recipes", { page: 1, limit: 50, isApproved: true }],
   });
 
@@ -57,7 +57,7 @@ export default function TrainerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Active Clients</p>
-                  <p className="text-2xl font-bold">{clients?.length || 0}</p>
+                  <p className="text-2xl font-bold">{clients.length || 0}</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
