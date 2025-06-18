@@ -9,6 +9,7 @@ import RecipeCard from "@/components/RecipeCard";
 import RecipeModal from "@/components/RecipeModal";
 import MealPlanGenerator from "@/components/MealPlanGenerator";
 import AdminTable from "@/components/AdminTable";
+import AdminRecipeGenerator from "@/components/AdminRecipeGenerator";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Home() {
