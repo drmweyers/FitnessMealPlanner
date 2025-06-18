@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, requireAdmin, requireTrainer, requireClient } from "./replitAuth";
 import { recipeGenerator } from "./services/recipeGenerator";
 import { mealPlanGenerator } from "./services/mealPlanGenerator";
 import { recipeFilterSchema, insertRecipeSchema, updateRecipeSchema, mealPlanGenerationSchema } from "@shared/schema";
@@ -17,7 +17,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      res.json(user);
+      
+      // Get additional profile info based on role
+      let additionalData = {};
+      if (user?.role === 'trainer') {
+        const trainer = await storage.getTrainerByUserId(user.id);
+        additionalData = { trainer };
+      } else if (user?.role === 'client') {
+        const client = await storage.getClientByUserId(user.id);
+        additionalData = { client };
+      }
+      
+      res.json({ ...user, ...additionalData });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -74,8 +85,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Role Management Routes (Admin only)
+  app.post('/api/admin/users/:userId/role', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+      
+      if (!['admin', 'trainer', 'client'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role. Must be admin, trainer, or client" });
+      }
+      
+      const user = await storage.updateUserRole(userId, role);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Create trainer or client profile based on new role
+      if (role === 'trainer') {
+        const existingTrainer = await storage.getTrainerByUserId(userId);
+        if (!existingTrainer) {
+          await storage.createTrainer({ userId });
+        }
+      } else if (role === 'client') {
+        const existingClient = await storage.getClientByUserId(userId);
+        if (!existingClient) {
+          await storage.createClient({
+            userId,
+            fitnessGoals: [],
+            dietaryRestrictions: [],
+            activityLevel: "moderately_active",
+          });
+        }
+      }
+      
+      res.json({ message: "Role updated successfully", user });
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
+  // Trainer Routes
+  app.get('/api/trainer/clients', isAuthenticated, requireTrainer, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer profile not found" });
+      }
+      
+      const clients = await storage.getTrainerClients(trainer.id);
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching trainer clients:", error);
+      res.status(500).json({ message: "Failed to fetch clients" });
+    }
+  });
+
+  app.get('/api/trainer/meal-plans', isAuthenticated, requireTrainer, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer profile not found" });
+      }
+      
+      const mealPlans = await storage.getTrainerMealPlans(trainer.id);
+      res.json(mealPlans);
+    } catch (error) {
+      console.error("Error fetching trainer meal plans:", error);
+      res.status(500).json({ message: "Failed to fetch meal plans" });
+    }
+  });
+
+  // Client Routes
+  app.get('/api/client/meal-plans', isAuthenticated, requireClient, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      
+      if (!client) {
+        return res.status(404).json({ message: "Client profile not found" });
+      }
+      
+      const mealPlans = await storage.getClientMealPlans(client.id);
+      res.json(mealPlans);
+    } catch (error) {
+      console.error("Error fetching client meal plans:", error);
+      res.status(500).json({ message: "Failed to fetch meal plans" });
+    }
+  });
+
   // Recipe routes - Admin protected
-  app.get('/api/admin/recipes', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/recipes', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const filters = recipeFilterSchema.parse({
         ...req.query,
