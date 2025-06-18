@@ -13,7 +13,7 @@ export default function RoleSetup() {
 
   const updateRole = useMutation({
     mutationFn: async (role: string) => {
-      const response = await apiRequest('POST', `/api/admin/users/${user?.id}/role`, { role });
+      const response = await apiRequest('POST', '/api/users/setup-role', { role });
       return response.json();
     },
     onSuccess: () => {

@@ -8,6 +8,8 @@ import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import RoleSetup from "@/pages/RoleSetup";
+import TrainerDashboard from "@/pages/TrainerDashboard";
+import ClientDashboard from "@/pages/ClientDashboard";
 import MealPlanGeneratorPage from "@/pages/MealPlanGenerator";
 import NotFound from "@/pages/not-found";
 
@@ -35,14 +37,14 @@ function Router() {
         </>
       ) : user?.role === 'trainer' ? (
         <>
-          <Route path="/" component={RoleSetup} />
-          <Route path="/trainer" component={RoleSetup} />
+          <Route path="/" component={TrainerDashboard} />
+          <Route path="/trainer" component={TrainerDashboard} />
           <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
         </>
       ) : user?.role === 'client' ? (
         <>
-          <Route path="/" component={RoleSetup} />
-          <Route path="/client" component={RoleSetup} />
+          <Route path="/" component={ClientDashboard} />
+          <Route path="/client" component={ClientDashboard} />
         </>
       ) : (
         <Route path="/" component={RoleSetup} />
