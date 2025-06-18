@@ -16,7 +16,7 @@ export default function Home() {
   const { user } = useAuth();
   const [filters, setFilters] = useState<RecipeFilter>({ 
     page: 1, 
-    limit: 12,
+    limit: 10,
     approved: true 
   });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -186,10 +186,36 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {total > filters.limit && (
-                  <div className="flex justify-center mt-12">
-                    <nav className="flex items-center space-x-2">
+                {/* Results per page selector and pagination */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-12">
+                  {/* Results per page */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600">Show:</span>
+                    <select
+                      value={filters.limit}
+                      onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                      className="px-3 py-1 border border-slate-300 rounded-md text-sm bg-white"
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                    <span className="text-sm text-slate-600">recipes per page</span>
+                  </div>
+
+                  {/* Pagination */}
+                  {total > filters.limit && (
+                    <nav className="flex items-center space-x-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={filters.page <= 1}
+                        onClick={() => handlePageChange(1)}
+                        className="hidden sm:flex"
+                      >
+                        First
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -199,19 +225,46 @@ export default function Home() {
                         <i className="fas fa-chevron-left"></i>
                       </Button>
                       
-                      {Array.from({ length: Math.min(5, Math.ceil(total / filters.limit)) }, (_, i) => {
-                        const page = i + 1;
-                        return (
-                          <Button
-                            key={page}
-                            variant={page === filters.page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePageChange(page)}
-                          >
-                            {page}
-                          </Button>
-                        );
-                      })}
+                      {(() => {
+                        const totalPages = Math.ceil(total / filters.limit);
+                        const currentPage = filters.page;
+                        const pages: (number | string)[] = [];
+                        
+                        // Always show first page
+                        if (currentPage > 3) {
+                          pages.push(1);
+                          if (currentPage > 4) pages.push('...');
+                        }
+                        
+                        // Show pages around current page
+                        const start = Math.max(1, currentPage - 2);
+                        const end = Math.min(totalPages, currentPage + 2);
+                        
+                        for (let i = start; i <= end; i++) {
+                          pages.push(i);
+                        }
+                        
+                        // Always show last page
+                        if (currentPage < totalPages - 2) {
+                          if (currentPage < totalPages - 3) pages.push('...');
+                          pages.push(totalPages);
+                        }
+                        
+                        return pages.map((page, index) => (
+                          page === '...' ? (
+                            <span key={`ellipsis-${index}`} className="px-2 text-slate-400">...</span>
+                          ) : (
+                            <Button
+                              key={page}
+                              variant={page === currentPage ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handlePageChange(page as number)}
+                            >
+                              {page}
+                            </Button>
+                          )
+                        ));
+                      })()}
                       
                       <Button
                         variant="outline"
@@ -221,9 +274,23 @@ export default function Home() {
                       >
                         <i className="fas fa-chevron-right"></i>
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={filters.page >= Math.ceil(total / filters.limit)}
+                        onClick={() => handlePageChange(Math.ceil(total / filters.limit))}
+                        className="hidden sm:flex"
+                      >
+                        Last
+                      </Button>
                     </nav>
+                  )}
+                  
+                  {/* Results info */}
+                  <div className="text-sm text-slate-600">
+                    Showing {Math.min(total, (filters.page - 1) * filters.limit + 1)}-{Math.min(total, filters.page * filters.limit)} of {total} recipes
                   </div>
-                )}
+                </div>
               </>
             ) : (
               <Card className="text-center py-12">
