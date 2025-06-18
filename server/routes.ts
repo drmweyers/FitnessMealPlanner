@@ -85,6 +85,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initial Role Setup (for users without a role)
+  app.post('/api/users/setup-role', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { role } = req.body;
+      
+      if (!['admin', 'trainer', 'client'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role. Must be admin, trainer, or client" });
+      }
+      
+      // Check if user already has a role
+      const existingUser = await storage.getUser(userId);
+      if (existingUser && existingUser.role) {
+        return res.status(400).json({ message: "User already has a role assigned" });
+      }
+      
+      const user = await storage.updateUserRole(userId, role);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Create trainer or client profile based on new role
+      if (role === 'trainer') {
+        const existingTrainer = await storage.getTrainerByUserId(userId);
+        if (!existingTrainer) {
+          await storage.createTrainer({ userId });
+        }
+      } else if (role === 'client') {
+        const existingClient = await storage.getClientByUserId(userId);
+        if (!existingClient) {
+          await storage.createClient({
+            userId,
+            fitnessGoals: [],
+            dietaryRestrictions: [],
+            activityLevel: "moderately_active",
+          });
+        }
+      }
+      
+      res.json({ message: "Role assigned successfully", user });
+    } catch (error) {
+      console.error("Error setting up user role:", error);
+      res.status(500).json({ message: "Failed to set up user role" });
+    }
+  });
+
   // Role Management Routes (Admin only)
   app.post('/api/admin/users/:userId/role', isAuthenticated, requireAdmin, async (req, res) => {
     try {
