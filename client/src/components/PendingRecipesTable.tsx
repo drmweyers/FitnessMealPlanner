@@ -41,7 +41,7 @@ export default function PendingRecipesTable() {
         queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
         queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
         queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-      }, 300);
+      }, 100);
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -84,7 +84,7 @@ export default function PendingRecipesTable() {
         queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
         queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
         queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-      }, 500);
+      }, 100);
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -115,9 +115,13 @@ export default function PendingRecipesTable() {
         title: "Recipe Deleted",
         description: "Recipe has been removed from the system.",
       });
-      // Refresh all relevant queries
-      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
-      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+      // Force immediate refresh of all data
+      queryClient.invalidateQueries();
+      setTimeout(() => {
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+      }, 100);
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
