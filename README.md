@@ -287,17 +287,32 @@ node scripts/generateRecipes.js 50
 
 ## 📚 Usage Examples
 
-### Filter Vegetarian Breakfast Recipes
+### Filter High-Protein Low-Carb Recipes
 ```http
-GET /api/recipes?mealType=breakfast&dietaryTag=vegetarian&maxCalories=400
+GET /api/recipes?minProtein=30&maxCarbs=20&mealType=lunch
 ```
 
-### Search for Chicken Recipes
+### Find Keto-Friendly Meals
 ```http
-GET /api/recipes?search=chicken&maxPrepTime=30
+GET /api/recipes?dietaryTag=keto&maxCarbs=10&minFat=15
 ```
 
-### Admin: Generate 25 Keto Recipes
+### Search for Quick Breakfast Options
+```http
+GET /api/recipes?mealType=breakfast&maxPrepTime=15&minProtein=20
+```
+
+### Filter by Complete Macro Profile
+```http
+GET /api/recipes?minProtein=25&maxProtein=45&minCarbs=15&maxCarbs=35&minFat=10&maxFat=20&maxCalories=500
+```
+
+### Vegetarian High-Protein Recipes
+```http
+GET /api/recipes?dietaryTag=vegetarian&minProtein=25&maxCalories=600
+```
+
+### Admin: Generate 25 Recipes
 ```http
 POST /api/admin/generate
 Content-Type: application/json
