@@ -3,9 +3,9 @@
  * Tests database operations, connections, and data integrity
  */
 
-const { db } = require('../server/db');
-const { storage } = require('../server/storage');
-const { recipes, users, mealPlans } = require('../shared/schema');
+import { db } from '../server/db.ts';
+import { storage } from '../server/storage.ts';
+import { recipes, users, mealPlans } from '../shared/schema.ts';
 
 // Test data
 const TEST_USER = {
@@ -307,7 +307,7 @@ class DatabaseTestSuite {
 }
 
 // Run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const testSuite = new DatabaseTestSuite();
   testSuite.runAllTests()
     .then(result => {
@@ -319,4 +319,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { DatabaseTestSuite };
+export { DatabaseTestSuite };
