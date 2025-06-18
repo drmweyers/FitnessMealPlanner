@@ -20,7 +20,12 @@ export default function Admin() {
     limit: 20 
   });
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery<{
+    total: number;
+    approved: number;
+    pending: number;
+    avgRating: number;
+  }>({
     queryKey: ['/api/admin/stats'],
     enabled: isAuthenticated,
   });
@@ -86,8 +91,14 @@ export default function Admin() {
         title: "Recipe Approved",
         description: "Recipe has been approved and is now visible to users.",
       });
+      // Aggressively refresh all related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      
+      // Force refetch to ensure immediate updates
+      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -118,8 +129,14 @@ export default function Admin() {
         title: "Recipe Deleted",
         description: "Recipe has been removed from the system.",
       });
+      // Aggressively refresh all related queries
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      
+      // Force refetch to ensure immediate updates
+      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -238,7 +255,7 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Total Recipes</p>
-                  <p className="text-2xl font-bold text-slate-900">{(stats as any).total.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-slate-900">{stats.total.toLocaleString()}</p>
                 </div>
                 <div className="p-3 bg-primary/10 rounded-full">
                   <i className="fas fa-book text-primary text-xl"></i>
@@ -252,7 +269,7 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Approved</p>
-                  <p className="text-2xl font-bold text-green-600">{(stats as any).approved.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.approved.toLocaleString()}</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
                   <i className="fas fa-check-circle text-green-600 text-xl"></i>
@@ -266,7 +283,7 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Pending Review</p>
-                  <p className="text-2xl font-bold text-secondary">{(stats as any).pending.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-secondary">{stats.pending.toLocaleString()}</p>
                 </div>
                 <div className="p-3 bg-amber-100 rounded-full">
                   <i className="fas fa-clock text-secondary text-xl"></i>
@@ -280,7 +297,7 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Avg Rating</p>
-                  <p className="text-2xl font-bold text-slate-900">{(stats as any).avgRating}</p>
+                  <p className="text-2xl font-bold text-slate-900">{stats.avgRating}</p>
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-full">
                   <i className="fas fa-star text-yellow-500 text-xl"></i>
