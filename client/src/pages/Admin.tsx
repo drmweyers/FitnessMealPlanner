@@ -7,13 +7,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import AdminTable from "@/components/AdminTable";
+import SearchFilters from "@/components/SearchFilters";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Admin() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
-  const [pendingFilters] = useState<RecipeFilter>({ 
+  const [filters, setFilters] = useState<RecipeFilter>({ 
     approved: false, 
     page: 1, 
     limit: 20 
@@ -24,10 +25,21 @@ export default function Admin() {
     enabled: isAuthenticated,
   });
 
-  const { data: pendingRecipes, isLoading: pendingLoading } = useQuery({
-    queryKey: ['/api/admin/recipes', pendingFilters],
+  const { data: recipesData, isLoading: pendingLoading } = useQuery({
+    queryKey: ['/api/admin/recipes', filters],
     enabled: isAuthenticated,
   });
+
+  const pendingRecipes = recipesData?.recipes || [];
+  const total = recipesData?.total || 0;
+
+  const handleFilterChange = (newFilters: Partial<RecipeFilter>) => {
+    setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
+  };
+
+  const handlePageChange = (page: number) => {
+    setFilters(prev => ({ ...prev, page }));
+  };
 
   const generateMutation = useMutation({
     mutationFn: async (count: number) => {
@@ -189,7 +201,7 @@ export default function Admin() {
               className="w-full border-secondary text-secondary hover:bg-secondary hover:text-white"
             >
               <i className="fas fa-list mr-2"></i>
-              View Pending ({pendingRecipes?.total || 0})
+              View Pending ({total})
             </Button>
           </CardContent>
         </Card>
@@ -274,6 +286,9 @@ export default function Admin() {
           </Card>
         </div>
       )}
+
+      {/* Search and Filters */}
+      <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
 
       {/* Pending Recipes Table */}
       <Card>
