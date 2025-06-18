@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { recipeGenerator } from "./services/recipeGenerator";
-import { recipeFilterSchema, insertRecipeSchema, updateRecipeSchema } from "@shared/schema";
+import { mealPlanGenerator } from "./services/mealPlanGenerator";
+import { recipeFilterSchema, insertRecipeSchema, updateRecipeSchema, mealPlanGenerationSchema } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
@@ -212,6 +213,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error starting recipe generation:", error);
       res.status(500).json({ message: "Failed to start recipe generation" });
+    }
+  });
+
+  // Meal Plan Generation
+  app.post('/api/generate-meal-plan', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub;
+      const validatedData = mealPlanGenerationSchema.parse(req.body);
+      
+      const mealPlan = await mealPlanGenerator.generateMealPlan(validatedData, userId);
+      const nutrition = mealPlanGenerator.calculateMealPlanNutrition(mealPlan);
+      
+      res.json({
+        mealPlan,
+        nutrition,
+        message: `Successfully generated ${validatedData.days}-day meal plan${validatedData.clientName ? ` for ${validatedData.clientName}` : ''}`,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: fromZodError(error).toString() });
+      } else {
+        console.error("Error generating meal plan:", error);
+        res.status(500).json({ message: (error as Error).message || "Failed to generate meal plan" });
+      }
     }
   });
 

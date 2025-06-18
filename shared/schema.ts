@@ -94,3 +94,50 @@ export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
 export type UpdateRecipe = z.infer<typeof updateRecipeSchema>;
 export type Recipe = typeof recipes.$inferSelect;
 export type RecipeFilter = z.infer<typeof recipeFilterSchema>;
+
+// Meal Plan Generation Schema
+export const mealPlanGenerationSchema = z.object({
+  days: z.number().min(1).max(30),
+  mealsPerDay: z.number().min(1).max(6).default(3),
+  clientName: z.string().optional(),
+  mealType: z.string().optional(),
+  dietaryTag: z.string().optional(),
+  maxPrepTime: z.number().optional(),
+  maxCalories: z.number().optional(),
+  minCalories: z.number().optional(),
+  minProtein: z.number().optional(),
+  maxProtein: z.number().optional(),
+  minCarbs: z.number().optional(),
+  maxCarbs: z.number().optional(),
+  minFat: z.number().optional(),
+  maxFat: z.number().optional(),
+});
+
+export type MealPlanGeneration = z.infer<typeof mealPlanGenerationSchema>;
+
+// Meal Plan Schema
+export const mealPlanSchema = z.object({
+  id: z.string(),
+  clientName: z.string().optional(),
+  days: z.number(),
+  mealsPerDay: z.number(),
+  generatedBy: z.string(), // User ID
+  createdAt: z.date(),
+  meals: z.array(z.object({
+    day: z.number(),
+    mealNumber: z.number(),
+    mealType: z.string(),
+    recipe: z.object({
+      id: z.string(),
+      name: z.string(),
+      caloriesKcal: z.number(),
+      proteinGrams: z.string(),
+      carbsGrams: z.string(),
+      fatGrams: z.string(),
+      prepTimeMinutes: z.number(),
+      servings: z.number(),
+    }),
+  })),
+});
+
+export type MealPlan = z.infer<typeof mealPlanSchema>;
