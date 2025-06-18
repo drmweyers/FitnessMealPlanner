@@ -5,11 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import RecipeModal from "@/components/RecipeModal";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function PendingRecipesTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [filters] = useState<RecipeFilter>({ 
     approved: false, 
     page: 1, 
@@ -162,6 +164,7 @@ export default function PendingRecipesTable() {
   }
 
   return (
+    <>
     <div className="overflow-x-auto">
       {/* Batch Actions Header */}
       {recipes.length > 0 && (
@@ -213,14 +216,20 @@ export default function PendingRecipesTable() {
           {recipes.map((recipe: Recipe) => (
             <tr key={recipe.id} className="hover:bg-slate-50">
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
+                <div 
+                  className="flex items-center cursor-pointer"
+                  onClick={() => setSelectedRecipe(recipe)}
+                >
                   <img 
                     className="h-12 w-12 rounded-lg object-cover mr-4" 
                     src={recipe.imageUrl || '/api/placeholder/100/100'} 
                     alt={recipe.name}
                   />
                   <div>
-                    <div className="text-sm font-medium text-slate-900">{recipe.name}</div>
+                    <div className="text-sm font-medium text-slate-900 hover:text-primary">
+                      {recipe.name}
+                      <i className="fas fa-external-link-alt ml-2 text-xs text-slate-400"></i>
+                    </div>
                     <div className="text-sm text-slate-500">
                       {recipe.description?.slice(0, 50)}
                       {recipe.description && recipe.description.length > 50 ? '...' : ''}
@@ -276,5 +285,14 @@ export default function PendingRecipesTable() {
         Showing {recipes.length} pending recipes
       </div>
     </div>
+    
+    {/* Recipe Detail Modal */}
+    {selectedRecipe && (
+      <RecipeModal 
+        recipe={selectedRecipe} 
+        onClose={() => setSelectedRecipe(null)} 
+      />
+    )}
+    </>
   );
 }
