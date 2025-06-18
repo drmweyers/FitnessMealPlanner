@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import { storage } from "../storage";
+import { generateMealImage } from "./openai";
 import type { MealPlanGeneration, MealPlan, RecipeFilter } from "@shared/schema";
 
 export class MealPlanGeneratorService {
@@ -127,6 +128,19 @@ export class MealPlanGeneratorService {
         const randomIndex = Math.floor(Math.random() * selectedRecipes.length);
         const selectedRecipe = selectedRecipes[randomIndex];
 
+        // Generate unique image for this meal
+        let imageUrl: string | undefined;
+        try {
+          imageUrl = await generateMealImage({
+            name: selectedRecipe.name,
+            description: selectedRecipe.description,
+            mealTypes: selectedRecipe.mealTypes,
+          });
+        } catch (error) {
+          console.error(`Failed to generate image for ${selectedRecipe.name}:`, error);
+          // Image generation will fallback to placeholder in the function itself
+        }
+
         mealPlan.meals.push({
           day,
           mealNumber,
@@ -134,12 +148,15 @@ export class MealPlanGeneratorService {
           recipe: {
             id: selectedRecipe.id,
             name: selectedRecipe.name,
+            description: selectedRecipe.description,
             caloriesKcal: selectedRecipe.caloriesKcal,
             proteinGrams: selectedRecipe.proteinGrams,
             carbsGrams: selectedRecipe.carbsGrams,
             fatGrams: selectedRecipe.fatGrams,
             prepTimeMinutes: selectedRecipe.prepTimeMinutes,
             servings: selectedRecipe.servings,
+            mealTypes: selectedRecipe.mealTypes,
+            imageUrl,
           },
         });
       }

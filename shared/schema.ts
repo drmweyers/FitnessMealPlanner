@@ -138,12 +138,15 @@ export const mealPlanSchema = z.object({
     recipe: z.object({
       id: z.string(),
       name: z.string(),
+      description: z.string(),
       caloriesKcal: z.number(),
       proteinGrams: z.string(),
       carbsGrams: z.string(),
       fatGrams: z.string(),
       prepTimeMinutes: z.number(),
       servings: z.number(),
+      mealTypes: z.array(z.string()),
+      imageUrl: z.string().optional(),
     }),
   })),
 });
