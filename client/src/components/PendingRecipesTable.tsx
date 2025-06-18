@@ -35,10 +35,13 @@ export default function PendingRecipesTable() {
         title: "Recipe Approved",
         description: "Recipe has been approved and is now visible to users.",
       });
-      // Refresh all relevant queries
-      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
-      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+      // Force immediate refresh of all data
+      queryClient.invalidateQueries();
+      setTimeout(() => {
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+      }, 300);
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -75,10 +78,13 @@ export default function PendingRecipesTable() {
         title: "All Recipes Approved",
         description: `Successfully approved ${count} recipes. They are now visible to users.`,
       });
-      // Refresh all relevant queries
-      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
-      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+      // Force immediate refresh of all data
+      queryClient.invalidateQueries();
+      setTimeout(() => {
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+      }, 500);
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -172,23 +178,37 @@ export default function PendingRecipesTable() {
           <div className="text-sm text-slate-600">
             {recipes.length} recipes pending approval
           </div>
-          <Button
-            onClick={() => approveAllMutation.mutate()}
-            disabled={approveAllMutation.isPending}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            {approveAllMutation.isPending ? (
-              <>
-                <i className="fas fa-spinner fa-spin mr-2"></i>
-                Approving All...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-check-double mr-2"></i>
-                Approve All
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                queryClient.invalidateQueries();
+                queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
+              }}
+              className="border-slate-300"
+            >
+              <i className="fas fa-sync mr-2"></i>
+              Refresh
+            </Button>
+            <Button
+              onClick={() => approveAllMutation.mutate()}
+              disabled={approveAllMutation.isPending}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {approveAllMutation.isPending ? (
+                <>
+                  <i className="fas fa-spinner fa-spin mr-2"></i>
+                  Approving All...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-check-double mr-2"></i>
+                  Approve All ({recipes.length})
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       )}
       
