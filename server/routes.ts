@@ -68,15 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/recipes/:id', async (req, res) => {
     try {
-      const recipeId = req.params.id;
-      
-      // Validate UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(recipeId)) {
-        return res.status(404).json({ message: "Recipe not found" });
-      }
-      
-      const recipe = await storage.getRecipe(recipeId);
+      const recipe = await storage.getRecipe(req.params.id);
       if (!recipe) {
         return res.status(404).json({ message: "Recipe not found" });
       }
@@ -89,10 +81,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(recipe);
     } catch (error) {
       console.error("Error fetching recipe:", error);
-      // If it's a database UUID error, return 404 instead of 500
-      if ((error as any).code === '22P02') {
-        return res.status(404).json({ message: "Recipe not found" });
-      }
       res.status(500).json({ message: "Failed to fetch recipe" });
     }
   });
