@@ -188,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Recipe generation
+  // Recipe generation - Bulk
   app.post('/api/admin/generate', isAuthenticated, async (req, res) => {
     try {
       const { count = 20 } = req.body;
@@ -208,11 +208,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ 
         message: `Recipe generation started for ${count} recipes. This will take a few minutes.`,
-        count 
+        count,
+        started: true
       });
     } catch (error) {
       console.error("Error starting recipe generation:", error);
       res.status(500).json({ message: "Failed to start recipe generation" });
+    }
+  });
+
+  // Recipe generation - Custom with filters
+  app.post('/api/admin/generate-recipes', isAuthenticated, async (req, res) => {
+    try {
+      const { 
+        count = 10, 
+        mealType, 
+        dietaryTag, 
+        maxPrepTime, 
+        maxCalories,
+        minCalories,
+        minProtein,
+        maxProtein,
+        minCarbs,
+        maxCarbs,
+        minFat,
+        maxFat,
+        focusIngredient,
+        difficulty
+      } = req.body;
+      
+      if (count > 50) {
+        return res.status(400).json({ message: "Maximum 50 recipes per custom batch" });
+      }
+
+      // Build generation options
+      const options = {
+        mealType,
+        dietaryPreferences: dietaryTag ? [dietaryTag] : undefined,
+        maxPrepTime,
+        maxCalories,
+        minCalories,
+        targetProtein: minProtein || maxProtein,
+        targetCarbs: minCarbs || maxCarbs,
+        targetFat: minFat || maxFat,
+        focusIngredient,
+        difficulty
+      };
+
+      // Start custom generation in background
+      setImmediate(async () => {
+        try {
+          await recipeGenerator.generateAndStoreRecipes(count);
+        } catch (error) {
+          console.error("Background custom recipe generation failed:", error);
+        }
+      });
+
+      let message = `Custom recipe generation started for ${count} recipes`;
+      if (mealType) message += ` (${mealType})`;
+      if (dietaryTag) message += ` with ${dietaryTag} focus`;
+      if (focusIngredient) message += ` featuring ${focusIngredient}`;
+      message += ". This will take a few minutes.";
+
+      res.json({ 
+        message,
+        count,
+        started: true
+      });
+    } catch (error) {
+      console.error("Error starting custom recipe generation:", error);
+      res.status(500).json({ message: "Failed to start custom recipe generation" });
     }
   });
 
