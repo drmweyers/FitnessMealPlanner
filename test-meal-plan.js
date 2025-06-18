@@ -1,47 +1,49 @@
-// Test meal plan generation with existing recipe data
+import { mealPlanGenerator } from './server/services/mealPlanGenerator.js';
+
 async function testMealPlanGeneration() {
-  const testData = {
+  console.log('Testing meal plan generation with 32 recipes...\n');
+  
+  const testParams = {
     days: 3,
     mealsPerDay: 3,
-    clientName: "Test Client",
-    maxPrepTime: 60,
-    maxCalories: 800
+    dietaryTags: ['high-protein'],
+    maxPrepTime: 20,
+    caloriesMin: 300,
+    caloriesMax: 500,
+    proteinMin: 20
   };
+  
+  console.log('Test Parameters:');
+  console.log(`- Days: ${testParams.days}`);
+  console.log(`- Meals per day: ${testParams.mealsPerDay}`);
+  console.log(`- Dietary focus: ${testParams.dietaryTags.join(', ')}`);
+  console.log(`- Max prep time: ${testParams.maxPrepTime} minutes`);
+  console.log(`- Calorie range: ${testParams.caloriesMin}-${testParams.caloriesMax}`);
+  console.log(`- Min protein: ${testParams.proteinMin}g\n`);
 
   try {
-    const response = await fetch('http://localhost:5000/api/generate-meal-plan', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(testData)
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.log('Error response:', error);
-      return;
-    }
-
-    const result = await response.json();
-    console.log('Meal plan generated successfully:');
-    console.log('Message:', result.message);
-    console.log('Days:', result.mealPlan.days);
-    console.log('Meals per day:', result.mealPlan.mealsPerDay);
-    console.log('Total meals:', result.mealPlan.meals.length);
-    console.log('Average daily calories:', result.nutrition.averageDaily.calories);
-    console.log('Average daily protein:', result.nutrition.averageDaily.protein + 'g');
+    const result = await mealPlanGenerator.generateMealPlan(testParams);
     
-    // Show first few meals
-    console.log('\nFirst few meals:');
-    result.mealPlan.meals.slice(0, 3).forEach(meal => {
-      console.log(`Day ${meal.day}, Meal ${meal.mealNumber}: ${meal.recipe.name} (${meal.recipe.caloriesKcal} cal)`);
+    console.log('✓ Meal Plan Generated Successfully!\n');
+    console.log('Generated Meal Plan:');
+    
+    result.mealPlan.days.forEach((day, index) => {
+      console.log(`\nDay ${index + 1}:`);
+      day.meals.forEach((meal, mealIndex) => {
+        console.log(`  Meal ${mealIndex + 1}: ${meal.name}`);
+        console.log(`    Calories: ${meal.caloriesKcal} | Protein: ${meal.proteinGrams}g | Prep: ${meal.prepTimeMinutes}min`);
+      });
     });
-
+    
+    console.log('\nNutritional Summary:');
+    console.log(`Total Calories: ${result.nutrition.total.calories}`);
+    console.log(`Total Protein: ${result.nutrition.total.protein}g`);
+    console.log(`Average Daily Calories: ${result.nutrition.averageDaily.calories}`);
+    console.log(`Average Daily Protein: ${result.nutrition.averageDaily.protein}g`);
+    
   } catch (error) {
-    console.log('Network error:', error.message);
+    console.log('✗ Meal Plan Generation Failed:', error.message);
   }
 }
 
-// Run the test
 testMealPlanGeneration();
