@@ -663,22 +663,46 @@ export default function MealPlanGenerator() {
                       <div className="overflow-x-auto">
                         <div className="grid gap-3">
                           {dayMeals.map((meal, mealIndex) => (
-                            <div key={mealIndex} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg min-w-[400px]">
-                            <div className="flex items-center gap-3 flex-shrink-0">
-                              <span className="text-lg">{getMealTypeIcon(meal.mealType)}</span>
-                              <div>
-                                <div className="font-medium">{meal.recipe.name}</div>
-                                <div className="text-sm text-slate-600 whitespace-nowrap">
-                                  {formatMealType(meal.mealType)} • {meal.recipe.prepTimeMinutes} min prep
+                            <div key={mealIndex} className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg min-w-[500px]">
+                              {/* Meal Image */}
+                              {meal.recipe.imageUrl && (
+                                <div className="flex-shrink-0">
+                                  <img
+                                    src={meal.recipe.imageUrl}
+                                    alt={meal.recipe.name}
+                                    className="w-20 h-20 object-cover rounded-lg shadow-sm"
+                                    onError={(e) => {
+                                      // Fallback to meal type icon if image fails to load
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              
+                              <div className="flex items-center justify-between flex-1">
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                  <span className="text-lg">{getMealTypeIcon(meal.mealType)}</span>
+                                  <div>
+                                    <div className="font-medium">{meal.recipe.name}</div>
+                                    <div className="text-sm text-slate-600">
+                                      {formatMealType(meal.mealType)} • {meal.recipe.prepTimeMinutes} min prep
+                                    </div>
+                                    {meal.recipe.description && (
+                                      <div className="text-xs text-slate-500 mt-1 max-w-xs truncate">
+                                        {meal.recipe.description}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-right text-sm text-slate-600 flex-shrink-0">
+                                  <div className="font-medium">{meal.recipe.caloriesKcal} cal</div>
+                                  <div className="whitespace-nowrap text-xs">
+                                    {meal.recipe.proteinGrams}g P • {meal.recipe.carbsGrams}g C • {meal.recipe.fatGrams}g F
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                            <div className="text-right text-sm text-slate-600 flex-shrink-0">
-                              <div>{meal.recipe.caloriesKcal} cal</div>
-                              <div className="whitespace-nowrap">{meal.recipe.proteinGrams}g • {meal.recipe.carbsGrams}g • {meal.recipe.fatGrams}g</div>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                         </div>
                       </div>
                     </CardContent>
