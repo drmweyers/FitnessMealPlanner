@@ -32,8 +32,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit: req.query.limit ? parseInt(req.query.limit as string) : 12,
         maxPrepTime: req.query.maxPrepTime ? parseInt(req.query.maxPrepTime as string) : undefined,
         maxCalories: req.query.maxCalories ? parseInt(req.query.maxCalories as string) : undefined,
+        minCalories: req.query.minCalories ? parseInt(req.query.minCalories as string) : undefined,
         minProtein: req.query.minProtein ? parseInt(req.query.minProtein as string) : undefined,
+        maxProtein: req.query.maxProtein ? parseInt(req.query.maxProtein as string) : undefined,
+        minCarbs: req.query.minCarbs ? parseInt(req.query.minCarbs as string) : undefined,
         maxCarbs: req.query.maxCarbs ? parseInt(req.query.maxCarbs as string) : undefined,
+        minFat: req.query.minFat ? parseInt(req.query.minFat as string) : undefined,
+        maxFat: req.query.maxFat ? parseInt(req.query.maxFat as string) : undefined,
         approved: true, // Only show approved recipes to public
       });
 
@@ -77,8 +82,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit: req.query.limit ? parseInt(req.query.limit as string) : 12,
         maxPrepTime: req.query.maxPrepTime ? parseInt(req.query.maxPrepTime as string) : undefined,
         maxCalories: req.query.maxCalories ? parseInt(req.query.maxCalories as string) : undefined,
+        minCalories: req.query.minCalories ? parseInt(req.query.minCalories as string) : undefined,
         minProtein: req.query.minProtein ? parseInt(req.query.minProtein as string) : undefined,
+        maxProtein: req.query.maxProtein ? parseInt(req.query.maxProtein as string) : undefined,
+        minCarbs: req.query.minCarbs ? parseInt(req.query.minCarbs as string) : undefined,
         maxCarbs: req.query.maxCarbs ? parseInt(req.query.maxCarbs as string) : undefined,
+        minFat: req.query.minFat ? parseInt(req.query.minFat as string) : undefined,
+        maxFat: req.query.maxFat ? parseInt(req.query.maxFat as string) : undefined,
         approved: req.query.approved !== undefined ? req.query.approved === 'true' : undefined,
       });
 

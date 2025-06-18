@@ -117,12 +117,32 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(recipes.caloriesKcal, filters.maxCalories));
     }
 
+    if (filters.minCalories) {
+      conditions.push(gte(recipes.caloriesKcal, filters.minCalories));
+    }
+
     if (filters.minProtein) {
       conditions.push(gte(recipes.proteinGrams, filters.minProtein.toString()));
     }
 
+    if (filters.maxProtein) {
+      conditions.push(lte(recipes.proteinGrams, filters.maxProtein.toString()));
+    }
+
+    if (filters.minCarbs) {
+      conditions.push(gte(recipes.carbsGrams, filters.minCarbs.toString()));
+    }
+
     if (filters.maxCarbs) {
       conditions.push(lte(recipes.carbsGrams, filters.maxCarbs.toString()));
+    }
+
+    if (filters.minFat) {
+      conditions.push(gte(recipes.fatGrams, filters.minFat.toString()));
+    }
+
+    if (filters.maxFat) {
+      conditions.push(lte(recipes.fatGrams, filters.maxFat.toString()));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
