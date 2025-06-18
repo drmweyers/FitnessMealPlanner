@@ -19,9 +19,9 @@ export default function RoleSetup() {
     onSuccess: () => {
       toast({
         title: "Role Updated",
-        description: "Please refresh the page to see changes",
+        description: "Redirecting to your dashboard...",
       });
-      setTimeout(() => window.location.reload(), 1500);
+      setTimeout(() => window.location.href = "/", 1500);
     },
     onError: (error: Error) => {
       toast({
@@ -39,7 +39,8 @@ export default function RoleSetup() {
           <CardHeader className="text-center">
             <CardTitle>Role-Based Authentication Demo</CardTitle>
             <CardDescription>
-              Welcome to FitMeal Pro! Current user role: <Badge>{user?.role || 'Loading...'}</Badge>
+              Welcome to FitMeal Pro! Current role: <Badge variant={user?.role ? "default" : "secondary"}>{user?.role || 'No role assigned'}</Badge>
+              {user?.role && <span className="block mt-2 text-sm">Click below to change your role</span>}
             </CardDescription>
           </CardHeader>
           <CardContent>

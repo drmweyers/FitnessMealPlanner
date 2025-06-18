@@ -95,11 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid role. Must be admin, trainer, or client" });
       }
       
-      // Check if user already has a role
-      const existingUser = await storage.getUser(userId);
-      if (existingUser && existingUser.role) {
-        return res.status(400).json({ message: "User already has a role assigned" });
-      }
+      // Allow role changes for existing users
       
       const user = await storage.updateUserRole(userId, role);
       if (!user) {

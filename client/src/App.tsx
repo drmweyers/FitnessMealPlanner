@@ -30,6 +30,7 @@ function Router() {
 
   return (
     <Switch>
+      <Route path="/role-setup" component={RoleSetup} />
       {user?.role === 'admin' ? (
         <>
           <Route path="/" component={Admin} />
