@@ -10,6 +10,7 @@ import RecipeModal from "@/components/RecipeModal";
 import MealPlanGenerator from "@/components/MealPlanGenerator";
 import AdminTable from "@/components/AdminTable";
 import AdminRecipeGenerator from "@/components/AdminRecipeGenerator";
+import PendingRecipesTable from "@/components/PendingRecipesTable";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Home() {
@@ -308,7 +309,20 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="admin">
-            <AdminRecipeGenerator />
+            <div className="space-y-8">
+              <AdminRecipeGenerator />
+              
+              {/* Pending Recipes Approval Section */}
+              <Card>
+                <CardContent className="p-0">
+                  <div className="px-6 py-4 border-b border-slate-200">
+                    <h2 className="text-xl font-semibold text-slate-900">Pending Recipe Approvals</h2>
+                    <p className="text-sm text-slate-600 mt-1">Review and approve recipes before they appear to users</p>
+                  </div>
+                  <PendingRecipesTable />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </main>
