@@ -1,0 +1,37 @@
+> rest-express@1.0.0 dev
+5:01:19 PM [express] serving on port 5000s
+Browserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+5:01:22 PM [express] GET /api/auth/user 401 in 3ms :: {"message":"Unauthorized"}
+5:01:24 PM [express] GET /api/auth/user 304 in 208ms :: {"id":"43965828","email":"dr.m.weyers@bcinno…
+5:01:24 PM [express] GET /api/placeholder/32/32 200 in 52ms
+5:01:24 PM [express] GET /api/admin/stats 304 in 68ms :: {"total":"36","approved":"33","pending":"3"…
+5:01:24 PM [express] GET /api/recipes 304 in 269ms :: {"recipes":[{"id":"9198be34-06c3-47da-bb52-81c…
+Starting recipe generation for 10 recipes...
+Processing batch 1/1 (10 recipes)
+Generating 10 recipes...
+5:04:15 PM [express] POST /api/admin/generate-recipes 200 in 2731ms :: {"message":"Custom recipe gen…
+5:04:16 PM [express] GET /api/recipes 304 in 277ms :: {"recipes":[{"id":"9198be34-06c3-47da-bb52-81c…
+5:04:18 PM [express] GET /api/admin/stats 304 in 2203ms :: {"total":"36","approved":"33","pending":"…
+Generated recipe 1/10: Vegan Tofu Scramble with Spinach and Tomatoes
+Generated recipe 2/10: Keto Avocado and Spinach Omelette
+Generated recipe 3/10: Keto Lemon Herb Salmon with Asparagus
+Generated recipe 4/10: Quinoa and Chickpea Salad
+Generated recipe 5/10: Grilled Lemon Herb Chicken Salad
+Generated recipe 6/10: Grilled Lemon Herb Chicken Salad
+Generated recipe 7/10: Keto Spinach and Cheese Omelette
+Generated recipe 8/10: Paleo Veggie Omelette
+Generated recipe 9/10: Keto Chicken Avocado Salad
+Generated recipe 10/10: Lemon Herb Grilled Salmon with Quinoa and Spinach
+Stored recipe: Vegan Tofu Scramble with Spinach and Tomatoes
+Stored recipe: Keto Avocado and Spinach Omelette
+Stored recipe: Keto Lemon Herb Salmon with Asparagus
+Stored recipe: Quinoa and Chickpea Salad
+Stored recipe: Grilled Lemon Herb Chicken Salad
+Stored recipe: Grilled Lemon Herb Chicken Salad
+Stored recipe: Keto Spinach and Cheese Omelette
+Stored recipe: Paleo Veggie Omelette
+Stored recipe: Keto Chicken Avocado Salad
+Stored recipe: Lemon Herb Grilled Salmon with Quinoa and Spinach
+Recipe generation completed. Success: 10, Failed: 0
