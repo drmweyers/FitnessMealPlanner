@@ -23,6 +23,9 @@ export default function ClientDashboard() {
               <p className="text-slate-600">Welcome back, {user?.firstName || 'Client'}</p>
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => window.location.href = "/role-setup"}>
+                Change Role
+              </Button>
               <Button variant="outline" onClick={() => window.location.href = "/api/logout"}>
                 Logout
               </Button>
