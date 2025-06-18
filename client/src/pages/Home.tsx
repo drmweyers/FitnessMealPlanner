@@ -20,6 +20,11 @@ export default function Home() {
     limit: 10,
     approved: true 
   });
+  const [adminFilters, setAdminFilters] = useState<RecipeFilter>({ 
+    page: 1, 
+    limit: 20,
+    approved: false 
+  });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   const { data: recipesData, isLoading } = useQuery({
@@ -41,6 +46,10 @@ export default function Home() {
 
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
+  };
+
+  const handleAdminFilterChange = (newFilters: Partial<RecipeFilter>) => {
+    setAdminFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
   };
 
   return (
@@ -310,6 +319,70 @@ export default function Home() {
 
           <TabsContent value="admin">
             <div className="space-y-8">
+              {/* Recipe Stats Overview */}
+              {stats && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-slate-600">Total Recipes</p>
+                          <p className="text-2xl font-bold text-slate-900">{(stats as any).total.toLocaleString()}</p>
+                        </div>
+                        <div className="p-3 bg-primary/10 rounded-full">
+                          <i className="fas fa-book text-primary text-xl"></i>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-slate-600">Approved</p>
+                          <p className="text-2xl font-bold text-green-600">{(stats as any).approved.toLocaleString()}</p>
+                        </div>
+                        <div className="p-3 bg-green-100 rounded-full">
+                          <i className="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-slate-600">Pending Review</p>
+                          <p className="text-2xl font-bold text-secondary">{(stats as any).pending.toLocaleString()}</p>
+                        </div>
+                        <div className="p-3 bg-amber-100 rounded-full">
+                          <i className="fas fa-clock text-secondary text-xl"></i>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-slate-600">Avg Rating</p>
+                          <p className="text-2xl font-bold text-slate-900">{(stats as any).avgRating}</p>
+                        </div>
+                        <div className="p-3 bg-yellow-100 rounded-full">
+                          <i className="fas fa-star text-yellow-500 text-xl"></i>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Search and Filters for Admin */}
+              <SearchFilters filters={adminFilters} onFilterChange={handleAdminFilterChange} />
+
               <AdminRecipeGenerator />
               
               {/* Pending Recipes Approval Section */}
