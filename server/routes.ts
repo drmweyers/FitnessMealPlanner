@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/recipes/:id', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/recipes/:id', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const recipe = await storage.getRecipe(req.params.id);
       if (!recipe) {
@@ -222,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/recipes', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/recipes', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const recipeData = insertRecipeSchema.parse(req.body);
       const recipe = await storage.createRecipe(recipeData);
@@ -237,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/recipes/:id', isAuthenticated, async (req, res) => {
+  app.patch('/api/admin/recipes/:id', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const updates = updateRecipeSchema.parse(req.body);
       const recipe = await storage.updateRecipe(req.params.id, updates);
@@ -255,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/recipes/:id/approve', isAuthenticated, async (req, res) => {
+  app.patch('/api/admin/recipes/:id/approve', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const recipe = await storage.approveRecipe(req.params.id);
       if (!recipe) {
@@ -268,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/recipes/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/admin/recipes/:id', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const success = await storage.deleteRecipe(req.params.id);
       if (!success) {
@@ -282,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin stats
-  app.get('/api/admin/stats', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/stats', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       // Disable caching for stats to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -298,7 +298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recipe generation - Bulk
-  app.post('/api/admin/generate', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/generate', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const { count = 20 } = req.body;
       
@@ -327,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recipe generation - Custom with filters
-  app.post('/api/admin/generate-recipes', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/generate-recipes', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const { 
         count = 10, 
