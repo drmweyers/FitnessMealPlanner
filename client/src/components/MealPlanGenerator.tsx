@@ -577,14 +577,33 @@ export default function MealPlanGenerator() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              {generatedPlan.mealPlan.clientName 
-                ? `Meal Plan for ${generatedPlan.mealPlan.clientName}` 
-                : 'Generated Meal Plan'
-              }
+              <Target className="h-5 w-5" />
+              {generatedPlan.mealPlan.planName}
             </CardTitle>
-            <CardDescription>
-              {generatedPlan.mealPlan.days}-day plan with {generatedPlan.mealPlan.mealsPerDay} meals per day
+            <CardDescription className="space-y-1">
+              <div className="flex items-center gap-4 text-sm">
+                <span className="flex items-center gap-1">
+                  <Activity className="h-3 w-3" />
+                  {generatedPlan.mealPlan.fitnessGoal}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Zap className="h-3 w-3" />
+                  {generatedPlan.mealPlan.dailyCalorieTarget} cal/day
+                </span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {generatedPlan.mealPlan.days} days, {generatedPlan.mealPlan.mealsPerDay} meals/day
+                </span>
+              </div>
+              {generatedPlan.mealPlan.clientName && (
+                <div className="flex items-center gap-1 text-sm">
+                  <Users className="h-3 w-3" />
+                  For: {generatedPlan.mealPlan.clientName}
+                </div>
+              )}
+              {generatedPlan.mealPlan.description && (
+                <p className="text-sm mt-2">{generatedPlan.mealPlan.description}</p>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

@@ -50,8 +50,17 @@ export class MealPlanGeneratorService {
 
     // Define meal types for distribution
     const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+    
+    // Calculate calorie distribution per meal based on daily target
+    const caloriesPerMeal = Math.round(dailyCalorieTarget / mealsPerDay);
+    const calorieVariance = Math.round(caloriesPerMeal * 0.2); // 20% variance allowed
+    
     const mealPlan: MealPlan = {
       id: nanoid(),
+      planName,
+      fitnessGoal,
+      description: description || `${planName} - ${fitnessGoal} focused meal plan`,
+      dailyCalorieTarget,
       clientName,
       days,
       mealsPerDay,
@@ -89,17 +98,30 @@ export class MealPlanGeneratorService {
           }
         }
 
+        // Filter by calorie range per meal (target ± variance)
+        const minCalories = caloriesPerMeal - calorieVariance;
+        const maxCalories = caloriesPerMeal + calorieVariance;
+        
+        let calorieFilteredRecipes = availableRecipes.filter(recipe => 
+          recipe.caloriesKcal >= minCalories && recipe.caloriesKcal <= maxCalories
+        );
+        
+        // If no recipes fit the calorie range, use all available recipes
+        if (calorieFilteredRecipes.length === 0) {
+          calorieFilteredRecipes = availableRecipes;
+        }
+
         // Select a random recipe, avoiding recent duplicates for variety
         const recentRecipeIds = mealPlan.meals
           .slice(-Math.min(mealsPerDay * 2, mealPlan.meals.length))
           .map(meal => meal.recipe.id);
 
-        let selectedRecipes = availableRecipes.filter(
+        let selectedRecipes = calorieFilteredRecipes.filter(
           recipe => !recentRecipeIds.includes(recipe.id)
         );
 
         if (selectedRecipes.length === 0) {
-          selectedRecipes = availableRecipes;
+          selectedRecipes = calorieFilteredRecipes;
         }
 
         const randomIndex = Math.floor(Math.random() * selectedRecipes.length);
