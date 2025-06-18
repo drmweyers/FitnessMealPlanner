@@ -8,6 +8,8 @@ import {
   type UpdateRecipe,
   type RecipeFilter,
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -29,59 +31,51 @@ export interface IStorage {
   }>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User> = new Map();
-  private recipes: Map<string, Recipe> = new Map();
-
-  // User operations
+export class DatabaseStorage implements IStorage {
+  // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const existingUser = this.users.get(userData.id);
-    const user: User = {
-      ...userData,
-      createdAt: existingUser?.createdAt || new Date(),
-      updatedAt: new Date(),
-    };
-    this.users.set(userData.id, user);
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
     return user;
   }
 
   // Recipe operations
   async createRecipe(recipeData: InsertRecipe): Promise<Recipe> {
-    const id = crypto.randomUUID();
-    const now = new Date();
-    const recipe: Recipe = {
-      ...recipeData,
-      id,
-      creationTimestamp: now,
-      lastUpdatedTimestamp: now,
-    };
-    this.recipes.set(id, recipe);
+    const [recipe] = await db.insert(recipes).values(recipeData).returning();
     return recipe;
   }
 
   async getRecipe(id: string): Promise<Recipe | undefined> {
-    return this.recipes.get(id);
+    const [recipe] = await db.select().from(recipes).where(eq(recipes.id, id));
+    return recipe;
   }
 
   async updateRecipe(id: string, updates: UpdateRecipe): Promise<Recipe | undefined> {
-    const recipe = this.recipes.get(id);
-    if (!recipe) return undefined;
-
-    const updatedRecipe: Recipe = {
-      ...recipe,
-      ...updates,
-      lastUpdatedTimestamp: new Date(),
-    };
-    this.recipes.set(id, updatedRecipe);
-    return updatedRecipe;
+    const [recipe] = await db
+      .update(recipes)
+      .set({ ...updates, lastUpdatedTimestamp: new Date() })
+      .where(eq(recipes.id, id))
+      .returning();
+    return recipe;
   }
 
   async deleteRecipe(id: string): Promise<boolean> {
-    return this.recipes.delete(id);
+    const result = await db.delete(recipes).where(eq(recipes.id, id));
+    return result.rowCount > 0;
   }
 
   async approveRecipe(id: string): Promise<Recipe | undefined> {
@@ -89,90 +83,70 @@ export class MemStorage implements IStorage {
   }
 
   async searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }> {
-    let filteredRecipes = Array.from(this.recipes.values());
+    const conditions = [];
 
     // Apply filters
     if (filters.approved !== undefined) {
-      filteredRecipes = filteredRecipes.filter(r => r.isApproved === filters.approved);
+      conditions.push(eq(recipes.isApproved, filters.approved));
     }
 
     if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      filteredRecipes = filteredRecipes.filter(r => 
-        r.name.toLowerCase().includes(searchTerm) ||
-        r.description?.toLowerCase().includes(searchTerm) ||
-        r.ingredientsJson.some(ing => ing.name.toLowerCase().includes(searchTerm))
+      const searchTerm = `%${filters.search.toLowerCase()}%`;
+      conditions.push(
+        sql`(
+          LOWER(${recipes.name}) LIKE ${searchTerm} OR 
+          LOWER(${recipes.description}) LIKE ${searchTerm} OR
+          LOWER(${recipes.ingredientsJson}::text) LIKE ${searchTerm}
+        )`
       );
     }
 
     if (filters.mealType) {
-      filteredRecipes = filteredRecipes.filter(r => 
-        r.mealTypes.includes(filters.mealType!)
-      );
+      conditions.push(sql`${recipes.mealTypes} @> ${JSON.stringify([filters.mealType])}`);
     }
 
     if (filters.dietaryTag) {
-      filteredRecipes = filteredRecipes.filter(r => 
-        r.dietaryTags.includes(filters.dietaryTag!)
-      );
+      conditions.push(sql`${recipes.dietaryTags} @> ${JSON.stringify([filters.dietaryTag])}`);
     }
 
     if (filters.maxPrepTime) {
-      filteredRecipes = filteredRecipes.filter(r => 
-        r.prepTimeMinutes <= filters.maxPrepTime!
-      );
+      conditions.push(lte(recipes.prepTimeMinutes, filters.maxPrepTime));
     }
 
     if (filters.maxCalories) {
-      filteredRecipes = filteredRecipes.filter(r => 
-        r.caloriesKcal <= filters.maxCalories!
-      );
+      conditions.push(lte(recipes.caloriesKcal, filters.maxCalories));
     }
 
     if (filters.minProtein) {
-      filteredRecipes = filteredRecipes.filter(r => 
-        Number(r.proteinGrams) >= filters.minProtein!
-      );
+      conditions.push(gte(recipes.proteinGrams, filters.minProtein.toString()));
     }
 
     if (filters.maxCarbs) {
-      filteredRecipes = filteredRecipes.filter(r => 
-        Number(r.carbsGrams) <= filters.maxCarbs!
-      );
+      conditions.push(lte(recipes.carbsGrams, filters.maxCarbs.toString()));
     }
 
-    if (filters.includeIngredients?.length) {
-      filteredRecipes = filteredRecipes.filter(r => 
-        filters.includeIngredients!.some(ing => 
-          r.ingredientsJson.some(recipeIng => 
-            recipeIng.name.toLowerCase().includes(ing.toLowerCase())
-          )
-        )
-      );
-    }
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    if (filters.excludeIngredients?.length) {
-      filteredRecipes = filteredRecipes.filter(r => 
-        !filters.excludeIngredients!.some(ing => 
-          r.ingredientsJson.some(recipeIng => 
-            recipeIng.name.toLowerCase().includes(ing.toLowerCase())
-          )
-        )
-      );
-    }
+    // Get total count
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(recipes)
+      .where(whereClause);
 
-    // Sort by creation date (newest first)
-    filteredRecipes.sort((a, b) => 
-      new Date(b.creationTimestamp || 0).getTime() - new Date(a.creationTimestamp || 0).getTime()
-    );
-
-    const total = filteredRecipes.length;
+    // Get paginated results
     const page = filters.page || 1;
     const limit = filters.limit || 12;
     const offset = (page - 1) * limit;
-    const paginatedRecipes = filteredRecipes.slice(offset, offset + limit);
 
-    return { recipes: paginatedRecipes, total };
+    const recipeResults = await db
+      .select()
+      .from(recipes)
+      .where(whereClause)
+      .orderBy(desc(recipes.creationTimestamp))
+      .limit(limit)
+      .offset(offset);
+
+    return { recipes: recipeResults, total: count };
   }
 
   async getRecipeStats(): Promise<{
@@ -181,18 +155,21 @@ export class MemStorage implements IStorage {
     pending: number;
     avgRating: number;
   }> {
-    const allRecipes = Array.from(this.recipes.values());
-    const total = allRecipes.length;
-    const approved = allRecipes.filter(r => r.isApproved).length;
-    const pending = total - approved;
-    
+    const [stats] = await db
+      .select({
+        total: sql<number>`count(*)`,
+        approved: sql<number>`count(*) filter (where is_approved = true)`,
+        pending: sql<number>`count(*) filter (where is_approved = false)`,
+      })
+      .from(recipes);
+
     return {
-      total,
-      approved,
-      pending,
-      avgRating: 4.6, // Mock average rating
+      total: stats.total,
+      approved: stats.approved,
+      pending: stats.pending,
+      avgRating: 4.6, // Static average rating
     };
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
