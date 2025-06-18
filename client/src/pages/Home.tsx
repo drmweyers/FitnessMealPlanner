@@ -50,6 +50,17 @@ export default function Home() {
                 <i className="fas fa-utensils text-primary text-2xl"></i>
                 <span className="text-xl font-bold text-slate-800">FitMeal Pro</span>
               </div>
+              <div className="hidden md:flex items-center space-x-6 ml-8">
+                <a href="/" className="text-slate-600 hover:text-slate-800 font-medium">
+                  Browse Recipes
+                </a>
+                <a href="/meal-plan-generator" className="text-slate-600 hover:text-slate-800 font-medium">
+                  Meal Plan Generator
+                </a>
+                <a href="/admin" className="text-slate-600 hover:text-slate-800 font-medium">
+                  Admin
+                </a>
+              </div>
             </div>
 
             <div className="flex items-center space-x-4">
