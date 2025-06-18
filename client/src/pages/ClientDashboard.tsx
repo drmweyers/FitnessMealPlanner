@@ -8,7 +8,7 @@ import { Calendar, ChefHat, Target, User } from "lucide-react";
 export default function ClientDashboard() {
   const { user } = useAuth();
 
-  const { data: mealPlans, isLoading: mealPlansLoading } = useQuery({
+  const { data: mealPlans = [], isLoading: mealPlansLoading } = useQuery<any[]>({
     queryKey: ["/api/client/meal-plans"],
   });
 
@@ -81,7 +81,7 @@ export default function ClientDashboard() {
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
-            ) : mealPlans && mealPlans.length > 0 ? (
+            ) : mealPlans.length > 0 ? (
               <div className="space-y-6">
                 {mealPlans.map((plan: any) => (
                   <div key={plan.id} className="border rounded-lg p-6">
