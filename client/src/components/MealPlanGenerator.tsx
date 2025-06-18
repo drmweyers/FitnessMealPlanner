@@ -660,24 +660,26 @@ export default function MealPlanGenerator() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid gap-3">
-                        {dayMeals.map((meal, mealIndex) => (
-                          <div key={mealIndex} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                            <div className="flex items-center gap-3">
+                      <div className="overflow-x-auto">
+                        <div className="grid gap-3">
+                          {dayMeals.map((meal, mealIndex) => (
+                            <div key={mealIndex} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg min-w-[400px]">
+                            <div className="flex items-center gap-3 flex-shrink-0">
                               <span className="text-lg">{getMealTypeIcon(meal.mealType)}</span>
                               <div>
                                 <div className="font-medium">{meal.recipe.name}</div>
-                                <div className="text-sm text-slate-600">
+                                <div className="text-sm text-slate-600 whitespace-nowrap">
                                   {formatMealType(meal.mealType)} • {meal.recipe.prepTimeMinutes} min prep
                                 </div>
                               </div>
                             </div>
-                            <div className="text-right text-sm text-slate-600">
+                            <div className="text-right text-sm text-slate-600 flex-shrink-0">
                               <div>{meal.recipe.caloriesKcal} cal</div>
-                              <div>{meal.recipe.proteinGrams}g • {meal.recipe.carbsGrams}g • {meal.recipe.fatGrams}g</div>
+                              <div className="whitespace-nowrap">{meal.recipe.proteinGrams}g • {meal.recipe.carbsGrams}g • {meal.recipe.fatGrams}g</div>
                             </div>
                           </div>
                         ))}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

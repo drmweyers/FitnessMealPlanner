@@ -48,22 +48,22 @@ export default function AdminTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full min-w-[800px]">
         <thead className="bg-slate-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Recipe
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Type
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Nutrition
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Created
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Actions
             </th>
           </tr>
@@ -104,27 +104,29 @@ export default function AdminTable({
                   : 'N/A'
                 }
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onApprove(recipe.id)}
-                  disabled={approvePending}
-                  className="text-green-600 border-green-200 hover:bg-green-50"
-                >
-                  <i className="fas fa-check mr-1"></i>
-                  Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onDelete(recipe.id)}
-                  disabled={deletePending}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <i className="fas fa-times mr-1"></i>
-                  Reject
-                </Button>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div className="flex space-x-2 min-w-[180px]">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onApprove(recipe.id)}
+                    disabled={approvePending}
+                    className="text-green-600 border-green-200 hover:bg-green-50"
+                  >
+                    <i className="fas fa-check mr-1"></i>
+                    Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onDelete(recipe.id)}
+                    disabled={deletePending}
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <i className="fas fa-times mr-1"></i>
+                    Reject
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}
