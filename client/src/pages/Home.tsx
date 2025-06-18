@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import SearchFilters from "@/components/SearchFilters";
 import RecipeCard from "@/components/RecipeCard";
 import RecipeModal from "@/components/RecipeModal";
+import MealPlanGenerator from "@/components/MealPlanGenerator";
+import AdminTable from "@/components/AdminTable";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Home() {
@@ -45,22 +47,9 @@ export default function Home() {
       <nav className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <i className="fas fa-utensils text-primary text-2xl"></i>
-                <span className="text-xl font-bold text-slate-800">FitMeal Pro</span>
-              </div>
-              <div className="hidden md:flex items-center space-x-6 ml-8">
-                <a href="/" className="text-slate-600 hover:text-slate-800 font-medium">
-                  Browse Recipes
-                </a>
-                <a href="/meal-plan-generator" className="text-slate-600 hover:text-slate-800 font-medium">
-                  Meal Plan Generator
-                </a>
-                <a href="/admin" className="text-slate-600 hover:text-slate-800 font-medium">
-                  Admin
-                </a>
-              </div>
+            <div className="flex items-center space-x-2">
+              <i className="fas fa-utensils text-primary text-2xl"></i>
+              <span className="text-xl font-bold text-slate-800">FitMeal Pro</span>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -91,10 +80,14 @@ export default function Home() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="recipes" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="recipes">
               <i className="fas fa-book-open mr-2"></i>
-              Recipes
+              Browse Recipes
+            </TabsTrigger>
+            <TabsTrigger value="meal-plan">
+              <i className="fas fa-utensils mr-2"></i>
+              Meal Plan Generator
             </TabsTrigger>
             <TabsTrigger value="admin">
               <i className="fas fa-cog mr-2"></i>
@@ -240,6 +233,10 @@ export default function Home() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="meal-plan">
+            <MealPlanGenerator />
           </TabsContent>
 
           <TabsContent value="admin">
