@@ -212,22 +212,22 @@ export default function PendingRecipesTable() {
         </div>
       )}
       
-      <table className="w-full">
+      <table className="w-full min-w-[800px]">
         <thead className="bg-slate-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Recipe
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Type
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Nutrition
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Status
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
               Actions
             </th>
           </tr>
@@ -273,27 +273,29 @@ export default function PendingRecipesTable() {
                   Pending Review
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => approveMutation.mutate(recipe.id)}
-                  disabled={approveMutation.isPending}
-                  className="text-green-600 border-green-200 hover:bg-green-50"
-                >
-                  <i className="fas fa-check mr-1"></i>
-                  Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => deleteMutation.mutate(recipe.id)}
-                  disabled={deleteMutation.isPending}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <i className="fas fa-trash mr-1"></i>
-                  Delete
-                </Button>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div className="flex space-x-2 min-w-[180px]">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => approveMutation.mutate(recipe.id)}
+                    disabled={approveMutation.isPending}
+                    className="text-green-600 border-green-200 hover:bg-green-50"
+                  >
+                    <i className="fas fa-check mr-1"></i>
+                    Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => deleteMutation.mutate(recipe.id)}
+                    disabled={deleteMutation.isPending}
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <i className="fas fa-trash mr-1"></i>
+                    Delete
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}
