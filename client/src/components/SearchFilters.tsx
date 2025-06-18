@@ -53,14 +53,14 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Meal Type</label>
               <Select
-                value={filters.mealType || ''}
-                onValueChange={(value) => onFilterChange({ mealType: value || undefined })}
+                value={filters.mealType || 'all'}
+                onValueChange={(value) => onFilterChange({ mealType: value === 'all' ? undefined : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Meals" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Meals</SelectItem>
+                  <SelectItem value="all">All Meals</SelectItem>
                   <SelectItem value="breakfast">Breakfast</SelectItem>
                   <SelectItem value="lunch">Lunch</SelectItem>
                   <SelectItem value="dinner">Dinner</SelectItem>
@@ -73,14 +73,14 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Dietary</label>
               <Select
-                value={filters.dietaryTag || ''}
-                onValueChange={(value) => onFilterChange({ dietaryTag: value || undefined })}
+                value={filters.dietaryTag || 'all'}
+                onValueChange={(value) => onFilterChange({ dietaryTag: value === 'all' ? undefined : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Diets" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Diets</SelectItem>
+                  <SelectItem value="all">All Diets</SelectItem>
                   <SelectItem value="vegetarian">Vegetarian</SelectItem>
                   <SelectItem value="vegan">Vegan</SelectItem>
                   <SelectItem value="keto">Keto</SelectItem>
@@ -96,14 +96,14 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Max Prep Time</label>
               <Select
-                value={filters.maxPrepTime?.toString() || ''}
-                onValueChange={(value) => onFilterChange({ maxPrepTime: value ? parseInt(value) : undefined })}
+                value={filters.maxPrepTime?.toString() || 'all'}
+                onValueChange={(value) => onFilterChange({ maxPrepTime: value === 'all' ? undefined : parseInt(value) })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Any Time" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any Time</SelectItem>
+                  <SelectItem value="all">Any Time</SelectItem>
                   <SelectItem value="15">15 minutes</SelectItem>
                   <SelectItem value="30">30 minutes</SelectItem>
                   <SelectItem value="60">1 hour</SelectItem>
@@ -116,14 +116,14 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Max Calories</label>
               <Select
-                value={filters.maxCalories?.toString() || ''}
-                onValueChange={(value) => onFilterChange({ maxCalories: value ? parseInt(value) : undefined })}
+                value={filters.maxCalories?.toString() || 'all'}
+                onValueChange={(value) => onFilterChange({ maxCalories: value === 'all' ? undefined : parseInt(value) })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Any Amount" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any Amount</SelectItem>
+                  <SelectItem value="all">Any Amount</SelectItem>
                   <SelectItem value="300">Under 300</SelectItem>
                   <SelectItem value="500">Under 500</SelectItem>
                   <SelectItem value="800">Under 800</SelectItem>
