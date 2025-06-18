@@ -129,3 +129,56 @@ export async function generateRecipeBatch(count: number = 10, options: {
 
   return recipes;
 }
+
+export async function generateMealImage(recipe: {
+  name: string;
+  description: string;
+  mealTypes: string[];
+}): Promise<string> {
+  // Define image styles for variety
+  const imageStyles = [
+    "clean minimalist photography",
+    "rustic food photography",
+    "modern culinary presentation",
+    "artisanal food styling",
+    "professional kitchen photography"
+  ];
+
+  // Select a random style for uniqueness
+  const imageStyle = imageStyles[Math.floor(Math.random() * imageStyles.length)];
+  
+  const imagePrompt = `Generate an ultra-realistic, high-resolution photograph of "${recipe.name}", a ${recipe.mealTypes[0]?.toLowerCase() || 'meal'} dish. It features ${recipe.description}. Present it artfully plated on a clean white ceramic plate set atop a rustic wooden table. Illuminate the scene with soft, natural side lighting to bring out the textures and vibrant colors of the ingredients. Use a shallow depth of field (aperture f/2.8) and a 45° camera angle for a professional, editorial look. Add subtle garnishes and minimal props (e.g., fresh herbs, linen napkin) to enhance context without clutter. The final image should be bright, mouthwatering, and ready for a premium fitness-focused recipe website. Style: ${imageStyle}.`;
+
+  try {
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: imagePrompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "standard",
+    });
+
+    if (!response.data || response.data.length === 0) {
+      throw new Error("No image data received from OpenAI");
+    }
+    
+    const imageUrl = response.data[0].url;
+    if (!imageUrl) {
+      throw new Error("No image URL received from OpenAI");
+    }
+
+    return imageUrl;
+  } catch (error) {
+    console.error("Error generating meal image:", error);
+    // Return a fallback placeholder image based on meal type
+    const mealType = recipe.mealTypes[0]?.toLowerCase() || 'meal';
+    const placeholders = {
+      breakfast: 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=250',
+      lunch: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=250',
+      dinner: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=250',
+      snack: 'https://images.unsplash.com/photo-1610970881699-44a5587cabec?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=250',
+    };
+    
+    return placeholders[mealType as keyof typeof placeholders] || placeholders.lunch;
+  }
+}
