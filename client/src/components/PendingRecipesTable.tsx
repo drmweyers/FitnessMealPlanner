@@ -35,10 +35,11 @@ export default function PendingRecipesTable() {
         title: "Recipe Approved",
         description: "Recipe has been approved and is now visible to users.",
       });
-      // Immediately invalidate and refetch all relevant queries
+      // Force refetch with cache bypass
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -75,10 +76,11 @@ export default function PendingRecipesTable() {
         title: "All Recipes Approved",
         description: `Successfully approved ${count} recipes. They are now visible to users.`,
       });
-      // Immediately invalidate and refetch all relevant queries
+      // Force refetch with cache bypass
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -109,10 +111,11 @@ export default function PendingRecipesTable() {
         title: "Recipe Deleted",
         description: "Recipe has been removed from the system.",
       });
-      // Immediately invalidate and refetch all relevant queries
+      // Force refetch with cache bypass
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -181,6 +184,7 @@ export default function PendingRecipesTable() {
                 queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
                 queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
                 queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+                queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
                 toast({
                   title: "Refreshing",
                   description: "Updating recipe data...",

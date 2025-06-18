@@ -180,6 +180,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin stats
   app.get('/api/admin/stats', isAuthenticated, async (req, res) => {
     try {
+      // Disable caching for stats to ensure fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       const stats = await storage.getRecipeStats();
       res.json(stats);
     } catch (error) {
