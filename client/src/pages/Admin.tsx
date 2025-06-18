@@ -30,8 +30,8 @@ export default function Admin() {
     enabled: isAuthenticated,
   });
 
-  const pendingRecipes = recipesData?.recipes || [];
-  const total = recipesData?.total || 0;
+  const pendingRecipes = (recipesData as any)?.recipes || [];
+  const total = (recipesData as any)?.total || 0;
 
   const handleFilterChange = (newFilters: Partial<RecipeFilter>) => {
     setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
@@ -173,15 +173,15 @@ export default function Admin() {
               disabled={generateMutation.isPending}
             >
               {generateMutation.isPending ? (
-                <>
+                <span className="flex items-center justify-center">
                   <i className="fas fa-spinner fa-spin mr-2"></i>
                   Generating...
-                </>
+                </span>
               ) : (
-                <>
+                <span className="flex items-center justify-center">
                   <i className="fas fa-magic mr-2"></i>
                   Generate New Batch
-                </>
+                </span>
               )}
             </Button>
           </CardContent>
@@ -200,8 +200,10 @@ export default function Admin() {
               variant="outline" 
               className="w-full border-secondary text-secondary hover:bg-secondary hover:text-white"
             >
-              <i className="fas fa-list mr-2"></i>
-              View Pending ({total})
+              <span className="flex items-center justify-center">
+                <i className="fas fa-list mr-2"></i>
+                View Pending ({total})
+              </span>
             </Button>
           </CardContent>
         </Card>
@@ -219,8 +221,10 @@ export default function Admin() {
               variant="outline" 
               className="w-full border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
             >
-              <i className="fas fa-file-download mr-2"></i>
-              Export All Data
+              <span className="flex items-center justify-center">
+                <i className="fas fa-file-download mr-2"></i>
+                Export All Data
+              </span>
             </Button>
           </CardContent>
         </Card>
@@ -234,7 +238,7 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Total Recipes</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.total.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-slate-900">{(stats as any).total.toLocaleString()}</p>
                 </div>
                 <div className="p-3 bg-primary/10 rounded-full">
                   <i className="fas fa-book text-primary text-xl"></i>
@@ -248,7 +252,7 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Approved</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.approved.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-green-600">{(stats as any).approved.toLocaleString()}</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
                   <i className="fas fa-check-circle text-green-600 text-xl"></i>
@@ -262,7 +266,7 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Pending Review</p>
-                  <p className="text-2xl font-bold text-secondary">{stats.pending.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-secondary">{(stats as any).pending.toLocaleString()}</p>
                 </div>
                 <div className="p-3 bg-amber-100 rounded-full">
                   <i className="fas fa-clock text-secondary text-xl"></i>
@@ -276,7 +280,7 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Avg Rating</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.avgRating}</p>
+                  <p className="text-2xl font-bold text-slate-900">{(stats as any).avgRating}</p>
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-full">
                   <i className="fas fa-star text-yellow-500 text-xl"></i>
@@ -290,14 +294,19 @@ export default function Admin() {
       {/* Search and Filters */}
       <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
 
-      {/* Pending Recipes Table */}
+      {/* Recipe Management Table */}
       <Card>
         <CardContent className="p-0">
           <div className="px-6 py-4 border-b border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900">Pending Recipe Reviews</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Recipe Management</h2>
+            <p className="text-sm text-slate-600 mt-1">
+              {filters.approved === false ? 'Pending Recipe Reviews' : 
+               filters.approved === true ? 'Approved Recipes' : 'All Recipes'} 
+              ({total} results)
+            </p>
           </div>
           <AdminTable
-            recipes={pendingRecipes?.recipes || []}
+            recipes={pendingRecipes}
             isLoading={pendingLoading}
             onApprove={(id) => approveMutation.mutate(id)}
             onDelete={(id) => deleteMutation.mutate(id)}
