@@ -11,7 +11,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, Sparkles, Database, Target, Zap, Clock } from "lucide-react";
+import { ChefHat, Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown } from "lucide-react";
 import { z } from "zod";
 
 const adminRecipeGenerationSchema = z.object({
@@ -169,7 +169,7 @@ export default function AdminRecipeGenerator() {
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="h-8 w-8 p-0"
             >
-              <i className={`fas ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'} text-sm`}></i>
+              {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
             </Button>
           </div>
           {!isCollapsed && (
