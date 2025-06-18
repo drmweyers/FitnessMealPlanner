@@ -73,21 +73,16 @@ export default function AdminRecipeGenerator() {
         description: data.message,
       });
       
-      // Poll for completion and refresh data
-      const pollForCompletion = () => {
+      // Refresh all recipe data after generation completes
+      setTimeout(() => {
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+        
         setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-          
-          // Continue polling for a few more refreshes to catch any delayed updates
-          setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-          }, 5000);
-        }, 10000); // Wait 10 seconds for generation to complete
-      };
-      
-      pollForCompletion();
+          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+        }, 8000);
+      }, 15000);
     },
     onError: (error: Error) => {
       toast({
@@ -120,21 +115,16 @@ export default function AdminRecipeGenerator() {
         description: data.message,
       });
       
-      // Poll for completion and refresh data
-      const pollForCompletion = () => {
+      // Refresh all recipe data after generation completes
+      setTimeout(() => {
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+        
         setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-          
-          // Continue polling for a few more refreshes to catch any delayed updates
-          setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-          }, 5000);
-        }, 10000); // Wait 10 seconds for generation to complete
-      };
-      
-      pollForCompletion();
+          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+        }, 8000);
+      }, 15000);
     },
     onError: (error: Error) => {
       toast({
@@ -154,11 +144,12 @@ export default function AdminRecipeGenerator() {
   };
 
   const handleRefreshStats = () => {
-    queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+    // Force immediate refresh of all recipe data
+    queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+    queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
     toast({
-      title: "Stats Refreshed",
-      description: "Recipe counts have been updated",
+      title: "Recipes Refreshed",
+      description: "Recipe database has been updated with new recipes",
     });
   };
 
