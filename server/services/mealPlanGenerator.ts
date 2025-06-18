@@ -9,19 +9,34 @@ export class MealPlanGeneratorService {
   ): Promise<MealPlan> {
     const { days, mealsPerDay, clientName, ...filterParams } = params;
 
-    // Create filter for recipe search
-    const recipeFilter: RecipeFilter = {
-      ...filterParams,
+    // Create filter for recipe search - start with basic approved filter
+    let recipeFilter: RecipeFilter = {
       approved: true,
-      limit: 100, // Get more recipes to choose from
+      limit: 100,
       page: 1,
     };
 
+    // Add non-restrictive filters first
+    if (filterParams.mealType) recipeFilter.mealType = filterParams.mealType;
+    if (filterParams.dietaryTag) recipeFilter.dietaryTag = filterParams.dietaryTag;
+    if (filterParams.maxPrepTime) recipeFilter.maxPrepTime = filterParams.maxPrepTime;
+
     // Get available recipes matching the criteria
-    const { recipes } = await storage.searchRecipes(recipeFilter);
+    let { recipes } = await storage.searchRecipes(recipeFilter);
+
+    // If no recipes found with filters, try with just approved recipes
+    if (recipes.length === 0) {
+      const fallbackFilter: RecipeFilter = {
+        approved: true,
+        limit: 100,
+        page: 1,
+      };
+      const fallbackResult = await storage.searchRecipes(fallbackFilter);
+      recipes = fallbackResult.recipes;
+    }
 
     if (recipes.length === 0) {
-      throw new Error("No recipes found matching the specified criteria. Please adjust your filters.");
+      throw new Error("No approved recipes available in the database. Please add some recipes first.");
     }
 
     // Define meal types for distribution
