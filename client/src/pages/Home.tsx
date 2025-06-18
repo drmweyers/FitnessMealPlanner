@@ -241,10 +241,7 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="admin">
-            {/* Admin content will be handled by AdminTable component */}
-            <div className="text-center py-12">
-              <p className="text-slate-600">Admin panel content will be loaded here.</p>
-            </div>
+            <AdminRecipeGenerator />
           </TabsContent>
         </Tabs>
       </main>
