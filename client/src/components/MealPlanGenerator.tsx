@@ -1,0 +1,563 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { mealPlanGenerationSchema, type MealPlanGeneration, type MealPlan } from "@shared/schema";
+import { ChefHat, Calendar, Users, Utensils, Clock, Zap, Target } from "lucide-react";
+
+interface MealPlanResult {
+  mealPlan: MealPlan;
+  nutrition: {
+    total: { calories: number; protein: number; carbs: number; fat: number };
+    averageDaily: { calories: number; protein: number; carbs: number; fat: number };
+    daily: Array<{ day: number; calories: number; protein: number; carbs: number; fat: number }>;
+  };
+  message: string;
+}
+
+export default function MealPlanGenerator() {
+  const { toast } = useToast();
+  const [generatedPlan, setGeneratedPlan] = useState<MealPlanResult | null>(null);
+
+  const form = useForm<MealPlanGeneration>({
+    resolver: zodResolver(mealPlanGenerationSchema),
+    defaultValues: {
+      days: 7,
+      mealsPerDay: 3,
+      clientName: "",
+    },
+  });
+
+  const generateMealPlan = useMutation({
+    mutationFn: async (data: MealPlanGeneration): Promise<MealPlanResult> => {
+      return await apiRequest('/api/generate-meal-plan', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' },
+      }) as Promise<MealPlanResult>;
+    },
+    onSuccess: (data: MealPlanResult) => {
+      setGeneratedPlan(data);
+      toast({
+        title: "Meal Plan Generated",
+        description: data.message,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: MealPlanGeneration) => {
+    generateMealPlan.mutate(data);
+  };
+
+  const formatMealType = (mealType: string) => {
+    return mealType.charAt(0).toUpperCase() + mealType.slice(1);
+  };
+
+  const getMealTypeIcon = (mealType: string) => {
+    switch (mealType) {
+      case 'breakfast': return '🌅';
+      case 'lunch': return '☀️';
+      case 'dinner': return '🌙';
+      case 'snack': return '🍎';
+      default: return '🍽️';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ChefHat className="h-5 w-5" />
+            Meal Plan Generator
+          </CardTitle>
+          <CardDescription>
+            Create customized meal plans for your clients based on their dietary preferences and nutritional goals.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Basic Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="clientName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Client Name (Optional)
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="days"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Number of Days
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="30"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="mealsPerDay"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Utensils className="h-4 w-4" />
+                        Meals Per Day
+                      </FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value?.toString()}
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 Meal</SelectItem>
+                            <SelectItem value="2">2 Meals</SelectItem>
+                            <SelectItem value="3">3 Meals</SelectItem>
+                            <SelectItem value="4">4 Meals</SelectItem>
+                            <SelectItem value="5">5 Meals</SelectItem>
+                            <SelectItem value="6">6 Meals</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Separator />
+
+              {/* Filter Options */}
+              <div>
+                <h4 className="text-sm font-medium text-slate-700 mb-4">Filter Preferences</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  
+                  <FormField
+                    control={form.control}
+                    name="mealType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Meal Type</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value || 'all'}
+                            onValueChange={(value) => field.onChange(value === 'all' ? undefined : value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="All Meals" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Meals</SelectItem>
+                              <SelectItem value="breakfast">Breakfast</SelectItem>
+                              <SelectItem value="lunch">Lunch</SelectItem>
+                              <SelectItem value="dinner">Dinner</SelectItem>
+                              <SelectItem value="snack">Snack</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="dietaryTag"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dietary</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value || 'all'}
+                            onValueChange={(value) => field.onChange(value === 'all' ? undefined : value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="All Diets" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Diets</SelectItem>
+                              <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                              <SelectItem value="vegan">Vegan</SelectItem>
+                              <SelectItem value="keto">Keto</SelectItem>
+                              <SelectItem value="paleo">Paleo</SelectItem>
+                              <SelectItem value="gluten-free">Gluten Free</SelectItem>
+                              <SelectItem value="low-carb">Low Carb</SelectItem>
+                              <SelectItem value="high-protein">High Protein</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="maxPrepTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          Max Prep Time
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value?.toString() || 'all'}
+                            onValueChange={(value) => field.onChange(value === 'all' ? undefined : parseInt(value))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Any Time" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Any Time</SelectItem>
+                              <SelectItem value="15">15 minutes</SelectItem>
+                              <SelectItem value="30">30 minutes</SelectItem>
+                              <SelectItem value="60">1 hour</SelectItem>
+                              <SelectItem value="120">2 hours</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="maxCalories"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Zap className="h-4 w-4" />
+                          Max Calories
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value?.toString() || 'all'}
+                            onValueChange={(value) => field.onChange(value === 'all' ? undefined : parseInt(value))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Any Amount" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Any Amount</SelectItem>
+                              <SelectItem value="300">Under 300</SelectItem>
+                              <SelectItem value="500">Under 500</SelectItem>
+                              <SelectItem value="800">Under 800</SelectItem>
+                              <SelectItem value="1200">Under 1200</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Macro Nutrient Filters */}
+              <div>
+                <h4 className="text-sm font-medium text-slate-700 mb-4 flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Macro Nutrient Targets (per meal)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  {/* Protein */}
+                  <div className="space-y-3">
+                    <h5 className="text-sm font-medium text-slate-600">Protein (g)</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="minProtein"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Min</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="maxProtein"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Max</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="∞"
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Carbohydrates */}
+                  <div className="space-y-3">
+                    <h5 className="text-sm font-medium text-slate-600">Carbohydrates (g)</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="minCarbs"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Min</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="maxCarbs"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Max</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="∞"
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Fat */}
+                  <div className="space-y-3">
+                    <h5 className="text-sm font-medium text-slate-600">Fat (g)</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="minFat"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Min</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="maxFat"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Max</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="∞"
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={generateMealPlan.isPending}
+                size="lg"
+              >
+                {generateMealPlan.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Generating Meal Plan...
+                  </>
+                ) : (
+                  <>
+                    <ChefHat className="h-4 w-4 mr-2" />
+                    Generate Meal Plan
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {/* Generated Meal Plan Results */}
+      {generatedPlan && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              {generatedPlan.mealPlan.clientName 
+                ? `Meal Plan for ${generatedPlan.mealPlan.clientName}` 
+                : 'Generated Meal Plan'
+              }
+            </CardTitle>
+            <CardDescription>
+              {generatedPlan.mealPlan.days}-day plan with {generatedPlan.mealPlan.mealsPerDay} meals per day
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            
+            {/* Nutrition Summary */}
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <h4 className="font-medium mb-3">Nutrition Summary (Daily Average)</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {generatedPlan.nutrition.averageDaily.calories}
+                  </div>
+                  <div className="text-sm text-slate-600">Calories</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    {generatedPlan.nutrition.averageDaily.protein}g
+                  </div>
+                  <div className="text-sm text-slate-600">Protein</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {generatedPlan.nutrition.averageDaily.carbs}g
+                  </div>
+                  <div className="text-sm text-slate-600">Carbs</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {generatedPlan.nutrition.averageDaily.fat}g
+                  </div>
+                  <div className="text-sm text-slate-600">Fat</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Meal Plan */}
+            <div className="space-y-4">
+              {Array.from({ length: generatedPlan.mealPlan.days }, (_, dayIndex) => {
+                const day = dayIndex + 1;
+                const dayMeals = generatedPlan.mealPlan.meals.filter(meal => meal.day === day);
+                const dayNutrition = generatedPlan.nutrition.daily[dayIndex];
+
+                return (
+                  <Card key={day} className="border-l-4 border-l-blue-500">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center justify-between">
+                        <span>Day {day}</span>
+                        <div className="flex gap-4 text-sm font-normal">
+                          <Badge variant="outline">{dayNutrition.calories} cal</Badge>
+                          <Badge variant="outline">{dayNutrition.protein}g protein</Badge>
+                          <Badge variant="outline">{dayNutrition.carbs}g carbs</Badge>
+                          <Badge variant="outline">{dayNutrition.fat}g fat</Badge>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-3">
+                        {dayMeals.map((meal, mealIndex) => (
+                          <div key={mealIndex} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">{getMealTypeIcon(meal.mealType)}</span>
+                              <div>
+                                <div className="font-medium">{meal.recipe.name}</div>
+                                <div className="text-sm text-slate-600">
+                                  {formatMealType(meal.mealType)} • {meal.recipe.prepTimeMinutes} min prep
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right text-sm text-slate-600">
+                              <div>{meal.recipe.caloriesKcal} cal</div>
+                              <div>{meal.recipe.proteinGrams}g • {meal.recipe.carbsGrams}g • {meal.recipe.fatGrams}g</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

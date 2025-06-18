@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
+import MealPlanGeneratorPage from "@/pages/MealPlanGenerator";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/admin" component={Admin} />
+          <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
         </>
       )}
       <Route component={NotFound} />
