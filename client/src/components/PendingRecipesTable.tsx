@@ -35,13 +35,10 @@ export default function PendingRecipesTable() {
         title: "Recipe Approved",
         description: "Recipe has been approved and is now visible to users.",
       });
-      // Force immediate refresh of all data
-      queryClient.invalidateQueries();
-      setTimeout(() => {
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-      }, 100);
+      // Immediately invalidate and refetch all relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -78,13 +75,10 @@ export default function PendingRecipesTable() {
         title: "All Recipes Approved",
         description: `Successfully approved ${count} recipes. They are now visible to users.`,
       });
-      // Force immediate refresh of all data
-      queryClient.invalidateQueries();
-      setTimeout(() => {
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-      }, 100);
+      // Immediately invalidate and refetch all relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -115,13 +109,10 @@ export default function PendingRecipesTable() {
         title: "Recipe Deleted",
         description: "Recipe has been removed from the system.",
       });
-      // Force immediate refresh of all data
-      queryClient.invalidateQueries();
-      setTimeout(() => {
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-      }, 100);
+      // Immediately invalidate and refetch all relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -187,8 +178,13 @@ export default function PendingRecipesTable() {
               variant="outline"
               size="sm"
               onClick={() => {
-                queryClient.invalidateQueries();
-                queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
+                queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+                queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+                toast({
+                  title: "Refreshing",
+                  description: "Updating recipe data...",
+                });
               }}
               className="border-slate-300"
             >
