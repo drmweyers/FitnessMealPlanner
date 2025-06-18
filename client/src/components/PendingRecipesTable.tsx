@@ -58,6 +58,46 @@ export default function PendingRecipesTable() {
     },
   });
 
+  const approveAllMutation = useMutation({
+    mutationFn: async () => {
+      const recipeIds = pendingRecipes.map((recipe: Recipe) => recipe.id);
+      await Promise.all(
+        recipeIds.map((id: string) => 
+          apiRequest('PATCH', `/api/admin/recipes/${id}/approve`)
+        )
+      );
+      return recipeIds.length;
+    },
+    onSuccess: (count: number) => {
+      toast({
+        title: "All Recipes Approved",
+        description: `Successfully approved ${count} recipes. They are now visible to users.`,
+      });
+      // Refresh all relevant queries
+      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
+      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+      queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to approve all recipes",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest('DELETE', `/api/admin/recipes/${id}`);
@@ -123,6 +163,32 @@ export default function PendingRecipesTable() {
 
   return (
     <div className="overflow-x-auto">
+      {/* Batch Actions Header */}
+      {recipes.length > 0 && (
+        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div className="text-sm text-slate-600">
+            {recipes.length} recipes pending approval
+          </div>
+          <Button
+            onClick={() => approveAllMutation.mutate()}
+            disabled={approveAllMutation.isPending}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            {approveAllMutation.isPending ? (
+              <>
+                <i className="fas fa-spinner fa-spin mr-2"></i>
+                Approving All...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-check-double mr-2"></i>
+                Approve All
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+      
       <table className="w-full">
         <thead className="bg-slate-50">
           <tr>
