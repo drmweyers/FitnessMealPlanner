@@ -122,6 +122,10 @@ export type MealPlanGeneration = z.infer<typeof mealPlanGenerationSchema>;
 // Meal Plan Schema
 export const mealPlanSchema = z.object({
   id: z.string(),
+  planName: z.string(),
+  fitnessGoal: z.string(),
+  description: z.string().optional(),
+  dailyCalorieTarget: z.number(),
   clientName: z.string().optional(),
   days: z.number(),
   mealsPerDay: z.number(),
