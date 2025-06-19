@@ -44,6 +44,8 @@ export default function AdminRecipeGenerator() {
   const queryClient = useQueryClient();
   const [lastGeneration, setLastGeneration] = useState<GenerationResult | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState<string>("");
 
   const form = useForm<AdminRecipeGeneration>({
     resolver: zodResolver(adminRecipeGenerationSchema),
@@ -56,7 +58,10 @@ export default function AdminRecipeGenerator() {
     mutationFn: async (data: AdminRecipeGeneration): Promise<GenerationResult> => {
       const response = await fetch('/api/admin/generate-recipes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify(data),
       });
       
@@ -71,19 +76,22 @@ export default function AdminRecipeGenerator() {
       setLastGeneration(data);
       toast({
         title: "Recipe Generation Started",
-        description: data.message,
+        description: `${data.message} - Generating ${data.count} recipes...`,
       });
       
-      // Refresh all recipe data after generation completes
+      // Immediate refresh to show generation started
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      
+      // Refresh after expected completion time
       setTimeout(() => {
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+        queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
         
-        setTimeout(() => {
-          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-        }, 8000);
-      }, 15000);
+        toast({
+          title: "Generation Complete",
+          description: `Successfully generated ${data.count} new recipes!`,
+        });
+      }, 30000); // 30 seconds for generation completion
     },
     onError: (error: Error) => {
       toast({
