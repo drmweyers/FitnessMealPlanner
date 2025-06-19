@@ -286,11 +286,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint
+  app.get('/api/meal-plan/test', async (req, res) => {
+    console.log("Test endpoint hit");
+    res.json({ status: "ok", message: "Meal plan service is available" });
+  });
+
   // Meal Plan Generation - Public endpoint for core functionality
   app.post('/api/meal-plan/generate', async (req, res) => {
+    console.log("POST /api/meal-plan/generate endpoint hit");
+    console.log("Request body:", req.body);
+    
     try {
+      // Simple validation first
+      if (!req.body) {
+        return res.status(400).json({ message: "Request body is required" });
+      }
+
       const userId = (req.user as any)?.claims?.sub || 'anonymous';
-      const validatedData = mealPlanGenerationSchema.parse(req.body);
+      console.log("User ID:", userId);
+      
+      // Basic required fields check
+      const { planName, fitnessGoal, dailyCalorieTarget, days = 7, mealsPerDay = 3 } = req.body;
+      
+      if (!planName || !fitnessGoal || !dailyCalorieTarget) {
+        return res.status(400).json({ 
+          message: "Missing required fields: planName, fitnessGoal, dailyCalorieTarget" 
+        });
+      }
+
+      const validatedData = {
+        planName,
+        fitnessGoal,
+        dailyCalorieTarget: Number(dailyCalorieTarget),
+        days: Number(days),
+        mealsPerDay: Number(mealsPerDay),
+        ...req.body
+      };
+      
+      console.log("Validated data:", validatedData);
       
       const mealPlan = await mealPlanGenerator.generateMealPlan(validatedData, userId);
       const nutrition = mealPlanGenerator.calculateMealPlanNutrition(mealPlan);
@@ -298,15 +332,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         mealPlan,
         nutrition,
-        message: `Successfully generated ${validatedData.days}-day meal plan${validatedData.clientName ? ` for ${validatedData.clientName}` : ''}`,
+        message: `Successfully generated ${validatedData.days}-day meal plan`,
       });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: fromZodError(error).toString() });
-      } else {
-        console.error("Error generating meal plan:", error);
-        res.status(500).json({ message: (error as Error).message || "Failed to generate meal plan" });
-      }
+      console.error("Error generating meal plan:", error);
+      res.status(500).json({ 
+        message: (error as Error).message || "Failed to generate meal plan",
+        error: process.env.NODE_ENV === 'development' ? error : undefined
+      });
     }
   });
 

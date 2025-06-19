@@ -32,10 +32,13 @@ export class MealPlanGeneratorService {
     if (filterParams.maxPrepTime) recipeFilter.maxPrepTime = filterParams.maxPrepTime;
 
     // Get available recipes matching the criteria
+    console.log("Searching for recipes with filter:", recipeFilter);
     let { recipes } = await storage.searchRecipes(recipeFilter);
+    console.log("Found", recipes.length, "recipes with filters");
 
     // If no recipes found with filters, try with just approved recipes
     if (recipes.length === 0) {
+      console.log("No recipes found with filters, trying fallback...");
       const fallbackFilter: RecipeFilter = {
         approved: true,
         limit: 100,
@@ -43,6 +46,7 @@ export class MealPlanGeneratorService {
       };
       const fallbackResult = await storage.searchRecipes(fallbackFilter);
       recipes = fallbackResult.recipes;
+      console.log("Found", recipes.length, "recipes with fallback filter");
     }
 
     if (recipes.length === 0) {
@@ -128,21 +132,12 @@ export class MealPlanGeneratorService {
         const randomIndex = Math.floor(Math.random() * selectedRecipes.length);
         const selectedRecipe = selectedRecipes[randomIndex];
 
-        // Generate unique image for this meal
-        let imageUrl: string | undefined;
+        // Use existing recipe image or fallback to placeholder
         const recipeDescription = selectedRecipe.description || `Delicious ${mealType} meal`;
         const recipeMealTypes = selectedRecipe.mealTypes || [mealType];
         
-        try {
-          imageUrl = await generateMealImage({
-            name: selectedRecipe.name,
-            description: recipeDescription,
-            mealTypes: recipeMealTypes,
-          });
-        } catch (error) {
-          console.error(`Failed to generate image for ${selectedRecipe.name}:`, error);
-          // Image generation will fallback to placeholder in the function itself
-        }
+        // Use the recipe's existing image URL or a placeholder
+        const imageUrl = selectedRecipe.imageUrl || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=250&fit=crop`;
 
         mealPlan.meals.push({
           day,
