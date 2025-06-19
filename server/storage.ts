@@ -187,12 +187,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRecipe(id: string): Promise<Recipe | undefined> {
-    // Validate UUID format to prevent database errors
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(id)) {
-      return undefined;
-    }
-    
     const [recipe] = await db.select().from(recipes).where(eq(recipes.id, id));
     return recipe;
   }
