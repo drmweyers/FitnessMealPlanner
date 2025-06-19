@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { mealPlanGenerationSchema, type MealPlanGeneration, type MealPlan } from "@shared/schema";
-import { ChefHat, Calendar, Users, Utensils, Clock, Zap, Target, Activity, FileText } from "lucide-react";
+import { ChefHat, Calendar, Users, Utensils, Clock, Zap, Target, Activity, FileText, Wand2, Sparkles } from "lucide-react";
 
 interface MealPlanResult {
   mealPlan: MealPlan;
@@ -29,6 +29,8 @@ interface MealPlanResult {
 export default function MealPlanGenerator() {
   const { toast } = useToast();
   const [generatedPlan, setGeneratedPlan] = useState<MealPlanResult | null>(null);
+  const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
+  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
 
   const form = useForm<MealPlanGeneration>({
     resolver: zodResolver(mealPlanGenerationSchema),
