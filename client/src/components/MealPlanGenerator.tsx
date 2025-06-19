@@ -14,7 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { mealPlanGenerationSchema, type MealPlanGeneration, type MealPlan } from "@shared/schema";
-import { ChefHat, Calendar, Users, Utensils, Clock, Zap, Target, Activity, FileText, Wand2, Sparkles } from "lucide-react";
+import { ChefHat, Calendar, Users, Utensils, Clock, Zap, Target, Activity, FileText, Wand2, Sparkles, Download } from "lucide-react";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface MealPlanResult {
   mealPlan: MealPlan;
@@ -185,6 +187,62 @@ export default function MealPlanGenerator() {
       toast({
         title: "Generation Failed",
         description: "Failed to parse and generate meal plan. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const exportToPDF = async () => {
+    if (!generatedPlan) return;
+
+    try {
+      // Create a temporary container for the PDF content
+      const element = document.getElementById('meal-plan-content');
+      if (!element) return;
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 295; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      // Add the first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add additional pages if needed
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Generate filename with plan name and date
+      const fileName = `${generatedPlan.mealPlan.planName.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      pdf.save(fileName);
+
+      toast({
+        title: "PDF Exported",
+        description: "Your meal plan has been downloaded successfully.",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate PDF. Please try again.",
         variant: "destructive",
       });
     }
@@ -785,9 +843,20 @@ export default function MealPlanGenerator() {
       {generatedPlan && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              {generatedPlan.mealPlan.planName}
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                {generatedPlan.mealPlan.planName}
+              </div>
+              <Button
+                onClick={exportToPDF}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export to PDF
+              </Button>
             </CardTitle>
             <CardDescription className="space-y-1">
               <div className="flex items-center gap-4 text-sm">
@@ -815,7 +884,7 @@ export default function MealPlanGenerator() {
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent id="meal-plan-content" className="space-y-6">
             
             {/* Nutrition Summary */}
             <div className="bg-slate-50 p-4 rounded-lg">
