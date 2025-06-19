@@ -199,143 +199,85 @@ export default function MealPlanGenerator() {
       const element = document.getElementById('meal-plan-content');
       if (!element) return;
 
-      // Show loading state
       toast({
         title: "Generating PDF",
-        description: "Creating high-quality PDF document...",
+        description: "Creating PDF document...",
       });
 
-      // Temporarily apply print styles for better PDF rendering
-      document.body.classList.add('pdf-export-mode');
-      
-      // Add custom styles for PDF export
-      const style = document.createElement('style');
-      style.textContent = `
-        .pdf-export-mode #meal-plan-content {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-          color: #000 !important;
-          background: #fff !important;
-          -webkit-font-smoothing: antialiased !important;
-          -moz-osx-font-smoothing: grayscale !important;
-          font-size: 14px !important;
-          line-height: 1.5 !important;
-        }
-        .pdf-export-mode #meal-plan-content * {
-          box-shadow: none !important;
-          border-color: #e5e7eb !important;
-        }
-        .pdf-export-mode #meal-plan-content .bg-slate-50 {
-          background-color: #f8fafc !important;
-        }
-        .pdf-export-mode #meal-plan-content img {
-          image-rendering: high-quality !important;
-          image-rendering: -webkit-optimize-contrast !important;
-        }
-      `;
-      document.head.appendChild(style);
+      // Ensure element is visible and has content
+      element.style.display = 'block';
+      element.style.visibility = 'visible';
 
-      // Enhanced canvas settings for crisp text and images
       const canvas = await html2canvas(element, {
-        scale: 4, // Very high scale for crisp text
+        scale: 2.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        logging: false,
-        width: element.scrollWidth,
+        logging: true,
         height: element.scrollHeight,
+        width: element.scrollWidth,
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 1920, // Fixed high resolution width
-        windowHeight: 1080,
-        imageTimeout: 20000,
-        removeContainer: true,
-        foreignObjectRendering: true,
-        onclone: (clonedDoc) => {
-          // Ensure fonts are loaded in cloned document
-          clonedDoc.fonts?.ready?.then?.(() => {
-            console.log('Fonts loaded in cloned document');
-          });
-        },
       });
 
-      // Clean up styles
-      document.head.removeChild(style);
-      document.body.classList.remove('pdf-export-mode');
+      console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
 
-      // Use JPEG with high quality for better compression and clarity
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      if (canvas.width === 0 || canvas.height === 0) {
+        throw new Error('Canvas has zero dimensions');
+      }
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
       
-      // Create PDF with higher DPI
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true,
-      });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const availableWidth = pdfWidth - (margin * 2);
+      const availableHeight = pdfHeight - (margin * 2);
       
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10; // 10mm margins
-      const contentWidth = pageWidth - (margin * 2);
-      const contentHeight = pageHeight - (margin * 2);
-      
-      // Calculate image dimensions maintaining aspect ratio
       const imgAspectRatio = canvas.width / canvas.height;
-      let imgWidth = contentWidth;
-      let imgHeight = contentWidth / imgAspectRatio;
+      let imgWidth = availableWidth;
+      let imgHeight = availableWidth / imgAspectRatio;
       
-      // If image height exceeds page height, scale down
-      if (imgHeight > contentHeight) {
-        imgHeight = contentHeight;
-        imgWidth = contentHeight * imgAspectRatio;
+      // If image is too tall for one page, scale it down
+      if (imgHeight > availableHeight) {
+        imgHeight = availableHeight;
+        imgWidth = availableHeight * imgAspectRatio;
       }
       
-      // Calculate how many pages we need
-      const totalHeight = (canvas.height * imgWidth) / canvas.width;
-      const pagesNeeded = Math.ceil(totalHeight / contentHeight);
+      // Calculate total height in PDF units
+      const scaledHeight = (canvas.height * imgWidth) / canvas.width;
+      const pageCount = Math.ceil(scaledHeight / availableHeight);
       
-      for (let i = 0; i < pagesNeeded; i++) {
+      for (let i = 0; i < pageCount; i++) {
         if (i > 0) {
           pdf.addPage();
         }
         
-        const yOffset = -(i * contentHeight * canvas.width) / imgWidth;
+        const yPosition = margin - (i * availableHeight);
         
         pdf.addImage(
           imgData,
-          'JPEG',
+          'PNG',
           margin,
-          margin + yOffset,
+          yPosition,
           imgWidth,
-          totalHeight,
-          undefined,
-          'MEDIUM' // Better compression
+          scaledHeight
         );
       }
 
-      // Add metadata
-      pdf.setProperties({
-        title: generatedPlan.mealPlan.planName,
-        subject: 'Meal Plan',
-        author: 'FitMeal Pro',
-        creator: 'FitMeal Pro Meal Plan Generator',
-        keywords: 'meal plan, nutrition, fitness',
-      });
-
-      // Generate filename with plan name and date
-      const fileName = `${generatedPlan.mealPlan.planName.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-      
+      const fileName = `${generatedPlan.mealPlan.planName.replace(/[^a-z0-9\s]/gi, '')}_${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
 
       toast({
-        title: "PDF Exported Successfully",
-        description: "High-quality meal plan PDF has been downloaded.",
+        title: "PDF Exported",
+        description: "Meal plan PDF downloaded successfully.",
       });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('PDF generation error:', error);
       toast({
         title: "Export Failed",
-        description: "Failed to generate PDF. Please try again.",
+        description: `Failed to generate PDF: ${error.message}`,
         variant: "destructive",
       });
     }
