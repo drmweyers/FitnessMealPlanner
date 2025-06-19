@@ -136,10 +136,84 @@ export default function MealPlanGenerator() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Plan Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Natural Language AI Interface */}
+          <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-blue-800">
+                <Wand2 className="h-5 w-5" />
+                AI-Powered Natural Language Generator
+              </CardTitle>
+              <CardDescription className="text-blue-600">
+                Describe your meal plan requirements in plain English and let AI automatically fill the form below.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <Label htmlFor="natural-language" className="text-blue-700 font-medium">
+                  Describe Your Meal Plan Requirements
+                </Label>
+                <Textarea
+                  id="natural-language"
+                  placeholder="Example: I need a 5-day weight loss meal plan for Sarah with 1600 calories per day, 3 meals daily, focusing on lean proteins and vegetables, avoiding gluten..."
+                  value={naturalLanguageInput}
+                  onChange={(e) => setNaturalLanguageInput(e.target.value)}
+                  className="min-h-[100px] border-blue-200 focus:border-blue-400"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  onClick={handleNaturalLanguageParse}
+                  disabled={parseNaturalLanguage.isPending || !naturalLanguageInput.trim()}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {parseNaturalLanguage.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Parsing with AI...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Parse with AI
+                    </>
+                  )}
+                </Button>
+                {showAdvancedForm && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAdvancedForm(false)}
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                  >
+                    Hide Advanced Form
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Simple Toggle Button for Manual Form Access */}
+          {!showAdvancedForm && (
+            <div className="flex justify-center mb-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAdvancedForm(true)}
+                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Manual Configuration
+              </Button>
+            </div>
+          )}
+
+          {/* Advanced Form - Show after AI parsing or manual toggle */}
+          {showAdvancedForm && (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Plan Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="planName"
@@ -598,10 +672,12 @@ export default function MealPlanGenerator() {
                   </>
                 )}
               </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                  </form>
+                </Form>
+              )}
+            </CardContent>
+          )}
+        </Card>
 
       {/* Generated Meal Plan Results */}
       {generatedPlan && (
