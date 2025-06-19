@@ -672,12 +672,11 @@ export default function MealPlanGenerator() {
                   </>
                 )}
               </Button>
-                  </form>
-                </Form>
-              )}
-            </CardContent>
+              </form>
+            </Form>
           )}
-        </Card>
+        </CardContent>
+      </Card>
 
       {/* Generated Meal Plan Results */}
       {generatedPlan && (
