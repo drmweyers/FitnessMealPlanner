@@ -7,7 +7,9 @@ interface RecipeModalProps {
 }
 
 export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
-  const instructions = recipe.instructionsText.split('\n').filter(step => step.trim());
+  // Handle both instructionsText (from browse recipes) and instructions (from meal plan)
+  const instructionText = recipe.instructionsText || (recipe as any).instructions || '';
+  const instructions = instructionText.split('\n').filter((step: string) => step.trim());
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -72,12 +74,12 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Meal Types:</span>
-                    <span className="font-medium text-slate-900">{recipe.mealTypes.join(', ')}</span>
+                    <span className="font-medium text-slate-900">{(recipe.mealTypes || []).join(', ')}</span>
                   </div>
-                  {recipe.dietaryTags.length > 0 && (
+                  {(recipe.dietaryTags || []).length > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">Dietary Tags:</span>
-                      <span className="font-medium text-slate-900">{recipe.dietaryTags.join(', ')}</span>
+                      <span className="font-medium text-slate-900">{(recipe.dietaryTags || []).join(', ')}</span>
                     </div>
                   )}
                 </div>
@@ -95,7 +97,7 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
                 
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Ingredients</h3>
                 <ul className="space-y-2">
-                  {recipe.ingredientsJson.map((ingredient, index) => (
+                  {(recipe.ingredientsJson || (recipe as any).ingredients || []).map((ingredient: any, index: number) => (
                     <li key={index} className="flex items-center text-slate-700">
                       <i className="fas fa-circle text-primary text-xs mr-3"></i>
                       <span>
@@ -109,7 +111,7 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Instructions</h3>
                 <ol className="space-y-4">
-                  {instructions.map((instruction, index) => (
+                  {instructions.map((instruction: string, index: number) => (
                     <li key={index} className="flex text-slate-700">
                       <span className="flex-shrink-0 w-6 h-6 bg-primary text-white text-sm font-medium rounded-full flex items-center justify-center mr-3 mt-0.5">
                         {index + 1}
