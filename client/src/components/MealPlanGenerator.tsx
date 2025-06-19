@@ -51,15 +51,16 @@ export default function MealPlanGenerator() {
         naturalLanguageInput
       });
       const result = await response.json();
+      console.log("Raw API response:", result);
       
       // Map the API response to the form structure
       const mappedData: MealPlanGeneration = {
         planName: result.planName || "",
         fitnessGoal: result.fitnessGoal || "",
         description: result.description || "",
-        dailyCalorieTarget: result.dailyCalorieTarget || 2000,
-        days: result.days || 7,
-        mealsPerDay: result.mealsPerDay || 3,
+        dailyCalorieTarget: Number(result.dailyCalorieTarget) || 2000,
+        days: Number(result.days) || 7,
+        mealsPerDay: Number(result.mealsPerDay) || 3,
         clientName: result.clientName || "",
         // Initialize optional filter fields
         mealType: undefined,
@@ -75,9 +76,11 @@ export default function MealPlanGenerator() {
         maxFat: undefined,
       };
       
+      console.log("Mapped data:", mappedData);
       return mappedData;
     },
     onSuccess: (parsedData: MealPlanGeneration) => {
+      console.log("Parsed data:", parsedData);
       // Auto-fill the form with parsed data
       form.reset(parsedData);
       setShowAdvancedForm(true);
@@ -85,6 +88,7 @@ export default function MealPlanGenerator() {
         title: "AI Parsing Complete",
         description: "Your natural language request has been converted to meal plan parameters.",
       });
+      console.log("Form values after reset:", form.getValues());
     },
     onError: (error: Error) => {
       toast({
