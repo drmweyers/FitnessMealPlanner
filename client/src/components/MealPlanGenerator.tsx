@@ -81,14 +81,20 @@ export default function MealPlanGenerator() {
     },
     onSuccess: (parsedData: MealPlanGeneration) => {
       console.log("Parsed data:", parsedData);
-      // Auto-fill the form with parsed data
-      form.reset(parsedData);
+      
+      // Set individual form values to trigger re-renders
+      Object.entries(parsedData).forEach(([key, value]) => {
+        if (value !== undefined) {
+          form.setValue(key as keyof MealPlanGeneration, value, { shouldValidate: true });
+        }
+      });
+      
       setShowAdvancedForm(true);
       toast({
         title: "AI Parsing Complete",
         description: "Your natural language request has been converted to meal plan parameters.",
       });
-      console.log("Form values after reset:", form.getValues());
+      console.log("Form values after setValue:", form.getValues());
     },
     onError: (error: Error) => {
       toast({
