@@ -5,10 +5,18 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
 }
 
+// Check if we're in development mode
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isReplitProduction = process.env.REPLIT_ENVIRONMENT === 'production';
+
+// Log environment info for debugging
+console.log(`Environment - NODE_ENV: ${process.env.NODE_ENV}, REPLIT_ENVIRONMENT: ${process.env.REPLIT_ENVIRONMENT}`);
+console.log(`Database mode: ${isDevelopment ? 'Development' : 'Production'}`);
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
-  max: 10,
+  max: isDevelopment ? 5 : 10, // Fewer connections in dev
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
   acquireTimeoutMillis: 60000,
