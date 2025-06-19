@@ -8,9 +8,14 @@ if (!process.env.DATABASE_URL) {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
-  max: 20,
+  max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000,
+  acquireTimeoutMillis: 60000,
+  createTimeoutMillis: 3000,
+  destroyTimeoutMillis: 5000,
+  reapIntervalMillis: 1000,
+  createRetryIntervalMillis: 200,
 });
 
 // Add error handling for the pool
