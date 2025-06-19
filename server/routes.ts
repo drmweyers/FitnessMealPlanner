@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, requireAdmin, requireTrainer, requireClient } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { recipeGenerator } from "./services/recipeGenerator";
 import { mealPlanGenerator } from "./services/mealPlanGenerator";
 import { recipeFilterSchema, insertRecipeSchema, updateRecipeSchema, mealPlanGenerationSchema } from "@shared/schema";
@@ -17,18 +17,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      
-      // Get additional profile info based on role
-      let additionalData = {};
-      if (user?.role === 'trainer') {
-        const trainer = await storage.getTrainerByUserId(user.id);
-        additionalData = { trainer };
-      } else if (user?.role === 'client') {
-        const client = await storage.getClientByUserId(user.id);
-        additionalData = { client };
-      }
-      
-      res.json({ ...user, ...additionalData });
+      res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -85,143 +74,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Initial Role Setup (for users without a role)
-  app.post('/api/users/setup-role', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { role } = req.body;
-      
-      if (!['admin', 'trainer', 'client'].includes(role)) {
-        return res.status(400).json({ message: "Invalid role. Must be admin, trainer, or client" });
-      }
-      
-      // Allow role changes for existing users
-      
-      const user = await storage.updateUserRole(userId, role);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Create trainer or client profile based on new role
-      if (role === 'trainer') {
-        const existingTrainer = await storage.getTrainerByUserId(userId);
-        if (!existingTrainer) {
-          await storage.createTrainer({ userId });
-        }
-      } else if (role === 'client') {
-        const existingClient = await storage.getClientByUserId(userId);
-        if (!existingClient) {
-          await storage.createClient({
-            userId,
-            fitnessGoals: [],
-            dietaryRestrictions: [],
-            activityLevel: "moderately_active",
-          });
-        }
-      }
-      
-      res.json({ message: "Role assigned successfully", user });
-    } catch (error) {
-      console.error("Error setting up user role:", error);
-      res.status(500).json({ message: "Failed to set up user role" });
-    }
-  });
-
-  // Role Management Routes (Admin only)
-  app.post('/api/admin/users/:userId/role', isAuthenticated, requireAdmin, async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const { role } = req.body;
-      
-      if (!['admin', 'trainer', 'client'].includes(role)) {
-        return res.status(400).json({ message: "Invalid role. Must be admin, trainer, or client" });
-      }
-      
-      const user = await storage.updateUserRole(userId, role);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Create trainer or client profile based on new role
-      if (role === 'trainer') {
-        const existingTrainer = await storage.getTrainerByUserId(userId);
-        if (!existingTrainer) {
-          await storage.createTrainer({ userId });
-        }
-      } else if (role === 'client') {
-        const existingClient = await storage.getClientByUserId(userId);
-        if (!existingClient) {
-          await storage.createClient({
-            userId,
-            fitnessGoals: [],
-            dietaryRestrictions: [],
-            activityLevel: "moderately_active",
-          });
-        }
-      }
-      
-      res.json({ message: "Role updated successfully", user });
-    } catch (error) {
-      console.error("Error updating user role:", error);
-      res.status(500).json({ message: "Failed to update user role" });
-    }
-  });
-
-  // Trainer Routes
-  app.get('/api/trainer/clients', isAuthenticated, requireTrainer, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const trainer = await storage.getTrainerByUserId(userId);
-      
-      if (!trainer) {
-        return res.status(404).json({ message: "Trainer profile not found" });
-      }
-      
-      const clients = await storage.getTrainerClients(trainer.id);
-      res.json(clients);
-    } catch (error) {
-      console.error("Error fetching trainer clients:", error);
-      res.status(500).json({ message: "Failed to fetch clients" });
-    }
-  });
-
-  app.get('/api/trainer/meal-plans', isAuthenticated, requireTrainer, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const trainer = await storage.getTrainerByUserId(userId);
-      
-      if (!trainer) {
-        return res.status(404).json({ message: "Trainer profile not found" });
-      }
-      
-      const mealPlans = await storage.getTrainerMealPlans(trainer.id);
-      res.json(mealPlans);
-    } catch (error) {
-      console.error("Error fetching trainer meal plans:", error);
-      res.status(500).json({ message: "Failed to fetch meal plans" });
-    }
-  });
-
-  // Client Routes
-  app.get('/api/client/meal-plans', isAuthenticated, requireClient, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const client = await storage.getClientByUserId(userId);
-      
-      if (!client) {
-        return res.status(404).json({ message: "Client profile not found" });
-      }
-      
-      const mealPlans = await storage.getClientMealPlans(client.id);
-      res.json(mealPlans);
-    } catch (error) {
-      console.error("Error fetching client meal plans:", error);
-      res.status(500).json({ message: "Failed to fetch meal plans" });
-    }
-  });
-
   // Recipe routes - Admin protected
-  app.get('/api/admin/recipes', isAuthenticated, requireAdmin, async (req, res) => {
+  app.get('/api/admin/recipes', isAuthenticated, async (req, res) => {
     try {
       const filters = recipeFilterSchema.parse({
         ...req.query,
@@ -251,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/recipes/:id', isAuthenticated, requireAdmin, async (req, res) => {
+  app.get('/api/admin/recipes/:id', isAuthenticated, async (req, res) => {
     try {
       const recipe = await storage.getRecipe(req.params.id);
       if (!recipe) {
@@ -264,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/recipes', isAuthenticated, requireAdmin, async (req, res) => {
+  app.post('/api/admin/recipes', isAuthenticated, async (req, res) => {
     try {
       const recipeData = insertRecipeSchema.parse(req.body);
       const recipe = await storage.createRecipe(recipeData);
@@ -279,7 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/recipes/:id', isAuthenticated, requireAdmin, async (req, res) => {
+  app.patch('/api/admin/recipes/:id', isAuthenticated, async (req, res) => {
     try {
       const updates = updateRecipeSchema.parse(req.body);
       const recipe = await storage.updateRecipe(req.params.id, updates);
@@ -297,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/recipes/:id/approve', isAuthenticated, requireAdmin, async (req, res) => {
+  app.patch('/api/admin/recipes/:id/approve', isAuthenticated, async (req, res) => {
     try {
       const recipe = await storage.approveRecipe(req.params.id);
       if (!recipe) {
@@ -310,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/recipes/:id', isAuthenticated, requireAdmin, async (req, res) => {
+  app.delete('/api/admin/recipes/:id', isAuthenticated, async (req, res) => {
     try {
       const success = await storage.deleteRecipe(req.params.id);
       if (!success) {
@@ -324,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin stats
-  app.get('/api/admin/stats', isAuthenticated, requireAdmin, async (req, res) => {
+  app.get('/api/admin/stats', isAuthenticated, async (req, res) => {
     try {
       // Disable caching for stats to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -340,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recipe generation - Bulk
-  app.post('/api/admin/generate', isAuthenticated, requireAdmin, async (req, res) => {
+  app.post('/api/admin/generate', isAuthenticated, async (req, res) => {
     try {
       const { count = 20 } = req.body;
       
@@ -369,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recipe generation - Custom with filters
-  app.post('/api/admin/generate-recipes', isAuthenticated, requireAdmin, async (req, res) => {
+  app.post('/api/admin/generate-recipes', isAuthenticated, async (req, res) => {
     try {
       const { 
         count = 10, 
@@ -432,45 +286,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Meal Plan Generation (Trainers only)
-  app.post('/api/trainer/generate-meal-plan', isAuthenticated, requireTrainer, async (req, res) => {
+  // Meal Plan Generation
+  app.post('/api/generate-meal-plan', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any)?.claims?.sub;
       const validatedData = mealPlanGenerationSchema.parse(req.body);
       
-      // Get trainer profile
-      const trainer = await storage.getTrainerByUserId(userId);
-      if (!trainer) {
-        return res.status(404).json({ message: "Trainer profile not found" });
-      }
-      
-      // Generate the meal plan
       const mealPlan = await mealPlanGenerator.generateMealPlan(validatedData, userId);
       const nutrition = mealPlanGenerator.calculateMealPlanNutrition(mealPlan);
-      
-      // Store the meal plan in database if client is specified
-      if (validatedData.clientName) {
-        // Find client by name (simplified - in production you'd want client ID)
-        const clients = await storage.getTrainerClients(trainer.id);
-        const client = clients.find(c => 
-          `${c.userId}`.toLowerCase().includes(validatedData.clientName!.toLowerCase())
-        );
-        
-        if (client) {
-          await storage.createMealPlan({
-            planName: mealPlan.planName,
-            fitnessGoal: mealPlan.fitnessGoal,
-            description: mealPlan.description,
-            dailyCalorieTarget: mealPlan.dailyCalorieTarget,
-            days: mealPlan.days,
-            mealsPerDay: mealPlan.mealsPerDay,
-            clientId: client.id,
-            trainerId: trainer.id,
-            generatedBy: userId,
-            mealsData: mealPlan.meals,
-          });
-        }
-      }
       
       res.json({
         mealPlan,

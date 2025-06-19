@@ -38,7 +38,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       maxAge: sessionTtl,
     },
   });
@@ -57,32 +57,13 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
-  // Check if this is the admin user (you can configure this)
-  const isAdmin = claims["email"] === "admin@fitmeal.com" || claims["sub"] === "1"; // Configure admin identifier
-  
-  const userData = {
+  await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
-    role: isAdmin ? "admin" as const : "client" as const, // Default new users to client role
-  };
-
-  const user = await storage.upsertUser(userData);
-  
-  // If this is a new client user, create their client profile
-  if (user.role === "client") {
-    const existingClient = await storage.getClientByUserId(user.id);
-    if (!existingClient) {
-      await storage.createClient({
-        userId: user.id,
-        fitnessGoals: [],
-        dietaryRestrictions: [],
-        activityLevel: "moderately_active",
-      });
-    }
-  }
+  });
 }
 
 export async function setupAuth(app: Express) {
@@ -174,39 +155,3 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return;
   }
 };
-
-// Role-based authorization middleware
-export const requireRole = (allowedRoles: string[]): RequestHandler => {
-  return async (req, res, next) => {
-    try {
-      const userSession = req.user as any;
-      const userId = userSession?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-
-      if (!allowedRoles.includes(user.role)) {
-        return res.status(403).json({ message: "Access denied: insufficient permissions" });
-      }
-
-      // Attach user info to request for downstream handlers
-      (req as any).userRole = user.role;
-      (req as any).userProfile = user;
-      
-      return next();
-    } catch (error) {
-      console.error("Role authorization error:", error);
-      return res.status(500).json({ message: "Authorization error" });
-    }
-  };
-};
-
-// Convenience middleware for specific roles
-export const requireAdmin = requireRole(["admin"]);
-export const requireTrainer = requireRole(["admin", "trainer"]);
-export const requireClient = requireRole(["admin", "trainer", "client"]);
