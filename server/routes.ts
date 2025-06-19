@@ -286,7 +286,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Meal Plan Generation
+  // Meal Plan Generation - Public endpoint for core functionality
+  app.post('/api/meal-plan/generate', async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || 'anonymous';
+      const validatedData = mealPlanGenerationSchema.parse(req.body);
+      
+      const mealPlan = await mealPlanGenerator.generateMealPlan(validatedData, userId);
+      const nutrition = mealPlanGenerator.calculateMealPlanNutrition(mealPlan);
+      
+      res.json({
+        mealPlan,
+        nutrition,
+        message: `Successfully generated ${validatedData.days}-day meal plan${validatedData.clientName ? ` for ${validatedData.clientName}` : ''}`,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: fromZodError(error).toString() });
+      } else {
+        console.error("Error generating meal plan:", error);
+        res.status(500).json({ message: (error as Error).message || "Failed to generate meal plan" });
+      }
+    }
+  });
+
+  // Legacy endpoint with authentication for backwards compatibility
   app.post('/api/generate-meal-plan', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any)?.claims?.sub;
