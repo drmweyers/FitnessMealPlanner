@@ -301,6 +301,29 @@ export default function MealPlanGenerator() {
     return mealType.charAt(0).toUpperCase() + mealType.slice(1);
   };
 
+  const getMealTypeColor = (mealType: string) => {
+    const colors = {
+      breakfast: "bg-orange-100 text-orange-700",
+      lunch: "bg-yellow-100 text-yellow-700", 
+      dinner: "bg-primary/10 text-primary",
+      snack: "bg-pink-100 text-pink-700",
+    };
+    return colors[mealType as keyof typeof colors] || "bg-slate-100 text-slate-700";
+  };
+
+  const getDietaryTagColor = (tag: string) => {
+    const colors = {
+      vegetarian: "bg-green-100 text-green-700",
+      vegan: "bg-blue-100 text-blue-700",
+      keto: "bg-green-100 text-green-700",
+      paleo: "bg-orange-100 text-orange-700",
+      "gluten-free": "bg-purple-100 text-purple-700",
+      "low-carb": "bg-red-100 text-red-700",
+      "high-protein": "bg-purple-100 text-purple-700",
+    };
+    return colors[tag as keyof typeof colors] || "bg-slate-100 text-slate-700";
+  };
+
   const getMealTypeIcon = (mealType: string) => {
     switch (mealType) {
       case 'breakfast': return '🌅';
@@ -983,54 +1006,120 @@ export default function MealPlanGenerator() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="overflow-x-auto">
-                        <div className="grid gap-3">
-                          {dayMeals.map((meal, mealIndex) => (
-                            <div 
-                              key={mealIndex} 
-                              className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg min-w-[500px] cursor-pointer hover:bg-slate-100 transition-colors"
-                              onClick={() => handleRecipeClick(meal.recipe)}
-                            >
-                              {/* Meal Image */}
-                              {meal.recipe.imageUrl && (
-                                <div className="flex-shrink-0">
-                                  <img
-                                    src={meal.recipe.imageUrl}
-                                    alt={meal.recipe.name}
-                                    className="w-20 h-20 object-cover rounded-lg shadow-sm"
-                                    onError={(e) => {
-                                      // Fallback to meal type icon if image fails to load
-                                      e.currentTarget.style.display = 'none';
-                                    }}
-                                  />
+                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {dayMeals.map((meal, mealIndex) => {
+                          const recipe = meal.recipe as any;
+                          return (
+                          <Card 
+                            key={mealIndex} 
+                            className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
+                            onClick={() => handleRecipeClick(meal.recipe)}
+                          >
+                            <img 
+                              src={meal.recipe.imageUrl || '/api/placeholder/400/250'} 
+                              alt={meal.recipe.name}
+                              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            
+                            <CardContent className="p-4">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${getMealTypeColor(meal.mealType)}`}>
+                                  {formatMealType(meal.mealType)}
+                                </span>
+                                {(meal.recipe as any).dietaryTags && (meal.recipe as any).dietaryTags.length > 0 && (
+                                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${getDietaryTagColor((meal.recipe as any).dietaryTags[0])}`}>
+                                    {(meal.recipe as any).dietaryTags[0].charAt(0).toUpperCase() + (meal.recipe as any).dietaryTags[0].slice(1)}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-primary transition-colors">
+                                {meal.recipe.name}
+                              </h3>
+                              
+                              <div className="grid grid-cols-2 gap-2 text-sm text-slate-600 mb-3">
+                                <div className="flex items-center space-x-1">
+                                  <i className="fas fa-clock text-slate-400"></i>
+                                  <span>{meal.recipe.prepTimeMinutes + ((meal.recipe as any).cookTimeMinutes || 0)} min</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <i className="fas fa-fire text-slate-400"></i>
+                                  <span>{meal.recipe.caloriesKcal} cal</span>
+                                </div>
+                              </div>
+                              
+                              {/* Description */}
+                              {meal.recipe.description && (
+                                <div className="mb-3">
+                                  <h4 className="text-sm font-medium text-slate-700 mb-1">Description</h4>
+                                  <p className="text-xs text-slate-600 line-clamp-2">{meal.recipe.description}</p>
                                 </div>
                               )}
                               
-                              <div className="flex items-center justify-between flex-1">
-                                <div className="flex items-center gap-3 flex-shrink-0">
-                                  <span className="text-lg">{getMealTypeIcon(meal.mealType)}</span>
-                                  <div>
-                                    <div className="font-medium">{meal.recipe.name}</div>
-                                    <div className="text-sm text-slate-600">
-                                      {formatMealType(meal.mealType)} • {meal.recipe.prepTimeMinutes} min prep
+                              {/* Ingredients Preview */}
+                              <div className="mb-3">
+                                <h4 className="text-sm font-medium text-slate-700 mb-1">Ingredients</h4>
+                                <div className="text-xs text-slate-600">
+                                  {(((meal.recipe as any).ingredientsJson || (meal.recipe as any).ingredients || []).slice(0, 3).map((ingredient: any, idx: number) => (
+                                    <div key={idx} className="flex items-center">
+                                      <i className="fas fa-circle text-primary text-xs mr-2"></i>
+                                      <span>{ingredient.amount} {ingredient.unit ? `${ingredient.unit} ` : ''}{ingredient.name}</span>
                                     </div>
-                                    {meal.recipe.description && (
-                                      <div className="text-xs text-slate-500 mt-1 max-w-xs truncate">
-                                        {meal.recipe.description}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="text-right text-sm text-slate-600 flex-shrink-0">
-                                  <div className="font-medium">{meal.recipe.caloriesKcal} cal</div>
-                                  <div className="whitespace-nowrap text-xs">
-                                    {meal.recipe.proteinGrams}g P • {meal.recipe.carbsGrams}g C • {meal.recipe.fatGrams}g F
-                                  </div>
+                                  )))}
+                                  {((meal.recipe as any).ingredientsJson || (meal.recipe as any).ingredients || []).length > 3 && (
+                                    <div className="text-xs text-slate-500 mt-1">
+                                      +{((meal.recipe as any).ingredientsJson || (meal.recipe as any).ingredients || []).length - 3} more ingredients
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                              
+                              {/* Instructions Preview */}
+                              <div className="mb-4">
+                                <h4 className="text-sm font-medium text-slate-700 mb-1">Instructions</h4>
+                                <div className="text-xs text-slate-600">
+                                  {(() => {
+                                    const instructionText = (meal.recipe as any).instructionsText || (meal.recipe as any).instructions || '';
+                                    const instructions = instructionText.split('\n').filter((step: string) => step.trim());
+                                    return instructions.slice(0, 2).map((instruction: string, idx: number) => (
+                                      <div key={idx} className="flex mb-1">
+                                        <span className="flex-shrink-0 w-4 h-4 bg-primary text-white text-xs font-medium rounded-full flex items-center justify-center mr-2 mt-0.5">
+                                          {idx + 1}
+                                        </span>
+                                        <span className="line-clamp-1">{instruction.trim()}</span>
+                                      </div>
+                                    ));
+                                  })()}
+                                  {(() => {
+                                    const instructionText = (meal.recipe as any).instructionsText || (meal.recipe as any).instructions || '';
+                                    const instructions = instructionText.split('\n').filter((step: string) => step.trim());
+                                    return instructions.length > 2 && (
+                                      <div className="text-xs text-slate-500 mt-1">
+                                        +{instructions.length - 2} more steps
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-3 gap-2 text-xs">
+                                <div className="text-center p-2 bg-slate-50 rounded">
+                                  <div className="font-semibold text-slate-900">{Number(meal.recipe.proteinGrams).toFixed(0)}g</div>
+                                  <div className="text-slate-500">Protein</div>
+                                </div>
+                                <div className="text-center p-2 bg-slate-50 rounded">
+                                  <div className="font-semibold text-slate-900">{Number(meal.recipe.carbsGrams).toFixed(0)}g</div>
+                                  <div className="text-slate-500">Carbs</div>
+                                </div>
+                                <div className="text-center p-2 bg-slate-50 rounded">
+                                  <div className="font-semibold text-slate-900">{Number(meal.recipe.fatGrams).toFixed(0)}g</div>
+                                  <div className="text-slate-500">Fat</div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                          );
+                        })}
                       </div>
                     </CardContent>
                   </Card>
