@@ -17,6 +17,7 @@ import { mealPlanGenerationSchema, type MealPlanGeneration, type MealPlan } from
 import { ChefHat, Calendar, Users, Utensils, Clock, Zap, Target, Activity, FileText, Wand2, Sparkles, Download } from "lucide-react";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import RecipeModal from './RecipeModal';
 
 interface MealPlanResult {
   mealPlan: MealPlan;
@@ -33,6 +34,15 @@ export default function MealPlanGenerator() {
   const [generatedPlan, setGeneratedPlan] = useState<MealPlanResult | null>(null);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
   const [showAdvancedForm, setShowAdvancedForm] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
+
+  const handleRecipeClick = (recipe: any) => {
+    setSelectedRecipe(recipe);
+  };
+
+  const closeRecipeModal = () => {
+    setSelectedRecipe(null);
+  };
 
   const form = useForm<MealPlanGeneration>({
     resolver: zodResolver(mealPlanGenerationSchema),
@@ -277,7 +287,7 @@ export default function MealPlanGenerator() {
       console.error('PDF generation error:', error);
       toast({
         title: "Export Failed",
-        description: `Failed to generate PDF: ${error.message}`,
+        description: `Failed to generate PDF: ${(error as Error).message}`,
         variant: "destructive",
       });
     }
@@ -976,7 +986,11 @@ export default function MealPlanGenerator() {
                       <div className="overflow-x-auto">
                         <div className="grid gap-3">
                           {dayMeals.map((meal, mealIndex) => (
-                            <div key={mealIndex} className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg min-w-[500px]">
+                            <div 
+                              key={mealIndex} 
+                              className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg min-w-[500px] cursor-pointer hover:bg-slate-100 transition-colors"
+                              onClick={() => handleRecipeClick(meal.recipe)}
+                            >
                               {/* Meal Image */}
                               {meal.recipe.imageUrl && (
                                 <div className="flex-shrink-0">
@@ -1025,6 +1039,14 @@ export default function MealPlanGenerator() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Recipe Detail Modal */}
+      {selectedRecipe && (
+        <RecipeModal
+          recipe={selectedRecipe}
+          onClose={closeRecipeModal}
+        />
       )}
     </div>
   );
