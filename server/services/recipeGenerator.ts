@@ -12,8 +12,12 @@ export class RecipeGeneratorService {
     let success = 0;
     let failed = 0;
 
+    // Environment safety check
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const environmentPrefix = isDevelopment ? '[DEV]' : '[PROD]';
+    
     try {
-      console.log(`Starting recipe generation for ${count} recipes...`);
+      console.log(`${environmentPrefix} Starting recipe generation for ${count} recipes...`);
       
       // Generate recipes in batches to avoid overwhelming the API
       const batchSize = 10;

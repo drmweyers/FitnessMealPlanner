@@ -202,19 +202,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Maximum 100 recipes per batch" });
       }
 
+      // Environment safety check
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const environmentPrefix = isDevelopment ? '[DEV]' : '[PROD]';
+      
+      console.log(`${environmentPrefix} Admin bulk recipe generation requested: ${count} recipes`);
+
       // Start generation in background
       setImmediate(async () => {
         try {
           await recipeGenerator.generateAndStoreRecipes(count);
         } catch (error) {
-          console.error("Background recipe generation failed:", error);
+          console.error(`${environmentPrefix} Background recipe generation failed:`, error);
         }
       });
 
       res.json({ 
-        message: `Recipe generation started for ${count} recipes. This will take a few minutes.`,
+        message: `${environmentPrefix} Recipe generation started for ${count} recipes. This will take a few minutes.`,
         count,
-        started: true
+        started: true,
+        environment: isDevelopment ? 'development' : 'production'
       });
     } catch (error) {
       console.error("Error starting recipe generation:", error);
@@ -245,6 +252,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (count > 50) {
         return res.status(400).json({ message: "Maximum 50 recipes per custom batch" });
       }
+
+      // Environment safety check
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const environmentPrefix = isDevelopment ? '[DEV]' : '[PROD]';
+      
+      console.log(`${environmentPrefix} Admin custom recipe generation requested: ${count} recipes with filters`);
 
       // Build generation options
       const options = {
