@@ -196,38 +196,131 @@ export default function MealPlanGenerator() {
     if (!generatedPlan) return;
 
     try {
-      // Create a temporary container for the PDF content
       const element = document.getElementById('meal-plan-content');
       if (!element) return;
 
+      // Show loading state
+      toast({
+        title: "Generating PDF",
+        description: "Creating high-quality PDF document...",
+      });
+
+      // Temporarily apply print styles for better PDF rendering
+      document.body.classList.add('pdf-export-mode');
+      
+      // Add custom styles for PDF export
+      const style = document.createElement('style');
+      style.textContent = `
+        .pdf-export-mode #meal-plan-content {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+          color: #000 !important;
+          background: #fff !important;
+          -webkit-font-smoothing: antialiased !important;
+          -moz-osx-font-smoothing: grayscale !important;
+          font-size: 14px !important;
+          line-height: 1.5 !important;
+        }
+        .pdf-export-mode #meal-plan-content * {
+          box-shadow: none !important;
+          border-color: #e5e7eb !important;
+        }
+        .pdf-export-mode #meal-plan-content .bg-slate-50 {
+          background-color: #f8fafc !important;
+        }
+        .pdf-export-mode #meal-plan-content img {
+          image-rendering: high-quality !important;
+          image-rendering: -webkit-optimize-contrast !important;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Enhanced canvas settings for crisp text and images
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 4, // Very high scale for crisp text
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
+        logging: false,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 1920, // Fixed high resolution width
+        windowHeight: 1080,
+        imageTimeout: 20000,
+        removeContainer: true,
+        foreignObjectRendering: true,
+        onclone: (clonedDoc) => {
+          // Ensure fonts are loaded in cloned document
+          clonedDoc.fonts?.ready?.then?.(() => {
+            console.log('Fonts loaded in cloned document');
+          });
+        },
       });
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      // Clean up styles
+      document.head.removeChild(style);
+      document.body.classList.remove('pdf-export-mode');
+
+      // Use JPEG with high quality for better compression and clarity
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      // Add the first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      // Add additional pages if needed
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      // Create PDF with higher DPI
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true,
+      });
+      
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10; // 10mm margins
+      const contentWidth = pageWidth - (margin * 2);
+      const contentHeight = pageHeight - (margin * 2);
+      
+      // Calculate image dimensions maintaining aspect ratio
+      const imgAspectRatio = canvas.width / canvas.height;
+      let imgWidth = contentWidth;
+      let imgHeight = contentWidth / imgAspectRatio;
+      
+      // If image height exceeds page height, scale down
+      if (imgHeight > contentHeight) {
+        imgHeight = contentHeight;
+        imgWidth = contentHeight * imgAspectRatio;
       }
+      
+      // Calculate how many pages we need
+      const totalHeight = (canvas.height * imgWidth) / canvas.width;
+      const pagesNeeded = Math.ceil(totalHeight / contentHeight);
+      
+      for (let i = 0; i < pagesNeeded; i++) {
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        const yOffset = -(i * contentHeight * canvas.width) / imgWidth;
+        
+        pdf.addImage(
+          imgData,
+          'JPEG',
+          margin,
+          margin + yOffset,
+          imgWidth,
+          totalHeight,
+          undefined,
+          'MEDIUM' // Better compression
+        );
+      }
+
+      // Add metadata
+      pdf.setProperties({
+        title: generatedPlan.mealPlan.planName,
+        subject: 'Meal Plan',
+        author: 'FitMeal Pro',
+        creator: 'FitMeal Pro Meal Plan Generator',
+        keywords: 'meal plan, nutrition, fitness',
+      });
 
       // Generate filename with plan name and date
       const fileName = `${generatedPlan.mealPlan.planName.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -235,8 +328,8 @@ export default function MealPlanGenerator() {
       pdf.save(fileName);
 
       toast({
-        title: "PDF Exported",
-        description: "Your meal plan has been downloaded successfully.",
+        title: "PDF Exported Successfully",
+        description: "High-quality meal plan PDF has been downloaded.",
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -884,7 +977,7 @@ export default function MealPlanGenerator() {
               )}
             </CardDescription>
           </CardHeader>
-          <CardContent id="meal-plan-content" className="space-y-6">
+          <CardContent id="meal-plan-content" className="space-y-6 print:bg-white print:text-black print:shadow-none">
             
             {/* Nutrition Summary */}
             <div className="bg-slate-50 p-4 rounded-lg">
