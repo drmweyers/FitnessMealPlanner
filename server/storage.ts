@@ -1,22 +1,12 @@
 import {
   users,
   recipes,
-  trainers,
-  clients,
-  mealPlans,
   type User,
   type UpsertUser,
   type Recipe,
   type InsertRecipe,
   type UpdateRecipe,
   type RecipeFilter,
-  type Trainer,
-  type InsertTrainer,
-  type Client,
-  type InsertClient,
-  type StoredMealPlan,
-  type InsertMealPlan,
-  type UserRole,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
@@ -25,27 +15,6 @@ export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  updateUserRole(userId: string, role: UserRole): Promise<User | undefined>;
-  
-  // Trainer operations
-  createTrainer(trainer: InsertTrainer): Promise<Trainer>;
-  getTrainer(id: string): Promise<Trainer | undefined>;
-  getTrainerByUserId(userId: string): Promise<Trainer | undefined>;
-  getTrainerClients(trainerId: string): Promise<Client[]>;
-  
-  // Client operations
-  createClient(client: InsertClient): Promise<Client>;
-  getClient(id: string): Promise<Client | undefined>;
-  getClientByUserId(userId: string): Promise<Client | undefined>;
-  assignClientToTrainer(clientId: string, trainerId: string): Promise<Client | undefined>;
-  
-  // Meal plan operations
-  createMealPlan(mealPlan: InsertMealPlan): Promise<StoredMealPlan>;
-  getMealPlan(id: string): Promise<StoredMealPlan | undefined>;
-  getClientMealPlans(clientId: string): Promise<StoredMealPlan[]>;
-  getTrainerMealPlans(trainerId: string): Promise<StoredMealPlan[]>;
-  updateMealPlan(id: string, updates: Partial<InsertMealPlan>): Promise<StoredMealPlan | undefined>;
-  deleteMealPlan(id: string): Promise<boolean>;
   
   // Recipe operations
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
@@ -82,102 +51,6 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
-  }
-
-  async updateUserRole(userId: string, role: UserRole): Promise<User | undefined> {
-    const [user] = await db
-      .update(users)
-      .set({ role, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
-
-  // Trainer operations
-  async createTrainer(trainerData: InsertTrainer): Promise<Trainer> {
-    const [trainer] = await db
-      .insert(trainers)
-      .values(trainerData)
-      .returning();
-    return trainer;
-  }
-
-  async getTrainer(id: string): Promise<Trainer | undefined> {
-    const [trainer] = await db.select().from(trainers).where(eq(trainers.id, id));
-    return trainer;
-  }
-
-  async getTrainerByUserId(userId: string): Promise<Trainer | undefined> {
-    const [trainer] = await db.select().from(trainers).where(eq(trainers.userId, userId));
-    return trainer;
-  }
-
-  async getTrainerClients(trainerId: string): Promise<Client[]> {
-    return await db.select().from(clients).where(eq(clients.trainerId, trainerId));
-  }
-
-  // Client operations
-  async createClient(clientData: InsertClient): Promise<Client> {
-    const [client] = await db
-      .insert(clients)
-      .values(clientData)
-      .returning();
-    return client;
-  }
-
-  async getClient(id: string): Promise<Client | undefined> {
-    const [client] = await db.select().from(clients).where(eq(clients.id, id));
-    return client;
-  }
-
-  async getClientByUserId(userId: string): Promise<Client | undefined> {
-    const [client] = await db.select().from(clients).where(eq(clients.userId, userId));
-    return client;
-  }
-
-  async assignClientToTrainer(clientId: string, trainerId: string): Promise<Client | undefined> {
-    const [client] = await db
-      .update(clients)
-      .set({ trainerId })
-      .where(eq(clients.id, clientId))
-      .returning();
-    return client;
-  }
-
-  // Meal plan operations
-  async createMealPlan(mealPlanData: InsertMealPlan): Promise<StoredMealPlan> {
-    const [mealPlan] = await db
-      .insert(mealPlans)
-      .values(mealPlanData)
-      .returning();
-    return mealPlan;
-  }
-
-  async getMealPlan(id: string): Promise<StoredMealPlan | undefined> {
-    const [mealPlan] = await db.select().from(mealPlans).where(eq(mealPlans.id, id));
-    return mealPlan;
-  }
-
-  async getClientMealPlans(clientId: string): Promise<StoredMealPlan[]> {
-    return await db.select().from(mealPlans).where(eq(mealPlans.clientId, clientId));
-  }
-
-  async getTrainerMealPlans(trainerId: string): Promise<StoredMealPlan[]> {
-    return await db.select().from(mealPlans).where(eq(mealPlans.trainerId, trainerId));
-  }
-
-  async updateMealPlan(id: string, updates: Partial<InsertMealPlan>): Promise<StoredMealPlan | undefined> {
-    const [mealPlan] = await db
-      .update(mealPlans)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(mealPlans.id, id))
-      .returning();
-    return mealPlan;
-  }
-
-  async deleteMealPlan(id: string): Promise<boolean> {
-    const result = await db.delete(mealPlans).where(eq(mealPlans.id, id));
-    return (result.rowCount ?? 0) > 0;
   }
 
   // Recipe operations
