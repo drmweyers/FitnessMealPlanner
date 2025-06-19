@@ -51,7 +51,31 @@ export default function MealPlanGenerator() {
         naturalLanguageInput
       });
       const result = await response.json();
-      return result as MealPlanGeneration;
+      
+      // Map the API response to the form structure
+      const mappedData: MealPlanGeneration = {
+        planName: result.planName || "",
+        fitnessGoal: result.fitnessGoal || "",
+        description: result.description || "",
+        dailyCalorieTarget: result.dailyCalorieTarget || 2000,
+        days: result.days || 7,
+        mealsPerDay: result.mealsPerDay || 3,
+        clientName: result.clientName || "",
+        // Initialize optional filter fields
+        mealType: undefined,
+        dietaryTag: undefined,
+        maxPrepTime: undefined,
+        maxCalories: undefined,
+        minCalories: undefined,
+        minProtein: undefined,
+        maxProtein: undefined,
+        minCarbs: undefined,
+        maxCarbs: undefined,
+        minFat: undefined,
+        maxFat: undefined,
+      };
+      
+      return mappedData;
     },
     onSuccess: (parsedData: MealPlanGeneration) => {
       // Auto-fill the form with parsed data
