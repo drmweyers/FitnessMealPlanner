@@ -45,32 +45,6 @@ export default function MealPlanGenerator() {
     },
   });
 
-  const parseNaturalLanguage = useMutation({
-    mutationFn: async (naturalLanguageInput: string): Promise<MealPlanGeneration> => {
-      const response = await apiRequest('POST', '/api/meal-plan/parse-natural-language', {
-        naturalLanguageInput
-      });
-      const result = await response.json();
-      return result as MealPlanGeneration;
-    },
-    onSuccess: (parsedData: MealPlanGeneration) => {
-      // Auto-fill the form with parsed data
-      form.reset(parsedData);
-      setShowAdvancedForm(true);
-      toast({
-        title: "AI Parsing Complete",
-        description: "Your natural language request has been converted to meal plan parameters.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Parsing Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const generateMealPlan = useMutation({
     mutationFn: async (data: MealPlanGeneration): Promise<MealPlanResult> => {
       const response = await apiRequest('POST', '/api/meal-plan/generate', data);
@@ -92,18 +66,6 @@ export default function MealPlanGenerator() {
       });
     },
   });
-
-  const handleNaturalLanguageSubmit = () => {
-    if (!naturalLanguageInput.trim()) {
-      toast({
-        title: "Input Required",
-        description: "Please enter your meal plan request in natural language.",
-        variant: "destructive",
-      });
-      return;
-    }
-    parseNaturalLanguage.mutate(naturalLanguageInput.trim());
-  };
 
   const onSubmit = (data: MealPlanGeneration) => {
     generateMealPlan.mutate(data);
@@ -136,91 +98,8 @@ export default function MealPlanGenerator() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Natural Language AI Interface */}
-          <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-800">
-                <Wand2 className="h-5 w-5" />
-                AI-Powered Natural Language Generator
-              </CardTitle>
-              <CardDescription className="text-blue-600">
-                Describe your meal plan in plain English and let AI convert it to structured parameters.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="natural-input" className="text-sm font-medium">
-                  Describe your meal plan requirements
-                </Label>
-                <Textarea
-                  id="natural-input"
-                  placeholder="Example: I need a 7-day weight loss meal plan for my client Sarah. She wants to lose 10 pounds, has a 1600 calorie target, is vegetarian, and doesn't like spicy food. She prefers 4 meals per day including snacks."
-                  className="min-h-[100px] resize-none"
-                  value={naturalLanguageInput}
-                  onChange={(e) => setNaturalLanguageInput(e.target.value)}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  onClick={handleNaturalLanguageSubmit}
-                  disabled={parseNaturalLanguage.isPending || !naturalLanguageInput.trim()}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {parseNaturalLanguage.isPending ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                      Parsing with AI...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Convert to Parameters
-                    </>
-                  )}
-                </Button>
-                {!showAdvancedForm && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAdvancedForm(true)}
-                  >
-                    Use Advanced Form Instead
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Advanced Form - Shown after AI parsing or manually */}
-          {showAdvancedForm && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Advanced Parameters
-                </CardTitle>
-                <CardDescription>
-                  Review and adjust the AI-generated parameters or create your meal plan manually.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2 mb-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowAdvancedForm(false)}
-                  >
-                    Use Natural Language Instead
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" style={{ display: showAdvancedForm ? 'block' : 'none' }}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Plan Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
