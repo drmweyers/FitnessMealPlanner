@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { storage } from '../server/storage';
-import type { InsertRecipe, Recipe } from '@shared/schema';
+import type { InsertRecipe, Recipe } from '../shared/schema';
 
 describe('Database Operations', () => {
   let testRecipeId: string;

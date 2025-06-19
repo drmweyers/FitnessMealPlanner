@@ -86,8 +86,14 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRecipe(id: string): Promise<boolean> {
     try {
-      const result = await db.delete(recipes).where(eq(recipes.id, id));
-      return true; // If no error thrown, deletion was successful
+      // First check if recipe exists
+      const existingRecipe = await this.getRecipe(id);
+      if (!existingRecipe) {
+        return false;
+      }
+      
+      await db.delete(recipes).where(eq(recipes.id, id));
+      return true;
     } catch (error) {
       console.error('Error deleting recipe:', error);
       return false;
