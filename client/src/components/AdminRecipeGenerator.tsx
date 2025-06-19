@@ -542,13 +542,18 @@ export default function AdminRecipeGenerator() {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={generateRecipes.isPending}
+                disabled={generateRecipes.isPending || isGenerating}
                 size="lg"
               >
                 {generateRecipes.isPending ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    Generating Recipes...
+                    Starting Generation...
+                  </>
+                ) : isGenerating ? (
+                  <>
+                    <Clock className="h-4 w-4 mr-2 animate-pulse" />
+                    {generationProgress || "Generating Recipes..."}
                   </>
                 ) : (
                   <>
@@ -595,27 +600,53 @@ export default function AdminRecipeGenerator() {
       )}
 
       {/* Generation Status */}
-      {lastGeneration && (
-        <Card className="border-green-200 bg-green-50">
+      {(lastGeneration || isGenerating) && (
+        <Card className={isGenerating ? "border-blue-200 bg-blue-50" : "border-green-200 bg-green-50"}>
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-green-700">
-              <Sparkles className="h-5 w-5" />
-              <span className="font-medium">Generation Status</span>
+            <div className={`flex items-center gap-2 ${isGenerating ? "text-blue-700" : "text-green-700"}`}>
+              {isGenerating ? (
+                <Clock className="h-5 w-5 animate-pulse" />
+              ) : (
+                <Sparkles className="h-5 w-5" />
+              )}
+              <span className="font-medium">
+                {isGenerating ? "Generation In Progress" : "Generation Complete"}
+              </span>
             </div>
-            <p className="text-green-600 mt-2">{lastGeneration.message}</p>
-            <div className="flex items-center gap-3 mt-3">
-              <Badge variant="secondary">
-                {lastGeneration.count} recipes requested
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefreshStats}
-                className="text-xs"
-              >
-                Refresh Stats
-              </Button>
-            </div>
+            
+            {isGenerating && generationProgress && (
+              <div className="mt-3">
+                <div className={`text-sm ${isGenerating ? "text-blue-600" : "text-green-600"} mb-2`}>
+                  {generationProgress}
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: "45%"}}></div>
+                </div>
+              </div>
+            )}
+            
+            {lastGeneration && (
+              <>
+                <p className={`${isGenerating ? "text-blue-600" : "text-green-600"} mt-2`}>
+                  {lastGeneration.message}
+                </p>
+                <div className="flex items-center gap-3 mt-3">
+                  <Badge variant="secondary">
+                    {lastGeneration.count} recipes {isGenerating ? "generating" : "generated"}
+                  </Badge>
+                  {!isGenerating && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefreshStats}
+                      className="text-xs"
+                    >
+                      Refresh Stats
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
