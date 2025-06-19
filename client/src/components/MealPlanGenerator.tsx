@@ -139,6 +139,57 @@ export default function MealPlanGenerator() {
     parseNaturalLanguage.mutate(naturalLanguageInput);
   };
 
+  const handleDirectGeneration = async () => {
+    if (!naturalLanguageInput.trim()) {
+      toast({
+        title: "Input Required",
+        description: "Please enter a description of your meal plan requirements.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // First parse the natural language input
+      const response = await apiRequest('POST', '/api/meal-plan/parse-natural-language', {
+        naturalLanguageInput
+      });
+      const parsedData = await response.json();
+      
+      // Map the parsed data to the generation format
+      const generationData: MealPlanGeneration = {
+        planName: parsedData.planName || "",
+        fitnessGoal: parsedData.fitnessGoal || "",
+        description: parsedData.description || "",
+        dailyCalorieTarget: Number(parsedData.dailyCalorieTarget) || 2000,
+        days: Number(parsedData.days) || 7,
+        mealsPerDay: Number(parsedData.mealsPerDay) || 3,
+        clientName: parsedData.clientName || "",
+        // Initialize optional filter fields
+        mealType: undefined,
+        dietaryTag: undefined,
+        maxPrepTime: undefined,
+        maxCalories: undefined,
+        minCalories: undefined,
+        minProtein: undefined,
+        maxProtein: undefined,
+        minCarbs: undefined,
+        maxCarbs: undefined,
+        minFat: undefined,
+        maxFat: undefined,
+      };
+
+      // Directly generate the meal plan
+      generateMealPlan.mutate(generationData);
+    } catch (error) {
+      toast({
+        title: "Generation Failed",
+        description: "Failed to parse and generate meal plan. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const onSubmit = (data: MealPlanGeneration) => {
     generateMealPlan.mutate(data);
   };
@@ -210,6 +261,24 @@ export default function MealPlanGenerator() {
                     <>
                       <Sparkles className="h-4 w-4 mr-2" />
                       Parse with AI
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleDirectGeneration}
+                  disabled={generateMealPlan.isPending || !naturalLanguageInput.trim()}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {generateMealPlan.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <ChefHat className="h-4 w-4 mr-2" />
+                      Generate Plan Directly
                     </>
                   )}
                 </Button>
