@@ -130,6 +130,84 @@ export async function generateRecipeBatch(count: number = 10, options: {
   return recipes;
 }
 
+export interface NaturalLanguageMealPlan {
+  planName: string;
+  fitnessGoal: string;
+  description: string;
+  dailyCalorieTarget: number;
+  days: number;
+  mealsPerDay: number;
+  clientName?: string;
+}
+
+export async function parseNaturalLanguageMealPlan(naturalLanguageInput: string): Promise<NaturalLanguageMealPlan> {
+  // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+  const prompt = `Parse the following natural language meal plan request and extract structured information. Return a JSON object with the meal plan parameters.
+
+Natural language input: "${naturalLanguageInput}"
+
+Extract and return a JSON object with these fields:
+{
+  "planName": "A descriptive name for the meal plan",
+  "fitnessGoal": "one of: weight_loss, muscle_gain, maintenance, athletic_performance, general_health, cutting, bulking",
+  "description": "A detailed description based on the input",
+  "dailyCalorieTarget": "estimated daily calorie target as a number (default 2000)",
+  "days": "number of days for the plan (default 7)",
+  "mealsPerDay": "number of meals per day (default 3)",
+  "clientName": "client name if mentioned, otherwise empty string"
+}
+
+Guidelines:
+- Infer fitness goals from context (e.g., "lose weight" = weight_loss, "build muscle" = muscle_gain)
+- Set realistic calorie targets based on goals (weight loss: 1500-1800, muscle gain: 2200-2800, maintenance: 1800-2200)
+- Default to 7 days and 3 meals per day unless specified
+- Create descriptive plan names that reflect the goal and duration
+- Include any dietary preferences, restrictions, or specific requirements in the description`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a fitness nutrition expert that parses natural language meal plan requests into structured data. Always respond with valid JSON only."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    
+    // Ensure all required fields are present with defaults
+    return {
+      planName: result.planName || "Custom Meal Plan",
+      fitnessGoal: result.fitnessGoal || "general_health",
+      description: result.description || naturalLanguageInput,
+      dailyCalorieTarget: result.dailyCalorieTarget || 2000,
+      days: result.days || 7,
+      mealsPerDay: result.mealsPerDay || 3,
+      clientName: result.clientName || ""
+    };
+  } catch (error) {
+    console.error("Error parsing natural language meal plan:", error);
+    // Return sensible defaults on error
+    return {
+      planName: "Custom Meal Plan",
+      fitnessGoal: "general_health",
+      description: naturalLanguageInput,
+      dailyCalorieTarget: 2000,
+      days: 7,
+      mealsPerDay: 3,
+      clientName: ""
+    };
+  }
+}
+
 export async function generateMealImage(recipe: {
   name: string;
   description: string;
