@@ -74,6 +74,9 @@ export default function AdminRecipeGenerator() {
     },
     onSuccess: (data: GenerationResult) => {
       setLastGeneration(data);
+      setIsGenerating(true);
+      setGenerationProgress("Starting recipe generation...");
+      
       toast({
         title: "Recipe Generation Started",
         description: `${data.message} - Generating ${data.count} recipes...`,
@@ -82,8 +85,15 @@ export default function AdminRecipeGenerator() {
       // Immediate refresh to show generation started
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       
+      // Simulate progress updates
+      setTimeout(() => setGenerationProgress("Generating recipes with AI..."), 2000);
+      setTimeout(() => setGenerationProgress("Processing nutritional data..."), 10000);
+      setTimeout(() => setGenerationProgress("Saving to database..."), 20000);
+      
       // Refresh after expected completion time
       setTimeout(() => {
+        setIsGenerating(false);
+        setGenerationProgress("");
         queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
         queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
         
