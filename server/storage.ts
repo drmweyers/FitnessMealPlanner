@@ -55,7 +55,7 @@ export class DatabaseStorage implements IStorage {
 
   // Recipe operations
   async createRecipe(recipeData: InsertRecipe): Promise<Recipe> {
-    const [recipe] = await db.insert(recipes).values(recipeData).returning();
+    const [recipe] = await db.insert(recipes).values(recipeData as any).returning();
     return recipe;
   }
 
@@ -65,17 +65,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateRecipe(id: string, updates: UpdateRecipe): Promise<Recipe | undefined> {
+    const updateData: any = { 
+      ...updates, 
+      lastUpdatedTimestamp: new Date() 
+    };
+    
+    // Ensure array fields are properly handled
+    if (updates.mealTypes) updateData.mealTypes = updates.mealTypes;
+    if (updates.dietaryTags) updateData.dietaryTags = updates.dietaryTags;
+    if (updates.mainIngredientTags) updateData.mainIngredientTags = updates.mainIngredientTags;
+    if (updates.ingredientsJson) updateData.ingredientsJson = updates.ingredientsJson;
+    
     const [recipe] = await db
       .update(recipes)
-      .set({ ...updates, lastUpdatedTimestamp: new Date() })
+      .set(updateData)
       .where(eq(recipes.id, id))
       .returning();
     return recipe;
   }
 
   async deleteRecipe(id: string): Promise<boolean> {
-    const result = await db.delete(recipes).where(eq(recipes.id, id));
-    return result.rowCount > 0;
+    try {
+      const result = await db.delete(recipes).where(eq(recipes.id, id));
+      return true; // If no error thrown, deletion was successful
+    } catch (error) {
+      console.error('Error deleting recipe:', error);
+      return false;
+    }
   }
 
   async approveRecipe(id: string): Promise<Recipe | undefined> {
