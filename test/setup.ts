@@ -4,9 +4,29 @@ import { vi } from 'vitest';
 // Mock fetch for API calls
 global.fetch = vi.fn();
 
-// Mock environment variables
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+// Mock environment variables for testing
 process.env.NODE_ENV = 'test';
+process.env.OPENAI_API_KEY = 'test-key';
+
+// Mock OpenAI completely to avoid browser environment issues
+vi.mock('openai', () => {
+  return {
+    default: vi.fn().mockImplementation(() => ({
+      chat: {
+        completions: {
+          create: vi.fn().mockResolvedValue({
+            choices: [{ message: { content: '{"recipes": []}' } }]
+          })
+        }
+      },
+      images: {
+        generate: vi.fn().mockResolvedValue({
+          data: [{ url: 'https://example.com/test-image.jpg' }]
+        })
+      }
+    }))
+  };
+});
 
 // Mock window.matchMedia for responsive components
 Object.defineProperty(window, 'matchMedia', {
