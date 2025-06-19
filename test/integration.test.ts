@@ -13,7 +13,7 @@ describe('Application Integration Tests', () => {
     app.use(express.urlencoded({ extended: false }));
     
     // Register all routes
-    server = await registerRoutes(app);
+    server = await registerRoutes(app as any);
   });
 
   afterAll(async () => {
