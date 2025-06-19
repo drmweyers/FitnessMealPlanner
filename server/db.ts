@@ -19,11 +19,6 @@ const pool = new Pool({
   max: isDevelopment ? 5 : 10, // Fewer connections in dev
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
-  acquireTimeoutMillis: 60000,
-  createTimeoutMillis: 3000,
-  destroyTimeoutMillis: 5000,
-  reapIntervalMillis: 1000,
-  createRetryIntervalMillis: 200,
 });
 
 // Add error handling for the pool

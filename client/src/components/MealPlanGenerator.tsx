@@ -45,6 +45,32 @@ export default function MealPlanGenerator() {
     },
   });
 
+  const parseNaturalLanguage = useMutation({
+    mutationFn: async (naturalLanguageInput: string): Promise<MealPlanGeneration> => {
+      const response = await apiRequest('POST', '/api/meal-plan/parse-natural-language', {
+        naturalLanguageInput
+      });
+      const result = await response.json();
+      return result as MealPlanGeneration;
+    },
+    onSuccess: (parsedData: MealPlanGeneration) => {
+      // Auto-fill the form with parsed data
+      form.reset(parsedData);
+      setShowAdvancedForm(true);
+      toast({
+        title: "AI Parsing Complete",
+        description: "Your natural language request has been converted to meal plan parameters.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Parsing Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const generateMealPlan = useMutation({
     mutationFn: async (data: MealPlanGeneration): Promise<MealPlanResult> => {
       const response = await apiRequest('POST', '/api/meal-plan/generate', data);
@@ -66,6 +92,18 @@ export default function MealPlanGenerator() {
       });
     },
   });
+
+  const handleNaturalLanguageParse = () => {
+    if (!naturalLanguageInput.trim()) {
+      toast({
+        title: "Input Required",
+        description: "Please enter a description of your meal plan requirements.",
+        variant: "destructive",
+      });
+      return;
+    }
+    parseNaturalLanguage.mutate(naturalLanguageInput);
+  };
 
   const onSubmit = (data: MealPlanGeneration) => {
     generateMealPlan.mutate(data);
