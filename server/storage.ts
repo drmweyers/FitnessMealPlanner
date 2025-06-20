@@ -15,12 +15,19 @@
 import {
   users,
   recipes,
+  trainerClients,
+  mealPlans,
   type User,
   type UpsertUser,
   type Recipe,
   type InsertRecipe,
   type UpdateRecipe,
   type RecipeFilter,
+  type TrainerClient,
+  type InsertTrainerClient,
+  type StoredMealPlan,
+  type InsertMealPlan,
+  type MealPlan,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
@@ -54,6 +61,17 @@ export interface IStorage {
     pending: number;
     avgRating: number;
   }>;
+
+  // Trainer-Client relationship operations
+  listClients(trainerId: string): Promise<User[]>;
+  assignClient(trainerId: string, clientId: string): Promise<TrainerClient>;
+  removeClientAssignment(trainerId: string, clientId: string): Promise<boolean>;
+  
+  // Meal plan operations
+  createOrUpdateMealPlan(planData: MealPlan, assignedBy: string, assignedTo: string): Promise<StoredMealPlan>;
+  getLatestMealPlanForUser(userId: string): Promise<StoredMealPlan | undefined>;
+  getMealPlansForUser(userId: string): Promise<StoredMealPlan[]>;
+  getMealPlansByTrainer(trainerId: string): Promise<StoredMealPlan[]>;
 }
 
 export class DatabaseStorage implements IStorage {

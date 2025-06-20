@@ -63,6 +63,7 @@ async function upsertUser(
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    role: claims["https://fitmealpro.app/role"] as "admin" | "trainer" | "client" ?? "client",
   });
 }
 
@@ -155,3 +156,31 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return;
   }
 };
+
+export const requireRole = (...allowed: ("admin" | "trainer" | "client")[]): RequestHandler =>
+  async (req, res, next) => {
+    const user = req.user as any;
+    
+    if (!user?.claims?.sub) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      // Get user role from database
+      const dbUser = await storage.getUser(user.claims.sub);
+      if (!dbUser) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      if (!allowed.includes(dbUser.role)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      // Attach user data to request for use in routes
+      (req as any).dbUser = dbUser;
+      next();
+    } catch (error) {
+      console.error("Role check error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
