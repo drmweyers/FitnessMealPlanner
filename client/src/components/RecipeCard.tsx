@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
 import type { Recipe } from "@shared/schema";
 
 interface RecipeCardProps {
@@ -7,6 +8,8 @@ interface RecipeCardProps {
 }
 
 export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const getMealTypeColor = (mealType: string) => {
     const colors = {
       breakfast: "bg-orange-100 text-orange-700",
@@ -30,19 +33,43 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
     return colors[tag as keyof typeof colors] || "bg-slate-100 text-slate-700";
   };
 
-  const primaryMealType = recipe.mealTypes[0] || 'dinner';
-  const primaryDietaryTag = recipe.dietaryTags[0];
+  const primaryMealType = recipe.mealTypes?.[0] || 'dinner';
+  const primaryDietaryTag = recipe.dietaryTags?.[0];
 
   return (
     <Card 
       className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
       onClick={onClick}
     >
-      <img 
-        src={recipe.imageUrl || '/api/placeholder/400/250'} 
-        alt={recipe.name}
-        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-      />
+      <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
+        {imageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            <div className="animate-pulse text-gray-400">
+              <i className="fas fa-image text-2xl"></i>
+            </div>
+          </div>
+        )}
+        {!imageError ? (
+          <img 
+            src={recipe.imageUrl ?? '/api/placeholder/400/250'} 
+            alt={recipe.name}
+            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            onLoad={() => setImageLoading(false)}
+            onError={() => {
+              setImageError(true);
+              setImageLoading(false);
+            }}
+            style={{ display: imageLoading ? 'none' : 'block' }}
+          />
+        ) : (
+          <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <div className="text-center text-gray-500">
+              <i className="fas fa-utensils text-3xl mb-2"></i>
+              <p className="text-sm font-medium">{recipe.name}</p>
+            </div>
+          </div>
+        )}
+      </div>
       
       <CardContent className="p-4">
         <div className="flex items-center space-x-2 mb-2">
