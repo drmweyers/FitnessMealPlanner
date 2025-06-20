@@ -131,7 +131,23 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  // Check if user is authenticated at all
+  if (!req.isAuthenticated() || !user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // Handle traditional login (has isTraditionalLogin flag)
+  if (user.isTraditionalLogin) {
+    const now = Math.floor(Date.now() / 1000);
+    if (now <= user.expires_at) {
+      return next();
+    } else {
+      return res.status(401).json({ message: "Session expired" });
+    }
+  }
+
+  // Handle Replit OIDC authentication
+  if (!user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 

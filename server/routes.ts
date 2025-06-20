@@ -99,27 +99,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
       
-      // Set session (mimicking Replit auth structure)
-      (req.session as any).passport = {
-        user: {
-          claims: {
-            sub: user.id,
-            email: user.email,
-            given_name: user.firstName,
-            family_name: user.lastName
-          }
-        }
+      // Create user session with claims structure that matches Replit auth
+      const userSession = {
+        claims: () => ({
+          sub: user.id,
+          email: user.email,
+          given_name: user.firstName,
+          family_name: user.lastName
+        }),
+        expires_at: Math.floor(Date.now() / 1000) + 86400, // 24 hours from now
+        isTraditionalLogin: true
       };
       
-      res.json({
-        message: 'Login successful',
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role
+      // Use Passport's login method to establish session
+      req.login(userSession, (err) => {
+        if (err) {
+          console.error('Session login error:', err);
+          return res.status(500).json({ message: 'Session creation failed' });
         }
+        
+        res.json({
+          message: 'Login successful',
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role
+          }
+        });
       });
     } catch (error) {
       console.error('Login error:', error);
@@ -130,8 +138,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user profile (requires authentication)
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId: string;
+      
+      // Handle traditional login
+      if (req.user.isTraditionalLogin && req.user.claims) {
+        userId = req.user.claims().sub;
+      }
+      // Handle Replit OIDC login
+      else if (req.user.claims) {
+        userId = req.user.claims.sub;
+      } else {
+        return res.status(401).json({ message: "Invalid session" });
+      }
+      
       const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
