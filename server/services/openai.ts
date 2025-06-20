@@ -234,19 +234,75 @@ export async function generateMealImage(recipe: {
   description: string;
   mealTypes: string[];
 }): Promise<string> {
-  // Define image styles for variety
+  // Define diverse image styles for maximum uniqueness
   const imageStyles = [
-    "clean minimalist photography",
-    "rustic food photography",
-    "modern culinary presentation",
-    "artisanal food styling",
-    "professional kitchen photography"
+    "clean minimalist photography with stark white background",
+    "rustic farmhouse food styling with weathered wood textures",
+    "modern culinary presentation with geometric plating",
+    "artisanal food photography with natural lighting and shadows",
+    "professional kitchen styling with marble surfaces",
+    "bright airy photography with soft pastel backgrounds",
+    "dramatic food styling with dark moody lighting",
+    "Mediterranean-inspired presentation with ceramic bowls",
+    "Scandinavian minimalist styling with light oak surfaces",
+    "contemporary fine dining presentation with artistic garnishes"
   ];
 
-  // Select a random style for uniqueness
+  // Define unique plating and presentation elements
+  const platingStyles = [
+    "elegantly arranged in a white ceramic bowl",
+    "artfully plated on a slate serving board",
+    "beautifully presented in a cast iron skillet",
+    "carefully composed on a bamboo cutting board",
+    "thoughtfully arranged on a marble serving plate",
+    "stylishly displayed in a glass serving dish",
+    "creatively plated on a wooden serving tray",
+    "perfectly arranged on a vintage ceramic plate",
+    "tastefully presented in a modern square dish",
+    "aesthetically composed on a natural stone plate"
+  ];
+
+  // Define varied camera angles and compositions
+  const compositions = [
+    "overhead flat lay composition at 90 degrees",
+    "45-degree angle with shallow depth of field",
+    "close-up macro shot focusing on textures",
+    "three-quarter view with dramatic side lighting",
+    "eye-level perspective with blurred background",
+    "slightly elevated angle showing depth and layers",
+    "diagonal composition with dynamic visual flow",
+    "centered composition with symmetrical balance"
+  ];
+
+  // Select random elements for maximum uniqueness
   const imageStyle = imageStyles[Math.floor(Math.random() * imageStyles.length)];
+  const platingStyle = platingStyles[Math.floor(Math.random() * platingStyles.length)];
+  const composition = compositions[Math.floor(Math.random() * compositions.length)];
   
-  const imagePrompt = `Generate an ultra-realistic, high-resolution photograph of "${recipe.name}", a ${recipe.mealTypes[0]?.toLowerCase() || 'meal'} dish. It features ${recipe.description}. Present it artfully plated on a clean white ceramic plate set atop a rustic wooden table. Illuminate the scene with soft, natural side lighting to bring out the textures and vibrant colors of the ingredients. Use a shallow depth of field (aperture f/2.8) and a 45° camera angle for a professional, editorial look. Add subtle garnishes and minimal props (e.g., fresh herbs, linen napkin) to enhance context without clutter. The final image should be bright, mouthwatering, and ready for a premium fitness-focused recipe website. Style: ${imageStyle}.`;
+  // Generate unique timestamp-based variation
+  const uniqueId = Date.now() % 1000;
+  
+  const imagePrompt = `Create a completely UNIQUE and visually distinct photograph of "${recipe.name}" (variation #${uniqueId}). This ${recipe.mealTypes[0]?.toLowerCase() || 'meal'} dish features: ${recipe.description}. 
+
+VISUAL REQUIREMENTS FOR UNIQUENESS:
+- ${platingStyle}
+- Photography style: ${imageStyle}
+- Camera composition: ${composition}
+- Specific to this dish's ingredients and colors described in: "${recipe.description}"
+- Must look distinctly different from other food photographs
+- Focus on the unique characteristics and textures of THIS specific meal
+- Use lighting and styling that emphasizes the meal's individual components
+- Include props and garnishes that complement this particular dish's flavor profile
+
+TECHNICAL SPECIFICATIONS:
+- Ultra-high resolution, professional food photography
+- Perfect lighting to showcase ingredient textures and colors
+- Sharp focus on the main dish with appropriate depth of field
+- Food styling that makes this specific meal look appetizing and fresh
+- Color palette that enhances the natural colors of the ingredients
+- Composition that tells the story of this particular recipe
+
+The final image must be completely unique, instantly recognizable as THIS specific dish, and unlike any other food photograph. Make it magazine-quality and irresistibly appetizing.`;
 
   try {
     const response = await openai.images.generate({
