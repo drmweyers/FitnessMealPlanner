@@ -24,7 +24,7 @@ export default function RoleSwitcher() {
 
   const switchRole = useMutation({
     mutationFn: async (newRole: string) => {
-      return apiRequest("/api/dev/switch-role", "POST", { role: newRole });
+      return apiRequest("POST", "/api/dev/switch-role", { role: newRole });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
