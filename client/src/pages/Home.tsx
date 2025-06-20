@@ -7,6 +7,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,12 @@ import { useState } from "react";
 
 export default function Home() {
   const { role } = useAuth();
+  const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
+
+  const handleRecipeClick = (recipeId: string) => {
+    navigate(`/recipe/${recipeId}`);
+  };
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['/api/admin/stats'],
@@ -128,7 +134,11 @@ export default function Home() {
       {/* Recipe Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRecipes.map((recipe: any) => (
-          <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+          <Card 
+            key={recipe.id} 
+            className="overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+            onClick={() => handleRecipeClick(recipe.id)}
+          >
             {/* Recipe Image */}
             <div className="relative h-48 bg-gradient-to-br from-orange-100 to-orange-200">
               {recipe.imageUrl ? (
@@ -249,11 +259,24 @@ export default function Home() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRecipeClick(recipe.id);
+                    }}
+                  >
                     <i className="fas fa-eye mr-2"></i>
                     View
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <i className="fas fa-heart mr-2"></i>
                     Save
                   </Button>
