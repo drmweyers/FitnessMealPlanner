@@ -22,6 +22,8 @@ import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import MealPlanGeneratorPage from "@/pages/MealPlanGenerator";
+import TrainerDashboard from "@/pages/TrainerDashboard";
+import ClientDashboard from "@/pages/ClientDashboard";
 import NotFound from "@/pages/not-found";
 
 /**
@@ -51,10 +53,29 @@ function Router() {
         <Route path="/" component={Landing} />
       ) : (
         <>
-          {/* Authenticated user routes - all use Home component with tabs */}
+          {/* Role-based routing for authenticated users */}
           <Route path="/" component={Home} />
-          <Route path="/admin" component={Home} />
-          <Route path="/meal-plan-generator" component={Home} />
+          
+          {/* Admin-only routes */}
+          {role === "admin" && (
+            <>
+              <Route path="/admin" component={Admin} />
+              <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
+            </>
+          )}
+          
+          {/* Trainer-only routes */}
+          {role === "trainer" && (
+            <>
+              <Route path="/trainer" component={TrainerDashboard} />
+              <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
+            </>
+          )}
+          
+          {/* Client-only routes */}
+          {role === "client" && (
+            <Route path="/my-meal-plan" component={ClientDashboard} />
+          )}
         </>
       )}
       {/* Catch-all route for 404 errors */}
