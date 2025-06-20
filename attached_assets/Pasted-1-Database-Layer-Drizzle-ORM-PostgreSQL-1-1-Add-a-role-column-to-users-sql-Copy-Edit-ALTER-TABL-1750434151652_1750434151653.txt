@@ -1,0 +1,177 @@
+1. Database Layer (Drizzle ORM + PostgreSQL)
+1.1 Add a role column to users
+sql
+Copy
+Edit
+ALTER TABLE users
+ADD COLUMN role VARCHAR(16) NOT NULL DEFAULT 'client';   -- 'admin' | 'trainer' | 'client'
+ts
+Copy
+Edit
+// @shared/schema.ts
+export const users = pgTable("users", {
+  /* …existing fields… */
+  role: varchar("role", { length: 16 }).$type<"admin" | "trainer" | "client">().default("client").notNull(),
+});
+1.2 Create relationship tables
+Table	Purpose	Key columns
+trainer_clients	Map trainers ⇄ clients	trainer_id (FK → users.id, ON DELETE CASCADE), client_id (FK → users.id, ON DELETE CASCADE), PK (trainer_id,client_id)
+meal_plans	Persist generated plans and assignments	id UUID PK, data JSONB (full plan), assigned_to FK → users.id, assigned_by FK → users.id, created_at TIMESTAMP
+
+Create both tables with standard CREATE TABLE IF NOT EXISTS migrations and add Drizzle models.
+
+1.3 Update Drizzle types
+Add role to UpsertUser and User types and create new types for TrainerClient and MealPlan.
+
+2. Backend (Express)
+2.1 Persist roles on sign-in
+ts
+Copy
+Edit
+async function upsertUser(claims: any) {
+  await storage.upsertUser({
+    id: claims.sub,
+    email: claims.email,
+    firstName: claims.first_name,
+    lastName: claims.last_name,
+    profileImageUrl: claims.profile_image_url,
+    role: claims["https://fitmealpro.app/role"] as "admin" | "trainer" | "client" ?? "client", // default
+  });
+}
+If you prefer manual role assignment, omit the custom claim and set roles directly in the DB.
+
+2.2 Add requireRole middleware
+ts
+Copy
+Edit
+export const requireRole = (...allowed: ("admin"|"trainer"|"client")[]): RequestHandler =>
+  (req, res, next) => {
+    const user = req.user as any;
+    if (!user?.claims?.sub) return res.status(401).json({ message: "Unauthorized" });
+    if (!allowed.includes(user.claims.role)) return res.status(403).json({ message: "Forbidden" });
+    next();
+};
+2.3 Wire authorization into routes
+Endpoint	Old guard	New guard
+Admin APIs (/api/admin/*, /api/auth/users, stats, bulk generation, approve/delete)	isAuthenticated	isAuthenticated, requireRole("admin")
+Meal-Plan Generator (/api/meal-plan/generate)	none	isAuthenticated, requireRole("admin","trainer")
+Trainer dashboards (/api/trainer/clients, /api/trainer/clients/:id/meal-plans)	new	isAuthenticated, requireRole("trainer")
+Client plan (/api/client/meal-plan)	new	isAuthenticated, requireRole("client","trainer","admin") (plus ownership check)
+
+Example ownership check:
+
+ts
+Copy
+Edit
+app.get("/api/client/meal-plan", requireRole("client","trainer","admin"), async (req,res) => {
+  const userId = (req.user as any).claims.sub;
+  const targetId = req.query.userId ?? userId;      // trainers can pass client id
+  if ((req.user as any).claims.role === "client" && targetId !== userId) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  const plan = await storage.getLatestMealPlanForUser(targetId);
+  res.json(plan);
+});
+2.4 Add trainer/client endpoints
+Implement in storage:
+
+listClients(trainerId)
+
+assignClient(trainerId, clientId)
+
+createOrUpdateMealPlan(planData, assignedBy, assignedTo)
+
+Then expose routes:
+
+ts
+Copy
+Edit
+app.get('/api/trainer/clients', requireRole("trainer"), …)
+app.post('/api/trainer/clients/:clientId/assign', requireRole("trainer"), …)
+3. Frontend (React)
+3.1 Expose role in useAuth
+ts
+Copy
+Edit
+export function useAuth() {
+  const { data, isLoading } = useQuery({ queryKey: ["/api/auth/user"] });
+  return { user: data, role: data?.role, isLoading, isAuthenticated: !!data };
+}
+3.2 Gate routes in Router
+tsx
+Copy
+Edit
+const { role, isAuthenticated, isLoading } = useAuth();
+
+if (!isAuthenticated) return <Landing />;
+
+return (
+  <Switch>
+    <Route path="/" component={Home} />
+    {(role === "admin" || role === "trainer") && (
+      <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
+    )}
+    {role === "admin" && <Route path="/admin" component={Admin} />}
+    {role === "trainer" && <Route path="/trainer" component={TrainerDashboard} />}
+    {role === "client" && <Route path="/my-meal-plan" component={ClientPlanPage} />}
+    <Route component={NotFound} />
+  </Switch>
+);
+3.3 Profile pages
+Build a generic AccountPage that reads /api/auth/user and displays:
+
+avatar, name, email
+
+role badge
+
+for admin: total users, list with roles, quick link to assign plans
+
+for trainer: table of clients, buttons → view / assign meal plans
+
+for client: latest meal plan, nutrition summary, “request change” button
+
+Use Radix UI + shadcn for tables/forms.
+
+4. Testing
+Vitest / Supertest
+Add positive tests for 200 OK when correct roles are supplied and 403 when not.
+
+Postman collection
+– Import admin, trainer, client token sets and verify access matrix.
+
+E2E (optional) with Playwright:
+Navigate as each role and assert correct pages appear/hidden.
+
+5. Seeding Roles
+sql
+Copy
+Edit
+UPDATE users SET role='admin' WHERE email='founder@example.com';
+UPDATE users SET role='trainer' WHERE email IN ('alice@pt.com','bob@pt.com');
+-- others default to 'client'
+For automated environments create a seed.ts script that promotes the first account that signs in (by timestamp) to admin.
+
+6. Environment Variables (unchanged but critical)
+nginx
+Copy
+Edit
+REPLIT_DOMAINS
+ISSUER_URL
+REPL_ID
+SESSION_SECRET
+DATABASE_URL
+Ensure they are present in Secrets → Workspace tab for every deployment target.
+
+7. Deployment Checklist
+Run migrations: npm run db:push (or drizzle-kit push).
+
+Restart dev server npm run dev.
+
+Confirm role appears in /api/auth/user.
+
+Verify route guards manually.
+
+Commit, push, and trigger Replit autoscale deploy.
+
+That’s it!
+These changes give you fine-grained role-based authorization, matching the three user profiles and their required page & API access, while preserving your existing Replit OIDC authentication flow.
