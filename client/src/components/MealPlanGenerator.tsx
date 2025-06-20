@@ -1,3 +1,19 @@
+/**
+ * Meal Plan Generator Component
+ * 
+ * This is the core component for creating personalized meal plans in FitMeal Pro.
+ * It provides both natural language processing and detailed form-based input
+ * for generating meal plans tailored to fitness goals and dietary preferences.
+ * 
+ * Key Features:
+ * - Natural language meal plan generation using OpenAI
+ * - Advanced form with nutritional constraints and preferences
+ * - Real-time meal plan preview with detailed recipe information
+ * - PDF export functionality for client deliverables
+ * - Interactive recipe modals with full cooking instructions
+ * - Comprehensive nutrition tracking and analysis
+ */
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +35,10 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import RecipeModal from './RecipeModal';
 
+/**
+ * Type definition for meal plan generation results
+ * Includes the meal plan data plus comprehensive nutrition analysis
+ */
 interface MealPlanResult {
   mealPlan: MealPlan;
   nutrition: {
@@ -31,11 +51,19 @@ interface MealPlanResult {
 
 export default function MealPlanGenerator() {
   const { toast } = useToast();
+  
+  // Component state management
   const [generatedPlan, setGeneratedPlan] = useState<MealPlanResult | null>(null);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
   const [showAdvancedForm, setShowAdvancedForm] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
 
+  /**
+   * Recipe Modal Handlers
+   * 
+   * Manages the display of detailed recipe information in a modal overlay.
+   * Users can click on meal cards to view full cooking instructions.
+   */
   const handleRecipeClick = (recipe: any) => {
     setSelectedRecipe(recipe);
   };

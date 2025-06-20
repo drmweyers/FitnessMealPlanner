@@ -1,3 +1,17 @@
+/**
+ * FitMeal Pro Frontend Application
+ * 
+ * Main application component that sets up the React app with routing,
+ * state management, and UI providers. Uses Wouter for client-side routing
+ * and TanStack Query for server state management.
+ * 
+ * Architecture:
+ * - Authentication-based routing (landing vs authenticated pages)
+ * - Global state management via React Query
+ * - UI components from shadcn/ui library
+ * - Toast notifications for user feedback
+ */
+
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -10,25 +24,44 @@ import Admin from "@/pages/Admin";
 import MealPlanGeneratorPage from "@/pages/MealPlanGenerator";
 import NotFound from "@/pages/not-found";
 
+/**
+ * Application Router
+ * 
+ * Handles client-side routing with authentication-based access control.
+ * Unauthenticated users see only the landing page, while authenticated
+ * users have access to the full application.
+ */
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
+      {/* Show landing page for unauthenticated users or during auth loading */}
       {isLoading || !isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
         <>
+          {/* Authenticated user routes */}
           <Route path="/" component={Home} />
           <Route path="/admin" component={Admin} />
           <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
         </>
       )}
+      {/* Catch-all route for 404 errors */}
       <Route component={NotFound} />
     </Switch>
   );
 }
 
+/**
+ * Root Application Component
+ * 
+ * Sets up global providers and context for the entire application:
+ * - QueryClientProvider: Server state management and caching
+ * - TooltipProvider: UI tooltip functionality
+ * - Toaster: Global toast notification system
+ * - Router: Application routing logic
+ */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>

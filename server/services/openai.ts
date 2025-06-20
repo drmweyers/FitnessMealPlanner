@@ -1,10 +1,31 @@
+/**
+ * OpenAI Integration Service
+ * 
+ * This service handles all AI-powered functionality in FitMeal Pro using OpenAI's GPT models.
+ * It provides recipe generation, natural language meal plan parsing, and AI-generated
+ * recipe images to enhance the user experience.
+ * 
+ * Key Features:
+ * - Intelligent recipe generation with nutritional constraints
+ * - Natural language meal plan parsing and form population
+ * - AI-generated recipe images using DALL-E
+ * - Batch recipe generation for database seeding
+ * - Comprehensive error handling and fallbacks
+ */
+
 import OpenAI from "openai";
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+// Using GPT-4o for optimal performance and accuracy
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "your-api-key"
 });
 
+/**
+ * Generated Recipe Interface
+ * 
+ * Defines the structure of AI-generated recipes before they're stored in the database.
+ * This interface ensures consistency between OpenAI responses and our database schema.
+ */
 export interface GeneratedRecipe {
   name: string;
   description: string;
