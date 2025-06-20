@@ -20,9 +20,6 @@ const pool = new Pool({
   min: 2, // Keep more connections alive
   idleTimeoutMillis: 30000, // Keep connections alive longer
   connectionTimeoutMillis: 10000, // Longer timeout for reliability
-  acquireTimeoutMillis: 10000, // Timeout for acquiring connections
-  statement_timeout: 30000, // SQL statement timeout
-  query_timeout: 30000, // Query timeout
 });
 
 // Add error handling for the pool

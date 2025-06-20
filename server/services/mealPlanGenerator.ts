@@ -189,8 +189,13 @@ export class MealPlanGeneratorService {
             carbsGrams: selectedRecipe.carbsGrams || "0",
             fatGrams: selectedRecipe.fatGrams || "0",
             prepTimeMinutes: selectedRecipe.prepTimeMinutes,
+            cookTimeMinutes: selectedRecipe.cookTimeMinutes || 0,
             servings: selectedRecipe.servings,
             mealTypes: recipeMealTypes,
+            dietaryTags: selectedRecipe.dietaryTags || [],
+            mainIngredientTags: selectedRecipe.mainIngredientTags || [],
+            ingredientsJson: selectedRecipe.ingredientsJson || [],
+            instructionsText: selectedRecipe.instructionsText || "",
             imageUrl,
           },
         });

@@ -260,7 +260,7 @@ export const mealPlanSchema = z.object({
     mealNumber: z.number(), // Meal 1, 2, 3 within the day
     mealType: z.string(), // breakfast, lunch, dinner, snack
     
-    // Simplified recipe data for meal plan display
+    // Complete recipe data for meal plan display
     recipe: z.object({
       id: z.string(),
       name: z.string(),
@@ -270,8 +270,17 @@ export const mealPlanSchema = z.object({
       carbsGrams: z.string(),
       fatGrams: z.string(),
       prepTimeMinutes: z.number(),
+      cookTimeMinutes: z.number().optional(),
       servings: z.number(),
       mealTypes: z.array(z.string()),
+      dietaryTags: z.array(z.string()).optional(),
+      mainIngredientTags: z.array(z.string()).optional(),
+      ingredientsJson: z.array(z.object({
+        name: z.string(),
+        amount: z.string(),
+        unit: z.string().optional(),
+      })).optional(),
+      instructionsText: z.string().optional(),
       imageUrl: z.string().optional(),
     }),
   })),
