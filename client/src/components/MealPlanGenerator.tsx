@@ -1058,121 +1058,63 @@ export default function MealPlanGenerator() {
                         </div>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {dayMeals.map((meal, mealIndex) => {
-                          const recipe = meal.recipe as any;
-                          return (
-                            <Card 
-                              key={mealIndex} 
-                              className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
-                              onClick={() => handleRecipeClick(meal.recipe)}
-                            >
-                              <img 
-                                src={recipe.imageUrl || '/api/placeholder/400/250'} 
-                                alt={recipe.name}
-                                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                              
-                              <CardContent className="p-4">
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${getMealTypeColor(meal.mealType)}`}>
-                                    {formatMealType(meal.mealType)}
-                                  </span>
-                                  {recipe.dietaryTags && recipe.dietaryTags.length > 0 && (
-                                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${getDietaryTagColor(recipe.dietaryTags[0])}`}>
-                                      {recipe.dietaryTags[0].charAt(0).toUpperCase() + recipe.dietaryTags[0].slice(1)}
+                    <CardContent className="p-0">
+                      <div className="overflow-hidden border-t">
+                        <table className="w-full">
+                          <thead className="bg-gray-50">
+                            <tr className="border-b">
+                              <th className="text-left py-3 px-4 font-medium text-gray-600 uppercase text-xs tracking-wider">Recipe</th>
+                              <th className="text-left py-3 px-4 font-medium text-gray-600 uppercase text-xs tracking-wider">Type</th>
+                              <th className="text-left py-3 px-4 font-medium text-gray-600 uppercase text-xs tracking-wider">Nutrition</th>
+                              <th className="text-left py-3 px-4 font-medium text-gray-600 uppercase text-xs tracking-wider">Time</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dayMeals.map((meal, mealIndex) => {
+                              const recipe = meal.recipe as any;
+                              return (
+                                <tr 
+                                  key={mealIndex}
+                                  className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                                  onClick={() => handleRecipeClick(meal.recipe)}
+                                >
+                                  <td className="py-4 px-4">
+                                    <div className="flex items-center space-x-3">
+                                      <img 
+                                        src={recipe.imageUrl || '/api/placeholder/60/60'} 
+                                        alt={recipe.name}
+                                        className="w-12 h-12 rounded-lg object-cover"
+                                      />
+                                      <div>
+                                        <div className="font-medium text-gray-900">{recipe.name}</div>
+                                        <div className="text-sm text-gray-500 line-clamp-1">
+                                          {recipe.description || 'Delicious and nutritious meal'}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-4">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMealTypeColor(meal.mealType)}`}>
+                                      {formatMealType(meal.mealType)}
                                     </span>
-                                  )}
-                                </div>
-                                
-                                <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-primary transition-colors">
-                                  {recipe.name}
-                                </h3>
-                                
-                                <div className="grid grid-cols-2 gap-2 text-sm text-slate-600 mb-3">
-                                  <div className="flex items-center space-x-1">
-                                    <i className="fas fa-clock text-slate-400"></i>
-                                    <span>{recipe.prepTimeMinutes + (recipe.cookTimeMinutes || 0)} min</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    <i className="fas fa-fire text-slate-400"></i>
-                                    <span>{recipe.caloriesKcal} cal</span>
-                                  </div>
-                                </div>
-                                
-                                {/* Description */}
-                                {recipe.description && (
-                                  <div className="mb-3">
-                                    <h4 className="text-sm font-medium text-slate-700 mb-1">Description</h4>
-                                    <p className="text-xs text-slate-600 line-clamp-2">{recipe.description}</p>
-                                  </div>
-                                )}
-                                
-                                {/* Ingredients Preview */}
-                                <div className="mb-3">
-                                  <h4 className="text-sm font-medium text-slate-700 mb-1">Ingredients</h4>
-                                  <div className="text-xs text-slate-600">
-                                    {((recipe.ingredientsJson || recipe.ingredients || []).slice(0, 3).map((ingredient: any, idx: number) => (
-                                      <div key={idx} className="flex items-center">
-                                        <i className="fas fa-circle text-primary text-xs mr-2"></i>
-                                        <span>{ingredient.amount} {ingredient.unit ? `${ingredient.unit} ` : ''}{ingredient.name}</span>
-                                      </div>
-                                    )))}
-                                    {(recipe.ingredientsJson || recipe.ingredients || []).length > 3 && (
-                                      <div className="text-xs text-slate-500 mt-1">
-                                        +{(recipe.ingredientsJson || recipe.ingredients || []).length - 3} more ingredients
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {/* Instructions Preview */}
-                                <div className="mb-4">
-                                  <h4 className="text-sm font-medium text-slate-700 mb-1">Instructions</h4>
-                                  <div className="text-xs text-slate-600">
-                                    {(() => {
-                                      const instructionText = recipe.instructionsText || recipe.instructions || '';
-                                      const instructions = instructionText.split('\n').filter((step: string) => step.trim());
-                                      return instructions.slice(0, 2).map((instruction: string, idx: number) => (
-                                        <div key={idx} className="flex mb-1">
-                                          <span className="flex-shrink-0 w-4 h-4 bg-primary text-white text-xs font-medium rounded-full flex items-center justify-center mr-2 mt-0.5">
-                                            {idx + 1}
-                                          </span>
-                                          <span className="line-clamp-1">{instruction.trim()}</span>
-                                        </div>
-                                      ));
-                                    })()}
-                                    {(() => {
-                                      const instructionText = recipe.instructionsText || recipe.instructions || '';
-                                      const instructions = instructionText.split('\n').filter((step: string) => step.trim());
-                                      return instructions.length > 2 && (
-                                        <div className="text-xs text-slate-500 mt-1">
-                                          +{instructions.length - 2} more steps
-                                        </div>
-                                      );
-                                    })()}
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-3 gap-2 text-xs">
-                                  <div className="text-center p-2 bg-slate-50 rounded">
-                                    <div className="font-semibold text-slate-900">{Number(recipe.proteinGrams).toFixed(0)}g</div>
-                                    <div className="text-slate-500">Protein</div>
-                                  </div>
-                                  <div className="text-center p-2 bg-slate-50 rounded">
-                                    <div className="font-semibold text-slate-900">{Number(recipe.carbsGrams).toFixed(0)}g</div>
-                                    <div className="text-slate-500">Carbs</div>
-                                  </div>
-                                  <div className="text-center p-2 bg-slate-50 rounded">
-                                    <div className="font-semibold text-slate-900">{Number(recipe.fatGrams).toFixed(0)}g</div>
-                                    <div className="text-slate-500">Fat</div>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
+                                  </td>
+                                  <td className="py-4 px-4">
+                                    <div className="text-sm text-gray-900">{recipe.caloriesKcal} cal</div>
+                                    <div className="text-xs text-gray-500">
+                                      {Number(recipe.proteinGrams).toFixed(0)}g protein
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-4">
+                                    <div className="text-sm text-gray-900">
+                                      {recipe.prepTimeMinutes + (recipe.cookTimeMinutes || 0)} min
+                                    </div>
+                                    <div className="text-xs text-gray-500">prep + cook</div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
                       </div>
                     </CardContent>
                   </Card>
