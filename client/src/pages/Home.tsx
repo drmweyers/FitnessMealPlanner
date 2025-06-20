@@ -128,64 +128,136 @@ export default function Home() {
       {/* Recipe Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRecipes.map((recipe: any) => (
-          <Card key={recipe.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg line-clamp-2">{recipe.title}</CardTitle>
+          <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            {/* Recipe Image */}
+            <div className="relative h-48 bg-gradient-to-br from-orange-100 to-orange-200">
+              {recipe.imageUrl ? (
+                <img 
+                  src={recipe.imageUrl} 
+                  alt={recipe.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <i className="fas fa-utensils text-4xl text-orange-400 mb-2"></i>
+                    <p className="text-orange-600 font-medium">{recipe.category || 'Recipe'}</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Status Badge */}
+              <div className="absolute top-3 right-3">
                 {recipe.status === 'approved' && (
-                  <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+                  <Badge className="bg-green-500 hover:bg-green-600 text-white shadow-md">
                     <i className="fas fa-check mr-1 text-xs"></i>
                     Approved
                   </Badge>
                 )}
                 {recipe.status === 'pending' && (
-                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200 shadow-md">
                     <i className="fas fa-clock mr-1 text-xs"></i>
                     Pending
                   </Badge>
                 )}
               </div>
-              <CardDescription className="line-clamp-2">
+
+              {/* Difficulty Badge */}
+              {recipe.difficulty && (
+                <div className="absolute top-3 left-3">
+                  <Badge variant="outline" className="bg-white/90 text-slate-700 border-slate-300">
+                    {recipe.difficulty}
+                  </Badge>
+                </div>
+              )}
+            </div>
+
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold line-clamp-2 mb-1">
+                {recipe.title}
+              </CardTitle>
+              <CardDescription className="line-clamp-2 text-sm">
                 {recipe.description}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm text-slate-600">
-                  <span><i className="fas fa-clock mr-1"></i>{recipe.cookTime || 'N/A'} min</span>
-                  <span><i className="fas fa-users mr-1"></i>{recipe.servings || 'N/A'} servings</span>
-                </div>
-                
-                <div className="flex justify-between text-sm text-slate-600">
-                  <span><i className="fas fa-fire mr-1"></i>{recipe.calories || 'N/A'} cal</span>
-                  <span><i className="fas fa-dumbbell mr-1"></i>{recipe.protein || 'N/A'}g protein</span>
-                </div>
 
-                {recipe.category && (
-                  <Badge variant="outline" className="text-xs">
-                    {recipe.category}
-                  </Badge>
-                )}
-
-                {recipe.tags && recipe.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {recipe.tags.slice(0, 3).map((tag: string, index: number) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {recipe.tags.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{recipe.tags.length - 3} more
-                      </Badge>
-                    )}
+            <CardContent className="pt-0">
+              <div className="space-y-4">
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center text-slate-600">
+                    <i className="fas fa-clock mr-2 text-blue-500"></i>
+                    <span>{recipe.prepTime ? `${recipe.prepTime} + ${recipe.cookTime || 0}` : recipe.cookTime || 'N/A'} min</span>
                   </div>
-                )}
+                  <div className="flex items-center text-slate-600">
+                    <i className="fas fa-users mr-2 text-green-500"></i>
+                    <span>{recipe.servings || 'N/A'} servings</span>
+                  </div>
+                </div>
 
-                <Button variant="outline" size="sm" className="w-full mt-3">
-                  <i className="fas fa-eye mr-2"></i>
-                  View Recipe
-                </Button>
+                {/* Nutritional Information */}
+                <div className="bg-slate-50 rounded-lg p-3 space-y-2">
+                  <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">
+                    Nutrition Per Serving
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Calories:</span>
+                      <span className="font-medium text-slate-800">{recipe.calories || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Protein:</span>
+                      <span className="font-medium text-slate-800">{recipe.protein || 'N/A'}g</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Carbs:</span>
+                      <span className="font-medium text-slate-800">{recipe.carbs || 'N/A'}g</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Fat:</span>
+                      <span className="font-medium text-slate-800">{recipe.fat || 'N/A'}g</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Category and Tags */}
+                <div className="space-y-2">
+                  {recipe.category && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs font-medium">
+                        <i className="fas fa-tag mr-1"></i>
+                        {recipe.category}
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  {recipe.tags && recipe.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {recipe.tags.slice(0, 3).map((tag: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="text-xs px-2 py-1">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {recipe.tags.length > 3 && (
+                        <Badge variant="secondary" className="text-xs px-2 py-1">
+                          +{recipe.tags.length - 3} more
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" size="sm" className="flex-1">
+                    <i className="fas fa-eye mr-2"></i>
+                    View
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1">
+                    <i className="fas fa-heart mr-2"></i>
+                    Save
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
