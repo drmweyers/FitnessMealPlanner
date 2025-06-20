@@ -14,10 +14,10 @@
  * - Comprehensive nutrition tracking and analysis
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,7 @@ interface MealPlanResult {
 
 export default function MealPlanGenerator() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Component state management
   const [generatedPlan, setGeneratedPlan] = useState<MealPlanResult | null>(null);
@@ -129,6 +130,10 @@ export default function MealPlanGenerator() {
         }
       });
       
+      // Refresh recipe data to ensure latest available recipes
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      queryClient.refetchQueries({ queryKey: ['/api/recipes'] });
+      
       setShowAdvancedForm(true);
       toast({
         title: "AI Parsing Complete",
@@ -153,6 +158,14 @@ export default function MealPlanGenerator() {
     },
     onSuccess: (data: MealPlanResult) => {
       setGeneratedPlan(data);
+      
+      // Comprehensive auto-refresh of all related data
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      queryClient.refetchQueries({ queryKey: ['/api/recipes'] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      
       toast({
         title: "Meal Plan Generated",
         description: data.message,
