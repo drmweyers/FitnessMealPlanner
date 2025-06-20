@@ -56,10 +56,20 @@ export default function Admin() {
         title: "Recipe Generation Started",
         description: data.message,
       });
-      // Refresh stats after a delay
+      // Immediate refresh to show generation started
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      
+      // Progressive refresh during generation
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      }, 2000);
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      }, 10000); // 10 seconds
+      
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+        queryClient.refetchQueries({ queryKey: ['/api/admin/recipes'] });
+      }, 30000); // 30 seconds - when generation should be complete
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
