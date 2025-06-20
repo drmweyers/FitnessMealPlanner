@@ -71,7 +71,10 @@ export default function Home() {
   };
 
   const handlePageChange = (page: number) => {
-    setFilters(prev => ({ ...prev, page }));
+    // Ensure page is within valid bounds
+    const totalPages = Math.max(1, Math.ceil(total / filters.limit));
+    const validPage = Math.max(1, Math.min(page, totalPages));
+    setFilters(prev => ({ ...prev, page: validPage }));
   };
 
   const handleAdminFilterChange = (newFilters: Partial<RecipeFilter>) => {
@@ -314,7 +317,10 @@ export default function Home() {
                         variant="outline"
                         size="sm"
                         disabled={filters.page >= Math.ceil(total / filters.limit)}
-                        onClick={() => handlePageChange(Math.ceil(total / filters.limit))}
+                        onClick={() => {
+                          const lastPage = Math.max(1, Math.ceil(total / filters.limit));
+                          handlePageChange(lastPage);
+                        }}
                         className="hidden sm:flex"
                       >
                         Last
