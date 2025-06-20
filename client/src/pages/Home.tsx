@@ -12,6 +12,7 @@ import MealPlanGenerator from "@/components/MealPlanGenerator";
 import AdminTable from "@/components/AdminTable";
 import AdminRecipeGenerator from "@/components/AdminRecipeGenerator";
 import PendingRecipesTable from "@/components/PendingRecipesTable";
+import RoleSwitcher from "@/components/RoleSwitcher";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Home() {
@@ -112,20 +113,33 @@ export default function Home() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Role Switcher for Testing */}
+        <div className="mb-8 flex justify-end">
+          <RoleSwitcher />
+        </div>
+
         <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className={`grid w-full mb-8 ${
+            role === "admin" ? "grid-cols-3" : 
+            role === "trainer" ? "grid-cols-2" : 
+            "grid-cols-1"
+          }`}>
             <TabsTrigger value="recipes">
               <i className="fas fa-book-open mr-2"></i>
               Browse Recipes
             </TabsTrigger>
-            <TabsTrigger value="meal-plan">
-              <i className="fas fa-utensils mr-2"></i>
-              Meal Plan Generator
-            </TabsTrigger>
-            <TabsTrigger value="admin">
-              <i className="fas fa-cog mr-2"></i>
-              Admin
-            </TabsTrigger>
+            {(role === "admin" || role === "trainer") && (
+              <TabsTrigger value="meal-plan">
+                <i className="fas fa-utensils mr-2"></i>
+                Meal Plan Generator
+              </TabsTrigger>
+            )}
+            {role === "admin" && (
+              <TabsTrigger value="admin">
+                <i className="fas fa-cog mr-2"></i>
+                Admin
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="recipes">

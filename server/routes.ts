@@ -552,6 +552,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Development Routes
+   * 
+   * Testing endpoints for role switching (development only)
+   */
+  
+  // Role switching for testing (development only)
+  app.post('/api/dev/switch-role', isAuthenticated, async (req: any, res) => {
+    try {
+      // Only allow in development
+      if (process.env.NODE_ENV !== 'development') {
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      const { role } = req.body;
+      const userId = req.user.claims.sub;
+      
+      if (!['admin', 'trainer', 'client'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+
+      await storage.upsertUser({
+        id: userId,
+        email: req.user.claims.email,
+        firstName: req.user.claims.first_name,
+        lastName: req.user.claims.last_name,
+        profileImageUrl: req.user.claims.profile_image_url,
+        role: role as "admin" | "trainer" | "client"
+      });
+
+      res.json({ message: "Role updated successfully", newRole: role });
+    } catch (error) {
+      console.error("Error switching role:", error);
+      res.status(500).json({ message: "Failed to switch role" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
