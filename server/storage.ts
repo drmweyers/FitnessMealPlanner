@@ -1,3 +1,17 @@
+/**
+ * FitMeal Pro Storage Layer
+ * 
+ * This module provides a clean abstraction layer over the database using the
+ * Repository pattern. It handles all CRUD operations for users and recipes,
+ * with comprehensive filtering, search capabilities, and proper error handling.
+ * 
+ * Architecture:
+ * - IStorage interface defines the contract for all storage operations
+ * - DatabaseStorage implements the interface using Drizzle ORM
+ * - All database queries are centralized here for consistency
+ * - Type safety is maintained through imported schema types
+ */
+
 import {
   users,
   recipes,
@@ -11,18 +25,29 @@ import {
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
 
+/**
+ * Storage Interface
+ * 
+ * Defines all storage operations available in the application.
+ * This interface allows for easy testing and potential future
+ * implementations (e.g., in-memory storage for tests).
+ */
 export interface IStorage {
-  // User operations (required for Replit Auth)
+  // User operations (required for Replit Auth integration)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
-  // Recipe operations
+  // Recipe CRUD operations
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
   getRecipe(id: string): Promise<Recipe | undefined>;
   updateRecipe(id: string, updates: UpdateRecipe): Promise<Recipe | undefined>;
   deleteRecipe(id: string): Promise<boolean>;
+  
+  // Advanced recipe operations
   searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }>;
   approveRecipe(id: string): Promise<Recipe | undefined>;
+  
+  // Analytics and reporting
   getRecipeStats(): Promise<{
     total: number;
     approved: number;

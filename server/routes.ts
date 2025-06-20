@@ -1,3 +1,16 @@
+/**
+ * FitMeal Pro API Routes
+ * 
+ * This file defines all API endpoints for the FitMeal Pro application.
+ * Routes are organized by functionality: authentication, public recipe access,
+ * admin operations, and meal plan generation.
+ * 
+ * Security Model:
+ * - Public routes: Recipe browsing and search
+ * - Authenticated routes: Meal plan generation, user profile
+ * - Admin routes: Recipe management, content moderation, analytics
+ */
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -8,11 +21,23 @@ import { recipeFilterSchema, insertRecipeSchema, updateRecipeSchema, mealPlanGen
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
+/**
+ * Register all API routes and middleware
+ * 
+ * Sets up authentication, defines all endpoints, and returns the HTTP server.
+ * Routes are processed in order, so authentication must be set up first.
+ */
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
+  // Initialize Replit authentication middleware
   await setupAuth(app);
 
-  // Auth routes
+  /**
+   * Authentication Routes
+   * 
+   * Handles user authentication and profile management through Replit's OIDC.
+   */
+  
+  // Get current user profile (requires authentication)
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -24,11 +49,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Recipe routes - Public
+  /**
+   * Public Recipe Routes
+   * 
+   * These endpoints are accessible without authentication for browsing
+   * and searching approved recipes. All public routes automatically
+   * filter to only show approved content.
+   */
+  
+  // Search and filter recipes with comprehensive query parameters
   app.get('/api/recipes', async (req, res) => {
     try {
+      // Parse and validate query parameters with type conversion
       const filters = recipeFilterSchema.parse({
         ...req.query,
+        // Convert string query params to numbers
         page: req.query.page ? parseInt(req.query.page as string) : 1,
         limit: req.query.limit ? parseInt(req.query.limit as string) : 12,
         maxPrepTime: req.query.maxPrepTime ? parseInt(req.query.maxPrepTime as string) : undefined,
@@ -40,12 +75,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxCarbs: req.query.maxCarbs ? parseInt(req.query.maxCarbs as string) : undefined,
         minFat: req.query.minFat ? parseInt(req.query.minFat as string) : undefined,
         maxFat: req.query.maxFat ? parseInt(req.query.maxFat as string) : undefined,
-        approved: true, // Only show approved recipes to public
+        approved: true, // Security: Only show approved recipes to public
       });
 
       const result = await storage.searchRecipes(filters);
       res.json(result);
     } catch (error) {
+      // Handle validation errors with user-friendly messages
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: fromZodError(error).toString() });
       } else {
