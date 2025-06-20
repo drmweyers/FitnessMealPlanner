@@ -73,6 +73,18 @@ export default function MealPlanGenerator() {
     setSelectedRecipe(null);
   };
 
+  /**
+   * Component Initialization
+   * 
+   * Ensures the latest recipe data is available when the component loads
+   * for optimal meal plan generation results.
+   */
+  useEffect(() => {
+    // Refresh recipe data on component mount to ensure latest available recipes
+    queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+  }, [queryClient]);
+
   const form = useForm<MealPlanGeneration>({
     resolver: zodResolver(mealPlanGenerationSchema),
     defaultValues: {
