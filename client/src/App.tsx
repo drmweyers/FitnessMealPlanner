@@ -24,6 +24,7 @@ import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import MealPlanGeneratorPage from "@/pages/MealPlanGenerator";
 import NotFound from "@/pages/not-found";
+import FallbackUI from "@/components/FallbackUI";
 
 /**
  * Application Router
@@ -49,12 +50,12 @@ function Router() {
 
   return (
     <Switch>
-      {/* Always render the Home component with tabs to prevent white screen */}
-      <Route path="/" component={Home} />
-      <Route path="/admin" component={Home} />
-      <Route path="/meal-plan-generator" component={Home} />
+      {/* Use fallback UI that guarantees tabs render */}
+      <Route path="/" component={FallbackUI} />
+      <Route path="/admin" component={FallbackUI} />
+      <Route path="/meal-plan-generator" component={FallbackUI} />
       {/* Fallback for unknown routes */}
-      <Route component={Home} />
+      <Route component={FallbackUI} />
     </Switch>
   );
 }
