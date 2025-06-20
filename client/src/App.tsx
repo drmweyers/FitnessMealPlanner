@@ -24,7 +24,7 @@ import Admin from "@/pages/Admin";
 import MealPlanGeneratorPage from "@/pages/MealPlanGenerator";
 import TrainerDashboard from "@/pages/TrainerDashboard";
 import ClientDashboard from "@/pages/ClientDashboard";
-import RecipeDetail from "@/pages/RecipeDetail";
+
 import NotFound from "@/pages/not-found";
 import Layout from "@/components/Layout";
 
@@ -57,7 +57,6 @@ function Router() {
         <Layout>
           <Switch>
             <Route path="/" component={Home} />
-            <Route path="/recipe/:id" component={RecipeDetail} />
             <Route path="/admin" component={Admin} />
             <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
             <Route path="/trainer" component={TrainerDashboard} />

@@ -7,20 +7,22 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import RecipeDetailModal from "@/components/RecipeDetailModal";
 import { useState } from "react";
 
 export default function Home() {
   const { role } = useAuth();
-  const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleRecipeClick = (recipeId: string) => {
-    navigate(`/recipe/${recipeId}`);
+    setSelectedRecipeId(recipeId);
+    setIsModalOpen(true);
   };
 
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -294,6 +296,13 @@ export default function Home() {
           <p className="text-slate-500">Try adjusting your search terms</p>
         </div>
       )}
+
+      {/* Recipe Detail Modal */}
+      <RecipeDetailModal
+        recipeId={selectedRecipeId}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      />
     </div>
   );
 }
