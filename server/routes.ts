@@ -126,7 +126,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxCarbs: req.query.maxCarbs ? parseInt(req.query.maxCarbs as string) : undefined,
         minFat: req.query.minFat ? parseInt(req.query.minFat as string) : undefined,
         maxFat: req.query.maxFat ? parseInt(req.query.maxFat as string) : undefined,
-        approved: req.query.approved !== undefined ? req.query.approved === 'true' : undefined,
+        approved: req.query.approved !== undefined ? 
+          req.query.approved === 'true' ? true : 
+          req.query.approved === 'false' ? false : 
+          undefined : undefined,
       });
 
       const result = await storage.searchRecipes(filters);
