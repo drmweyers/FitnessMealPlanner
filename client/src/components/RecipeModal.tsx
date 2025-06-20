@@ -1,3 +1,20 @@
+/**
+ * Recipe Modal Component
+ * 
+ * A comprehensive modal overlay that displays detailed recipe information including
+ * nutritional data, ingredients, cooking instructions, and meal planning details.
+ * This component handles different recipe data structures from various sources
+ * (browse recipes vs meal plan recipes) and provides a consistent viewing experience.
+ * 
+ * Key Features:
+ * - Responsive design with mobile-friendly layout
+ * - Detailed nutritional information display
+ * - Step-by-step cooking instructions
+ * - Ingredient list with measurements
+ * - Recipe metadata (prep time, servings, dietary tags)
+ * - Fallback image handling for missing recipe photos
+ */
+
 import { Button } from "@/components/ui/button";
 import type { Recipe } from "@shared/schema";
 
@@ -7,7 +24,13 @@ interface RecipeModalProps {
 }
 
 export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
-  // Handle both instructionsText (from browse recipes) and instructions (from meal plan)
+  /**
+   * Instruction Text Handling
+   * 
+   * Handles different instruction formats between browse recipes and meal plan recipes.
+   * Browse recipes use 'instructionsText' while meal plan recipes may use 'instructions'.
+   * Splits text into individual steps for better readability.
+   */
   const instructionText = recipe.instructionsText || (recipe as any).instructions || '';
   const instructions = instructionText.split('\n').filter((step: string) => step.trim());
 
