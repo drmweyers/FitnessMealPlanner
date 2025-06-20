@@ -50,12 +50,12 @@ function Router() {
 
   return (
     <Switch>
-      {/* Use fallback UI that guarantees tabs render */}
-      <Route path="/" component={FallbackUI} />
-      <Route path="/admin" component={FallbackUI} />
-      <Route path="/meal-plan-generator" component={FallbackUI} />
+      {/* Main application routes with tabs */}
+      <Route path="/" component={Home} />
+      <Route path="/admin" component={Home} />
+      <Route path="/meal-plan-generator" component={Home} />
       {/* Fallback for unknown routes */}
-      <Route component={FallbackUI} />
+      <Route component={Home} />
     </Switch>
   );
 }
