@@ -52,11 +52,15 @@ export default function Home() {
   const { data: recipesData, isLoading } = useQuery({
     queryKey: ['/api/recipes', filters],
     enabled: true,
+    retry: 1,
+    throwOnError: false,
   });
 
   const { data: stats } = useQuery({
     queryKey: ['/api/admin/stats'],
     enabled: !!user,
+    retry: 1,
+    throwOnError: false,
   });
 
   const recipes = recipesData?.recipes || [];
