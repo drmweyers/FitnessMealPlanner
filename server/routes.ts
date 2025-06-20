@@ -100,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Set session (mimicking Replit auth structure)
-      req.session.passport = {
+      (req.session as any).passport = {
         user: {
           claims: {
             sub: user.id,
