@@ -1,13 +1,41 @@
+/**
+ * Meal Plan Generator Service
+ * 
+ * This service handles the intelligent generation of personalized meal plans
+ * based on user requirements, dietary preferences, and available recipes.
+ * 
+ * Key Features:
+ * - Smart recipe selection with fallback strategies
+ * - Automatic nutrition calculation and balancing
+ * - Meal type distribution across days
+ * - Calorie target optimization
+ * - Dietary restriction compliance
+ */
+
 import { nanoid } from "nanoid";
 import { storage } from "../storage";
 import { generateMealImage } from "./openai";
 import type { MealPlanGeneration, MealPlan, RecipeFilter } from "@shared/schema";
 
 export class MealPlanGeneratorService {
+  /**
+   * Generate a complete meal plan based on user parameters
+   * 
+   * This method implements a multi-step process:
+   * 1. Filter recipes based on dietary preferences and constraints
+   * 2. Distribute meals across days and meal types
+   * 3. Calculate comprehensive nutritional information
+   * 4. Return a structured meal plan object
+   * 
+   * @param params - Meal plan generation parameters from user input
+   * @param generatedBy - User ID who requested the meal plan
+   * @returns Complete meal plan with recipes and nutrition data
+   */
   async generateMealPlan(
     params: MealPlanGeneration,
     generatedBy: string
   ): Promise<MealPlan> {
+    // Destructure parameters for easier handling
     const { 
       planName, 
       fitnessGoal, 
@@ -16,27 +44,36 @@ export class MealPlanGeneratorService {
       days, 
       mealsPerDay, 
       clientName, 
-      ...filterParams 
+      ...filterParams  // Extract all filtering parameters
     } = params;
 
-    // Create filter for recipe search - start with basic approved filter
+    /**
+     * Recipe Selection Strategy
+     * 
+     * Uses a progressive filtering approach:
+     * 1. Start with user-specified constraints
+     * 2. Fall back to broader criteria if no matches
+     * 3. Ensure minimum viable recipe pool
+     */
+    
+    // Build initial filter with user preferences
     let recipeFilter: RecipeFilter = {
-      approved: true,
-      limit: 100,
+      approved: true, // Security: Only use approved recipes
+      limit: 100,     // Get enough recipes for variety
       page: 1,
     };
 
-    // Add non-restrictive filters first
+    // Apply user-specified filters progressively
     if (filterParams.mealType) recipeFilter.mealType = filterParams.mealType;
     if (filterParams.dietaryTag) recipeFilter.dietaryTag = filterParams.dietaryTag;
     if (filterParams.maxPrepTime) recipeFilter.maxPrepTime = filterParams.maxPrepTime;
 
-    // Get available recipes matching the criteria
+    // Execute initial recipe search
     console.log("Searching for recipes with filter:", recipeFilter);
     let { recipes } = await storage.searchRecipes(recipeFilter);
     console.log("Found", recipes.length, "recipes with filters");
 
-    // If no recipes found with filters, try with just approved recipes
+    // Fallback strategy: If no recipes match constraints, use all approved recipes
     if (recipes.length === 0) {
       console.log("No recipes found with filters, trying fallback...");
       const fallbackFilter: RecipeFilter = {
