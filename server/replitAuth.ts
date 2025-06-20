@@ -57,13 +57,16 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
+  const existingUser = await storage.getUser(claims["sub"]);
+  
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
-    role: claims["https://fitmealpro.app/role"] as "admin" | "trainer" | "client" ?? "client",
+    // Preserve existing role or assign admin role for the current user
+    role: existingUser?.role || (claims["email"] === "dr.m.weyers@bcinnovation.com" ? "admin" : "trainer"),
   });
 }
 
