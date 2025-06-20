@@ -14,7 +14,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, requireRole } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { recipeGenerator } from "./services/recipeGenerator";
 import { mealPlanGenerator } from "./services/mealPlanGenerator";
 import { recipeFilterSchema, insertRecipeSchema, updateRecipeSchema, mealPlanGenerationSchema } from "@shared/schema";
@@ -34,136 +34,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   /**
    * Authentication Routes
    * 
-   * Handles both Replit OIDC authentication and traditional email/password authentication
-   * with role-based account creation.
+   * Handles user authentication and profile management through Replit's OIDC.
    */
-  
-  // Register new user with role selection
-  app.post('/api/auth/register', async (req, res) => {
-    try {
-      const { firstName, lastName, email, password, role } = req.body;
-      
-      // Validate required fields
-      if (!firstName || !lastName || !email || !password || !role) {
-        return res.status(400).json({ message: 'All fields are required' });
-      }
-      
-      // Validate role
-      if (!['admin', 'trainer', 'client'].includes(role)) {
-        return res.status(400).json({ message: 'Invalid role specified' });
-      }
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(409).json({ message: 'User already exists with this email' });
-      }
-      
-      // Create user with specified role
-      const newUser = await storage.createUser({
-        firstName,
-        lastName,
-        email,
-        password, // In production, this should be hashed
-        role: role as 'admin' | 'trainer' | 'client'
-      });
-      
-      res.status(201).json({
-        message: 'Account created successfully',
-        user: {
-          id: newUser.id,
-          email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          role: newUser.role
-        }
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ message: 'Failed to create account' });
-    }
-  });
-  
-  // Login with email and password
-  app.post('/api/auth/login', async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
-      }
-      
-      // Find user and validate password
-      const user = await storage.authenticateUser(email, password);
-      if (!user) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      
-      // Create user session with claims structure that matches Replit auth
-      const userSession = {
-        claims: () => ({
-          sub: user.id,
-          email: user.email,
-          given_name: user.firstName,
-          family_name: user.lastName
-        }),
-        expires_at: Math.floor(Date.now() / 1000) + 86400, // 24 hours from now
-        isTraditionalLogin: true
-      };
-      
-      // Use Passport's login method to establish session
-      req.login(userSession, (err) => {
-        if (err) {
-          console.error('Session login error:', err);
-          return res.status(500).json({ message: 'Session creation failed' });
-        }
-        
-        // Force session save
-        req.session.save((saveErr) => {
-          if (saveErr) {
-            console.error('Session save error:', saveErr);
-            return res.status(500).json({ message: 'Session save failed' });
-          }
-          
-          res.json({
-            message: 'Login successful',
-            user: {
-              id: user.id,
-              email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              role: user.role
-            }
-          });
-        });
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ message: 'Login failed' });
-    }
-  });
   
   // Get current user profile (requires authentication)
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      let userId: string;
-      
-      // Handle traditional login
-      if (req.user.isTraditionalLogin && req.user.claims) {
-        userId = req.user.claims().sub;
-      }
-      // Handle Replit OIDC login
-      else if (req.user.claims) {
-        userId = req.user.claims.sub;
-      } else {
-        return res.status(401).json({ message: "Invalid session" });
-      }
-      
+      const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -279,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/recipes', isAuthenticated, requireRole("admin"), async (req, res) => {
+  app.post('/api/admin/recipes', isAuthenticated, async (req, res) => {
     try {
       const recipeData = insertRecipeSchema.parse(req.body);
       const recipe = await storage.createRecipe(recipeData);
@@ -294,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/recipes/:id', isAuthenticated, requireRole("admin"), async (req, res) => {
+  app.patch('/api/admin/recipes/:id', isAuthenticated, async (req, res) => {
     try {
       const updates = updateRecipeSchema.parse(req.body);
       const recipe = await storage.updateRecipe(req.params.id, updates);
@@ -312,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/recipes/:id/approve', isAuthenticated, requireRole("admin"), async (req, res) => {
+  app.patch('/api/admin/recipes/:id/approve', isAuthenticated, async (req, res) => {
     try {
       const recipe = await storage.approveRecipe(req.params.id);
       if (!recipe) {
@@ -325,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/recipes/:id', isAuthenticated, requireRole("admin"), async (req, res) => {
+  app.delete('/api/admin/recipes/:id', isAuthenticated, async (req, res) => {
     try {
       const success = await storage.deleteRecipe(req.params.id);
       if (!success) {
@@ -339,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin stats
-  app.get('/api/admin/stats', isAuthenticated, requireRole("admin"), async (req, res) => {
+  app.get('/api/admin/stats', isAuthenticated, async (req, res) => {
     try {
       // Disable caching for stats to ensure fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -355,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recipe generation - Bulk
-  app.post('/api/admin/generate', isAuthenticated, requireRole("admin"), async (req, res) => {
+  app.post('/api/admin/generate', isAuthenticated, async (req, res) => {
     try {
       const { count = 20 } = req.body;
       
@@ -391,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recipe generation - Custom with filters
-  app.post('/api/admin/generate-recipes', isAuthenticated, requireRole("admin"), async (req, res) => {
+  app.post('/api/admin/generate-recipes', isAuthenticated, async (req, res) => {
     try {
       const { 
         count = 10, 
@@ -466,8 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", message: "Meal plan service is available" });
   });
 
-  // Meal Plan Generation - Requires trainer or admin role
-  app.post('/api/meal-plan/generate', isAuthenticated, requireRole("admin", "trainer"), async (req, res) => {
+  // Meal Plan Generation - Public endpoint for core functionality
+  app.post('/api/meal-plan/generate', async (req, res) => {
     console.log("POST /api/meal-plan/generate endpoint hit");
     console.log("Request body:", req.body);
     
@@ -562,152 +440,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Error generating meal plan:", error);
         res.status(500).json({ message: (error as Error).message || "Failed to generate meal plan" });
       }
-    }
-  });
-
-  /**
-   * Trainer Routes
-   * 
-   * Endpoints for trainers to manage their clients and meal plans
-   */
-  
-  // Get trainer's clients
-  app.get('/api/trainer/clients', isAuthenticated, requireRole("trainer"), async (req: any, res) => {
-    try {
-      const trainerId = req.dbUser.id;
-      const clients = await storage.listClients(trainerId);
-      res.json(clients);
-    } catch (error) {
-      console.error("Error fetching trainer clients:", error);
-      res.status(500).json({ message: "Failed to fetch clients" });
-    }
-  });
-
-  // Assign client to trainer
-  app.post('/api/trainer/clients/:clientId/assign', isAuthenticated, requireRole("trainer"), async (req: any, res) => {
-    try {
-      const trainerId = req.dbUser.id;
-      const { clientId } = req.params;
-      
-      const assignment = await storage.assignClient(trainerId, clientId);
-      res.status(201).json(assignment);
-    } catch (error) {
-      console.error("Error assigning client:", error);
-      res.status(500).json({ message: "Failed to assign client" });
-    }
-  });
-
-  // Create/update meal plan for client
-  app.post('/api/trainer/clients/:clientId/meal-plan', isAuthenticated, requireRole("trainer"), async (req: any, res) => {
-    try {
-      const trainerId = req.dbUser.id;
-      const { clientId } = req.params;
-      
-      const validatedData = mealPlanGenerationSchema.parse(req.body);
-      const mealPlan = await mealPlanGenerator.generateMealPlan(validatedData, trainerId);
-      
-      const storedPlan = await storage.createOrUpdateMealPlan(mealPlan, trainerId, clientId);
-      res.status(201).json(storedPlan);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: fromZodError(error).toString() });
-      } else {
-        console.error("Error creating meal plan for client:", error);
-        res.status(500).json({ message: "Failed to create meal plan" });
-      }
-    }
-  });
-
-  // Get meal plans created by trainer
-  app.get('/api/trainer/meal-plans', isAuthenticated, requireRole("trainer"), async (req: any, res) => {
-    try {
-      const trainerId = req.dbUser.id;
-      const mealPlans = await storage.getMealPlansByTrainer(trainerId);
-      res.json(mealPlans);
-    } catch (error) {
-      console.error("Error fetching trainer meal plans:", error);
-      res.status(500).json({ message: "Failed to fetch meal plans" });
-    }
-  });
-
-  /**
-   * Client Routes
-   * 
-   * Endpoints for clients to view their meal plans
-   */
-  
-  // Get client's latest meal plan
-  app.get('/api/client/meal-plan', isAuthenticated, requireRole("client", "trainer", "admin"), async (req: any, res) => {
-    try {
-      const userId = req.dbUser.id;
-      const targetId = req.query.userId || userId;
-      
-      // Only allow clients to view their own plans, trainers/admins can view any
-      if (req.dbUser.role === "client" && targetId !== userId) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      
-      const mealPlan = await storage.getLatestMealPlanForUser(targetId);
-      res.json(mealPlan);
-    } catch (error) {
-      console.error("Error fetching client meal plan:", error);
-      res.status(500).json({ message: "Failed to fetch meal plan" });
-    }
-  });
-
-  // Get all meal plans for client
-  app.get('/api/client/meal-plans', isAuthenticated, requireRole("client", "trainer", "admin"), async (req: any, res) => {
-    try {
-      const userId = req.dbUser.id;
-      const targetId = req.query.userId || userId;
-      
-      // Only allow clients to view their own plans, trainers/admins can view any
-      if (req.dbUser.role === "client" && targetId !== userId) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-      
-      const mealPlans = await storage.getMealPlansForUser(targetId);
-      res.json(mealPlans);
-    } catch (error) {
-      console.error("Error fetching client meal plans:", error);
-      res.status(500).json({ message: "Failed to fetch meal plans" });
-    }
-  });
-
-  /**
-   * Development Routes
-   * 
-   * Testing endpoints for role switching (development only)
-   */
-  
-  // Role switching for testing (development only)
-  app.post('/api/dev/switch-role', isAuthenticated, async (req: any, res) => {
-    try {
-      // Only allow in development
-      if (process.env.NODE_ENV !== 'development') {
-        return res.status(404).json({ message: "Not found" });
-      }
-
-      const { role } = req.body;
-      const userId = req.user.claims.sub;
-      
-      if (!['admin', 'trainer', 'client'].includes(role)) {
-        return res.status(400).json({ message: "Invalid role" });
-      }
-
-      await storage.upsertUser({
-        id: userId,
-        email: req.user.claims.email,
-        firstName: req.user.claims.first_name,
-        lastName: req.user.claims.last_name,
-        profileImageUrl: req.user.claims.profile_image_url,
-        role: role as "admin" | "trainer" | "client"
-      });
-
-      res.json({ message: "Role updated successfully", newRole: role });
-    } catch (error) {
-      console.error("Error switching role:", error);
-      res.status(500).json({ message: "Failed to switch role" });
     }
   });
 

@@ -18,15 +18,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import Login from "@/pages/Login";
+import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import MealPlanGeneratorPage from "@/pages/MealPlanGenerator";
-import TrainerDashboard from "@/pages/TrainerDashboard";
-import ClientDashboard from "@/pages/ClientDashboard";
-
 import NotFound from "@/pages/not-found";
-import Layout from "@/components/Layout";
 
 /**
  * Application Router
@@ -36,7 +32,7 @@ import Layout from "@/components/Layout";
  * users have access to the full application.
  */
 function Router() {
-  const { isAuthenticated, isLoading, role } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -52,18 +48,14 @@ function Router() {
   return (
     <Switch>
       {!isAuthenticated ? (
-        <Route path="/" component={Login} />
+        <Route path="/" component={Landing} />
       ) : (
-        <Layout>
-          <Switch>
-            <Route path="/" component={Home} />
-            <Route path="/admin" component={Admin} />
-            <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
-            <Route path="/trainer" component={TrainerDashboard} />
-            <Route path="/my-meal-plan" component={ClientDashboard} />
-            <Route component={NotFound} />
-          </Switch>
-        </Layout>
+        <>
+          {/* Authenticated user routes - all use Home component with tabs */}
+          <Route path="/" component={Home} />
+          <Route path="/admin" component={Home} />
+          <Route path="/meal-plan-generator" component={Home} />
+        </>
       )}
       {/* Catch-all route for 404 errors */}
       <Route component={NotFound} />

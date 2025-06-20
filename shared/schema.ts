@@ -62,7 +62,6 @@ export const sessions = pgTable(
  * - email: User's email address (unique constraint)
  * - firstName/lastName: User's display name components
  * - profileImageUrl: Avatar URL from Replit
- * - role: User role for authorization (admin, trainer, client)
  * - createdAt/updatedAt: Automatic timestamps
  */
 export const users = pgTable("users", {
@@ -71,7 +70,6 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role", { length: 16 }).$type<"admin" | "trainer" | "client">().default("client").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -79,55 +77,6 @@ export const users = pgTable("users", {
 // Type definitions for user operations
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-
-/**
- * Trainer-Client Relationship Table
- * 
- * Maps trainers to their assigned clients for meal plan management.
- * Supports many-to-many relationships (trainers can have multiple clients,
- * clients can work with multiple trainers).
- */
-export const trainerClients = pgTable("trainer_clients", {
-  trainerId: varchar("trainer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  clientId: varchar("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  assignedAt: timestamp("assigned_at").defaultNow(),
-}, (table) => ({
-  // Composite primary key to prevent duplicate assignments
-  pk: { primaryKey: [table.trainerId, table.clientId] },
-}));
-
-export type TrainerClient = typeof trainerClients.$inferSelect;
-export type InsertTrainerClient = typeof trainerClients.$inferInsert;
-
-/**
- * Meal Plans Table
- * 
- * Stores generated meal plans with assignment information.
- * Meal plans are persistent records that can be shared between
- * trainers and clients, with full audit trail.
- */
-export const mealPlans = pgTable("meal_plans", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  
-  // Meal plan data stored as JSONB for flexibility
-  data: jsonb("data").$type<MealPlan>().notNull(),
-  
-  // Assignment and ownership
-  assignedTo: varchar("assigned_to").notNull().references(() => users.id, { onDelete: "cascade" }),
-  assignedBy: varchar("assigned_by").notNull().references(() => users.id, { onDelete: "cascade" }),
-  
-  // Timestamps
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => [
-  // Index for efficient queries by assignee
-  index("IDX_meal_plans_assigned_to").on(table.assignedTo),
-  // Index for efficient queries by creator
-  index("IDX_meal_plans_assigned_by").on(table.assignedBy),
-]);
-
-export type StoredMealPlan = typeof mealPlans.$inferSelect;
-export type InsertMealPlan = typeof mealPlans.$inferInsert;
 
 /**
  * Recipes Table

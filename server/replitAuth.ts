@@ -38,7 +38,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       maxAge: sessionTtl,
     },
   });
@@ -57,16 +57,12 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
-  const existingUser = await storage.getUser(claims["sub"]);
-  
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
-    // Preserve existing role or assign admin role for the current user
-    role: existingUser?.role || (claims["email"] === "dr.m.weyers@bcinnovation.com" ? "admin" : "trainer"),
   });
 }
 
@@ -102,14 +98,8 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
-  passport.serializeUser((user: Express.User, cb) => {
-    console.log('Serializing user:', user);
-    cb(null, user);
-  });
-  passport.deserializeUser((user: Express.User, cb) => {
-    console.log('Deserializing user:', user);
-    cb(null, user);
-  });
+  passport.serializeUser((user: Express.User, cb) => cb(null, user));
+  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
@@ -140,23 +130,7 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  // Check if user is authenticated at all
-  if (!req.isAuthenticated() || !user) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  // Handle traditional login (has isTraditionalLogin flag)
-  if (user.isTraditionalLogin) {
-    const now = Math.floor(Date.now() / 1000);
-    if (now <= user.expires_at) {
-      return next();
-    } else {
-      return res.status(401).json({ message: "Session expired" });
-    }
-  }
-
-  // Handle Replit OIDC authentication
-  if (!user.expires_at) {
+  if (!req.isAuthenticated() || !user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -181,31 +155,3 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return;
   }
 };
-
-export const requireRole = (...allowed: ("admin" | "trainer" | "client")[]): RequestHandler =>
-  async (req, res, next) => {
-    const user = req.user as any;
-    
-    if (!user?.claims?.sub) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    try {
-      // Get user role from database
-      const dbUser = await storage.getUser(user.claims.sub);
-      if (!dbUser) {
-        return res.status(401).json({ message: "User not found" });
-      }
-
-      if (!allowed.includes(dbUser.role)) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-
-      // Attach user data to request for use in routes
-      (req as any).dbUser = dbUser;
-      next();
-    } catch (error) {
-      console.error("Role check error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  };

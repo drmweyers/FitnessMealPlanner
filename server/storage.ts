@@ -15,19 +15,12 @@
 import {
   users,
   recipes,
-  trainerClients,
-  mealPlans,
   type User,
   type UpsertUser,
   type Recipe,
   type InsertRecipe,
   type UpdateRecipe,
   type RecipeFilter,
-  type TrainerClient,
-  type InsertTrainerClient,
-  type StoredMealPlan,
-  type InsertMealPlan,
-  type MealPlan,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
@@ -42,15 +35,6 @@ import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
 export interface IStorage {
   // User operations (required for Replit Auth integration)
   getUser(id: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    role: 'admin' | 'trainer' | 'client';
-  }): Promise<User>;
-  authenticateUser(email: string, password: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Recipe CRUD operations
@@ -70,61 +54,12 @@ export interface IStorage {
     pending: number;
     avgRating: number;
   }>;
-
-  // Trainer-Client relationship operations
-  listClients(trainerId: string): Promise<User[]>;
-  assignClient(trainerId: string, clientId: string): Promise<TrainerClient>;
-  removeClientAssignment(trainerId: string, clientId: string): Promise<boolean>;
-  
-  // Meal plan operations
-  createOrUpdateMealPlan(planData: MealPlan, assignedBy: string, assignedTo: string): Promise<StoredMealPlan>;
-  getLatestMealPlanForUser(userId: string): Promise<StoredMealPlan | undefined>;
-  getMealPlansForUser(userId: string): Promise<StoredMealPlan[]>;
-  getMealPlansByTrainer(trainerId: string): Promise<StoredMealPlan[]>;
 }
 
 export class DatabaseStorage implements IStorage {
   // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
-  }
-
-  async createUser(userData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    role: 'admin' | 'trainer' | 'client';
-  }): Promise<User> {
-    const userId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    const [user] = await db
-      .insert(users)
-      .values({
-        id: userId,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        role: userData.role,
-        profileImageUrl: `/api/placeholder/32/32`, // Default avatar
-      })
-      .returning();
-    return user;
-  }
-
-  async authenticateUser(email: string, password: string): Promise<User | undefined> {
-    // In a real application, you would hash and compare passwords
-    // For demo purposes, we'll just find the user by email
-    const user = await this.getUserByEmail(email);
-    if (!user) return undefined;
-    
-    // In production, use bcrypt or similar to compare hashed passwords
-    // For now, we'll just return the user (password validation skipped for demo)
     return user;
   }
 
@@ -301,115 +236,6 @@ export class DatabaseStorage implements IStorage {
       pending: stats.pending,
       avgRating: 4.6, // Static average rating
     };
-  }
-
-  async listClients(trainerId: string): Promise<User[]> {
-    const result = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        profileImageUrl: users.profileImageUrl,
-        role: users.role,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-      })
-      .from(trainerClients)
-      .innerJoin(users, eq(trainerClients.clientId, users.id))
-      .where(eq(trainerClients.trainerId, trainerId));
-
-    return result;
-  }
-
-  async assignClient(trainerId: string, clientId: string): Promise<TrainerClient> {
-    const result = await db
-      .insert(trainerClients)
-      .values({ trainerId, clientId })
-      .returning();
-
-    return result[0];
-  }
-
-  async removeClientAssignment(trainerId: string, clientId: string): Promise<boolean> {
-    const result = await db
-      .delete(trainerClients)
-      .where(
-        and(
-          eq(trainerClients.trainerId, trainerId),
-          eq(trainerClients.clientId, clientId)
-        )
-      );
-
-    return (result.rowCount || 0) > 0;
-  }
-
-  async createOrUpdateMealPlan(planData: MealPlan, assignedBy: string, assignedTo: string): Promise<StoredMealPlan> {
-    // Check if a meal plan already exists for this user
-    const existing = await db
-      .select()
-      .from(mealPlans)
-      .where(eq(mealPlans.assignedTo, assignedTo))
-      .orderBy(desc(mealPlans.createdAt))
-      .limit(1);
-
-    if (existing.length > 0) {
-      // Update existing meal plan
-      const result = await db
-        .update(mealPlans)
-        .set({
-          data: planData,
-          assignedBy,
-          updatedAt: new Date(),
-        })
-        .where(eq(mealPlans.id, existing[0].id))
-        .returning();
-
-      return result[0];
-    } else {
-      // Create new meal plan
-      const result = await db
-        .insert(mealPlans)
-        .values({
-          data: planData,
-          assignedBy,
-          assignedTo,
-        })
-        .returning();
-
-      return result[0];
-    }
-  }
-
-  async getLatestMealPlanForUser(userId: string): Promise<StoredMealPlan | undefined> {
-    const result = await db
-      .select()
-      .from(mealPlans)
-      .where(eq(mealPlans.assignedTo, userId))
-      .orderBy(desc(mealPlans.createdAt))
-      .limit(1);
-
-    return result[0];
-  }
-
-  async getMealPlansForUser(userId: string): Promise<StoredMealPlan[]> {
-    const result = await db
-      .select()
-      .from(mealPlans)
-      .where(eq(mealPlans.assignedTo, userId))
-      .orderBy(desc(mealPlans.createdAt));
-
-    return result;
-  }
-
-  async getMealPlansByTrainer(trainerId: string): Promise<StoredMealPlan[]> {
-    const result = await db
-      .select()
-      .from(mealPlans)
-      .where(eq(mealPlans.assignedBy, trainerId))
-      .orderBy(desc(mealPlans.createdAt));
-
-    return result;
   }
 }
 
