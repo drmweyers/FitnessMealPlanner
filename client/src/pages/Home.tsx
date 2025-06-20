@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +16,7 @@ import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Home() {
   const { user } = useAuth();
+  const [location, navigate] = useLocation();
   const [filters, setFilters] = useState<RecipeFilter>({ 
     page: 1, 
     limit: 10,
@@ -26,6 +28,26 @@ export default function Home() {
     approved: false 
   });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+
+  // Determine active tab based on URL
+  const getActiveTab = () => {
+    if (location === '/admin') return 'admin';
+    if (location === '/meal-plan-generator') return 'meal-plan';
+    return 'recipes';
+  };
+
+  const handleTabChange = (value: string) => {
+    switch (value) {
+      case 'admin':
+        navigate('/admin');
+        break;
+      case 'meal-plan':
+        navigate('/meal-plan-generator');
+        break;
+      default:
+        navigate('/');
+    }
+  };
 
   const { data: recipesData, isLoading } = useQuery({
     queryKey: ['/api/recipes', filters],
@@ -90,7 +112,7 @@ export default function Home() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="recipes" className="w-full">
+        <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="recipes">
               <i className="fas fa-book-open mr-2"></i>

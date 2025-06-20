@@ -51,10 +51,10 @@ function Router() {
         <Route path="/" component={Landing} />
       ) : (
         <>
-          {/* Authenticated user routes */}
+          {/* Authenticated user routes - all use Home component with tabs */}
           <Route path="/" component={Home} />
-          <Route path="/admin" component={Admin} />
-          <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
+          <Route path="/admin" component={Home} />
+          <Route path="/meal-plan-generator" component={Home} />
         </>
       )}
       {/* Catch-all route for 404 errors */}
