@@ -15,7 +15,7 @@ import PendingRecipesTable from "@/components/PendingRecipesTable";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [location, navigate] = useLocation();
   const [filters, setFilters] = useState<RecipeFilter>({ 
     page: 1, 
@@ -49,12 +49,12 @@ export default function Home() {
     }
   };
 
-  const { data: recipesData, isLoading } = useQuery({
+  const { data: recipesData, isLoading } = useQuery<{recipes: Recipe[], total: number}>({
     queryKey: ['/api/recipes', filters],
     enabled: true,
   });
 
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<{total: number, approved: number, pending: number, avgRating: number}>({
     queryKey: ['/api/admin/stats'],
     enabled: !!user,
   });
