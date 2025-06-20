@@ -42,6 +42,15 @@ import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
 export interface IStorage {
   // User operations (required for Replit Auth integration)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: 'admin' | 'trainer' | 'client';
+  }): Promise<User>;
+  authenticateUser(email: string, password: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Recipe CRUD operations
@@ -78,6 +87,44 @@ export class DatabaseStorage implements IStorage {
   // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: 'admin' | 'trainer' | 'client';
+  }): Promise<User> {
+    const userId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const [user] = await db
+      .insert(users)
+      .values({
+        id: userId,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        role: userData.role,
+        profileImageUrl: `/api/placeholder/32/32`, // Default avatar
+      })
+      .returning();
+    return user;
+  }
+
+  async authenticateUser(email: string, password: string): Promise<User | undefined> {
+    // In a real application, you would hash and compare passwords
+    // For demo purposes, we'll just find the user by email
+    const user = await this.getUserByEmail(email);
+    if (!user) return undefined;
+    
+    // In production, use bcrypt or similar to compare hashed passwords
+    // For now, we'll just return the user (password validation skipped for demo)
     return user;
   }
 

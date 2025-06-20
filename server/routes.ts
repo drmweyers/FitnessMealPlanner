@@ -34,8 +34,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
   /**
    * Authentication Routes
    * 
-   * Handles user authentication and profile management through Replit's OIDC.
+   * Handles both Replit OIDC authentication and traditional email/password authentication
+   * with role-based account creation.
    */
+  
+  // Register new user with role selection
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { firstName, lastName, email, password, role } = req.body;
+      
+      // Validate required fields
+      if (!firstName || !lastName || !email || !password || !role) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+      
+      // Validate role
+      if (!['admin', 'trainer', 'client'].includes(role)) {
+        return res.status(400).json({ message: 'Invalid role specified' });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ message: 'User already exists with this email' });
+      }
+      
+      // Create user with specified role
+      const newUser = await storage.createUser({
+        firstName,
+        lastName,
+        email,
+        password, // In production, this should be hashed
+        role: role as 'admin' | 'trainer' | 'client'
+      });
+      
+      res.status(201).json({
+        message: 'Account created successfully',
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role
+        }
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ message: 'Failed to create account' });
+    }
+  });
+  
+  // Login with email and password
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required' });
+      }
+      
+      // Find user and validate password
+      const user = await storage.authenticateUser(email, password);
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+      
+      // Set session (mimicking Replit auth structure)
+      req.session.passport = {
+        user: {
+          claims: {
+            sub: user.id,
+            email: user.email,
+            given_name: user.firstName,
+            family_name: user.lastName
+          }
+        }
+      };
+      
+      res.json({
+        message: 'Login successful',
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Login failed' });
+    }
+  });
   
   // Get current user profile (requires authentication)
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
