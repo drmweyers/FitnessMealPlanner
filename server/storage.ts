@@ -255,6 +255,115 @@ export class DatabaseStorage implements IStorage {
       avgRating: 4.6, // Static average rating
     };
   }
+
+  async listClients(trainerId: string): Promise<User[]> {
+    const result = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(trainerClients)
+      .innerJoin(users, eq(trainerClients.clientId, users.id))
+      .where(eq(trainerClients.trainerId, trainerId));
+
+    return result;
+  }
+
+  async assignClient(trainerId: string, clientId: string): Promise<TrainerClient> {
+    const result = await db
+      .insert(trainerClients)
+      .values({ trainerId, clientId })
+      .returning();
+
+    return result[0];
+  }
+
+  async removeClientAssignment(trainerId: string, clientId: string): Promise<boolean> {
+    const result = await db
+      .delete(trainerClients)
+      .where(
+        and(
+          eq(trainerClients.trainerId, trainerId),
+          eq(trainerClients.clientId, clientId)
+        )
+      );
+
+    return result.rowCount > 0;
+  }
+
+  async createOrUpdateMealPlan(planData: MealPlan, assignedBy: string, assignedTo: string): Promise<StoredMealPlan> {
+    // Check if a meal plan already exists for this user
+    const existing = await db
+      .select()
+      .from(mealPlans)
+      .where(eq(mealPlans.assignedTo, assignedTo))
+      .orderBy(desc(mealPlans.createdAt))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing meal plan
+      const result = await db
+        .update(mealPlans)
+        .set({
+          data: planData,
+          assignedBy,
+          updatedAt: new Date(),
+        })
+        .where(eq(mealPlans.id, existing[0].id))
+        .returning();
+
+      return result[0];
+    } else {
+      // Create new meal plan
+      const result = await db
+        .insert(mealPlans)
+        .values({
+          data: planData,
+          assignedBy,
+          assignedTo,
+        })
+        .returning();
+
+      return result[0];
+    }
+  }
+
+  async getLatestMealPlanForUser(userId: string): Promise<StoredMealPlan | undefined> {
+    const result = await db
+      .select()
+      .from(mealPlans)
+      .where(eq(mealPlans.assignedTo, userId))
+      .orderBy(desc(mealPlans.createdAt))
+      .limit(1);
+
+    return result[0];
+  }
+
+  async getMealPlansForUser(userId: string): Promise<StoredMealPlan[]> {
+    const result = await db
+      .select()
+      .from(mealPlans)
+      .where(eq(mealPlans.assignedTo, userId))
+      .orderBy(desc(mealPlans.createdAt));
+
+    return result;
+  }
+
+  async getMealPlansByTrainer(trainerId: string): Promise<StoredMealPlan[]> {
+    const result = await db
+      .select()
+      .from(mealPlans)
+      .where(eq(mealPlans.assignedBy, trainerId))
+      .orderBy(desc(mealPlans.createdAt));
+
+    return result;
+  }
 }
 
 export const storage = new DatabaseStorage();
