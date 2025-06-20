@@ -1,0 +1,79 @@
+Frontend Testing
+1. Component Tests
+Run the existing component tests to verify UI functionality:
+
+npm run test test/components.test.tsx
+2. Integration Tests
+Test the complete frontend-backend integration:
+
+npm run test test/integration.test.ts
+3. Functional Tests
+Verify API endpoints are working correctly:
+
+npm run test test/functional.test.ts
+Backend Testing
+4. API Route Tests
+Test all API endpoints and authentication:
+
+npm run test test/api.test.ts
+5. Database Operations
+Verify all CRUD operations and data integrity:
+
+npm run test test/database.test.ts
+6. Service Layer Tests
+Test business logic and external service integrations:
+
+npm run test test/services.test.ts
+Complete Test Suite
+Run all tests together for comprehensive coverage:
+
+npm run test
+Manual Testing Checklist
+Authentication & Authorization
+ Login/logout functionality
+ Admin route protection
+ Session persistence across page refreshes
+Recipe Management
+ Browse recipes with pagination
+ Search functionality with various keywords
+ Filter by meal type, dietary preferences, calories
+ Recipe modal displays correctly
+ Admin recipe approval workflow
+Meal Plan Generation
+ Generate meal plans with different parameters
+ Nutrition calculations are accurate
+ PDF export functionality
+ Dietary restriction filtering
+Performance Testing
+ Page load times under 3 seconds
+ API response times under 500ms
+ Database queries optimized
+ No memory leaks during extended use
+Cross-browser Testing
+ Chrome/Chromium functionality
+ Firefox compatibility
+ Safari functionality (if available)
+ Mobile responsiveness
+Load Testing
+Test concurrent user scenarios:
+
+test-load.js
+Add load testing script
+node test-load.js
+Data Validation Tests
+Verify your current database state:
+
+curl "http://localhost:5000/api/admin/stats"
+curl "http://localhost:5000/api/recipes?limit=5"
+Security Testing
+Test authentication and input validation:
+
+curl -X GET "http://localhost:5000/api/admin/recipes"
+curl "http://localhost:5000/api/recipes?minCalories=invalid&maxCalories=also-invalid"
+Based on your QA_REPORT.md, your application is already performing excellently with:
+
+223 total recipes (all approved)
+Sub-100ms API response times
+Comprehensive error handling
+Proper authentication protection
+Running these tests will confirm that all functionality remains stable and ready for production deployment on Replit.
