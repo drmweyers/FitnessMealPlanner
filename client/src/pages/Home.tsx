@@ -21,6 +21,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleRecipeClick = (recipeId: string) => {
+    console.log('Recipe clicked:', recipeId);
     setSelectedRecipeId(recipeId);
     setIsModalOpen(true);
   };

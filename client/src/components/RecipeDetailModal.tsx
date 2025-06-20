@@ -26,9 +26,11 @@ interface RecipeDetailModalProps {
 
 export default function RecipeDetailModal({ recipeId, open, onOpenChange }: RecipeDetailModalProps) {
   const { data: recipe, isLoading, error } = useQuery({
-    queryKey: ['/api/recipes', recipeId],
+    queryKey: [`/api/recipes/${recipeId}`],
     enabled: !!recipeId && open,
   });
+
+  console.log('Recipe ID:', recipeId, 'Recipe data:', recipe, 'Loading:', isLoading, 'Error:', error);
 
   if (!recipeId) return null;
 
@@ -63,10 +65,10 @@ export default function RecipeDetailModal({ recipeId, open, onOpenChange }: Reci
             {/* Header with Image */}
             <div className="relative">
               <div className="h-64 bg-gradient-to-br from-orange-100 to-orange-200 relative overflow-hidden">
-                {recipe.imageUrl ? (
+                {(recipe as any).imageUrl ? (
                   <img 
-                    src={recipe.imageUrl} 
-                    alt={recipe.title}
+                    src={(recipe as any).imageUrl} 
+                    alt={(recipe as any).title}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -76,13 +78,13 @@ export default function RecipeDetailModal({ recipeId, open, onOpenChange }: Reci
                 )}
                 
                 {/* Status Badge */}
-                {recipe.status && (
+                {(recipe as any).status && (
                   <div className="absolute top-4 left-4">
                     <Badge 
-                      variant={recipe.status === 'approved' ? 'default' : 'secondary'}
-                      className={recipe.status === 'approved' ? 'bg-green-500' : 'bg-yellow-500'}
+                      variant={(recipe as any).status === 'approved' ? 'default' : 'secondary'}
+                      className={(recipe as any).status === 'approved' ? 'bg-green-500' : 'bg-yellow-500'}
                     >
-                      {recipe.status}
+                      {(recipe as any).status}
                     </Badge>
                   </div>
                 )}
