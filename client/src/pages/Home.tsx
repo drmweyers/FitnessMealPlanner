@@ -38,12 +38,17 @@ export default function Home() {
   // Convert recipes data to expected format
   const recipesList = recipes?.recipes || [];
   
+  console.log('Raw recipes data:', recipes);
+  console.log('Recipes list:', recipesList.length, 'recipes');
+  
   // Filter recipes based on search term
   const filteredRecipes = recipesList.filter((recipe: any) =>
     recipe.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     recipe.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     recipe.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  console.log('Filtered recipes:', filteredRecipes.length);
 
   if (statsLoading || recipesLoading) {
     return (
@@ -302,7 +307,13 @@ export default function Home() {
       <RecipeDetailModal
         recipeId={selectedRecipeId}
         open={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        onOpenChange={(open) => {
+          console.log('Modal open change:', open);
+          if (!open) {
+            setSelectedRecipeId(null);
+          }
+          setIsModalOpen(open);
+        }}
       />
     </div>
   );

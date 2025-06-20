@@ -25,12 +25,14 @@ interface RecipeDetailModalProps {
 }
 
 export default function RecipeDetailModal({ recipeId, open, onOpenChange }: RecipeDetailModalProps) {
+  console.log('Modal props - Recipe ID:', recipeId, 'Open:', open);
+  
   const { data: recipe, isLoading, error } = useQuery({
     queryKey: [`/api/recipes/${recipeId}`],
     enabled: !!recipeId && open,
   });
 
-  console.log('Recipe ID:', recipeId, 'Recipe data:', recipe, 'Loading:', isLoading, 'Error:', error);
+  console.log('Query result - Recipe data:', recipe, 'Loading:', isLoading, 'Error:', error);
 
   if (!recipeId) return null;
 
