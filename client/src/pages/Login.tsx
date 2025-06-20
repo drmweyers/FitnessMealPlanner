@@ -226,10 +226,10 @@ export default function Login() {
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => window.location.href = '/api/auth/replit'}
+                    onClick={() => window.location.href = '/api/login'}
                   >
                     <i className="fas fa-code mr-2"></i>
-                    Continue with Replit
+                    Continue with Replit Auth
                   </Button>
                 </div>
               </CardContent>
