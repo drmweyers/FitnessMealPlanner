@@ -25,6 +25,7 @@ import MealPlanGeneratorPage from "@/pages/MealPlanGenerator";
 import TrainerDashboard from "@/pages/TrainerDashboard";
 import ClientDashboard from "@/pages/ClientDashboard";
 import NotFound from "@/pages/not-found";
+import Layout from "@/components/Layout";
 
 /**
  * Application Router
@@ -52,31 +53,16 @@ function Router() {
       {!isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
-        <>
-          {/* Role-based routing for authenticated users */}
-          <Route path="/" component={Home} />
-          
-          {/* Admin-only routes */}
-          {role === "admin" && (
-            <>
-              <Route path="/admin" component={Admin} />
-              <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
-            </>
-          )}
-          
-          {/* Trainer-only routes */}
-          {role === "trainer" && (
-            <>
-              <Route path="/trainer" component={TrainerDashboard} />
-              <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
-            </>
-          )}
-          
-          {/* Client-only routes */}
-          {role === "client" && (
+        <Layout>
+          <Switch>
+            <Route path="/" component={Home} />
+            <Route path="/admin" component={Admin} />
+            <Route path="/meal-plan-generator" component={MealPlanGeneratorPage} />
+            <Route path="/trainer" component={TrainerDashboard} />
             <Route path="/my-meal-plan" component={ClientDashboard} />
-          )}
-        </>
+            <Route component={NotFound} />
+          </Switch>
+        </Layout>
       )}
       {/* Catch-all route for 404 errors */}
       <Route component={NotFound} />
