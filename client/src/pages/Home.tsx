@@ -152,7 +152,7 @@ export default function Home() {
               {recipe.imageUrl ? (
                 <img 
                   src={recipe.imageUrl} 
-                  alt={recipe.title}
+                  alt={recipe.name || recipe.title}
                   className="w-full h-full object-cover"
                 />
               ) : (

@@ -70,7 +70,7 @@ export default function RecipeDetailModal({ recipeId, open, onOpenChange }: Reci
                 {(recipe as any).imageUrl ? (
                   <img 
                     src={(recipe as any).imageUrl} 
-                    alt={(recipe as any).title}
+                    alt={(recipe as any).name || (recipe as any).title}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -108,11 +108,11 @@ export default function RecipeDetailModal({ recipeId, open, onOpenChange }: Reci
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <DialogTitle className="text-2xl font-bold text-gray-900 leading-tight">
-                        {recipe.title}
+                        {(recipe as any).name || (recipe as any).title}
                       </DialogTitle>
-                      {recipe.description && (
+                      {(recipe as any).description && (
                         <p className="text-gray-600 mt-2 leading-relaxed">
-                          {recipe.description}
+                          {(recipe as any).description}
                         </p>
                       )}
                     </div>
@@ -208,12 +208,12 @@ export default function RecipeDetailModal({ recipeId, open, onOpenChange }: Reci
                 <Separator />
 
                 {/* Ingredients */}
-                {recipe.ingredients && recipe.ingredients.length > 0 && (
+                {((recipe as any).ingredientsJson || (recipe as any).ingredients) && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4 text-gray-900">Ingredients</h3>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <ul className="space-y-3">
-                        {recipe.ingredients.map((ingredient: any, index: number) => (
+                        {((recipe as any).ingredientsJson || (recipe as any).ingredients || []).map((ingredient: any, index: number) => (
                           <li key={index} className="flex items-start gap-3">
                             <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
                             <div className="flex-1">
@@ -239,11 +239,11 @@ export default function RecipeDetailModal({ recipeId, open, onOpenChange }: Reci
                 <Separator />
 
                 {/* Instructions */}
-                {recipe.instructions && recipe.instructions.length > 0 && (
+                {((recipe as any).instructionsText || (recipe as any).instructions) && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4 text-gray-900">Instructions</h3>
                     <div className="space-y-4">
-                      {recipe.instructions.map((instruction: string, index: number) => (
+                      {(((recipe as any).instructionsText || (recipe as any).instructions || '').split('\n').filter(Boolean)).map((instruction: string, index: number) => (
                         <div key={index} className="flex gap-4">
                           <div className="flex-shrink-0 w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-semibold text-sm">
                             {index + 1}
