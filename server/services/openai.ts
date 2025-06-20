@@ -229,6 +229,99 @@ Guidelines:
   }
 }
 
+export interface NaturalLanguageRecipeRequirements {
+  count: number;
+  mealType?: string;
+  dietaryTag?: string;
+  maxPrepTime?: number;
+  maxCalories?: number;
+  minCalories?: number;
+  minProtein?: number;
+  maxProtein?: number;
+  minCarbs?: number;
+  maxCarbs?: number;
+  minFat?: number;
+  maxFat?: number;
+  focusIngredient?: string;
+  difficulty?: string;
+}
+
+export async function parseNaturalLanguageRecipeRequirements(naturalLanguageInput: string): Promise<NaturalLanguageRecipeRequirements> {
+  const prompt = `Parse the following natural language recipe generation request and extract structured information. Return a JSON object with the recipe generation parameters.
+
+Natural language input: "${naturalLanguageInput}"
+
+Extract and return a JSON object with these fields:
+{
+  "count": "number of recipes to generate (default 10)",
+  "mealType": "one of: breakfast, lunch, dinner, snack (optional)",
+  "dietaryTag": "one of: vegetarian, vegan, keto, paleo, gluten-free, low-carb, high-protein (optional)",
+  "maxPrepTime": "maximum preparation time in minutes (optional)",
+  "maxCalories": "maximum calories per serving (optional)",
+  "minCalories": "minimum calories per serving (optional)",
+  "minProtein": "minimum protein in grams (optional)",
+  "maxProtein": "maximum protein in grams (optional)",
+  "minCarbs": "minimum carbohydrates in grams (optional)",
+  "maxCarbs": "maximum carbohydrates in grams (optional)",
+  "minFat": "minimum fat in grams (optional)",
+  "maxFat": "maximum fat in grams (optional)",
+  "focusIngredient": "main ingredient to focus on (optional)",
+  "difficulty": "one of: beginner, intermediate, advanced (optional)"
+}
+
+Guidelines:
+- Infer dietary tags from context (e.g., "high protein" = high-protein, "low carb" = low-carb)
+- Set realistic nutritional ranges based on requirements
+- Default to 10 recipes unless specified
+- Include any specific ingredients mentioned in focusIngredient
+- Map time constraints to maxPrepTime (e.g., "quick" = 15, "under 30 minutes" = 30)
+- Only include fields that are explicitly mentioned or can be clearly inferred`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a nutrition expert that parses natural language recipe generation requests into structured data. Always respond with valid JSON only."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    
+    // Ensure required fields are present with defaults
+    return {
+      count: result.count || 10,
+      mealType: result.mealType || undefined,
+      dietaryTag: result.dietaryTag || undefined,
+      maxPrepTime: result.maxPrepTime || undefined,
+      maxCalories: result.maxCalories || undefined,
+      minCalories: result.minCalories || undefined,
+      minProtein: result.minProtein || undefined,
+      maxProtein: result.maxProtein || undefined,
+      minCarbs: result.minCarbs || undefined,
+      maxCarbs: result.maxCarbs || undefined,
+      minFat: result.minFat || undefined,
+      maxFat: result.maxFat || undefined,
+      focusIngredient: result.focusIngredient || undefined,
+      difficulty: result.difficulty || undefined,
+    };
+  } catch (error) {
+    console.error("Error parsing natural language recipe requirements:", error);
+    // Return sensible defaults on error
+    return {
+      count: 10,
+    };
+  }
+}
+
 export async function generateMealImage(recipe: {
   name: string;
   description: string;

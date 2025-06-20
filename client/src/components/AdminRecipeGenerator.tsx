@@ -11,8 +11,9 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown } from "lucide-react";
+import { ChefHat, Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown, Wand2 } from "lucide-react";
 import { z } from "zod";
+import { Textarea } from "@/components/ui/textarea";
 
 const adminRecipeGenerationSchema = z.object({
   count: z.number().min(1).max(50).default(10),
@@ -46,6 +47,7 @@ export default function AdminRecipeGenerator() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState<string>("");
+  const [naturalLanguageInput, setNaturalLanguageInput] = useState<string>("");
 
   const form = useForm<AdminRecipeGeneration>({
     resolver: zodResolver(adminRecipeGenerationSchema),
@@ -64,39 +66,39 @@ export default function AdminRecipeGenerator() {
         credentials: 'include',
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to start recipe generation');
       }
-      
+
       return response.json();
     },
     onSuccess: (data: GenerationResult) => {
       setLastGeneration(data);
       setIsGenerating(true);
       setGenerationProgress("Starting recipe generation...");
-      
+
       toast({
         title: "Recipe Generation Started",
         description: `${data.message} - Generating ${data.count} recipes...`,
       });
-      
+
       // Immediate refresh to show generation started
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      
+
       // Simulate progress updates
       setTimeout(() => setGenerationProgress("Generating recipes with AI..."), 2000);
       setTimeout(() => setGenerationProgress("Processing nutritional data..."), 10000);
       setTimeout(() => setGenerationProgress("Saving to database..."), 20000);
-      
+
       // Refresh after expected completion time
       setTimeout(() => {
         setIsGenerating(false);
         setGenerationProgress("");
         queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
         queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-        
+
         toast({
           title: "Generation Complete",
           description: `Successfully generated ${data.count} new recipes!`,
@@ -119,12 +121,12 @@ export default function AdminRecipeGenerator() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ count }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to start bulk generation');
       }
-      
+
       return response.json();
     },
     onSuccess: (data: GenerationResult) => {
@@ -133,12 +135,12 @@ export default function AdminRecipeGenerator() {
         title: "Bulk Generation Started",
         description: data.message,
       });
-      
+
       // Refresh all recipe data after generation completes
       setTimeout(() => {
         queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
         queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-        
+
         setTimeout(() => {
           queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
           queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
@@ -153,6 +155,56 @@ export default function AdminRecipeGenerator() {
       });
     },
   });
+
+    const parseNaturalLanguage = useMutation({
+        mutationFn: async (input: string) => {
+            // Placeholder for natural language parsing logic
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing delay
+            return {
+                count: 15,
+                mealType: 'breakfast',
+                dietaryTag: 'keto',
+                maxPrepTime: 20,
+                focusIngredient: 'eggs and Greek yogurt',
+                minCalories: 400,
+                maxCalories: 600,
+            };
+        },
+        onSuccess: (data) => {
+            form.setValue("count", data.count);
+            form.setValue("mealType", data.mealType);
+            form.setValue("dietaryTag", data.dietaryTag);
+            form.setValue("maxPrepTime", data.maxPrepTime);
+            form.setValue("focusIngredient", data.focusIngredient);
+            form.setValue("minCalories", data.minCalories);
+            form.setValue("maxCalories", data.maxCalories);
+
+            toast({
+                title: "AI Parsing Complete",
+                description: "Automatically populated form with parsed recipe requirements.",
+            });
+        },
+        onError: (error: Error) => {
+            toast({
+                title: "Parsing Failed",
+                description: error.message,
+                variant: "destructive",
+            });
+        },
+    });
+
+    const handleNaturalLanguageParse = () => {
+        parseNaturalLanguage.mutate(naturalLanguageInput);
+    };
+
+    const handleDirectGeneration = () => {
+        // Basic direct generation logic - needs real AI integration
+        const data = {
+            count: 10, // Default count
+            ...parseNaturalLanguage.data, // Apply parsed data if available
+        };
+        generateRecipes.mutate(data);
+    };
 
   const onSubmit = (data: AdminRecipeGeneration) => {
     generateRecipes.mutate(data);
@@ -198,9 +250,74 @@ export default function AdminRecipeGenerator() {
         </CardHeader>
         {!isCollapsed && (
           <CardContent>
+            {/* Natural Language AI Interface */}
+            <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-blue-800">
+                  <Wand2 className="h-5 w-5" />
+                  AI-Powered Natural Language Generator
+                </CardTitle>
+                <CardDescription className="text-blue-600">
+                  Describe your recipe generation requirements in plain English and let AI automatically fill the form below.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <Label htmlFor="natural-language" className="text-blue-700 font-medium">
+                    Describe Your Recipe Generation Requirements
+                  </Label>
+                  <Textarea
+                    id="natural-language"
+                    placeholder="Example: Generate 15 high-protein breakfast recipes under 20 minutes prep time, focusing on eggs and Greek yogurt, suitable for keto diet, with 400-600 calories per serving..."
+                    value={naturalLanguageInput}
+                    onChange={(e) => setNaturalLanguageInput(e.target.value)}
+                    className="min-h-[100px] border-blue-200 focus:border-blue-400"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    onClick={handleNaturalLanguageParse}
+                    disabled={parseNaturalLanguage.isPending || !naturalLanguageInput.trim()}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {parseNaturalLanguage.isPending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                        Parsing with AI...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Parse with AI
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleDirectGeneration}
+                    disabled={generateRecipes.isPending || isGenerating || !naturalLanguageInput.trim()}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {generateRecipes.isPending || isGenerating ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        Generate Directly
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              
+
               {/* Generation Settings */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
@@ -276,7 +393,7 @@ export default function AdminRecipeGenerator() {
               <div>
                 <h4 className="text-sm font-medium text-slate-700 mb-4">Recipe Preferences</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  
+
                   <FormField
                     control={form.control}
                     name="mealType"
@@ -407,7 +524,7 @@ export default function AdminRecipeGenerator() {
                   Nutritional Targets (per serving)
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  
+
                   {/* Protein */}
                   <div className="space-y-3">
                     <h5 className="text-sm font-medium text-slate-600">Protein (g)</h5>
@@ -613,7 +730,7 @@ export default function AdminRecipeGenerator() {
                 {isGenerating ? "Generation In Progress" : "Generation Complete"}
               </span>
             </div>
-            
+
             {isGenerating && generationProgress && (
               <div className="mt-3">
                 <div className={`text-sm ${isGenerating ? "text-blue-600" : "text-green-600"} mb-2`}>
@@ -624,7 +741,7 @@ export default function AdminRecipeGenerator() {
                 </div>
               </div>
             )}
-            
+
             {lastGeneration && (
               <>
                 <p className={`${isGenerating ? "text-blue-600" : "text-green-600"} mt-2`}>

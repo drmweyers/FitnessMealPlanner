@@ -427,6 +427,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Parse natural language recipe requirements for admin
+  app.post('/api/admin/parse-recipe-requirements', isAuthenticated, async (req, res) => {
+    try {
+      const { naturalLanguageInput } = req.body;
+      
+      if (!naturalLanguageInput || typeof naturalLanguageInput !== 'string') {
+        return res.status(400).json({ message: "Natural language input is required" });
+      }
+
+      const { parseNaturalLanguageRecipeRequirements } = await import('./services/openai');
+      const parsedRequirements = await parseNaturalLanguageRecipeRequirements(naturalLanguageInput);
+      
+      res.json(parsedRequirements);
+    } catch (error) {
+      console.error("Error parsing natural language recipe requirements:", error);
+      res.status(500).json({ 
+        message: "Failed to parse natural language input",
+        error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      });
+    }
+  });
+
   // Legacy endpoint with authentication for backwards compatibility
   app.post('/api/generate-meal-plan', isAuthenticated, async (req, res) => {
     try {
