@@ -18,9 +18,11 @@ export default function PendingRecipesTable() {
     limit: 50 
   });
 
-  const { data: pendingData, isLoading } = useQuery({
+  const { data: pendingData, isLoading, refetch } = useQuery({
     queryKey: ['/api/admin/recipes', filters],
     enabled: true,
+    staleTime: 0, // Always consider data stale
+    refetchOnMount: true,
   });
 
   const pendingRecipes = (pendingData as any)?.recipes || [];
@@ -181,9 +183,12 @@ export default function PendingRecipesTable() {
               variant="outline"
               size="sm"
               onClick={() => {
+                // Force complete cache refresh
+                queryClient.removeQueries({ queryKey: ['/api/admin/recipes'] });
                 queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
                 queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
                 queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+                refetch(); // Force immediate refetch
                 queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
                 toast({
                   title: "Refreshing",
