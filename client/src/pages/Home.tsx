@@ -119,27 +119,19 @@ export default function Home() {
         </div>
 
         <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-          <TabsList className={`grid w-full mb-8 ${
-            (user?.role === "admin") ? "grid-cols-3" : 
-            (user?.role === "trainer") ? "grid-cols-2" : 
-            "grid-cols-1"
-          }`}>
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="recipes">
               <i className="fas fa-book-open mr-2"></i>
               Browse Recipes
             </TabsTrigger>
-            {(user?.role === "admin" || user?.role === "trainer") && (
-              <TabsTrigger value="meal-plan">
-                <i className="fas fa-utensils mr-2"></i>
-                Meal Plan Generator
-              </TabsTrigger>
-            )}
-            {user?.role === "admin" && (
-              <TabsTrigger value="admin">
-                <i className="fas fa-cog mr-2"></i>
-                Admin
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="meal-plan">
+              <i className="fas fa-utensils mr-2"></i>
+              Meal Plan Generator
+            </TabsTrigger>
+            <TabsTrigger value="admin">
+              <i className="fas fa-cog mr-2"></i>
+              Admin
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="recipes">
