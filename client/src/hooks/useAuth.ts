@@ -9,6 +9,7 @@ export function useAuth() {
 
   return {
     user,
+    role: user?.role,
     isLoading,
     isAuthenticated: !!user && !error,
   };

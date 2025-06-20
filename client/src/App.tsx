@@ -32,7 +32,7 @@ import NotFound from "@/pages/not-found";
  * users have access to the full application.
  */
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, role } = useAuth();
 
   if (isLoading) {
     return (

@@ -269,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recipe generation - Custom with filters
-  app.post('/api/admin/generate-recipes', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/generate-recipes', isAuthenticated, requireRole("admin"), async (req, res) => {
     try {
       const { 
         count = 10, 
@@ -344,8 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", message: "Meal plan service is available" });
   });
 
-  // Meal Plan Generation - Public endpoint for core functionality
-  app.post('/api/meal-plan/generate', async (req, res) => {
+  // Meal Plan Generation - Requires trainer or admin role
+  app.post('/api/meal-plan/generate', isAuthenticated, requireRole("admin", "trainer"), async (req, res) => {
     console.log("POST /api/meal-plan/generate endpoint hit");
     console.log("Request body:", req.body);
     
@@ -440,6 +440,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Error generating meal plan:", error);
         res.status(500).json({ message: (error as Error).message || "Failed to generate meal plan" });
       }
+    }
+  });
+
+  /**
+   * Trainer Routes
+   * 
+   * Endpoints for trainers to manage their clients and meal plans
+   */
+  
+  // Get trainer's clients
+  app.get('/api/trainer/clients', isAuthenticated, requireRole("trainer"), async (req: any, res) => {
+    try {
+      const trainerId = req.dbUser.id;
+      const clients = await storage.listClients(trainerId);
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching trainer clients:", error);
+      res.status(500).json({ message: "Failed to fetch clients" });
+    }
+  });
+
+  // Assign client to trainer
+  app.post('/api/trainer/clients/:clientId/assign', isAuthenticated, requireRole("trainer"), async (req: any, res) => {
+    try {
+      const trainerId = req.dbUser.id;
+      const { clientId } = req.params;
+      
+      const assignment = await storage.assignClient(trainerId, clientId);
+      res.status(201).json(assignment);
+    } catch (error) {
+      console.error("Error assigning client:", error);
+      res.status(500).json({ message: "Failed to assign client" });
+    }
+  });
+
+  // Create/update meal plan for client
+  app.post('/api/trainer/clients/:clientId/meal-plan', isAuthenticated, requireRole("trainer"), async (req: any, res) => {
+    try {
+      const trainerId = req.dbUser.id;
+      const { clientId } = req.params;
+      
+      const validatedData = mealPlanGenerationSchema.parse(req.body);
+      const mealPlan = await mealPlanGenerator.generateMealPlan(validatedData, trainerId);
+      
+      const storedPlan = await storage.createOrUpdateMealPlan(mealPlan, trainerId, clientId);
+      res.status(201).json(storedPlan);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: fromZodError(error).toString() });
+      } else {
+        console.error("Error creating meal plan for client:", error);
+        res.status(500).json({ message: "Failed to create meal plan" });
+      }
+    }
+  });
+
+  // Get meal plans created by trainer
+  app.get('/api/trainer/meal-plans', isAuthenticated, requireRole("trainer"), async (req: any, res) => {
+    try {
+      const trainerId = req.dbUser.id;
+      const mealPlans = await storage.getMealPlansByTrainer(trainerId);
+      res.json(mealPlans);
+    } catch (error) {
+      console.error("Error fetching trainer meal plans:", error);
+      res.status(500).json({ message: "Failed to fetch meal plans" });
+    }
+  });
+
+  /**
+   * Client Routes
+   * 
+   * Endpoints for clients to view their meal plans
+   */
+  
+  // Get client's latest meal plan
+  app.get('/api/client/meal-plan', isAuthenticated, requireRole("client", "trainer", "admin"), async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const targetId = req.query.userId || userId;
+      
+      // Only allow clients to view their own plans, trainers/admins can view any
+      if (req.dbUser.role === "client" && targetId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const mealPlan = await storage.getLatestMealPlanForUser(targetId);
+      res.json(mealPlan);
+    } catch (error) {
+      console.error("Error fetching client meal plan:", error);
+      res.status(500).json({ message: "Failed to fetch meal plan" });
+    }
+  });
+
+  // Get all meal plans for client
+  app.get('/api/client/meal-plans', isAuthenticated, requireRole("client", "trainer", "admin"), async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const targetId = req.query.userId || userId;
+      
+      // Only allow clients to view their own plans, trainers/admins can view any
+      if (req.dbUser.role === "client" && targetId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const mealPlans = await storage.getMealPlansForUser(targetId);
+      res.json(mealPlans);
+    } catch (error) {
+      console.error("Error fetching client meal plans:", error);
+      res.status(500).json({ message: "Failed to fetch meal plans" });
     }
   });
 

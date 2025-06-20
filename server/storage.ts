@@ -294,7 +294,7 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async createOrUpdateMealPlan(planData: MealPlan, assignedBy: string, assignedTo: string): Promise<StoredMealPlan> {
