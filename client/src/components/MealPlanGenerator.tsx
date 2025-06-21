@@ -15,6 +15,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
+import { flushSync } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -89,24 +90,23 @@ export default function MealPlanGenerator() {
   }, [queryClient]);
 
   /**
-   * Auto-refresh GUI when meal plan is generated
-   * 
-   * Automatically refreshes the interface when a new meal plan is generated
-   * to ensure the table populates immediately without manual refresh.
+   * Auto-scroll and ensure meal plan visibility when generated
    */
   useEffect(() => {
-    if (generatedPlan) {
-      console.log("Auto-refreshing GUI after meal plan generation");
+    if (generatedPlan && mealPlanRef.current) {
+      console.log("Auto-scrolling to meal plan after generation");
       
-      // Multiple refresh triggers to ensure table populates
-      const refreshTimers = [
-        setTimeout(() => setRefreshKey(prev => prev + 1), 50),
-        setTimeout(() => setRefreshKey(prev => prev + 1), 200),
-        setTimeout(() => setRefreshKey(prev => prev + 1), 500),
-        setTimeout(() => setRefreshKey(prev => prev + 1), 1000)
-      ];
+      // Small delay to ensure DOM is updated
+      const scrollTimer = setTimeout(() => {
+        if (mealPlanRef.current) {
+          mealPlanRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 200);
       
-      return () => refreshTimers.forEach(timer => clearTimeout(timer));
+      return () => clearTimeout(scrollTimer);
     }
   }, [generatedPlan]);
 
@@ -236,14 +236,14 @@ export default function MealPlanGenerator() {
     },
     onSuccess: (data: MealPlanResult) => {
       console.log("Meal plan generation successful:", data);
-      setIsAutoRefreshing(true);
       
-      // Immediate state update
-      setGeneratedPlan(data);
-      setRefreshKey(prev => prev + 1);
-      setForceRender(prev => prev + 1);
+      // Force synchronous state update to immediately render the meal plan
+      flushSync(() => {
+        setGeneratedPlan(data);
+        setRefreshKey(prev => prev + 1);
+      });
       
-      // Auto-scroll to meal plan section with smooth animation
+      // Immediate scroll after synchronous update
       setTimeout(() => {
         if (mealPlanRef.current) {
           mealPlanRef.current.scrollIntoView({ 
@@ -251,25 +251,11 @@ export default function MealPlanGenerator() {
             block: 'start' 
           });
         }
-        setRefreshKey(prev => prev + 1);
-        setForceRender(prev => prev + 1);
-      }, 50);
-      
-      // Ensure table populates with staggered refreshes
-      setTimeout(() => {
-        setRefreshKey(prev => prev + 1);
-        setForceRender(prev => prev + 1);
-      }, 200);
-      
-      setTimeout(() => {
-        setRefreshKey(prev => prev + 1);
-        setForceRender(prev => prev + 1);
-        setIsAutoRefreshing(false);
-      }, 1000);
+      }, 100);
       
       toast({
         title: "Meal Plan Generated Successfully",
-        description: "Auto-refreshing and scrolling to meal plan",
+        description: "Table populated and scrolling to view",
       });
     },
     onError: (error: Error) => {
