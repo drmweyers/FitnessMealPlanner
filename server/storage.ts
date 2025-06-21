@@ -52,7 +52,6 @@ export interface IStorage {
     total: number;
     approved: number;
     pending: number;
-    avgRating: number;
   }>;
 }
 
@@ -220,7 +219,6 @@ export class DatabaseStorage implements IStorage {
     total: number;
     approved: number;
     pending: number;
-    avgRating: number;
   }> {
     const [stats] = await db
       .select({
@@ -234,7 +232,6 @@ export class DatabaseStorage implements IStorage {
       total: stats.total,
       approved: stats.approved,
       pending: stats.pending,
-      avgRating: 4.6, // Static average rating
     };
   }
 }

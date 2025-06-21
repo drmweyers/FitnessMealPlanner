@@ -141,7 +141,6 @@ describe('Database Operations', () => {
       expect(typeof stats.total).toBe('number');
       expect(typeof stats.approved).toBe('number');
       expect(typeof stats.pending).toBe('number');
-      expect(typeof stats.avgRating).toBe('number');
       expect(stats.total).toBeGreaterThanOrEqual(stats.approved + stats.pending);
     });
 

@@ -181,19 +181,7 @@ export default function Home() {
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-slate-600">Avg Rating</p>
-                        <p className="text-2xl font-bold text-slate-900">{stats.avgRating}</p>
-                      </div>
-                      <div className="p-3 bg-yellow-100 rounded-full">
-                        <i className="fas fa-star text-yellow-500 text-xl"></i>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+
               </div>
             )}
 

@@ -86,7 +86,7 @@ export default function Landing() {
       {/* Stats Section */}
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
               <div className="text-3xl md:text-4xl font-bold text-primary mb-2">2,000+</div>
               <div className="text-slate-600">Healthy Recipes</div>
@@ -94,10 +94,6 @@ export default function Landing() {
             <div>
               <div className="text-3xl md:text-4xl font-bold text-secondary mb-2">50+</div>
               <div className="text-slate-600">Dietary Options</div>
-            </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-green-600 mb-2">4.8★</div>
-              <div className="text-slate-600">Average Rating</div>
             </div>
             <div>
               <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-2">24/7</div>
