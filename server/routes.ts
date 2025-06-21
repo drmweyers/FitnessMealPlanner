@@ -224,6 +224,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk delete recipes
+  app.delete('/api/admin/recipes', isAuthenticated, async (req, res) => {
+    try {
+      const { ids } = req.body;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "Recipe IDs array is required" });
+      }
+
+      if (ids.length > 100) {
+        return res.status(400).json({ message: "Maximum 100 recipes can be deleted at once" });
+      }
+
+      const deletedCount = await storage.bulkDeleteRecipes(ids);
+      
+      res.json({ 
+        message: `Successfully deleted ${deletedCount} recipe${deletedCount > 1 ? 's' : ''}`,
+        deletedCount 
+      });
+    } catch (error) {
+      console.error("Error bulk deleting recipes:", error);
+      res.status(500).json({ message: "Failed to delete recipes" });
+    }
+  });
+
   // Admin stats
   app.get('/api/admin/stats', isAuthenticated, async (req, res) => {
     try {

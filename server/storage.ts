@@ -24,6 +24,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 
 /**
  * Storage Interface
@@ -42,6 +43,7 @@ export interface IStorage {
   getRecipe(id: string): Promise<Recipe | undefined>;
   updateRecipe(id: string, updates: UpdateRecipe): Promise<Recipe | undefined>;
   deleteRecipe(id: string): Promise<boolean>;
+  bulkDeleteRecipes(ids: string[]): Promise<number>;
   
   // Advanced recipe operations
   searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }>;
@@ -121,6 +123,16 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting recipe:', error);
       return false;
+    }
+  }
+
+  async bulkDeleteRecipes(ids: string[]): Promise<number> {
+    try {
+      const result = await db.delete(recipes).where(inArray(recipes.id, ids));
+      return result.rowCount || 0;
+    } catch (error) {
+      console.error('Error bulk deleting recipes:', error);
+      return 0;
     }
   }
 
