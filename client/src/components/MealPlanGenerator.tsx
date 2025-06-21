@@ -48,6 +48,8 @@ interface MealPlanResult {
     daily: Array<{ day: number; calories: number; protein: number; carbs: number; fat: number }>;
   };
   message: string;
+  completed?: boolean;
+  timestamp?: string;
 }
 
 export default function MealPlanGenerator() {
@@ -237,26 +239,53 @@ export default function MealPlanGenerator() {
     onSuccess: (data: MealPlanResult) => {
       console.log("Meal plan generation successful:", data);
       
-      // Force synchronous state update to immediately render the meal plan
-      flushSync(() => {
+      // Check if backend indicates completion
+      if (data.completed) {
+        console.log("Backend confirmed meal plan generation completed at:", data.timestamp);
+        
+        // Force synchronous state update to immediately render the meal plan
+        flushSync(() => {
+          setGeneratedPlan(data);
+          setRefreshKey(prev => prev + 1);
+        });
+        
+        // Multiple auto-refresh triggers after confirmed completion
+        setTimeout(() => {
+          console.log("Auto-refresh trigger 1: Scrolling to meal plan");
+          if (mealPlanRef.current) {
+            mealPlanRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            });
+          }
+          setRefreshKey(prev => prev + 1);
+          setForceRender(prev => prev + 1);
+        }, 50);
+        
+        setTimeout(() => {
+          console.log("Auto-refresh trigger 2: Force re-render");
+          setRefreshKey(prev => prev + 1);
+          setForceRender(prev => prev + 1);
+        }, 200);
+        
+        setTimeout(() => {
+          console.log("Auto-refresh trigger 3: Final refresh");
+          setRefreshKey(prev => prev + 1);
+          setForceRender(prev => prev + 1);
+        }, 500);
+        
+        toast({
+          title: "Meal Plan Generated Successfully",
+          description: "Generation completed - auto-refreshing table",
+        });
+      } else {
+        // Fallback for responses without completion flag
         setGeneratedPlan(data);
-        setRefreshKey(prev => prev + 1);
-      });
-      
-      // Immediate scroll after synchronous update
-      setTimeout(() => {
-        if (mealPlanRef.current) {
-          mealPlanRef.current.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
-        }
-      }, 100);
-      
-      toast({
-        title: "Meal Plan Generated Successfully",
-        description: "Table populated and scrolling to view",
-      });
+        toast({
+          title: "Meal Plan Generated",
+          description: "Please scroll down to view your meal plan",
+        });
+      }
     },
     onError: (error: Error) => {
       console.error("Meal plan generation failed:", error);

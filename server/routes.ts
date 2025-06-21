@@ -429,6 +429,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mealPlan,
         nutrition,
         message: `Successfully generated ${validatedData.days}-day meal plan`,
+        completed: true,
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
       console.error("Error generating meal plan:", error);
