@@ -171,12 +171,9 @@ export default function MealPlanGenerator() {
     onSuccess: (data: MealPlanResult) => {
       setGeneratedPlan(data);
       
-      // Comprehensive auto-refresh of all related data
+      // Auto-refresh recipe data only (remove admin endpoints for public users)
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
       queryClient.refetchQueries({ queryKey: ['/api/recipes'] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
       
       toast({
         title: "Meal Plan Generated",

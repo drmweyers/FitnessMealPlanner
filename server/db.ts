@@ -16,10 +16,12 @@ console.log(`Database mode: ${isDevelopment ? 'Development' : 'Production'}`);
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
-  max: 5, // Increase max connections for better performance
-  min: 2, // Keep more connections alive
-  idleTimeoutMillis: 30000, // Keep connections alive longer
-  connectionTimeoutMillis: 10000, // Longer timeout for reliability
+  max: 3, // Reduce max connections to prevent overload
+  min: 1, // Keep minimum connections alive
+  idleTimeoutMillis: 60000, // Keep connections alive longer
+  connectionTimeoutMillis: 15000, // Increased timeout for reliability
+  acquireTimeoutMillis: 60000, // Time to wait for connection from pool
+  allowExitOnIdle: true, // Allow process to exit when idle
 });
 
 // Add error handling for the pool
