@@ -87,8 +87,11 @@ export class MealPlanGeneratorService {
     }
 
     if (recipes.length === 0) {
-      throw new Error("No approved recipes available in the database. Please add some recipes first.");
+      console.error("No recipes found in database");
+      throw new Error("No approved recipes available in the database. Please add some recipes first or check your database connection.");
     }
+
+    console.log(`Found ${recipes.length} approved recipes for meal plan generation`);
 
     // Define meal types for distribution
     const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];

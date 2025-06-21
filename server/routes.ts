@@ -349,7 +349,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test endpoint
   app.get('/api/meal-plan/test', async (req, res) => {
     console.log("Test endpoint hit");
-    res.json({ status: "ok", message: "Meal plan service is available" });
+    try {
+      // Check if there are any approved recipes available
+      const { recipes, total } = await storage.searchRecipes({ 
+        approved: true, 
+        limit: 1, 
+        page: 1 
+      });
+      
+      res.json({ 
+        status: "ok", 
+        message: "Meal plan service is available",
+        recipesAvailable: total > 0,
+        totalRecipes: total
+      });
+    } catch (error) {
+      console.error("Test endpoint error:", error);
+      res.json({ 
+        status: "error", 
+        message: "Database connection issue",
+        recipesAvailable: false,
+        totalRecipes: 0
+      });
+    }
   });
 
   // Meal Plan Generation - Public endpoint for core functionality
@@ -363,7 +385,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Request body is required" });
       }
 
-      const userId = (req.user as any)?.claims?.sub || 'anonymous';
+      // Allow anonymous users for public meal plan generation
+      const userId = (req as any).user?.claims?.sub || 'anonymous';
       console.log("User ID:", userId);
       
       // Basic required fields check
@@ -381,7 +404,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dailyCalorieTarget: Number(dailyCalorieTarget),
         days: Number(days),
         mealsPerDay: Number(mealsPerDay),
-        ...req.body
+        clientName: req.body.clientName || "",
+        description: req.body.description || "",
+        // Optional filters
+        mealType: req.body.mealType || undefined,
+        dietaryTag: req.body.dietaryTag || undefined,
+        maxPrepTime: req.body.maxPrepTime ? Number(req.body.maxPrepTime) : undefined,
+        maxCalories: req.body.maxCalories ? Number(req.body.maxCalories) : undefined,
+        minCalories: req.body.minCalories ? Number(req.body.minCalories) : undefined,
+        minProtein: req.body.minProtein ? Number(req.body.minProtein) : undefined,
+        maxProtein: req.body.maxProtein ? Number(req.body.maxProtein) : undefined,
+        minCarbs: req.body.minCarbs ? Number(req.body.minCarbs) : undefined,
+        maxCarbs: req.body.maxCarbs ? Number(req.body.maxCarbs) : undefined,
+        minFat: req.body.minFat ? Number(req.body.minFat) : undefined,
+        maxFat: req.body.maxFat ? Number(req.body.maxFat) : undefined,
       };
       
       console.log("Validated data:", validatedData);
@@ -396,9 +432,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error generating meal plan:", error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to generate meal plan";
+      if ((error as Error).message.includes("No approved recipes")) {
+        errorMessage = "No recipes available in the database. Please add some recipes first.";
+      } else if ((error as Error).message.includes("Connection")) {
+        errorMessage = "Database connection issue. Please try again.";
+      } else {
+        errorMessage = (error as Error).message || errorMessage;
+      }
+      
       res.status(500).json({ 
-        message: (error as Error).message || "Failed to generate meal plan",
-        error: process.env.NODE_ENV === 'development' ? error : undefined
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? (error as Error).stack : undefined
       });
     }
   });
