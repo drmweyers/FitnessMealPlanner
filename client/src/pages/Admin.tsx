@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import AdminTable from "@/components/AdminTable";
+import AdminRecipeGrid from "@/components/AdminRecipeGrid";
 import SearchFilters from "@/components/SearchFilters";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
@@ -16,8 +17,11 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<RecipeFilter>({ 
     page: 1, 
-    limit: 20 
+    limit: 50,
+    approved: undefined // Show all recipes by default
   });
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
+  const [showAllRecipes, setShowAllRecipes] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery<{
     total: number;
@@ -29,13 +33,22 @@ export default function Admin() {
     enabled: isAuthenticated,
   });
 
-  const { data: recipesData, isLoading: pendingLoading } = useQuery({
-    queryKey: ['/api/admin/recipes', filters],
-    enabled: isAuthenticated,
+  // Use the working public recipes endpoint instead of admin recipes
+  const { data: allRecipesData, isLoading: allRecipesLoading } = useQuery({
+    queryKey: ['/api/recipes', filters],
+    enabled: isAuthenticated && showAllRecipes,
   });
 
-  const pendingRecipes = (recipesData as any)?.recipes || [];
-  const total = (recipesData as any)?.total || 0;
+  const { data: adminRecipesData, isLoading: pendingLoading } = useQuery({
+    queryKey: ['/api/admin/recipes', filters],
+    enabled: isAuthenticated && !showAllRecipes,
+  });
+
+  const allRecipes = (allRecipesData as any)?.recipes || [];
+  const pendingRecipes = (adminRecipesData as any)?.recipes || [];
+  const displayRecipes = showAllRecipes ? allRecipes : pendingRecipes;
+  const total = showAllRecipes ? allRecipes.length : ((adminRecipesData as any)?.total || 0);
+  const isLoading = showAllRecipes ? allRecipesLoading : pendingLoading;
 
   const handleFilterChange = (newFilters: Partial<RecipeFilter>) => {
     setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
@@ -298,12 +311,19 @@ export default function Admin() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow" 
+          onClick={() => {
+            setShowAllRecipes(true);
+            setFilters({ page: 1, limit: 50 });
+          }}
+        >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Total Recipes</p>
                   <p className="text-2xl font-bold text-slate-900">{stats.total.toLocaleString()}</p>
+                  <p className="text-xs text-primary mt-1">Click to view all recipes</p>
                 </div>
                 <div className="p-3 bg-primary/10 rounded-full">
                   <i className="fas fa-book text-primary text-xl"></i>
