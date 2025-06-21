@@ -129,7 +129,7 @@ export class DatabaseStorage implements IStorage {
   async bulkDeleteRecipes(ids: string[]): Promise<number> {
     try {
       const result = await db.delete(recipes).where(inArray(recipes.id, ids));
-      return result.rowCount || 0;
+      return Number(result.rowCount) || 0;
     } catch (error) {
       console.error('Error bulk deleting recipes:', error);
       return 0;

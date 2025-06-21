@@ -168,6 +168,45 @@ export default function Admin() {
     },
   });
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const response = await apiRequest('DELETE', '/api/admin/recipes', { ids });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Recipes Deleted",
+        description: data.message,
+      });
+      // Aggressively refresh all related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      
+      // Force refetch to ensure immediate updates
+      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete selected recipes",
+        variant: "destructive",
+      });
+    },
+  });
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -337,8 +376,10 @@ export default function Admin() {
             isLoading={pendingLoading}
             onApprove={(id) => approveMutation.mutate(id)}
             onDelete={(id) => deleteMutation.mutate(id)}
+            onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
             approvePending={approveMutation.isPending}
             deletePending={deleteMutation.isPending}
+            bulkDeletePending={bulkDeleteMutation.isPending}
           />
         </CardContent>
       </Card>
