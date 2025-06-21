@@ -52,7 +52,7 @@ function Router() {
     <Switch>
       {/* Main application routes with tabs */}
       <Route path="/" component={Home} />
-      <Route path="/admin" component={Home} />
+      <Route path="/admin" component={Admin} />
       <Route path="/meal-plan-generator" component={Home} />
       {/* Fallback for unknown routes */}
       <Route component={Home} />
