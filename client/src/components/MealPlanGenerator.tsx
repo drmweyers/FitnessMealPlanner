@@ -14,7 +14,7 @@
  * - Comprehensive nutrition tracking and analysis
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -60,6 +60,7 @@ export default function MealPlanGenerator() {
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [forceRender, setForceRender] = useState(0);
+  const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const mealPlanRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -235,31 +236,40 @@ export default function MealPlanGenerator() {
     },
     onSuccess: (data: MealPlanResult) => {
       console.log("Meal plan generation successful:", data);
+      setIsAutoRefreshing(true);
       
-      // Immediate state update with multiple force renders
+      // Immediate state update
       setGeneratedPlan(data);
       setRefreshKey(prev => prev + 1);
       setForceRender(prev => prev + 1);
       
-      // Force React to re-render the entire component tree
+      // Auto-scroll to meal plan section with smooth animation
       setTimeout(() => {
-        setRefreshKey(prev => prev + 1);
-        setForceRender(prev => prev + 1);
-      }, 0);
-      
-      setTimeout(() => {
+        if (mealPlanRef.current) {
+          mealPlanRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
         setRefreshKey(prev => prev + 1);
         setForceRender(prev => prev + 1);
       }, 50);
       
+      // Ensure table populates with staggered refreshes
       setTimeout(() => {
         setRefreshKey(prev => prev + 1);
         setForceRender(prev => prev + 1);
       }, 200);
       
+      setTimeout(() => {
+        setRefreshKey(prev => prev + 1);
+        setForceRender(prev => prev + 1);
+        setIsAutoRefreshing(false);
+      }, 1000);
+      
       toast({
         title: "Meal Plan Generated Successfully",
-        description: "Table will populate automatically",
+        description: "Auto-refreshing and scrolling to meal plan",
       });
     },
     onError: (error: Error) => {
@@ -1127,7 +1137,7 @@ export default function MealPlanGenerator() {
             </div>
 
             {/* Meal Plan */}
-            <div key={`${refreshKey}-${forceRender}`} className="space-y-4">
+            <div ref={mealPlanRef} key={`${refreshKey}-${forceRender}`} className="space-y-4">
               {Array.from({ length: generatedPlan.mealPlan.days }, (_, dayIndex) => {
                 const day = dayIndex + 1;
                 const dayMeals = generatedPlan.mealPlan.meals.filter(meal => meal.day === day);
