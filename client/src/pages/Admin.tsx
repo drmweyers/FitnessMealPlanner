@@ -15,7 +15,7 @@ export default function Admin() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<RecipeFilter>({ 
-    approved: false, 
+    approved: true, 
     page: 1, 
     limit: 20 
   });
