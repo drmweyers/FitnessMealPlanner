@@ -1082,15 +1082,35 @@ export default function MealPlanGenerator() {
                 <Target className="h-5 w-5" />
                 {generatedPlan.mealPlan.planName}
               </div>
-              <Button
-                onClick={exportToPDF}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Export to PDF
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setRefreshKey(prev => prev + 1);
+                    setForceRender(prev => prev + 1);
+                    if (mealPlanRef.current) {
+                      mealPlanRef.current.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                      });
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <ChefHat className="h-4 w-4" />
+                  Refresh List
+                </Button>
+                <Button
+                  onClick={exportToPDF}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Export to PDF
+                </Button>
+              </div>
             </CardTitle>
             <CardDescription className="space-y-1">
               <div className="flex items-center gap-4 text-sm">
