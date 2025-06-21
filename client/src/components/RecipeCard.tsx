@@ -72,12 +72,13 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
       </div>
       
       <CardContent className="p-4">
-        <div className="flex items-center space-x-2 mb-2">
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${getMealTypeColor(primaryMealType)}`}>
+        {/* Meal Type - More Prominent */}
+        <div className="mb-3">
+          <div className={`inline-block text-sm font-semibold px-3 py-2 rounded-lg ${getMealTypeColor(primaryMealType)} shadow-sm`}>
             {primaryMealType.charAt(0).toUpperCase() + primaryMealType.slice(1)}
-          </span>
+          </div>
           {primaryDietaryTag && (
-            <span className={`text-xs font-medium px-2 py-1 rounded-full ${getDietaryTagColor(primaryDietaryTag)}`}>
+            <span className={`ml-2 text-xs font-medium px-2 py-1 rounded-full ${getDietaryTagColor(primaryDietaryTag)}`}>
               {primaryDietaryTag.charAt(0).toUpperCase() + primaryDietaryTag.slice(1)}
             </span>
           )}
@@ -98,18 +99,28 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           </div>
         </div>
         
-        <div className="grid grid-cols-3 gap-2 text-xs">
-          <div className="text-center p-2 bg-slate-50 rounded">
-            <div className="font-semibold text-slate-900">{Number(recipe.proteinGrams).toFixed(0)}g</div>
-            <div className="text-slate-500">Protein</div>
+        {/* Nutrition Information with Brand Colors */}
+        <div>
+          <h4 className="text-sm font-medium text-slate-700 mb-2">Nutrition Information</h4>
+          <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">{recipe.caloriesKcal}</div>
+              <div className="text-xs text-slate-500">Calories</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">{Number(recipe.proteinGrams).toFixed(0)}g</div>
+              <div className="text-xs text-slate-500">Protein</div>
+            </div>
           </div>
-          <div className="text-center p-2 bg-slate-50 rounded">
-            <div className="font-semibold text-slate-900">{Number(recipe.carbsGrams).toFixed(0)}g</div>
-            <div className="text-slate-500">Carbs</div>
-          </div>
-          <div className="text-center p-2 bg-slate-50 rounded">
-            <div className="font-semibold text-slate-900">{Number(recipe.fatGrams).toFixed(0)}g</div>
-            <div className="text-slate-500">Fat</div>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{Number(recipe.carbsGrams).toFixed(0)}g</div>
+              <div className="text-xs text-slate-500">Carbs</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{Number(recipe.fatGrams).toFixed(0)}g</div>
+              <div className="text-xs text-slate-500">Fat</div>
+            </div>
           </div>
         </div>
       </CardContent>

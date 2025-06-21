@@ -74,19 +74,19 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Nutrition Information</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{recipe.caloriesKcal}</div>
+                    <div className="text-3xl font-bold text-orange-600">{recipe.caloriesKcal}</div>
                     <div className="text-sm text-gray-600">Calories</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{Number(recipe.proteinGrams).toFixed(0)}g</div>
+                    <div className="text-3xl font-bold text-red-600">{Number(recipe.proteinGrams).toFixed(0)}g</div>
                     <div className="text-sm text-gray-600">Protein</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{Number(recipe.carbsGrams).toFixed(0)}g</div>
+                    <div className="text-3xl font-bold text-blue-600">{Number(recipe.carbsGrams).toFixed(0)}g</div>
                     <div className="text-sm text-gray-600">Carbs</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gray-900">{Number(recipe.fatGrams).toFixed(0)}g</div>
+                    <div className="text-3xl font-bold text-green-600">{Number(recipe.fatGrams).toFixed(0)}g</div>
                     <div className="text-sm text-gray-600">Fat</div>
                   </div>
                 </div>
