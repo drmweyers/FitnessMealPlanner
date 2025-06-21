@@ -376,32 +376,87 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Search and Filters */}
-      <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+      {/* Search and Filters - only show when viewing recipes */}
+      {showAllRecipes && <SearchFilters filters={filters} onFilterChange={handleFilterChange} />}
 
-      {/* Recipe Management Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="px-6 py-4 border-b border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900">Recipe Management</h2>
-            <p className="text-sm text-slate-600 mt-1">
-              {filters.approved === false ? 'Pending Recipe Reviews' : 
-               filters.approved === true ? 'Approved Recipes' : 'All Recipes'} 
-              ({total} results)
-            </p>
-          </div>
-          <AdminTable
-            recipes={pendingRecipes}
-            isLoading={pendingLoading}
-            onApprove={(id) => approveMutation.mutate(id)}
-            onDelete={(id) => deleteMutation.mutate(id)}
-            onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
-            approvePending={approveMutation.isPending}
-            deletePending={deleteMutation.isPending}
-            bulkDeletePending={bulkDeleteMutation.isPending}
-          />
-        </CardContent>
-      </Card>
+      {/* Recipe Management Section */}
+      {showAllRecipes ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">All Recipes ({total} total)</h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  Manage and delete recipes from the database
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
+                >
+                  <i className={`fas ${viewMode === 'grid' ? 'fa-table' : 'fa-th-large'} mr-2`}></i>
+                  {viewMode === 'grid' ? 'Table View' : 'Grid View'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAllRecipes(false)}
+                >
+                  <i className="fas fa-arrow-left mr-2"></i>
+                  Back to Dashboard
+                </Button>
+              </div>
+            </div>
+
+            {viewMode === 'grid' ? (
+              <AdminRecipeGrid
+                recipes={displayRecipes}
+                isLoading={isLoading}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
+                deletePending={deleteMutation.isPending}
+                bulkDeletePending={bulkDeleteMutation.isPending}
+              />
+            ) : (
+              <AdminTable
+                recipes={displayRecipes}
+                isLoading={isLoading}
+                onApprove={(id) => approveMutation.mutate(id)}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
+                approvePending={approveMutation.isPending}
+                deletePending={deleteMutation.isPending}
+                bulkDeletePending={bulkDeleteMutation.isPending}
+              />
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <div className="px-6 py-4 border-b border-slate-200">
+              <h2 className="text-xl font-semibold text-slate-900">Recipe Management</h2>
+              <p className="text-sm text-slate-600 mt-1">
+                {filters.approved === false ? 'Pending Recipe Reviews' : 
+                 filters.approved === true ? 'Approved Recipes' : 'All Recipes'} 
+                ({total} results)
+              </p>
+            </div>
+            <AdminTable
+              recipes={displayRecipes}
+              isLoading={isLoading}
+              onApprove={(id) => approveMutation.mutate(id)}
+              onDelete={(id) => deleteMutation.mutate(id)}
+              onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
+              approvePending={approveMutation.isPending}
+              deletePending={deleteMutation.isPending}
+              bulkDeletePending={bulkDeleteMutation.isPending}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
