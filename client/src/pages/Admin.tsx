@@ -379,27 +379,30 @@ export default function Admin() {
       {/* Search and Filters - only show when viewing recipes */}
       {showAllRecipes && <SearchFilters filters={filters} onFilterChange={handleFilterChange} />}
 
-      {/* Show All Recipes Button - only show when not viewing recipes */}
+      {/* Show All Recipes Button - always show when not viewing recipes */}
       {!showAllRecipes && (
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Recipe Database Management</h3>
-              <p className="text-slate-600 mb-4">View and manage all recipes in the database with delete functionality</p>
-              <Button
-                size="lg"
-                onClick={() => {
-                  setShowAllRecipes(true);
-                  setFilters({ page: 1, limit: 50 });
-                }}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <i className="fas fa-database mr-2"></i>
-                View All Recipes ({stats?.total || 0})
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <>
+          <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Recipe Database Management</h3>
+                <p className="text-slate-600 mb-4">View and manage all recipes in the database with delete functionality</p>
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    setShowAllRecipes(true);
+                    setFilters({ page: 1, limit: 50 });
+                  }}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <i className="fas fa-database mr-2"></i>
+                  View All Recipes ({stats?.total || 0})
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* Recipe Management Section */}
