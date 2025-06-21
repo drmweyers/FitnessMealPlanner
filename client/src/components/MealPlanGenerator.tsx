@@ -59,6 +59,8 @@ export default function MealPlanGenerator() {
   const [showAdvancedForm, setShowAdvancedForm] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [forceRender, setForceRender] = useState(0);
+  const mealPlanRef = useRef<HTMLDivElement>(null);
 
   /**
    * Recipe Modal Handlers
@@ -95,23 +97,17 @@ export default function MealPlanGenerator() {
     if (generatedPlan) {
       console.log("Auto-refreshing GUI after meal plan generation");
       
-      // Force immediate refresh of recipe data
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      queryClient.refetchQueries({ queryKey: ['/api/recipes'] });
+      // Multiple refresh triggers to ensure table populates
+      const refreshTimers = [
+        setTimeout(() => setRefreshKey(prev => prev + 1), 50),
+        setTimeout(() => setRefreshKey(prev => prev + 1), 200),
+        setTimeout(() => setRefreshKey(prev => prev + 1), 500),
+        setTimeout(() => setRefreshKey(prev => prev + 1), 1000)
+      ];
       
-      // Trigger key refresh to force component re-render
-      setRefreshKey(prev => prev + 1);
-      
-      // Additional refresh to ensure table populates
-      const refreshTimer = setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-        queryClient.refetchQueries({ queryKey: ['/api/recipes'] });
-        setRefreshKey(prev => prev + 1);
-      }, 500);
-      
-      return () => clearTimeout(refreshTimer);
+      return () => refreshTimers.forEach(timer => clearTimeout(timer));
     }
-  }, [generatedPlan, queryClient]);
+  }, [generatedPlan]);
 
   const form = useForm<MealPlanGeneration>({
     resolver: zodResolver(mealPlanGenerationSchema),
@@ -239,32 +235,31 @@ export default function MealPlanGenerator() {
     },
     onSuccess: (data: MealPlanResult) => {
       console.log("Meal plan generation successful:", data);
+      
+      // Immediate state update with multiple force renders
       setGeneratedPlan(data);
-      
-      // Comprehensive auto-refresh to populate GUI immediately
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      queryClient.refetchQueries({ queryKey: ['/api/recipes'] });
-      
-      // Force immediate component refresh
       setRefreshKey(prev => prev + 1);
+      setForceRender(prev => prev + 1);
       
-      // Force immediate re-render of the meal plan display
+      // Force React to re-render the entire component tree
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-        queryClient.refetchQueries({ queryKey: ['/api/recipes'] });
         setRefreshKey(prev => prev + 1);
-      }, 100);
+        setForceRender(prev => prev + 1);
+      }, 0);
       
-      // Additional refresh after 1 second to ensure all data is loaded
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-        queryClient.refetchQueries({ queryKey: ['/api/recipes'] });
         setRefreshKey(prev => prev + 1);
-      }, 1000);
+        setForceRender(prev => prev + 1);
+      }, 50);
+      
+      setTimeout(() => {
+        setRefreshKey(prev => prev + 1);
+        setForceRender(prev => prev + 1);
+      }, 200);
       
       toast({
         title: "Meal Plan Generated Successfully",
-        description: data.message || "Meal plan generated successfully - Table will populate automatically",
+        description: "Table will populate automatically",
       });
     },
     onError: (error: Error) => {
@@ -1132,14 +1127,14 @@ export default function MealPlanGenerator() {
             </div>
 
             {/* Meal Plan */}
-            <div key={refreshKey} className="space-y-4">
+            <div key={`${refreshKey}-${forceRender}`} className="space-y-4">
               {Array.from({ length: generatedPlan.mealPlan.days }, (_, dayIndex) => {
                 const day = dayIndex + 1;
                 const dayMeals = generatedPlan.mealPlan.meals.filter(meal => meal.day === day);
                 const dayNutrition = generatedPlan.nutrition.daily[dayIndex];
 
                 return (
-                  <Card key={`${day}-${refreshKey}`} className="border-l-4 border-l-blue-500">
+                  <Card key={`${day}-${refreshKey}-${forceRender}`} className="border-l-4 border-l-blue-500">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg flex items-center justify-between">
                         <span>Day {day}</span>
