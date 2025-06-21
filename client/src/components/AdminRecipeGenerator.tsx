@@ -224,6 +224,16 @@ export default function AdminRecipeGenerator() {
     });
   };
 
+  const handleRefreshPendingRecipes = () => {
+    // Force immediate refresh of pending recipes list
+    queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/recipes' });
+    queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
+    toast({
+      title: "Pending Recipes Refreshed",
+      description: "Pending recipe list has been updated",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -752,14 +762,24 @@ export default function AdminRecipeGenerator() {
                     {lastGeneration.count} recipes {isGenerating ? "generating" : "generated"}
                   </Badge>
                   {!isGenerating && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRefreshStats}
-                      className="text-xs"
-                    >
-                      Refresh Stats
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRefreshStats}
+                        className="text-xs"
+                      >
+                        Refresh Stats
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRefreshPendingRecipes}
+                        className="text-xs bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
+                      >
+                        Refresh Pending Recipe List
+                      </Button>
+                    </>
                   )}
                 </div>
               </>
