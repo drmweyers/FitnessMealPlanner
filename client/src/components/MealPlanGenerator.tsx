@@ -82,7 +82,6 @@ export default function MealPlanGenerator() {
   useEffect(() => {
     // Refresh recipe data on component mount to ensure latest available recipes
     queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
   }, [queryClient]);
 
   const form = useForm<MealPlanGeneration>({
@@ -164,11 +163,32 @@ export default function MealPlanGenerator() {
 
   const generateMealPlan = useMutation({
     mutationFn: async (data: MealPlanGeneration): Promise<MealPlanResult> => {
-      const response = await apiRequest('POST', '/api/meal-plan/generate', data);
-      const result = await response.json();
-      return result as MealPlanResult;
+      console.log("Generating meal plan with data:", data);
+      
+      try {
+        const response = await apiRequest('POST', '/api/meal-plan/generate', data);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log("Meal plan generation result:", result);
+        
+        // Validate the response structure
+        if (!result.mealPlan || !result.nutrition) {
+          throw new Error("Invalid response format from server");
+        }
+        
+        return result as MealPlanResult;
+      } catch (error) {
+        console.error("Meal plan generation error:", error);
+        throw error;
+      }
     },
     onSuccess: (data: MealPlanResult) => {
+      console.log("Meal plan generation successful:", data);
       setGeneratedPlan(data);
       
       // Auto-refresh recipe data only (remove admin endpoints for public users)
@@ -176,14 +196,15 @@ export default function MealPlanGenerator() {
       queryClient.refetchQueries({ queryKey: ['/api/recipes'] });
       
       toast({
-        title: "Meal Plan Generated",
-        description: data.message,
+        title: "Meal Plan Generated Successfully",
+        description: data.message || `Generated ${data.mealPlan.days.length}-day meal plan`,
       });
     },
     onError: (error: Error) => {
+      console.error("Meal plan generation failed:", error);
       toast({
         title: "Generation Failed",
-        description: error.message,
+        description: error.message || "An unexpected error occurred during meal plan generation",
         variant: "destructive",
       });
     },

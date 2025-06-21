@@ -20,7 +20,6 @@ const pool = new Pool({
   min: 1, // Keep minimum connections alive
   idleTimeoutMillis: 60000, // Keep connections alive longer
   connectionTimeoutMillis: 15000, // Increased timeout for reliability
-  acquireTimeoutMillis: 60000, // Time to wait for connection from pool
   allowExitOnIdle: true, // Allow process to exit when idle
 });
 
