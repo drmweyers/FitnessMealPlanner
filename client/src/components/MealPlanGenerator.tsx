@@ -1049,24 +1049,49 @@ export default function MealPlanGenerator() {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={generateMealPlan.isPending}
-                size="lg"
-              >
-                {generateMealPlan.isPending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    Generating Meal Plan...
-                  </>
-                ) : (
-                  <>
-                    <ChefHat className="h-4 w-4 mr-2" />
-                    Generate Meal Plan
-                  </>
+              <div className="flex gap-3">
+                <Button 
+                  type="submit" 
+                  className="flex-1" 
+                  disabled={generateMealPlan.isPending}
+                  size="lg"
+                >
+                  {generateMealPlan.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Generating Meal Plan...
+                    </>
+                  ) : (
+                    <>
+                      <ChefHat className="h-4 w-4 mr-2" />
+                      Generate Meal Plan
+                    </>
+                  )}
+                </Button>
+                
+                {generatedPlan && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      console.log("Manual refresh button clicked");
+                      setRefreshKey(prev => prev + 1);
+                      setForceRender(prev => prev + 1);
+                      if (mealPlanRef.current) {
+                        mealPlanRef.current.scrollIntoView({ 
+                          behavior: 'smooth', 
+                          block: 'start' 
+                        });
+                      }
+                    }}
+                    variant="outline"
+                    size="lg"
+                    className="px-6"
+                  >
+                    <Target className="h-4 w-4 mr-2" />
+                    Refresh List
+                  </Button>
                 )}
-              </Button>
+              </div>
               </form>
             </Form>
           )}
