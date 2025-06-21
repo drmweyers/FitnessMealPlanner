@@ -338,7 +338,12 @@ export async function generateMealImage(recipe: {
     "dramatic food styling with dark moody lighting",
     "Mediterranean-inspired presentation with ceramic bowls",
     "Scandinavian minimalist styling with light oak surfaces",
-    "contemporary fine dining presentation with artistic garnishes"
+    "contemporary fine dining presentation with artistic garnishes",
+    "vintage diner aesthetic with checkered tablecloth",
+    "modern cafe styling with concrete surfaces",
+    "elegant restaurant presentation with black backgrounds",
+    "home kitchen warmth with natural wood tones",
+    "industrial kitchen styling with steel surfaces"
   ];
 
   // Define unique plating and presentation elements
@@ -352,7 +357,12 @@ export async function generateMealImage(recipe: {
     "creatively plated on a wooden serving tray",
     "perfectly arranged on a vintage ceramic plate",
     "tastefully presented in a modern square dish",
-    "aesthetically composed on a natural stone plate"
+    "aesthetically composed on a natural stone plate",
+    "served in a colorful Mexican ceramic bowl",
+    "presented on a handcrafted pottery dish",
+    "arranged on a sleek black granite surface",
+    "displayed in a rustic copper serving pan",
+    "composed on a vintage blue and white china plate"
   ];
 
   // Define varied camera angles and compositions
@@ -364,38 +374,100 @@ export async function generateMealImage(recipe: {
     "eye-level perspective with blurred background",
     "slightly elevated angle showing depth and layers",
     "diagonal composition with dynamic visual flow",
-    "centered composition with symmetrical balance"
+    "centered composition with symmetrical balance",
+    "asymmetrical composition with negative space",
+    "low angle shot emphasizing height and volume",
+    "extreme close-up highlighting ingredients",
+    "wide shot showing table setting context"
+  ];
+
+  // Define lighting variations for uniqueness
+  const lightingStyles = [
+    "soft natural window light from the left",
+    "warm golden hour lighting",
+    "cool daylight with soft shadows",
+    "dramatic side lighting with deep shadows",
+    "bright even lighting with minimal shadows",
+    "warm tungsten lighting for cozy atmosphere",
+    "cool LED lighting for modern feel",
+    "backlighting to highlight steam and textures",
+    "rim lighting to create depth and separation",
+    "diffused overhead lighting for even illumination"
+  ];
+
+  // Define color schemes for variety
+  const colorSchemes = [
+    "warm earth tones with browns and golds",
+    "cool blues and whites for fresh appearance",
+    "vibrant colors highlighting fresh ingredients",
+    "monochromatic styling in neutral tones",
+    "high contrast black and white accents",
+    "pastel color palette for soft appearance",
+    "rich jewel tones for luxury feel",
+    "natural green accents from herbs and vegetables",
+    "warm orange and red tones for appetite appeal",
+    "clean white with single color accent"
+  ];
+
+  // Define garnish and styling details
+  const garnishStyles = [
+    "fresh herb garnish artfully placed",
+    "microgreens for professional presentation",
+    "edible flowers for elegant decoration",
+    "sauce drizzle in artistic pattern",
+    "toasted nuts or seeds scattered around",
+    "fresh citrus zest or slices as accent",
+    "colorful vegetable chips as decoration",
+    "herb oil drizzle for color contrast",
+    "crispy bacon bits or protein garnish",
+    "seasonal fruit accompaniment"
   ];
 
   // Select random elements for maximum uniqueness
   const imageStyle = imageStyles[Math.floor(Math.random() * imageStyles.length)];
   const platingStyle = platingStyles[Math.floor(Math.random() * platingStyles.length)];
   const composition = compositions[Math.floor(Math.random() * compositions.length)];
+  const lightingStyle = lightingStyles[Math.floor(Math.random() * lightingStyles.length)];
+  const colorScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
+  const garnishStyle = garnishStyles[Math.floor(Math.random() * garnishStyles.length)];
   
-  // Generate unique timestamp-based variation
-  const uniqueId = Date.now() % 1000;
+  // Generate multiple uniqueness factors
+  const uniqueId = Date.now() % 10000;
+  const randomSeed = Math.floor(Math.random() * 1000000);
+  const recipeHash = recipe.name.length + recipe.description.length;
   
-  const imagePrompt = `Create a completely UNIQUE and visually distinct photograph of "${recipe.name}" (variation #${uniqueId}). This ${recipe.mealTypes[0]?.toLowerCase() || 'meal'} dish features: ${recipe.description}. 
+  const imagePrompt = `Create a completely UNIQUE and visually distinct photograph of "${recipe.name}" (ID: ${uniqueId}-${randomSeed}-${recipeHash}). This ${recipe.mealTypes[0]?.toLowerCase() || 'meal'} dish features: ${recipe.description}. 
 
-VISUAL REQUIREMENTS FOR UNIQUENESS:
-- ${platingStyle}
+VISUAL REQUIREMENTS FOR ABSOLUTE UNIQUENESS:
+- Plating: ${platingStyle}
 - Photography style: ${imageStyle}
 - Camera composition: ${composition}
-- Specific to this dish's ingredients and colors described in: "${recipe.description}"
-- Must look distinctly different from other food photographs
-- Focus on the unique characteristics and textures of THIS specific meal
-- Use lighting and styling that emphasizes the meal's individual components
-- Include props and garnishes that complement this particular dish's flavor profile
+- Lighting: ${lightingStyle}
+- Color scheme: ${colorScheme}
+- Garnish: ${garnishStyle}
+
+RECIPE-SPECIFIC DETAILS:
+- Highlight the specific ingredients mentioned in: "${recipe.description}"
+- Emphasize textures unique to this recipe's cooking method
+- Show the characteristic colors of this particular dish
+- Include visual elements that tell the story of this specific recipe
+
+UNIQUENESS REQUIREMENTS:
+- This image must be completely different from any other food photograph
+- Use the exact combination of styling elements listed above
+- Focus on what makes THIS dish special and recognizable
+- Include unique visual markers that distinguish it from similar meals
+- Ensure the styling choices create a one-of-a-kind appearance
 
 TECHNICAL SPECIFICATIONS:
 - Ultra-high resolution, professional food photography
-- Perfect lighting to showcase ingredient textures and colors
-- Sharp focus on the main dish with appropriate depth of field
-- Food styling that makes this specific meal look appetizing and fresh
-- Color palette that enhances the natural colors of the ingredients
-- Composition that tells the story of this particular recipe
+- Lighting must match the specified style: ${lightingStyle}
+- Color palette following: ${colorScheme}
+- Sharp focus highlighting ingredient textures
+- Professional food styling with specified garnish: ${garnishStyle}
+- Camera angle and composition as specified: ${composition}
 
-The final image must be completely unique, instantly recognizable as THIS specific dish, and unlike any other food photograph. Make it magazine-quality and irresistibly appetizing.`;
+FINAL REQUIREMENT: This image must be instantly distinguishable from other food photos through its unique combination of styling, lighting, plating, and composition elements. Make it magazine-quality and irresistibly appetizing while maintaining complete visual uniqueness.`;
 
   try {
     const response = await openai.images.generate({
