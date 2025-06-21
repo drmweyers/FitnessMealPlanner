@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import SearchFilters from "@/components/SearchFilters";
 import RecipeCard from "@/components/RecipeCard";
+import RecipeListItem from "@/components/RecipeListItem";
 import RecipeModal from "@/components/RecipeModal";
 import MealPlanGenerator from "@/components/MealPlanGenerator";
 import AdminTable from "@/components/AdminTable";
@@ -28,6 +29,7 @@ export default function Home() {
     approved: false 
   });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Determine active tab based on URL
   const getActiveTab = () => {
@@ -188,30 +190,88 @@ export default function Home() {
             {/* Search and Filters */}
             <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
 
-            {/* Recipe Grid */}
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <div className="h-48 bg-slate-200 rounded-t-xl"></div>
-                    <CardContent className="p-4">
-                      <div className="h-4 bg-slate-200 rounded mb-2"></div>
-                      <div className="h-3 bg-slate-200 rounded w-2/3"></div>
-                    </CardContent>
-                  </Card>
-                ))}
+            {/* View Toggle */}
+            <div className="flex justify-end mb-6">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-slate-600">View:</span>
+                <div className="flex border border-slate-300 rounded-lg overflow-hidden">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="rounded-none px-3 py-1"
+                  >
+                    <i className="fas fa-th mr-2"></i>
+                    Grid
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="rounded-none px-3 py-1"
+                  >
+                    <i className="fas fa-list mr-2"></i>
+                    List
+                  </Button>
+                </div>
               </div>
-            ) : recipes.length > 0 ? (
-              <>
+            </div>
+
+            {/* Recipe Display */}
+            {isLoading ? (
+              viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {recipes.map((recipe) => (
-                    <RecipeCard 
-                      key={recipe.id} 
-                      recipe={recipe} 
-                      onClick={() => setSelectedRecipe(recipe)}
-                    />
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Card key={i} className="animate-pulse">
+                      <div className="h-48 bg-slate-200 rounded-t-xl"></div>
+                      <CardContent className="p-4">
+                        <div className="h-4 bg-slate-200 rounded mb-2"></div>
+                        <div className="h-3 bg-slate-200 rounded w-2/3"></div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
+              ) : (
+                <div className="space-y-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardContent className="p-4">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-24 h-24 bg-slate-200 rounded-lg"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-slate-200 rounded mb-2"></div>
+                            <div className="h-3 bg-slate-200 rounded w-2/3 mb-2"></div>
+                            <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )
+            ) : recipes.length > 0 ? (
+              <>
+                {viewMode === 'grid' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {recipes.map((recipe) => (
+                      <RecipeCard 
+                        key={recipe.id} 
+                        recipe={recipe} 
+                        onClick={() => setSelectedRecipe(recipe)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {recipes.map((recipe) => (
+                      <RecipeListItem 
+                        key={recipe.id} 
+                        recipe={recipe} 
+                        onClick={() => setSelectedRecipe(recipe)}
+                      />
+                    ))}
+                  </div>
+                )}
 
                 {/* Results per page selector and pagination */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-12">
