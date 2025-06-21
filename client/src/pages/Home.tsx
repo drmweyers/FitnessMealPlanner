@@ -9,9 +9,7 @@ import SearchFilters from "@/components/SearchFilters";
 import RecipeCard from "@/components/RecipeCard";
 import RecipeModal from "@/components/RecipeModal";
 import MealPlanGenerator from "@/components/MealPlanGenerator";
-import AdminTable from "@/components/AdminTable";
-import AdminRecipeGenerator from "@/components/AdminRecipeGenerator";
-import PendingRecipesTable from "@/components/PendingRecipesTable";
+// Admin components removed to prevent unauthorized API calls
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Home() {
@@ -56,12 +54,8 @@ export default function Home() {
     throwOnError: false,
   });
 
-  const { data: stats } = useQuery({
-    queryKey: ['/api/admin/stats'],
-    enabled: !!user,
-    retry: 1,
-    throwOnError: false,
-  });
+  // Remove admin stats query for public users
+  const stats = null;
 
   const recipes = recipesData?.recipes || [];
   const total = recipesData?.total || 0;
@@ -350,81 +344,18 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="admin">
-            <div className="space-y-8">
-              {/* Recipe Stats Overview */}
-              {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-slate-600">Total Recipes</p>
-                          <p className="text-2xl font-bold text-slate-900">{(stats as any).total.toLocaleString()}</p>
-                        </div>
-                        <div className="p-3 bg-primary/10 rounded-full">
-                          <i className="fas fa-book text-primary text-xl"></i>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-slate-600">Approved</p>
-                          <p className="text-2xl font-bold text-green-600">{(stats as any).approved.toLocaleString()}</p>
-                        </div>
-                        <div className="p-3 bg-green-100 rounded-full">
-                          <i className="fas fa-check-circle text-green-600 text-xl"></i>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-slate-600">Pending Review</p>
-                          <p className="text-2xl font-bold text-secondary">{(stats as any).pending.toLocaleString()}</p>
-                        </div>
-                        <div className="p-3 bg-amber-100 rounded-full">
-                          <i className="fas fa-clock text-secondary text-xl"></i>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-slate-600">Avg Rating</p>
-                          <p className="text-2xl font-bold text-slate-900">{(stats as any).avgRating}</p>
-                        </div>
-                        <div className="p-3 bg-yellow-100 rounded-full">
-                          <i className="fas fa-star text-yellow-500 text-xl"></i>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {/* Search and Filters for Admin */}
-              <SearchFilters filters={adminFilters} onFilterChange={handleAdminFilterChange} />
-
-              <AdminRecipeGenerator />
-              
-              {/* Pending Recipes Approval Section */}
-              <Card>
-                <CardContent className="p-0">
-                  <div className="px-6 py-4 border-b border-slate-200">
-                    <h2 className="text-xl font-semibold text-slate-900">Pending Recipe Approvals</h2>
-                    <p className="text-sm text-slate-600 mt-1">Review and approve recipes before they appear to users</p>
-                  </div>
-                  <PendingRecipesTable />
+            <div className="flex items-center justify-center min-h-[400px]">
+              <Card className="text-center max-w-md">
+                <CardContent className="p-8">
+                  <i className="fas fa-lock text-4xl text-slate-300 mb-4"></i>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Admin Access Required</h3>
+                  <p className="text-slate-600 mb-4">Please log in to access admin features.</p>
+                  <Button 
+                    onClick={() => window.location.href = '/api/login'}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    Log In
+                  </Button>
                 </CardContent>
               </Card>
             </div>
