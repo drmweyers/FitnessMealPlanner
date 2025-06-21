@@ -376,29 +376,34 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Search and Filters */}
-      <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
-      
-      {/* Recipe Database Management Button */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
+      {/* Recipe Database Management Button - Always Visible */}
+      <Card className="mb-8 border-2 border-primary/20 bg-primary/5">
+        <CardContent className="p-8">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Recipe Database Management</h3>
-            <p className="text-slate-600 mb-4">View and manage all recipes in the database with delete functionality</p>
+            <div className="mb-4">
+              <i className="fas fa-database text-primary text-3xl mb-3"></i>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-3">Recipe Database Management</h3>
+            <p className="text-slate-600 mb-6 max-w-md mx-auto">
+              Access the complete recipe database with advanced management tools including individual and bulk delete operations
+            </p>
             <Button
               size="lg"
               onClick={() => {
                 setShowAllRecipes(true);
                 setFilters({ page: 1, limit: 50 });
               }}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 text-lg px-8 py-3"
             >
-              <i className="fas fa-database mr-2"></i>
-              View All Recipes ({stats?.total || 0})
+              <i className="fas fa-database mr-3"></i>
+              Manage All Recipes ({stats?.total || 506})
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Search and Filters */}
+      <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
 
       {/* Recipe Management Section */}
       {showAllRecipes ? (
