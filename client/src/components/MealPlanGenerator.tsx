@@ -99,9 +99,18 @@ export default function MealPlanGenerator() {
 
   const parseNaturalLanguage = useMutation({
     mutationFn: async (naturalLanguageInput: string): Promise<MealPlanGeneration> => {
-      const response = await apiRequest('POST', '/api/meal-plan/parse-natural-language', {
-        naturalLanguageInput
+      const response = await fetch('/api/meal-plan/parse-natural-language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ naturalLanguageInput }),
+        credentials: 'include',
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+      
       const result = await response.json();
       console.log("Raw API response:", result);
       
@@ -166,7 +175,13 @@ export default function MealPlanGenerator() {
       console.log("Generating meal plan with data:", data);
       
       try {
-        const response = await apiRequest('POST', '/api/meal-plan/generate', data);
+        // Use direct fetch instead of apiRequest to bypass auth error handling
+        const response = await fetch('/api/meal-plan/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: 'include',
+        });
         
         if (!response.ok) {
           const errorText = await response.text();
@@ -197,7 +212,7 @@ export default function MealPlanGenerator() {
       
       toast({
         title: "Meal Plan Generated Successfully",
-        description: data.message || `Generated ${data.mealPlan.days.length}-day meal plan`,
+        description: data.message || "Meal plan generated successfully",
       });
     },
     onError: (error: Error) => {
@@ -234,9 +249,17 @@ export default function MealPlanGenerator() {
 
     try {
       // First parse the natural language input
-      const response = await apiRequest('POST', '/api/meal-plan/parse-natural-language', {
-        naturalLanguageInput
+      const response = await fetch('/api/meal-plan/parse-natural-language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ naturalLanguageInput }),
+        credentials: 'include',
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Parsing failed: ${response.status} - ${errorText}`);
+      }
       const parsedData = await response.json();
       
       // Map the parsed data to the generation format
