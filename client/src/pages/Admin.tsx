@@ -31,6 +31,7 @@ export default function Admin() {
   }>({
     queryKey: ['/api/admin/stats'],
     enabled: isAuthenticated,
+    retry: false, // Don't retry on auth errors
   });
 
   // Use the working public recipes endpoint instead of admin recipes
@@ -227,6 +228,11 @@ export default function Admin() {
     );
   }
 
+  // Debug logging
+  console.log('Admin component rendering - isAuthenticated:', isAuthenticated);
+  console.log('Admin component rendering - stats:', stats);
+  console.log('Admin component rendering - showAllRecipes:', showAllRecipes);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -376,6 +382,14 @@ export default function Admin() {
         </div>
       )}
 
+      {/* DEBUG: Test Section - Should Always Be Visible */}
+      <div className="mb-8 p-4 bg-red-100 border-2 border-red-500">
+        <h2 className="text-xl font-bold text-red-900">DEBUG: Component Test</h2>
+        <p>If you can see this red box, the Admin component is rendering correctly.</p>
+        <p>Stats: {JSON.stringify(stats)}</p>
+        <p>Auth: {isAuthenticated ? 'Authenticated' : 'Not authenticated'}</p>
+      </div>
+
       {/* Recipe Database Management Button - Always Visible */}
       <Card className="mb-8 border-2 border-primary/20 bg-primary/5">
         <CardContent className="p-8">
@@ -396,7 +410,7 @@ export default function Admin() {
               className="bg-primary hover:bg-primary/90 text-lg px-8 py-3"
             >
               <i className="fas fa-database mr-3"></i>
-              Manage All Recipes ({stats?.total || 506})
+              Manage All Recipes ({stats?.total || "Loading..."})
             </Button>
           </div>
         </CardContent>
