@@ -312,18 +312,18 @@ export default function Admin() {
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow" 
-          onClick={() => {
-            setShowAllRecipes(true);
-            setFilters({ page: 1, limit: 50 });
-          }}
-        >
+            className="cursor-pointer hover:shadow-md transition-shadow" 
+            onClick={() => {
+              setShowAllRecipes(true);
+              setFilters({ page: 1, limit: 50 });
+            }}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600">Total Recipes</p>
                   <p className="text-2xl font-bold text-slate-900">{stats.total.toLocaleString()}</p>
-                  <p className="text-xs text-primary mt-1">Click to view all recipes</p>
+                  <p className="text-xs text-primary mt-1">👆 Click to view all recipes</p>
                 </div>
                 <div className="p-3 bg-primary/10 rounded-full">
                   <i className="fas fa-book text-primary text-xl"></i>
