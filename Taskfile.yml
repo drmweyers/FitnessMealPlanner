@@ -1,0 +1,30 @@
+version: "3"
+
+tasks:
+  up:
+    desc: "Start services in dev mode. Use --prod for production."
+    cmds:
+      - docker compose --profile {{.CLI_ARGS | default "dev"}} up
+    vars:
+      PROD:
+        sh: "echo $PROD"
+  
+  down:
+    desc: Stop running services
+    cmds:
+      - docker compose down
+
+  console:
+    desc: Open a bash shell in the running dev container
+    cmds:
+      - docker compose exec app-dev bash
+
+  logs:
+    desc: "Follow logs for a service. Args: -- service (default: app-dev)"
+    cmds:
+      - docker compose logs -f {{.CLI_ARGS | default "app-dev"}}
+      
+  dockerlogin:
+    desc: (DevOps only) Log in to a private Docker registry
+    cmds:
+      - docker login registry.digitalocean.com

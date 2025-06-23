@@ -12,11 +12,19 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const token = localStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
   });
 
   await throwIfResNotOk(res);
@@ -47,7 +55,14 @@ export const getQueryFn: <T>(options: {
       }
     }
 
+    const token = localStorage.getItem('token');
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const res = await fetch(url, {
+      headers,
       credentials: "include",
     });
 
@@ -56,7 +71,23 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
-    return await res.json();
+    const data = await res.json();
+
+    // If the data has a `recipes` property that is an array, we assume
+    // it's a valid list response and return it directly.
+    if (data && Array.isArray(data.recipes)) {
+      return data;
+    }
+
+    // If the data is a single object (and not an array), we assume it's a
+    // single recipe and wrap it in the structure the UI expects.
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      return { recipes: [data], total: 1 };
+    }
+    
+    // As a fallback for any other unexpected response, return a valid
+    // empty list structure to prevent UI crashes.
+    return { recipes: [], total: 0 };
   };
 
 export const queryClient = new QueryClient({

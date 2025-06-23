@@ -6,120 +6,49 @@
  * both development (Vite) and production (static) environments.
  */
 
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import 'dotenv/config';
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import { recipeRouter } from './routes/recipes';
+import authRouter from './authRoutes';
+import adminRouter from './routes/adminRoutes';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import ViteExpress from 'vite-express';
 
-// Initialize Express application
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
-// Parse JSON payloads up to 100kb (default limit)
+app.use(cors({
+    origin: 'http://localhost:3000', // Allow requests from your frontend
+    credentials: true,
+}));
 app.use(express.json());
-
-// Parse URL-encoded form data (for traditional form submissions)
-app.use(express.urlencoded({ extended: false }));
-
-/**
- * Request Logging Middleware
- * 
- * This middleware captures and logs all API requests with timing information.
- * It intercepts the response JSON to include response data in logs for debugging.
- * Only logs API routes (paths starting with "/api") to avoid cluttering logs
- * with static asset requests.
- */
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  // Monkey-patch res.json to capture response data for logging
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  // Log when response is complete
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    
-    // Only log API routes to reduce noise
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      
-      // Include response data in logs for debugging
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      // Truncate long log lines to keep terminal readable
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
+app.use(cookieParser());
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
 
-/**
- * Application Bootstrap Function
- * 
- * This async IIFE handles the complete server initialization process:
- * 1. Registers all API routes and authentication
- * 2. Sets up error handling middleware
- * 3. Configures development/production environments
- * 4. Starts the HTTP server
- */
-(async () => {
-  // Register all API routes, authentication middleware, and get HTTP server instance
-  const server = await registerRoutes(app);
+app.use('/api/auth', authRouter);
+app.use('/api/recipes', recipeRouter);
+app.use('/api/admin', adminRouter);
 
-  /**
-   * Global Error Handler Middleware
-   * 
-   * Catches any unhandled errors thrown in route handlers and formats
-   * them as JSON responses. This must be registered after all routes
-   * to ensure it catches errors from any route handler.
-   */
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
-    res.status(status).json({ message });
-    throw err;
-  });
+// The "catchall" handler: for any request that doesn't match one above,
+// send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 
-  /**
-   * Environment-Specific Setup
-   * 
-   * Development: Sets up Vite development server with hot module replacement
-   * Production: Serves pre-built static assets from dist folder
-   * 
-   * IMPORTANT: Vite setup must come AFTER all API routes to prevent
-   * the catch-all route from interfering with API endpoints
-   */
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+const port = process.env.PORT || 5001;
+ViteExpress.listen(app, Number(port), () =>
+  console.log(`Server is listening on port ${port}...`),
+);
 
-  /**
-   * Server Startup
-   * 
-   * Port 5000 is required as it's the only non-firewalled port in Replit.
-   * The server binds to 0.0.0.0 to accept connections from any interface,
-   * and reusePort allows multiple processes to bind to the same port.
-   */
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+export { app };

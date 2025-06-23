@@ -11,7 +11,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ChefHat, Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown, Wand2 } from "lucide-react";
+import { ChefHat, Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown, Wand2, CheckCircle, Circle } from "lucide-react";
 import { z } from "zod";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -38,6 +38,13 @@ interface GenerationResult {
   message: string;
   count: number;
   started: boolean;
+  success: number;
+  failed: number;
+  errors: string[];
+  metrics?: {
+    totalDuration: number;
+    averageTimePerRecipe: number;
+  };
 }
 
 export default function AdminRecipeGenerator() {
@@ -48,6 +55,14 @@ export default function AdminRecipeGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState<string>("");
   const [naturalLanguageInput, setNaturalLanguageInput] = useState<string>("");
+  const [progressPercentage, setProgressPercentage] = useState<number>(0);
+  const [statusSteps, setStatusSteps] = useState<Array<{text: string; completed: boolean}>>([
+    { text: "Initializing AI models...", completed: false },
+    { text: "Generating recipe concepts...", completed: false },
+    { text: "Calculating nutritional data...", completed: false },
+    { text: "Validating recipes...", completed: false },
+    { text: "Saving to database...", completed: false }
+  ]);
 
   const form = useForm<AdminRecipeGeneration>({
     resolver: zodResolver(adminRecipeGenerationSchema),
@@ -77,7 +92,10 @@ export default function AdminRecipeGenerator() {
     onSuccess: (data: GenerationResult) => {
       setLastGeneration(data);
       setIsGenerating(true);
-      setGenerationProgress("Starting recipe generation...");
+      setProgressPercentage(0);
+      
+      // Reset status steps
+      setStatusSteps(steps => steps.map(step => ({ ...step, completed: false })));
 
       toast({
         title: "Recipe Generation Started",
@@ -87,23 +105,55 @@ export default function AdminRecipeGenerator() {
       // Immediate refresh to show generation started
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
 
-      // Simulate progress updates
-      setTimeout(() => setGenerationProgress("Generating recipes with AI..."), 2000);
-      setTimeout(() => setGenerationProgress("Processing nutritional data..."), 10000);
-      setTimeout(() => setGenerationProgress("Saving to database..."), 20000);
+      // Simulate progress updates with more granular steps
+      const updateStep = (index: number, progress: number) => {
+        setStatusSteps(steps => steps.map((step, i) => ({
+          ...step,
+          completed: i <= index
+        })));
+        setProgressPercentage(progress);
+        setGenerationProgress(statusSteps[index].text);
+      };
 
-      // Refresh after expected completion time
+      const stepDuration = 30000 / statusSteps.length; // Total 30s divided by number of steps
+      
+      // Update steps sequentially
+      statusSteps.forEach((_, index) => {
+        setTimeout(() => {
+          updateStep(index, (index + 1) * (100 / statusSteps.length));
+        }, stepDuration * (index + 1));
+      });
+
+      // Complete the generation
       setTimeout(() => {
         setIsGenerating(false);
+        setProgressPercentage(100);
         setGenerationProgress("");
-        queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+        
+        // Show final results
+        const successRate = (data.success / data.count) * 100;
+        const avgTime = data.metrics?.averageTimePerRecipe 
+          ? Math.round(data.metrics.averageTimePerRecipe / 1000) 
+          : null;
 
         toast({
           title: "Generation Complete",
-          description: `Successfully generated ${data.count} new recipes!`,
+          description: `Successfully generated ${data.success} recipes${data.failed > 0 ? `, ${data.failed} failed` : ''}${avgTime ? ` (avg. ${avgTime}s per recipe)` : ''}`
         });
-      }, 30000); // 30 seconds for generation completion
+
+        if (data.failed > 0) {
+          toast({
+            title: "Some Recipes Failed",
+            description: "Check the console for detailed error information",
+            variant: "destructive"
+          });
+          console.error("Recipe generation errors:", data.errors);
+        }
+
+        // Refresh data
+        queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      }, 30000);
     },
     onError: (error: Error) => {
       toast({
@@ -741,20 +791,42 @@ export default function AdminRecipeGenerator() {
               </span>
             </div>
 
-            {isGenerating && generationProgress && (
-              <div className="mt-3">
-                <div className={`text-sm ${isGenerating ? "text-blue-600" : "text-green-600"} mb-2`}>
-                  {generationProgress}
-                </div>
+            {isGenerating && (
+              <div className="mt-4 space-y-4">
                 <div className="w-full bg-blue-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: "45%"}}></div>
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-in-out" 
+                    style={{width: `${progressPercentage}%`}}
+                  ></div>
+                </div>
+                
+                <div className="space-y-2">
+                  {statusSteps.map((step, index) => (
+                    <div 
+                      key={index} 
+                      className={`flex items-center gap-2 text-sm ${
+                        step.completed ? 'text-blue-700' : 'text-slate-500'
+                      }`}
+                    >
+                      {step.completed ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : index === statusSteps.findIndex(s => !s.completed) ? (
+                        <Circle className="h-4 w-4 animate-pulse text-blue-500" />
+                      ) : (
+                        <Circle className="h-4 w-4" />
+                      )}
+                      <span className={step.completed ? 'text-slate-700' : ''}>
+                        {step.text}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
             {lastGeneration && (
               <>
-                <p className={`${isGenerating ? "text-blue-600" : "text-green-600"} mt-2`}>
+                <p className={`${isGenerating ? "text-blue-600" : "text-green-600"} mt-4`}>
                   {lastGeneration.message}
                 </p>
                 <div className="flex items-center gap-3 mt-3">

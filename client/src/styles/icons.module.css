@@ -1,0 +1,31 @@
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+}
+
+.iconPrimary {
+  composes: icon;
+  color: var(--primary);
+}
+
+.iconMuted {
+  composes: icon;
+  color: var(--muted-foreground);
+}
+
+.iconLarge {
+  composes: icon;
+  font-size: 1.5em;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background-color: var(--primary-light);
+} 

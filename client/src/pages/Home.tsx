@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,9 +10,6 @@ import RecipeCard from "@/components/RecipeCard";
 import RecipeListItem from "@/components/RecipeListItem";
 import RecipeModal from "@/components/RecipeModal";
 import MealPlanGenerator from "@/components/MealPlanGenerator";
-import AdminTable from "@/components/AdminTable";
-import AdminRecipeGenerator from "@/components/AdminRecipeGenerator";
-import PendingRecipesTable from "@/components/PendingRecipesTable";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Home() {
@@ -23,26 +20,17 @@ export default function Home() {
     limit: 10,
     approved: true 
   });
-  const [adminFilters, setAdminFilters] = useState<RecipeFilter>({ 
-    page: 1, 
-    limit: 20,
-    approved: false 
-  });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Determine active tab based on URL
   const getActiveTab = () => {
-    if (location === '/admin') return 'admin';
     if (location === '/meal-plan-generator') return 'meal-plan';
     return 'recipes';
   };
 
   const handleTabChange = (value: string) => {
     switch (value) {
-      case 'admin':
-        navigate('/admin');
-        break;
       case 'meal-plan':
         navigate('/meal-plan-generator');
         break;
@@ -53,16 +41,7 @@ export default function Home() {
 
   const { data: recipesData, isLoading } = useQuery({
     queryKey: ['/api/recipes', filters],
-    enabled: true,
-    retry: 1,
-    throwOnError: false,
-  });
-
-  const { data: stats } = useQuery({
-    queryKey: ['/api/admin/stats'],
-    enabled: !!user,
-    retry: 1,
-    throwOnError: false,
+    enabled: getActiveTab() === 'recipes',
   });
 
   const recipes = recipesData?.recipes || [];
@@ -73,436 +52,148 @@ export default function Home() {
   };
 
   const handlePageChange = (page: number) => {
-    // Ensure page is within valid bounds
     const totalPages = Math.max(1, Math.ceil(total / filters.limit));
     const validPage = Math.max(1, Math.min(page, totalPages));
     setFilters(prev => ({ ...prev, page: validPage }));
   };
 
-  const handleAdminFilterChange = (newFilters: Partial<RecipeFilter>) => {
-    setAdminFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <i className="fas fa-utensils text-primary text-2xl"></i>
-              <span className="text-xl font-bold text-slate-800">FitMeal Pro</span>
-            </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome, {user?.email}</h1>
+        <p className="text-slate-600">Browse recipes and create meal plans for your clients.</p>
+      </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <button className="flex items-center space-x-2 text-slate-600 hover:text-slate-800 transition-colors">
-                  <img 
-                    src={user?.profileImageUrl || '/api/placeholder/32/32'} 
-                    alt="Profile" 
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  <span className="hidden sm:block font-medium">
-                    {user?.firstName || user?.email || 'User'}
-                  </span>
-                </button>
+      <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsTrigger value="recipes">
+            <i className="fas fa-book-open mr-2"></i>
+            Browse Recipes
+          </TabsTrigger>
+          <TabsTrigger value="meal-plan">
+            <i className="fas fa-utensils mr-2"></i>
+            Meal Plan Generator
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="recipes" className="space-y-6">
+          {/* Search and Filters */}
+          <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+
+          {/* View Toggle */}
+          <div className="flex justify-end mb-6">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-slate-600">View:</span>
+              <div className="flex border border-slate-300 rounded-lg overflow-hidden">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="rounded-none px-3 py-1"
+                >
+                  <i className="fas fa-th mr-2"></i>
+                  Grid
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="rounded-none px-3 py-1"
+                >
+                  <i className="fas fa-list mr-2"></i>
+                  List
+                </Button>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.location.href = '/api/logout'}
-              >
-                <i className="fas fa-sign-out-alt mr-2"></i>
-                Logout
-              </Button>
             </div>
           </div>
-        </div>
-      </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="recipes">
-              <i className="fas fa-book-open mr-2"></i>
-              Browse Recipes
-            </TabsTrigger>
-            <TabsTrigger value="meal-plan">
-              <i className="fas fa-utensils mr-2"></i>
-              Meal Plan Generator
-            </TabsTrigger>
-            <TabsTrigger value="admin">
-              <i className="fas fa-cog mr-2"></i>
-              Admin
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="recipes">
-            {/* Recipe Stats Overview */}
-            {stats && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-slate-600">Total Recipes</p>
-                        <p className="text-2xl font-bold text-slate-900">{stats.total.toLocaleString()}</p>
-                      </div>
-                      <div className="p-3 bg-primary/10 rounded-full">
-                        <i className="fas fa-book text-primary text-xl"></i>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-slate-600">Approved</p>
-                        <p className="text-2xl font-bold text-green-600">{stats.approved.toLocaleString()}</p>
-                      </div>
-                      <div className="p-3 bg-green-100 rounded-full">
-                        <i className="fas fa-check-circle text-green-600 text-xl"></i>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-slate-600">Pending Review</p>
-                        <p className="text-2xl font-bold text-secondary">{stats.pending.toLocaleString()}</p>
-                      </div>
-                      <div className="p-3 bg-amber-100 rounded-full">
-                        <i className="fas fa-clock text-secondary text-xl"></i>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-
+          {/* Recipe Display */}
+          {isLoading ? (
+            viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <div className="h-48 bg-slate-200 rounded-t-xl"></div>
+                    <CardContent className="p-4">
+                      <div className="h-4 bg-slate-200 rounded mb-2"></div>
+                      <div className="h-3 bg-slate-200 rounded w-2/3"></div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            )}
-
-            {/* Search and Filters */}
-            <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
-
-            {/* View Toggle */}
-            <div className="flex justify-end mb-6">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-slate-600">View:</span>
-                <div className="flex border border-slate-300 rounded-lg overflow-hidden">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="rounded-none px-3 py-1"
-                  >
-                    <i className="fas fa-th mr-2"></i>
-                    Grid
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="rounded-none px-3 py-1"
-                  >
-                    <i className="fas fa-list mr-2"></i>
-                    List
-                  </Button>
-                </div>
+            ) : (
+              <div className="space-y-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-4">
+                      <div className="flex items-start space-x-4">
+                        <div className="w-24 h-24 bg-slate-200 rounded-lg"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-slate-200 rounded mb-2"></div>
+                          <div className="h-3 bg-slate-200 rounded w-2/3 mb-2"></div>
+                          <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </div>
-
-            {/* Recipe Display */}
-            {isLoading ? (
-              viewMode === 'grid' ? (
+            )
+          ) : (
+            <>
+              {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <Card key={i} className="animate-pulse">
-                      <div className="h-48 bg-slate-200 rounded-t-xl"></div>
-                      <CardContent className="p-4">
-                        <div className="h-4 bg-slate-200 rounded mb-2"></div>
-                        <div className="h-3 bg-slate-200 rounded w-2/3"></div>
-                      </CardContent>
-                    </Card>
+                  {recipes.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.id}
+                      recipe={recipe}
+                      onClick={() => setSelectedRecipe(recipe)}
+                    />
                   ))}
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <Card key={i} className="animate-pulse">
-                      <CardContent className="p-4">
-                        <div className="flex items-start space-x-4">
-                          <div className="w-24 h-24 bg-slate-200 rounded-lg"></div>
-                          <div className="flex-1">
-                            <div className="h-4 bg-slate-200 rounded mb-2"></div>
-                            <div className="h-3 bg-slate-200 rounded w-2/3 mb-2"></div>
-                            <div className="h-3 bg-slate-200 rounded w-1/3"></div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  {recipes.map((recipe) => (
+                    <RecipeListItem
+                      key={recipe.id}
+                      recipe={recipe}
+                      onClick={() => setSelectedRecipe(recipe)}
+                    />
                   ))}
                 </div>
-              )
-            ) : recipes.length > 0 ? (
-              <>
-                {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {recipes.map((recipe) => (
-                      <RecipeCard 
-                        key={recipe.id} 
-                        recipe={recipe} 
-                        onClick={() => setSelectedRecipe(recipe)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {recipes.map((recipe) => (
-                      <RecipeListItem 
-                        key={recipe.id} 
-                        recipe={recipe} 
-                        onClick={() => setSelectedRecipe(recipe)}
-                      />
-                    ))}
-                  </div>
-                )}
+              )}
 
-                {/* Results per page selector and pagination */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-12">
-                  {/* Results per page */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600">Show:</span>
-                    <select
-                      value={filters.limit}
-                      onChange={(e) => setFilters(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
-                      className="px-3 py-1 border border-slate-300 rounded-md text-sm bg-white"
-                    >
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                    <span className="text-sm text-slate-600">recipes per page</span>
-                  </div>
-
-                  {/* Pagination */}
-                  {total > filters.limit && (
-                    <nav className="flex items-center space-x-1">
+              {/* Pagination */}
+              {total > filters.limit && (
+                <div className="mt-8 flex justify-center">
+                  <div className="flex space-x-2">
+                    {Array.from({ length: Math.ceil(total / filters.limit) }).map((_, i) => (
                       <Button
-                        variant="outline"
+                        key={i}
+                        variant={filters.page === i + 1 ? 'default' : 'outline'}
                         size="sm"
-                        disabled={filters.page <= 1}
-                        onClick={() => handlePageChange(1)}
-                        className="hidden sm:flex"
+                        onClick={() => handlePageChange(i + 1)}
                       >
-                        First
+                        {i + 1}
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={filters.page <= 1}
-                        onClick={() => handlePageChange(filters.page - 1)}
-                      >
-                        <i className="fas fa-chevron-left"></i>
-                      </Button>
-                      
-                      {(() => {
-                        const totalPages = Math.ceil(total / filters.limit);
-                        const currentPage = filters.page;
-                        const pages: (number | string)[] = [];
-                        
-                        // Always show first page
-                        if (currentPage > 3) {
-                          pages.push(1);
-                          if (currentPage > 4) pages.push('...');
-                        }
-                        
-                        // Show pages around current page
-                        const start = Math.max(1, currentPage - 2);
-                        const end = Math.min(totalPages, currentPage + 2);
-                        
-                        for (let i = start; i <= end; i++) {
-                          pages.push(i);
-                        }
-                        
-                        // Always show last page
-                        if (currentPage < totalPages - 2) {
-                          if (currentPage < totalPages - 3) pages.push('...');
-                          pages.push(totalPages);
-                        }
-                        
-                        return pages.map((page, index) => (
-                          page === '...' ? (
-                            <span key={`ellipsis-${index}`} className="px-2 text-slate-400">...</span>
-                          ) : (
-                            <Button
-                              key={page}
-                              variant={page === currentPage ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handlePageChange(page as number)}
-                            >
-                              {page}
-                            </Button>
-                          )
-                        ));
-                      })()}
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={filters.page >= Math.ceil(total / filters.limit)}
-                        onClick={() => handlePageChange(filters.page + 1)}
-                      >
-                        <i className="fas fa-chevron-right"></i>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={filters.page >= Math.ceil(total / filters.limit)}
-                        onClick={() => {
-                          const lastPage = Math.max(1, Math.ceil(total / filters.limit));
-                          handlePageChange(lastPage);
-                        }}
-                        className="hidden sm:flex"
-                      >
-                        Last
-                      </Button>
-                    </nav>
-                  )}
-                  
-                  {/* Results info */}
-                  <div className="text-sm text-slate-600">
-                    Showing {Math.min(total, (filters.page - 1) * filters.limit + 1)}-{Math.min(total, filters.page * filters.limit)} of {total} recipes
+                    ))}
                   </div>
                 </div>
-              </>
-            ) : (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <i className="fas fa-search text-4xl text-slate-300 mb-4"></i>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No recipes found</h3>
-                  <p className="text-slate-600">Try adjusting your search criteria or filters.</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+              )}
+            </>
+          )}
+        </TabsContent>
 
-          <TabsContent value="meal-plan">
-            <MealPlanGenerator />
-          </TabsContent>
-
-          <TabsContent value="admin">
-            {user ? (
-              <div className="space-y-8">
-                {/* Recipe Stats Overview */}
-                {stats && (
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-slate-600">Total Recipes</p>
-                            <p className="text-2xl font-bold text-slate-900">{(stats as any).total.toLocaleString()}</p>
-                          </div>
-                          <div className="p-3 bg-primary/10 rounded-full">
-                            <i className="fas fa-book text-primary text-xl"></i>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-slate-600">Approved</p>
-                            <p className="text-2xl font-bold text-green-600">{(stats as any).approved.toLocaleString()}</p>
-                          </div>
-                          <div className="p-3 bg-green-100 rounded-full">
-                            <i className="fas fa-check-circle text-green-600 text-xl"></i>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-slate-600">Pending Review</p>
-                            <p className="text-2xl font-bold text-secondary">{(stats as any).pending.toLocaleString()}</p>
-                          </div>
-                          <div className="p-3 bg-amber-100 rounded-full">
-                            <i className="fas fa-clock text-secondary text-xl"></i>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-slate-600">Avg Rating</p>
-                            <p className="text-2xl font-bold text-slate-900">{(stats as any).avgRating}</p>
-                          </div>
-                          <div className="p-3 bg-yellow-100 rounded-full">
-                            <i className="fas fa-star text-yellow-500 text-xl"></i>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-
-                {/* Search and Filters for Admin */}
-                <SearchFilters filters={adminFilters} onFilterChange={handleAdminFilterChange} />
-
-                <AdminRecipeGenerator />
-                
-                {/* Pending Recipes Approval Section */}
-                <Card>
-                  <CardContent className="p-0">
-                    <div className="px-6 py-4 border-b border-slate-200">
-                      <h2 className="text-xl font-semibold text-slate-900">Pending Recipe Approvals</h2>
-                      <p className="text-sm text-slate-600 mt-1">Review and approve recipes before they appear to users</p>
-                    </div>
-                    <PendingRecipesTable />
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center min-h-[400px]">
-                <Card className="text-center max-w-md">
-                  <CardContent className="p-8">
-                    <i className="fas fa-lock text-4xl text-slate-300 mb-4"></i>
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">Admin Access Required</h3>
-                    <p className="text-slate-600 mb-4">Please log in to access admin features.</p>
-                    <Button 
-                      onClick={() => window.location.href = '/api/login'}
-                      className="bg-primary hover:bg-primary/90"
-                    >
-                      Log In
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </main>
+        <TabsContent value="meal-plan">
+          <MealPlanGenerator />
+        </TabsContent>
+      </Tabs>
 
       {/* Recipe Modal */}
       {selectedRecipe && (
-        <RecipeModal 
-          recipe={selectedRecipe} 
-          onClose={() => setSelectedRecipe(null)} 
+        <RecipeModal
+          recipe={selectedRecipe}
+          onClose={() => setSelectedRecipe(null)}
         />
       )}
     </div>

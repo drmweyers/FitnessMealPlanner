@@ -25,13 +25,17 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(import.meta.dirname, "client/dist"),
     emptyOutDir: true,
   },
   server: {
     fs: {
       strict: true,
       deny: ["**/.*"],
+    },
+    hmr: {
+      port: 24678,
+      host: "0.0.0.0",
     },
   },
 });

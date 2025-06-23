@@ -8,7 +8,7 @@ import { nanoid } from "nanoid";
 
 const viteLogger = createLogger();
 
-export function log(message: string, source = "express") {
+const logFn = (message: string, source = "express") => {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -19,11 +19,17 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
+export const log = Object.assign(logFn, {
+  express: (message: string) => logFn(message, "express"),
+  vite: (message: string) => logFn(message, "vite"),
+  error: (message: string, source = "error") => logFn(message, source),
+});
+
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
-    allowedHosts: true,
+    allowedHosts: true as const,
   };
 
   const vite = await createViteServer({

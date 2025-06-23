@@ -1,27 +1,31 @@
-
-# Use Node.js 20 Alpine for smaller image size
-FROM node:20-alpine
-
-# Set working directory
+# 1. Development Stage
+FROM node:20-alpine AS dev
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
+RUN npm install
 COPY . .
+EXPOSE 5000 24678
+CMD ["npm", "run", "dev"]
 
-# Build the application
+# 2. Builder Stage
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=dev /app/package*.json ./
+COPY --from=dev /app/node_modules ./node_modules
+COPY . .
 RUN npm run build
 
-# Expose port 5000
+# 3. Production Stage
+FROM node:20-alpine AS prod
+WORKDIR /app
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/client/dist ./client/dist
+COPY --from=builder /app/node_modules ./node_modules
+
+# Prune dev dependencies
+RUN npm prune --production
+
 EXPOSE 5000
-
-# Set environment to production
 ENV NODE_ENV=production
-
-# Start the application
 CMD ["npm", "run", "start"]

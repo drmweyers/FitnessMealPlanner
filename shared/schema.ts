@@ -6,7 +6,7 @@
  * recipe storage, and validation schemas for API endpoints.
  * 
  * Key Components:
- * - Authentication tables (sessions, users)
+ * - Authentication tables (users, password_reset_tokens)
  * - Recipe management (recipes table with nutritional data)
  * - Type definitions and validation schemas
  * - Meal plan generation schemas
@@ -23,59 +23,72 @@ import {
   integer,
   boolean,
   decimal,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-/**
- * Sessions Table
- * 
- * Stores user session data for Replit authentication.
- * This table is managed by express-session with connect-pg-simple.
- * 
- * Fields:
- * - sid: Session identifier (primary key)
- * - sess: Session data stored as JSONB
- * - expire: Session expiration timestamp
- */
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [
-    // Index on expire for efficient session cleanup
-    index("IDX_session_expire").on(table.expire)
-  ],
-);
+export const userRoleEnum = pgEnum("user_role", ["admin", "trainer", "customer"]);
 
 /**
  * Users Table
  * 
- * Stores user profile information from Replit authentication.
- * User data is automatically synced from Replit's OIDC provider.
+ * Stores user profile information for authentication.
  * 
  * Fields:
- * - id: Unique user identifier from Replit
- * - email: User's email address (unique constraint)
- * - firstName/lastName: User's display name components
- * - profileImageUrl: Avatar URL from Replit
+ * - id: Unique user identifier (UUID)
+ * - email: User's email address (unique, not null)
+ * - password: Hashed password
+ * - role: User's role (admin, trainer, customer)
  * - createdAt/updatedAt: Automatic timestamps
  */
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: varchar("email").unique().notNull(),
+  password: text("password").notNull(),
+  role: userRoleEnum("role").default("customer").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/**
+ * Password Reset Tokens Table
+ * 
+ * Stores tokens for the "forgot password" feature.
+ * 
+ * Fields:
+ * - id: Unique token identifier (UUID)
+ * - user_id: Foreign key to the users table
+ * - token: The reset token
+ * - expires_at: Token expiration timestamp
+ */
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+/**
+ * Refresh Tokens Table
+ *
+ * Stores refresh tokens for persistent user sessions.
+ *
+ * Fields:
+ * - id: Unique token identifier (UUID)
+ * - user_id: Foreign key to the users table
+ * - token: The refresh token
+ * - expires_at: Token expiration timestamp
+ */
+export const refreshTokens = pgTable("refresh_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
 // Type definitions for user operations
-export type UpsertUser = typeof users.$inferInsert;
+export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
 /**
@@ -128,6 +141,14 @@ export const recipes = pgTable("recipes", {
   creationTimestamp: timestamp("creation_timestamp").defaultNow(),
   lastUpdatedTimestamp: timestamp("last_updated_timestamp").defaultNow(),
   isApproved: boolean("is_approved").default(false), // Content moderation flag
+});
+
+export const personalizedRecipes = pgTable("personalized_recipes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  trainerId: uuid("trainer_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  recipeId: uuid("recipe_id").references(() => recipes.id, { onDelete: 'cascade' }).notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow(),
 });
 
 /**

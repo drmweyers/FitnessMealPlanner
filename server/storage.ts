@@ -15,12 +15,15 @@
 import {
   users,
   recipes,
+  personalizedRecipes,
   type User,
-  type UpsertUser,
+  type InsertUser,
   type Recipe,
   type InsertRecipe,
   type UpdateRecipe,
   type RecipeFilter,
+  passwordResetTokens,
+  refreshTokens,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
@@ -34,9 +37,21 @@ import { inArray } from "drizzle-orm";
  * implementations (e.g., in-memory storage for tests).
  */
 export interface IStorage {
-  // User operations (required for Replit Auth integration)
+  // User operations
   getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUserPassword(userId: string, password: string): Promise<void>;
+  
+  // Password Reset
+  createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void>;
+  getPasswordResetToken(token: string): Promise<{ userId: string, expiresAt: Date } | undefined>;
+  deletePasswordResetToken(token: string): Promise<void>;
+  
+  // Refresh Token Operations
+  createRefreshToken(userId: string, token: string, expiresAt: Date): Promise<void>;
+  getRefreshToken(token: string): Promise<{ userId: string, expiresAt: Date } | undefined>;
+  deleteRefreshToken(token: string): Promise<void>;
   
   // Recipe CRUD operations
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
@@ -55,28 +70,61 @@ export interface IStorage {
     approved: number;
     pending: number;
   }>;
+
+  // Personalized recipes
+  getPersonalizedRecipes(customerId: string): Promise<Recipe[]>;
+  
+  // Transaction support
+  transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations (required for Replit Auth)
+  // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(userData).returning();
+    return user;
+  }
+
+  async updateUserPassword(userId: string, password: string): Promise<void> {
+    await db.update(users).set({ password }).where(eq(users.id, userId));
+  }
+
+  // Password Reset
+  async createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+    await db.insert(passwordResetTokens).values({ userId, token, expiresAt });
+  }
+
+  async getPasswordResetToken(token: string): Promise<{ userId: string; expiresAt: Date; } | undefined> {
+    const [result] = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+    return result;
+  }
+
+  async deletePasswordResetToken(token: string): Promise<void> {
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+  }
+
+  // Refresh Token Operations
+  async createRefreshToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+    await db.insert(refreshTokens).values({ userId, token, expiresAt });
+  }
+
+  async getRefreshToken(token: string): Promise<{ userId: string; expiresAt: Date; } | undefined> {
+    const [result] = await db.select().from(refreshTokens).where(eq(refreshTokens.token, token));
+    return result;
+  }
+
+  async deleteRefreshToken(token: string): Promise<void> {
+    await db.delete(refreshTokens).where(eq(refreshTokens.token, token));
   }
 
   // Recipe operations
@@ -138,6 +186,19 @@ export class DatabaseStorage implements IStorage {
 
   async approveRecipe(id: string): Promise<Recipe | undefined> {
     return this.updateRecipe(id, { isApproved: true });
+  }
+
+  async getPersonalizedRecipes(customerId: string): Promise<Recipe[]> {
+    const assignedRecipes = await db
+      .select({
+        recipe: recipes,
+      })
+      .from(personalizedRecipes)
+      .leftJoin(recipes, eq(personalizedRecipes.recipeId, recipes.id))
+      .where(eq(personalizedRecipes.customerId, customerId))
+      .orderBy(desc(personalizedRecipes.assignedAt));
+
+    return assignedRecipes.map(r => r.recipe).filter((r): r is Recipe => r !== null);
   }
 
   async searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }> {
@@ -246,6 +307,11 @@ export class DatabaseStorage implements IStorage {
       pending: stats.pending,
     };
   }
+  
+  // Transaction support
+  async transaction<T>(action: (trx: any) => Promise<T>): Promise<T> {
+    return db.transaction(action);
+  }
 }
 
-export const storage = new DatabaseStorage();
+export const storage: IStorage = new DatabaseStorage();
