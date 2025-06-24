@@ -218,6 +218,45 @@ export default function Admin() {
     },
   });
 
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const response = await apiRequest('POST', '/api/admin/recipes/bulk-approve', { ids });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Recipes Approved",
+        description: data.message || "Selected recipes have been approved.",
+      });
+      // Aggressively refresh all related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      
+      // Force refetch to ensure immediate updates
+      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to approve recipes",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleManageAllClick = () => {
     setFilters(prev => ({ ...prev, approved: undefined, page: 1 }));
   };
@@ -450,42 +489,137 @@ export default function Admin() {
       
       {/* Recipe Management Section - Now outside tabs */}
       <div id="recipe-management-section">
-        {/* Search and Filters */}
-        <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
-
-        {/* Recipe List */}
-        <Card className="mt-8">
-          <CardContent className="p-0">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Recipe Management</h2>
-                <p className="text-sm text-slate-600 mt-1">
-                  {filters.approved === false ? 'Pending Recipe Reviews' :
-                    filters.approved === true ? 'Approved Recipes' : 'All Recipes'}
-                  ({total} results)
-                </p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Total Recipes */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Total Recipes</p>
+                  <h3 className="text-2xl font-bold text-slate-900 mt-1">
+                    {statsLoading ? '...' : stats?.total || 0}
+                  </h3>
+                </div>
+                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <i className="fas fa-book-open text-primary text-xl"></i>
+                </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Approved Recipes */}
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" 
+                onClick={() => handleFilterChange({ approved: true })}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Approved</p>
+                  <h3 className="text-2xl font-bold text-green-600 mt-1">
+                    {statsLoading ? '...' : stats?.approved || 0}
+                  </h3>
+                </div>
+                <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <i className="fas fa-check text-green-600 text-xl"></i>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pending Recipes */}
+          <Card className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => handleFilterChange({ approved: false })}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600">Pending Approval</p>
+                  <h3 className="text-2xl font-bold text-yellow-600 mt-1">
+                    {statsLoading ? '...' : stats?.pending || 0}
+                  </h3>
+                </div>
+                <div className="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <i className="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Average Rating */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+              <div>
+                  <p className="text-sm font-medium text-slate-600">Avg Rating</p>
+                  <h3 className="text-2xl font-bold text-slate-900 mt-1">
+                    {statsLoading ? '...' : (stats?.avgRating || 0).toFixed(1)}
+                  </h3>
+                </div>
+                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <i className="fas fa-star text-primary text-xl"></i>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant={filters.approved === undefined ? "default" : "outline"}
+              onClick={() => handleFilterChange({ approved: undefined })}
+            >
+              <i className="fas fa-list-ul mr-2"></i>
+              All Recipes
+            </Button>
+            <Button
+              variant={filters.approved === false ? "default" : "outline"}
+              onClick={() => handleFilterChange({ approved: false })}
+              className="text-yellow-600"
+            >
+              <i className="fas fa-clock mr-2"></i>
+              Pending Approval ({stats?.pending || 0})
+            </Button>
+            <Button
+              variant={filters.approved === true ? "default" : "outline"}
+              onClick={() => handleFilterChange({ approved: true })}
+              className="text-green-600"
+            >
+              <i className="fas fa-check mr-2"></i>
+              Approved ({stats?.approved || 0})
+            </Button>
+          </div>
+
+          <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
               >
-                <i className={`fas ${viewMode === 'grid' ? 'fa-table' : 'fa-th-large'} mr-2`}></i>
+              <i className={`fas fa-${viewMode === 'grid' ? 'table' : 'th'} mr-2`}></i>
                 {viewMode === 'grid' ? 'Table View' : 'Grid View'}
               </Button>
             </div>
-            <div className="p-6">
-              {isLoading ? (
-                <div className="text-center p-8">Loading recipes...</div>
-              ) : total > 0 ? (
-                viewMode === 'grid' ? (
+        </div>
+
+        {/* Search and Filters */}
+        <div className="mb-6">
+          <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+        </div>
+
+        {/* Recipe Display */}
+        {viewMode === 'grid' ? (
                   <AdminRecipeGrid
                     recipes={displayRecipes}
                     isLoading={isLoading}
                     onDelete={(id) => deleteMutation.mutate(id)}
                     onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
+            onApprove={(id) => approveMutation.mutate(id)}
+            onBulkApprove={(ids) => bulkApproveMutation.mutate(ids)}
                     deletePending={deleteMutation.isPending}
                     bulkDeletePending={bulkDeleteMutation.isPending}
+            approvePending={approveMutation.isPending}
+            bulkApprovePending={bulkApproveMutation.isPending}
                   />
                 ) : (
                   <AdminTable
@@ -498,16 +632,25 @@ export default function Admin() {
                     deletePending={deleteMutation.isPending}
                     bulkDeletePending={bulkDeleteMutation.isPending}
                   />
-                )
-              ) : (
-                <div className="text-center p-8">
-                  <h3 className="text-lg font-semibold">No Recipes Found</h3>
-                  <p className="text-slate-600">No recipes match the current filters.</p>
-                </div>
-              )}
+        )}
+
+        {/* Pagination */}
+        {total > filters.limit && (
+          <div className="mt-8 flex justify-center">
+            <div className="flex space-x-2">
+              {Array.from({ length: Math.ceil(total / filters.limit) }).map((_, i) => (
+                <Button
+                  key={i}
+                  variant={filters.page === i + 1 ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handlePageChange(i + 1)}
+                >
+                  {i + 1}
+                </Button>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
       </div>
     </div>
   );

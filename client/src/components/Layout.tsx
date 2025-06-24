@@ -18,7 +18,8 @@ import {
   LogOut, 
   Menu,
   ChevronDown,
-  Bell
+  Bell,
+  Utensils
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -46,10 +47,23 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   const navigation = [
+    // Customer navigation
     ...(user?.role === 'customer' 
       ? [{ name: 'My Meal Plans', href: '/my-meal-plans', icon: User }] 
-      : [{ name: 'Home', href: '/', icon: Home }]),
-    ...(user?.role === 'admin' ? [{ name: 'Admin', href: '/admin', icon: Settings }] : []),
+      : []),
+    
+    // Trainer navigation
+    ...(user?.role === 'trainer'
+      ? [
+          { name: 'Trainer Dashboard', href: '/trainer', icon: Home },
+          { name: 'Meal Plan Generator', href: '/meal-plan-generator', icon: Utensils }
+        ]
+      : []),
+    
+    // Admin navigation
+    ...(user?.role === 'admin' 
+      ? [{ name: 'Admin', href: '/admin', icon: Settings }] 
+      : []),
   ];
 
   return (

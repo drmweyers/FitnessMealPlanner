@@ -7,12 +7,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import SearchFilters from "@/components/SearchFilters";
 import RecipeCard from "@/components/RecipeCard";
+import RecipeCardWithAssignment from "@/components/RecipeCardWithAssignment";
 import RecipeListItem from "@/components/RecipeListItem";
+import RecipeListItemWithAssignment from "@/components/RecipeListItemWithAssignment";
 import RecipeModal from "@/components/RecipeModal";
+import RecipeAssignment from "@/components/RecipeAssignment";
 import MealPlanGenerator from "@/components/MealPlanGenerator";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
-export default function Home() {
+export default function Trainer() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
   const [filters, setFilters] = useState<RecipeFilter>({ 
@@ -35,7 +38,7 @@ export default function Home() {
         navigate('/meal-plan-generator');
         break;
       default:
-        navigate('/');
+        navigate('/trainer');
     }
   };
 
@@ -44,8 +47,8 @@ export default function Home() {
     enabled: getActiveTab() === 'recipes',
   });
 
-  const recipes = recipesData?.recipes || [];
-  const total = recipesData?.total || 0;
+  const recipes: Recipe[] = (recipesData as any)?.recipes || [];
+  const total: number = (recipesData as any)?.total || 0;
 
   const handleFilterChange = (newFilters: Partial<RecipeFilter>) => {
     setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
@@ -144,21 +147,39 @@ export default function Home() {
               {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {recipes.map((recipe) => (
-                    <RecipeCard
-                      key={recipe.id}
-                      recipe={recipe}
-                      onClick={() => setSelectedRecipe(recipe)}
-                    />
+                    user?.role === 'trainer' || user?.role === 'admin' ? (
+                      <RecipeCardWithAssignment
+                        key={recipe.id}
+                        recipe={recipe}
+                        onClick={() => setSelectedRecipe(recipe)}
+                        showAssignment={user?.role === 'trainer' || user?.role === 'admin'}
+                      />
+                    ) : (
+                      <RecipeCard
+                        key={recipe.id}
+                        recipe={recipe}
+                        onClick={() => setSelectedRecipe(recipe)}
+                      />
+                    )
                   ))}
                 </div>
               ) : (
                 <div className="space-y-4">
                   {recipes.map((recipe) => (
-                    <RecipeListItem
-                      key={recipe.id}
-                      recipe={recipe}
-                      onClick={() => setSelectedRecipe(recipe)}
-                    />
+                    user?.role === 'trainer' || user?.role === 'admin' ? (
+                      <RecipeListItemWithAssignment
+                        key={recipe.id}
+                        recipe={recipe}
+                        onClick={() => setSelectedRecipe(recipe)}
+                        showAssignment={user?.role === 'trainer' || user?.role === 'admin'}
+                      />
+                    ) : (
+                      <RecipeListItem
+                        key={recipe.id}
+                        recipe={recipe}
+                        onClick={() => setSelectedRecipe(recipe)}
+                      />
+                    )
                   ))}
                 </div>
               )}
@@ -198,4 +219,4 @@ export default function Home() {
       )}
     </div>
   );
-}
+} 

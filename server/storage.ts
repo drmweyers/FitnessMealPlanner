@@ -42,6 +42,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserPassword(userId: string, password: string): Promise<void>;
+  getCustomers(recipeId?: string): Promise<(User & { hasRecipe?: boolean })[]>;
   
   // Password Reset
   createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void>;
@@ -73,6 +74,7 @@ export interface IStorage {
 
   // Personalized recipes
   getPersonalizedRecipes(customerId: string): Promise<Recipe[]>;
+  assignRecipeToCustomers(trainerId: string, recipeId: string, customerIds: string[]): Promise<void>;
   
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
@@ -97,6 +99,26 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPassword(userId: string, password: string): Promise<void> {
     await db.update(users).set({ password }).where(eq(users.id, userId));
+  }
+
+  async getCustomers(recipeId?: string): Promise<(User & { hasRecipe?: boolean })[]> {
+    const customers = await db.select().from(users).where(eq(users.role, 'customer'));
+    
+    if (recipeId) {
+      const assignments = await db
+        .select()
+        .from(personalizedRecipes)
+        .where(eq(personalizedRecipes.recipeId, recipeId));
+      
+      const assignedCustomerIds = new Set(assignments.map(a => a.customerId));
+      
+      return customers.map(customer => ({
+        ...customer,
+        hasRecipe: assignedCustomerIds.has(customer.id)
+      }));
+    }
+    
+    return customers;
   }
 
   // Password Reset
@@ -199,6 +221,43 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(personalizedRecipes.assignedAt));
 
     return assignedRecipes.map(r => r.recipe).filter((r): r is Recipe => r !== null);
+  }
+
+  async assignRecipeToCustomers(trainerId: string, recipeId: string, customerIds: string[]): Promise<void> {
+    // Get current assignments for this recipe
+    const currentAssignments = await db
+      .select()
+      .from(personalizedRecipes)
+      .where(eq(personalizedRecipes.recipeId, recipeId));
+    
+    const currentlyAssignedIds = new Set(currentAssignments.map(a => a.customerId));
+    
+    // Determine which customers to add and remove
+    const toAdd = customerIds.filter(id => !currentlyAssignedIds.has(id));
+    const toRemove = Array.from(currentlyAssignedIds).filter(id => !customerIds.includes(id));
+    
+    // Remove assignments that are no longer needed
+    if (toRemove.length > 0) {
+      await db
+        .delete(personalizedRecipes)
+        .where(
+          and(
+            eq(personalizedRecipes.recipeId, recipeId),
+            inArray(personalizedRecipes.customerId, toRemove)
+          )
+        );
+    }
+    
+    // Add new assignments
+    if (toAdd.length > 0) {
+      const assignments = toAdd.map(customerId => ({
+        customerId,
+        trainerId,
+        recipeId,
+      }));
+      
+      await db.insert(personalizedRecipes).values(assignments);
+    }
   }
 
   async searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }> {

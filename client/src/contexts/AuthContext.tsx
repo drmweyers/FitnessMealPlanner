@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState, ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import type { User, UserRole } from '@/hooks/useAuth';
 
 const API_BASE_URL = '/api';
@@ -77,6 +78,7 @@ function normalizeAuthResponse(response: AuthResponse): { token: string; user: U
 export function AuthProvider({ children }: AuthProviderProps) {
   const queryClient = useQueryClient();
   const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -92,24 +94,66 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      // Clear auth token and notify other tabs
+      localStorage.removeItem('token');
+      window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
+      setAuthToken(null);
+      
+      // Clear all queries from the cache
+      queryClient.clear();
+      
+      // Reset the user query data
+      queryClient.setQueryData([`${API_BASE_URL}/auth/me`], null);
+
+      // Navigate to login
+      navigate('/login');
+    }
+  };
+
   const { data: user, isLoading, error } = useQuery({
     queryKey: [`${API_BASE_URL}/auth/me`],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+        
+        if (response.status === 401) {
+          // Token is expired or invalid
+          await handleLogout();
+          throw new Error('Session expired. Please login again.');
+        }
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+        
+        const data = await response.json();
+        const normalized = normalizeAuthResponse(data);
+        return normalized.user;
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('Session expired')) {
+          throw error;
+        }
+        console.error('Auth check failed:', error);
+        throw new Error('Failed to validate session');
       }
-      
-      const data = await response.json();
-      const normalized = normalizeAuthResponse(data);
-      return normalized.user;
     },
-    retry: 1,
+    retry: (failureCount, error) => {
+      // Don't retry on 401 errors
+      if (error instanceof Error && error.message.includes('Session expired')) {
+        return false;
+      }
+      return failureCount < 1;
+    },
     retryDelay: 1000,
     staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: !!authToken, // Only fetch user data if we have a token
@@ -196,25 +240,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const logout = async () => {
-    try {
-        await fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
-    } catch (error) {
-        console.error('Logout failed:', error);
-    } finally {
-        // Clear auth token and notify other tabs
-        localStorage.removeItem('token');
-        window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
-        setAuthToken(null);
-        
-        // Clear all queries from the cache
-        queryClient.clear();
-        
-        // Reset the user query data
-        queryClient.setQueryData([`${API_BASE_URL}/auth/me`], null);
-    }
-  };
-
   const value = {
     user: user as User | null,
     isLoading: isLoading && !isAuthError,
@@ -222,7 +247,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     error: error as Error | undefined,
     login,
     register,
-    logout,
+    logout: handleLogout,
   };
 
   return (

@@ -143,6 +143,9 @@ export default function AdminTable({
                 Recipe
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
                 Type
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
@@ -183,6 +186,15 @@ export default function AdminTable({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    recipe.isApproved 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {recipe.isApproved ? 'Approved' : 'Pending'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/10 text-primary">
                     {(recipe.mealTypes && recipe.mealTypes.length > 0) ? recipe.mealTypes[0] : 'N/A'}
                   </span>
@@ -206,10 +218,14 @@ export default function AdminTable({
                       variant="outline"
                       onClick={() => onApprove(recipe.id)}
                       disabled={approvePending || selectedIds.includes(recipe.id)}
-                      className="text-green-600 border-green-200 hover:bg-green-50"
+                      className={`${
+                        recipe.isApproved 
+                          ? 'text-yellow-600 border-yellow-200 hover:bg-yellow-50'
+                          : 'text-green-600 border-green-200 hover:bg-green-50'
+                      }`}
                     >
-                      <i className="fas fa-check mr-1"></i>
-                      Approve
+                      <i className={`fas fa-${recipe.isApproved ? 'times' : 'check'} mr-1`}></i>
+                      {recipe.isApproved ? 'Unapprove' : 'Approve'}
                     </Button>
                     <Button
                       size="sm"

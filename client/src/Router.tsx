@@ -2,7 +2,7 @@ import React from "react";
 import { Route, Switch, Redirect } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
-import Home from "@/pages/Home";
+import Trainer from "@/pages/Trainer";
 import Admin from "@/pages/Admin";
 import Customer from "@/pages/Customer";
 import LoginPage from "@/pages/LoginPage";
@@ -29,6 +29,8 @@ export default function Router() {
       <Switch>
         <Route path="/login" component={LoginPage} />
         <Route path="/register" component={RegisterPage} />
+        <Route path="/forgot-password" component={ForgotPasswordPage} />
+        <Route path="/reset-password" component={ResetPasswordPage} />
         <Route path="/">
           <Redirect to="/login" />
         </Route>
@@ -47,25 +49,52 @@ export default function Router() {
             case 'customer':
               return <Redirect to="/my-meal-plans" />;
             case 'trainer':
-              return <Home />;
+              return <Redirect to="/trainer" />;
             case 'admin':
               return <Redirect to="/admin" />;
             default:
-              return <Home />;
+              return <Trainer />;
           }
         }} />
-        {user.role === 'admin' && <Route path="/admin" component={Admin} />}
-        {user.role === 'customer' && (
-          <>
-            <Route path="/customer" component={Customer} />
-            <Route path="/my-meal-plans" component={Customer} />
-          </>
-        )}
-        {user.role === 'trainer' && (
-          <>
-            <Route path="/meal-plan-generator" component={Home} />
-          </>
-        )}
+        
+        {/* Admin Routes */}
+        <Route path="/admin" component={() => {
+          if (user.role !== 'admin') {
+            return <Redirect to="/" />;
+          }
+          return <Admin />;
+        }} />
+        
+        {/* Customer Routes */}
+        <Route path="/customer" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <Customer />;
+        }} />
+        
+        <Route path="/my-meal-plans" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <Customer />;
+        }} />
+        
+        {/* Trainer Routes */}
+        <Route path="/trainer" component={() => {
+          if (user.role !== 'trainer') {
+            return <Redirect to="/" />;
+          }
+          return <Trainer />;
+        }} />
+        
+        <Route path="/meal-plan-generator" component={() => {
+          if (user.role !== 'trainer' && user.role !== 'admin') {
+            return <Redirect to="/" />;
+          }
+          return <Trainer />;
+        }} />
+        
         <Route path="*" component={NotFound} />
       </Switch>
     </Layout>

@@ -9,8 +9,12 @@ interface AdminRecipeGridProps {
   isLoading: boolean;
   onDelete: (id: string) => void;
   onBulkDelete: (ids: string[]) => void;
+  onApprove: (id: string) => void;
+  onBulkApprove: (ids: string[]) => void;
   deletePending: boolean;
   bulkDeletePending: boolean;
+  approvePending: boolean;
+  bulkApprovePending: boolean;
 }
 
 export default function AdminRecipeGrid({
@@ -18,8 +22,12 @@ export default function AdminRecipeGrid({
   isLoading,
   onDelete,
   onBulkDelete,
+  onApprove,
+  onBulkApprove,
   deletePending,
-  bulkDeletePending
+  bulkDeletePending,
+  approvePending,
+  bulkApprovePending
 }: AdminRecipeGridProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
@@ -47,6 +55,13 @@ export default function AdminRecipeGrid({
   const handleBulkDelete = () => {
     if (selectedIds.length > 0) {
       onBulkDelete(selectedIds);
+      setSelectedIds([]);
+    }
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedIds.length > 0) {
+      onBulkApprove(selectedIds);
       setSelectedIds([]);
     }
   };
@@ -99,37 +114,80 @@ export default function AdminRecipeGrid({
           )}
         </div>
         
-        {selectedIds.length > 0 && (
-          <div className="flex items-center space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedIds([])}
-              className="text-slate-600 border-slate-300 hover:bg-slate-100"
-            >
-              Clear Selection
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={handleBulkDelete}
-              disabled={bulkDeletePending}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {bulkDeletePending ? (
-                <span className="flex items-center">
-                  <i className="fas fa-spinner fa-spin mr-2"></i>
-                  Deleting...
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <i className="fas fa-trash mr-2"></i>
-                  Delete Selected ({selectedIds.length})
-                </span>
-              )}
-            </Button>
+        <div className="flex items-center space-x-4">
+          {/* Status Summary */}
+          <div className="flex items-center space-x-2 text-sm">
+            <span className="px-2 py-1 rounded-full bg-green-100 text-green-800 font-medium">
+              {recipes.filter(r => r.isApproved).length} Approved
+            </span>
+            <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">
+              {recipes.filter(r => !r.isApproved).length} Pending
+            </span>
           </div>
-        )}
+          
+          {selectedIds.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedIds([])}
+                className="text-slate-600 border-slate-300 hover:bg-slate-100"
+              >
+                Clear Selection
+              </Button>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={handleBulkApprove}
+                disabled={bulkApprovePending}
+                className={`${
+                  selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
+                    ? 'bg-yellow-600 hover:bg-yellow-700'
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
+              >
+                {bulkApprovePending ? (
+                  <span className="flex items-center">
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    {selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
+                      ? 'Unapproving...'
+                      : 'Approving...'}
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <i className={`fas fa-${
+                      selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
+                        ? 'times'
+                        : 'check'
+                    } mr-2`}></i>
+                    {selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
+                      ? 'Unapprove Selected'
+                      : 'Approve Selected'} ({selectedIds.length})
+                  </span>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleBulkDelete}
+                disabled={bulkDeletePending}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {bulkDeletePending ? (
+                  <span className="flex items-center">
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Deleting...
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <i className="fas fa-trash mr-2"></i>
+                    Delete Selected ({selectedIds.length})
+                  </span>
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Recipe Grid */}
@@ -149,19 +207,50 @@ export default function AdminRecipeGrid({
                 <Checkbox
                   checked={isSelected}
                   onCheckedChange={(checked) => handleSelectRecipe(recipe.id, checked as boolean)}
-                  disabled={deletePending || bulkDeletePending}
+                  disabled={deletePending || bulkDeletePending || approvePending || bulkApprovePending}
                   className="bg-white/90 backdrop-blur-sm"
                 />
               </div>
 
-              {/* Delete Button */}
-              <div className="absolute top-3 right-3 z-10">
+              {/* Action Buttons */}
+              <div className="absolute top-3 right-3 z-10 flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onApprove(recipe.id);
+                  }}
+                  disabled={approvePending || isSelected}
+                  className={`
+                    transition-all duration-200
+                    shadow-md hover:shadow-lg
+                    backdrop-blur-sm
+                    ${recipe.isApproved 
+                      ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                    }
+                  `}
+                  title={recipe.isApproved ? "Unapprove Recipe" : "Approve Recipe"}
+                >
+                  <i className={`fas fa-${recipe.isApproved ? 'times' : 'check'} text-sm`}></i>
+                </Button>
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => onDelete(recipe.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(recipe.id);
+                  }}
                   disabled={deletePending || isSelected}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 hover:bg-red-700"
+                  className="
+                    transition-all duration-200
+                    shadow-md hover:shadow-lg
+                    backdrop-blur-sm
+                    bg-red-500 hover:bg-red-600
+                    text-white
+                  "
+                  title="Delete Recipe"
                 >
                   <i className="fas fa-trash text-sm"></i>
                 </Button>
@@ -175,55 +264,68 @@ export default function AdminRecipeGrid({
                     alt={recipe.name}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  {/* Approval Status Badge */}
-                  <div className="absolute bottom-2 left-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      recipe.isApproved 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                  {/* Approval Status Badge - Moved to top-left for better visibility */}
+                  <div className="absolute top-2 left-2 z-10">
+                    <span className={`
+                      px-3 py-1.5 
+                      text-xs font-semibold rounded-full 
+                      shadow-md backdrop-blur-sm
+                      ${recipe.isApproved 
+                        ? 'bg-green-100/90 text-green-800' 
+                        : 'bg-yellow-100/90 text-yellow-800'
+                      }
+                    `}>
                       {recipe.isApproved ? 'Approved' : 'Pending'}
                     </span>
                   </div>
+                  {/* Click to View Hint */}
+                  <div className="
+                    absolute bottom-0 left-0 right-0
+                    bg-gradient-to-t from-black/50 to-transparent
+                    text-white text-center
+                    py-2 text-sm
+                    opacity-0 group-hover:opacity-100
+                    transition-opacity duration-200
+                  ">
+                    Click to view details
+                  </div>
                 </div>
 
-                {/* Recipe Info */}
+                {/* Recipe Info - Enhanced styling */}
                 <div className="p-4 space-y-3">
                   <div>
-                    <h3 className="font-semibold text-slate-900 line-clamp-2 group-hover:text-primary transition-colors">
+                    <h3 className="font-semibold text-slate-900 text-lg line-clamp-2 group-hover:text-primary transition-colors">
                       {recipe.name}
                     </h3>
-                    <p className="text-sm text-slate-600 line-clamp-2 mt-1">
+                    <p className="text-sm text-slate-600 line-clamp-2 mt-2">
                       {recipe.description}
                     </p>
                   </div>
 
-                  {/* Recipe Stats */}
-                  <div className="flex items-center justify-between text-sm text-slate-500">
-                    <div className="flex items-center space-x-4">
-                      <span className="flex items-center">
-                        <i className="fas fa-fire text-orange-500 mr-1"></i>
-                        {recipe.caloriesKcal} cal
-                      </span>
-                      <span className="flex items-center">
-                        <i className="fas fa-clock text-blue-500 mr-1"></i>
-                        {recipe.prepTimeMinutes}min
-                      </span>
-                    </div>
+                  {/* Recipe Stats - Enhanced with better icons and layout */}
+                  <div className="flex items-center gap-4 text-sm text-slate-600">
+                    <span className="flex items-center bg-orange-50 px-2 py-1 rounded-full">
+                      <i className="fas fa-fire text-orange-500 mr-1.5"></i>
+                      {recipe.caloriesKcal} cal
+                    </span>
+                    <span className="flex items-center bg-blue-50 px-2 py-1 rounded-full">
+                      <i className="fas fa-clock text-blue-500 mr-1.5"></i>
+                      {recipe.prepTimeMinutes}min
+                    </span>
                   </div>
 
-                  {/* Meal Types */}
-                  <div className="flex flex-wrap gap-1">
+                  {/* Meal Types - Enhanced styling */}
+                  <div className="flex flex-wrap gap-2">
                     {recipe.mealTypes?.slice(0, 2).map((type, index) => (
                       <span 
                         key={index}
-                        className="px-2 py-1 text-xs bg-primary/10 text-primary rounded-full"
+                        className="px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full"
                       >
                         {type}
                       </span>
                     ))}
                     {recipe.mealTypes && recipe.mealTypes.length > 2 && (
-                      <span className="px-2 py-1 text-xs bg-slate-100 text-slate-600 rounded-full">
+                      <span className="px-2.5 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">
                         +{recipe.mealTypes.length - 2}
                       </span>
                     )}
