@@ -88,10 +88,30 @@ export async function generateRecipeBatch(
     dietaryRestrictions?: string[];
   } = {}
 ): Promise<GeneratedRecipe[]> {
-  const systemPrompt = `You are an expert nutritionist and professional chef. 
+  const systemPrompt = `You are an expert nutritionist and professional chef.
 Generate a batch of ${count} diverse and healthy recipes.
-IMPORTANT: Respond with a JSON object containing a 'recipes' array: { "recipes": [...] }
-Each recipe object must be complete and follow the specified format. Ensure the final JSON is valid.`;
+IMPORTANT: Respond with a single JSON object containing a 'recipes' array: { "recipes": [...] }.
+Each recipe object in the array MUST be complete and strictly follow this TypeScript interface:
+interface GeneratedRecipe {
+  name: string;
+  description: string;
+  mealTypes: string[]; // e.g., ["Breakfast", "Snack"]
+  dietaryTags: string[]; // e.g., ["Gluten-Free", "Vegan"]
+  mainIngredientTags: string[]; // e.g., ["Chicken", "Broccoli"]
+  ingredients: { name: string; amount: number; unit: string }[];
+  instructions: string; // Detailed, step-by-step instructions.
+  prepTimeMinutes: number;
+  cookTimeMinutes: number;
+  servings: number;
+  estimatedNutrition: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  imageUrl: string; // Set this to an empty string: ""
+}
+Ensure the final JSON is perfectly valid and complete. Do not omit any fields.`;
 
   const userPrompt = `Generate ${count} recipes.
 ${options.mealTypes ? `Meal types: ${options.mealTypes.join(", ")}` : ""}
@@ -126,12 +146,28 @@ Respond with { "recipes": [ ... ] }`;
     }
     
     // Full validation on each recipe object
-    const validRecipes = recipes.filter(r => 
-      r && r.name && r.ingredients && r.instructions && r.estimatedNutrition
-    );
+    const validRecipes: GeneratedRecipe[] = [];
+    const invalidRecipes: any[] = [];
 
-    if (validRecipes.length < recipes.length) {
-      console.warn(`Filtered out ${recipes.length - validRecipes.length} invalid recipe objects.`);
+    for (const r of recipes) {
+      if (
+        r &&
+        r.name &&
+        r.ingredients &&
+        r.instructions &&
+        r.estimatedNutrition &&
+        typeof r.imageUrl === 'string'
+      ) {
+        validRecipes.push(r as GeneratedRecipe);
+      } else {
+        invalidRecipes.push(r);
+      }
+    }
+
+    if (invalidRecipes.length > 0) {
+      console.warn(`Filtered out ${invalidRecipes.length} invalid recipe objects.`);
+      // Log only the first invalid object to avoid flooding logs
+      console.debug('Example invalid recipe:', JSON.stringify(invalidRecipes[0], null, 2));
     }
 
     return validRecipes;

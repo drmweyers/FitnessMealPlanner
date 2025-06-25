@@ -129,7 +129,10 @@ export class RecipeGeneratorService {
         mealTypes: recipe.mealTypes,
         dietaryTags: recipe.dietaryTags,
         mainIngredientTags: recipe.mainIngredientTags,
-        ingredientsJson: recipe.ingredients,
+        ingredientsJson: recipe.ingredients.map((ing) => ({
+          ...ing,
+          amount: String(ing.amount),
+        })),
         instructionsText: recipe.instructions,
         prepTimeMinutes: recipe.prepTimeMinutes,
         cookTimeMinutes: recipe.cookTimeMinutes,
