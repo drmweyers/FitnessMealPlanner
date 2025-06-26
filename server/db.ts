@@ -15,7 +15,9 @@ console.log(`Database mode: ${isDevelopment ? 'Development' : 'Production'}`);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DATABASE_URL && (process.env.DATABASE_URL.includes('sslmode=require') || process.env.DATABASE_URL.includes('neon.tech'))
+    ? { rejectUnauthorized: false }
+    : false,
   max: 3, // Reduce max connections to prevent overload
   min: 1, // Keep minimum connections alive
   idleTimeoutMillis: 60000, // Keep connections alive longer
