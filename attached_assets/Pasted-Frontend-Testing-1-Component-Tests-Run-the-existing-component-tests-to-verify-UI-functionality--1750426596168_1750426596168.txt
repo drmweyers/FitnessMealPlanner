@@ -63,13 +63,13 @@ node test-load.js
 Data Validation Tests
 Verify your current database state:
 
-curl "http://localhost:5000/api/admin/stats"
-curl "http://localhost:5000/api/recipes?limit=5"
+curl "http://localhost:5001/api/admin/stats"
+curl "http://localhost:5001/api/recipes?limit=5"
 Security Testing
 Test authentication and input validation:
 
-curl -X GET "http://localhost:5000/api/admin/recipes"
-curl "http://localhost:5000/api/recipes?minCalories=invalid&maxCalories=also-invalid"
+curl -X GET "http://localhost:5001/api/admin/recipes"
+curl "http://localhost:5001/api/recipes?minCalories=invalid&maxCalories=also-invalid"
 Based on your QA_REPORT.md, your application is already performing excellently with:
 
 223 total recipes (all approved)

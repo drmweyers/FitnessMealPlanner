@@ -28,7 +28,7 @@ REPLIT_ENVIRONMENT=production
 
 # Application Configuration
 NODE_ENV=production
-PORT=5000
+PORT=5001
 ```
 
 #### Optional Variables
@@ -66,7 +66,7 @@ npm run dev
 ```
 
 ### Development Server
-The development server runs on `http://localhost:5000` with:
+The development server runs on `http://localhost:5001` with:
 - Hot module replacement for React
 - Automatic server restart on changes
 - API proxy for seamless frontend-backend integration
@@ -163,7 +163,7 @@ COPY . .
 RUN npm run build
 
 # Expose port
-EXPOSE 5000
+EXPOSE 5001
 
 # Start application
 CMD ["npm", "run", "start"]
@@ -172,7 +172,7 @@ CMD ["npm", "run", "start"]
 ```bash
 # Build and run Docker container
 docker build -t fitmeal-pro .
-docker run -p 5000:5000 --env-file .env fitmeal-pro
+docker run -p 5001:5001 --env-file .env fitmeal-pro
 ```
 
 ## Database Setup
@@ -242,12 +242,12 @@ curl -X PATCH https://your-domain.com/api/recipes/bulk-approve \
 server {
     listen 443 ssl http2;
     server_name your-domain.com;
-    
+
     ssl_certificate /path/to/certificate.crt;
     ssl_certificate_key /path/to/private.key;
-    
+
     location / {
-        proxy_pass http://localhost:5000;
+        proxy_pass http://localhost:5001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -304,12 +304,12 @@ export const pool = new Pool({
 #### Query Optimization
 ```sql
 -- Analyze query performance
-EXPLAIN ANALYZE SELECT * FROM recipes 
-WHERE meal_types @> '["breakfast"]' 
+EXPLAIN ANALYZE SELECT * FROM recipes
+WHERE meal_types @> '["breakfast"]'
 AND is_approved = true;
 
 -- Optimize JSONB queries
-CREATE INDEX CONCURRENTLY idx_recipes_meal_types_gin 
+CREATE INDEX CONCURRENTLY idx_recipes_meal_types_gin
 ON recipes USING GIN (meal_types);
 ```
 
@@ -344,7 +344,7 @@ app.get('/health', async (req, res) => {
     database: 'checking...',
     openai: 'checking...',
   };
-  
+
   try {
     // Check database connection
     await db.select().from(recipes).limit(1);
@@ -353,7 +353,7 @@ app.get('/health', async (req, res) => {
     health.database = 'error';
     health.status = 'error';
   }
-  
+
   res.json(health);
 });
 ```
@@ -363,12 +363,12 @@ app.get('/health', async (req, res) => {
 // Response time monitoring
 app.use((req, res, next) => {
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     console.log(`${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
   });
-  
+
   next();
 });
 ```

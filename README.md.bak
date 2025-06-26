@@ -6,7 +6,7 @@ A comprehensive fitness meal planning application that uses OpenAI to generate h
 
 1. **Clone and Setup**: This project is pre-configured for Replit deployment
 2. **Add API Key**: Add your `OPENAI_API_KEY` in Replit Secrets
-3. **Run**: Click the "Run" button - the app will start on port 5000
+3. **Run**: Click the "Run" button - the app will start on port 5001
 4. **Access**: Visit your Replit URL to see the landing page
 5. **Login**: Click "Get Started" to authenticate with Replit Auth
 6. **Generate**: Use the Admin tab to generate your first batch of recipes
@@ -242,7 +242,7 @@ CREATE TABLE recipes (
 ### Replit Deployment
 1. Environment variables are automatically configured
 2. PostgreSQL database is provisioned and connected
-3. Application runs on port 5000 with automatic SSL
+3. Application runs on port 5001 with automatic SSL
 4. Continuous deployment from code changes
 
 ### Production Considerations

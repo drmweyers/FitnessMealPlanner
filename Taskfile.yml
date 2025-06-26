@@ -8,7 +8,7 @@ tasks:
     vars:
       PROD:
         sh: "echo $PROD"
-  
+
   down:
     desc: Stop running services
     cmds:
@@ -23,8 +23,20 @@ tasks:
     desc: "Follow logs for a service. Args: -- service (default: app-dev)"
     cmds:
       - docker compose logs -f {{.CLI_ARGS | default "app-dev"}}
-      
+
   dockerlogin:
     desc: (DevOps only) Log in to a private Docker registry
     cmds:
       - docker login registry.digitalocean.com
+
+  dockerlogout:
+    desc: (DevOps only) Command will log out of the private docker container registry. (Important step if you are using other private docker registries)
+    cmds:
+      - docker logout registry.digitalocean.com
+
+  dockerdeploy:
+    desc: (DevOps only) Command will build the production container of this project and deploy to the private docker container registry.
+    cmds:
+      - docker build -f Dockerfile --rm -t registry.digitalocean.com/bci/fitnessmealplanner:prod --platform linux/amd64 .
+      - docker tag registry.digitalocean.com/bci/fitnessmealplanner:prod registry.digitalocean.com/bci/fitnessmealplanner:prod
+      - docker push registry.digitalocean.com/bci/fitnessmealplanner:prod
