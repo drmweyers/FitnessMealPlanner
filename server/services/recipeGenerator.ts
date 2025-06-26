@@ -4,6 +4,7 @@ import type { InsertRecipe } from "@shared/schema";
 import { OpenAIRateLimiter } from "./utils/RateLimiter";
 import { RecipeCache } from "./utils/RecipeCache";
 import { RecipeGenerationMetrics } from "./utils/Metrics";
+import { uploadImageToS3 } from "./utils/S3Uploader";
 
 interface GenerationOptions {
   count: number;
@@ -155,14 +156,20 @@ export class RecipeGeneratorService {
   }
 
   private async getOrGenerateImage(recipe: GeneratedRecipe): Promise<string | null> {
-    const cacheKey = `image_${recipe.name.replace(/\s/g, '_')}`;
+    const cacheKey = `image_s3_${recipe.name.replace(/\s/g, '_')}`;
     
     try {
       return await this.cache.getOrSet(cacheKey, async () => {
-        return await generateImageForRecipe(recipe);
+        const tempUrl = await generateImageForRecipe(recipe);
+        if (!tempUrl) {
+          throw new Error("Did not receive a temporary URL from OpenAI.");
+        }
+        
+        const permanentUrl = await uploadImageToS3(tempUrl, recipe.name);
+        return permanentUrl;
       });
     } catch (error) {
-      console.error(`Failed to generate image for "${recipe.name}":`, error);
+      console.error(`Failed to generate and store image for "${recipe.name}":`, error);
       return null;
     }
   }
