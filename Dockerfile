@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-EXPOSE 5000 24678
+EXPOSE 5001 24678
 CMD ["npm", "run", "dev"]
 
 # 2. Builder Stage
@@ -23,9 +23,12 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/client/dist ./client/dist
 COPY --from=builder /app/node_modules ./node_modules
 
+# (DevOps Fix) Install tsx for execution
+RUN npm install -g tsx
+
 # Prune dev dependencies
 RUN npm prune --production
 
-EXPOSE 5000
+EXPOSE 5001
 ENV NODE_ENV=production
 CMD ["npm", "run", "start"]

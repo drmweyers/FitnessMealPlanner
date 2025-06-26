@@ -35,7 +35,7 @@ You are Replit Agent. Build a complete backend service for the Fitness Meal Plan
    - Validate and sanitize all request inputs; handle errors gracefully.
 
 7. Deployment
-   - Configure a Replit Deployment as a Web Server on port 3000 (Express) or 5000 (Flask), linking to environment secrets.
+   - Configure a Replit Deployment as a Web Server on port 3000 (Express) or 5001 (Flask), linking to environment secrets.
    - Ensure continuous deployment so code updates auto-deploy.
 
 8. Documentation

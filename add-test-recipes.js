@@ -10,9 +10,10 @@ const recipes = [
       { name: "Greek yogurt", amount: "200", unit: "g" },
       { name: "mixed berries", amount: "100", unit: "g" },
       { name: "granola", amount: "30", unit: "g" },
-      { name: "honey", amount: "1", unit: "tbsp" }
+      { name: "honey", amount: "1", unit: "tbsp" },
     ],
-    instructionsText: "Layer yogurt, berries, and granola in a bowl. Drizzle with honey.",
+    instructionsText:
+      "Layer yogurt, berries, and granola in a bowl. Drizzle with honey.",
     prepTimeMinutes: 5,
     cookTimeMinutes: 0,
     servings: 1,
@@ -22,7 +23,7 @@ const recipes = [
     fatGrams: "12.0",
     imageUrl: "https://images.unsplash.com/photo-1571115764595-644a1f56a55c",
     sourceReference: "Sample Recipe",
-    isApproved: true
+    isApproved: true,
   },
   {
     name: "Turkey and Avocado Wrap",
@@ -35,9 +36,10 @@ const recipes = [
       { name: "sliced turkey", amount: "100", unit: "g" },
       { name: "avocado", amount: "0.5", unit: "piece" },
       { name: "lettuce", amount: "50", unit: "g" },
-      { name: "tomato", amount: "1", unit: "medium" }
+      { name: "tomato", amount: "1", unit: "medium" },
     ],
-    instructionsText: "Spread avocado on tortilla, add turkey, lettuce, and tomato. Roll tightly.",
+    instructionsText:
+      "Spread avocado on tortilla, add turkey, lettuce, and tomato. Roll tightly.",
     prepTimeMinutes: 10,
     cookTimeMinutes: 0,
     servings: 1,
@@ -47,7 +49,7 @@ const recipes = [
     fatGrams: "18.0",
     imageUrl: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b",
     sourceReference: "Sample Recipe",
-    isApproved: true
+    isApproved: true,
   },
   {
     name: "Salmon with Sweet Potato",
@@ -60,9 +62,10 @@ const recipes = [
       { name: "sweet potato", amount: "200", unit: "g" },
       { name: "broccoli", amount: "150", unit: "g" },
       { name: "olive oil", amount: "2", unit: "tbsp" },
-      { name: "lemon", amount: "0.5", unit: "piece" }
+      { name: "lemon", amount: "0.5", unit: "piece" },
     ],
-    instructionsText: "Roast sweet potato at 400F for 25 minutes. Pan-sear salmon 4 minutes per side. Steam broccoli. Serve with lemon.",
+    instructionsText:
+      "Roast sweet potato at 400F for 25 minutes. Pan-sear salmon 4 minutes per side. Steam broccoli. Serve with lemon.",
     prepTimeMinutes: 15,
     cookTimeMinutes: 25,
     servings: 1,
@@ -72,7 +75,7 @@ const recipes = [
     fatGrams: "22.0",
     imageUrl: "https://images.unsplash.com/photo-1467003909585-2f8a72700288",
     sourceReference: "Sample Recipe",
-    isApproved: true
+    isApproved: true,
   },
   {
     name: "Protein Smoothie Bowl",
@@ -85,9 +88,10 @@ const recipes = [
       { name: "banana", amount: "1", unit: "medium" },
       { name: "almond milk", amount: "200", unit: "ml" },
       { name: "blueberries", amount: "50", unit: "g" },
-      { name: "chia seeds", amount: "1", unit: "tbsp" }
+      { name: "chia seeds", amount: "1", unit: "tbsp" },
     ],
-    instructionsText: "Blend protein powder, banana, and almond milk. Pour into bowl and top with blueberries and chia seeds.",
+    instructionsText:
+      "Blend protein powder, banana, and almond milk. Pour into bowl and top with blueberries and chia seeds.",
     prepTimeMinutes: 5,
     cookTimeMinutes: 0,
     servings: 1,
@@ -97,7 +101,7 @@ const recipes = [
     fatGrams: "8.0",
     imageUrl: "https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38",
     sourceReference: "Sample Recipe",
-    isApproved: true
+    isApproved: true,
   },
   {
     name: "Veggie Stir Fry",
@@ -110,9 +114,10 @@ const recipes = [
       { name: "mixed vegetables", amount: "200", unit: "g" },
       { name: "soy sauce", amount: "2", unit: "tbsp" },
       { name: "sesame oil", amount: "1", unit: "tbsp" },
-      { name: "garlic", amount: "2", unit: "cloves" }
+      { name: "garlic", amount: "2", unit: "cloves" },
     ],
-    instructionsText: "Heat oil in pan, add garlic and tofu. Cook 3 minutes, add vegetables and soy sauce. Stir fry 5 minutes.",
+    instructionsText:
+      "Heat oil in pan, add garlic and tofu. Cook 3 minutes, add vegetables and soy sauce. Stir fry 5 minutes.",
     prepTimeMinutes: 10,
     cookTimeMinutes: 8,
     servings: 1,
@@ -122,24 +127,24 @@ const recipes = [
     fatGrams: "16.0",
     imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19",
     sourceReference: "Sample Recipe",
-    isApproved: true
-  }
+    isApproved: true,
+  },
 ];
 
 // Function to add recipes via API
 async function addRecipes() {
-  console.log('Adding test recipes...');
-  
+  console.log("Adding test recipes...");
+
   for (const recipe of recipes) {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/recipes', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5001/api/admin/recipes", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(recipe)
+        body: JSON.stringify(recipe),
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log(`Added: ${recipe.name}`);
@@ -150,8 +155,8 @@ async function addRecipes() {
       console.log(`Error adding ${recipe.name}:`, error.message);
     }
   }
-  
-  console.log('Finished adding recipes');
+
+  console.log("Finished adding recipes");
 }
 
 addRecipes();

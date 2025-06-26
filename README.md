@@ -21,7 +21,7 @@ This project provides Dockerfiles for both the server and client applications, a
    This will build and start both the server and client containers.
 
 ### Service Ports
-- **Server (`ts-server`):** Exposes port **5000** (mapped to host `5000:5000`).
+- **Server (`ts-server`):** Exposes port **5001** (mapped to host `5001:5001`).
 - **Client (`ts-client`):** Exposes port **3000** (mapped to host `3000:3000`).
 
 ### Special Configuration
