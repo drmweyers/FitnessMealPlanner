@@ -6,7 +6,6 @@
  * both development (Vite) and production (static) environments.
  */
 
-import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -28,6 +27,12 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     console.error(err.stack);
     res.status(500).send('Something broke!');

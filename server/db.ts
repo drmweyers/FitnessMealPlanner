@@ -10,14 +10,28 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const isReplitProduction = process.env.REPLIT_ENVIRONMENT === 'production';
 
 // Log environment info for debugging
-console.log(`Environment - NODE_ENV: ${process.env.NODE_ENV}, REPLIT_ENVIRONMENT: ${process.env.REPLIT_ENVIRONMENT}`);
+console.log(`Environment - NODE_ENV: ${isDevelopment}, REPLIT_ENVIRONMENT: ${isReplitProduction}`);
 console.log(`Database mode: ${isDevelopment ? 'Development' : 'Production'}`);
+
+const getSslConfig = () => {
+  // Explicitly control SSL mode via an environment variable for clarity.
+  const sslMode = process.env.DB_SSL_MODE;
+
+  // For managed databases that require SSL but may use self-signed certs.
+  // This allows the connection without failing on certificate validation.
+  if (sslMode === 'require' || sslMode === 'allow') {
+    console.log("Database SSL mode enabled with 'rejectUnauthorized: false'.");
+    return { rejectUnauthorized: false };
+  }
+
+  // For local Docker databases or others that do not support SSL.
+  console.log("Database SSL mode disabled.");
+  return false;
+};
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL && (process.env.DATABASE_URL.includes('sslmode=require') || process.env.DATABASE_URL.includes('neon.tech'))
-    ? { rejectUnauthorized: false }
-    : false,
+  ssl: getSslConfig(),
   max: 3, // Reduce max connections to prevent overload
   min: 1, // Keep minimum connections alive
   idleTimeoutMillis: 60000, // Keep connections alive longer
