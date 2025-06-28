@@ -4,10 +4,8 @@ tasks:
   up:
     desc: "Start services in dev mode. Use --prod for production."
     cmds:
+      - echo "🚀 Starting FitMeal Pro services..."
       - docker compose --profile {{.CLI_ARGS | default "dev"}} up
-    vars:
-      PROD:
-        sh: "echo $PROD"
 
   down:
     desc: Stop running services
@@ -30,13 +28,133 @@ tasks:
       - docker login registry.digitalocean.com
 
   dockerlogout:
-    desc: (DevOps only) Command will log out of the private docker container registry. (Important step if you are using other private docker registries)
+    desc: (DevOps only) Log out of the private docker container registry
     cmds:
       - docker logout registry.digitalocean.com
 
-  dockerdeploy:
-    desc: (DevOps only) Command will build the production container of this project and deploy to the private docker container registry.
+  # Pre-build verification
+  verify-build-files:
+    desc: Verify required files exist before building
     cmds:
-      - docker build --no-cache -f Dockerfile --rm -t registry.digitalocean.com/bci/fitnessmealplanner:prod --platform linux/amd64 .
-      - docker tag registry.digitalocean.com/bci/fitnessmealplanner:prod registry.digitalocean.com/bci/fitnessmealplanner:prod
+      - echo "🔍 Verifying required files exist..."
+      - echo "📁 Available Dockerfiles:"
+      - ls -la Dockerfile server/Dockerfile || echo "Some Dockerfiles missing"
+      - echo "🎯 Using server/Dockerfile for production builds"
+      - |
+        if [ ! -f "drizzle.config.ts" ]; then
+          echo "❌ FATAL: drizzle.config.ts not found in project root!"
+          echo "📁 Current directory contents:"
+          ls -la
+          exit 1
+        else
+          echo "✅ drizzle.config.ts found"
+        fi
+      - |
+        if [ ! -f "package.json" ]; then
+          echo "❌ FATAL: package.json not found!"
+          exit 1
+        else
+          echo "✅ package.json found"
+        fi
+      - |
+        if [ ! -d "shared" ]; then
+          echo "❌ FATAL: shared directory not found!"
+          exit 1
+        else
+          echo "✅ shared directory found"
+        fi
+      - echo "🎯 All required files verified!"
+
+  # Use the SERVER Dockerfile (not root one)
+  dockerdeploy:
+    desc: (DevOps only) Build and deploy production container using server/Dockerfile
+    deps: [verify-build-files]
+    cmds:
+      - echo "🚀 Building production image using server/Dockerfile..."
+      - |
+        docker build \
+          --no-cache \
+          --target final \
+          --platform linux/amd64 \
+          -f server/Dockerfile \
+          -t registry.digitalocean.com/bci/fitnessmealplanner:prod \
+          .
+      - echo "📦 Built image:"
+      - docker images registry.digitalocean.com/bci/fitnessmealplanner:prod
+      - echo "🚀 Pushing ONLY prod tag to registry..."
       - docker push registry.digitalocean.com/bci/fitnessmealplanner:prod
+      - echo "✅ Deployment complete!"
+
+  # Utility tasks for debugging
+  # Test using the server Dockerfile
+  test-local-build:
+    desc: Test build locally using server/Dockerfile
+    cmds:
+      - echo "🧪 Testing local build with server/Dockerfile..."
+      - |
+        docker build \
+          --target final \
+          -f server/Dockerfile \
+          -t fitmeal-test \
+          .
+      - echo "📦 Image size:"
+      - docker images fitmeal-test
+
+  # Local test with server dockerfile
+  test-local-container:
+    desc: Test local container files using server/Dockerfile
+    deps: [test-local-build]
+    cmds:
+      - echo "🧪 Testing files inside LOCAL container..."
+      - |
+        docker run --rm fitmeal-test sh -c "
+          echo '📁 Files in /app:' &&
+          ls -la &&
+          echo '🔍 Checking drizzle.config.ts:' &&
+          ls -la drizzle.config.ts &&
+          echo '📄 drizzle.config.ts content preview:' &&
+          head -3 drizzle.config.ts &&
+          echo '🔧 Testing drizzle-kit:' &&
+          npx drizzle-kit --version &&
+          echo '✅ Container file verification complete!'
+        "
+
+  test-container-files:
+    desc: Test that critical files exist inside the built container
+    cmds:
+      - echo "🧪 Testing files inside PRODUCTION container..."
+      - |
+        docker run --rm registry.digitalocean.com/bci/fitnessmealplanner:prod sh -c "
+          echo '📁 Files in /app:' &&
+          ls -la &&
+          echo '🔍 Checking drizzle.config.ts:' &&
+          ls -la drizzle.config.ts &&
+          echo '📄 drizzle.config.ts content preview:' &&
+          head -3 drizzle.config.ts &&
+          echo '✅ Container file verification complete!'
+        "
+
+  test-image:
+    desc: Test the built image locally before deploying
+    deps: [test-container-files]
+    cmds:
+      - echo "🧪 Testing production image locally..."
+      - |
+        docker run --rm \
+          --env-file .env \
+          -p 5001:5001 \
+          registry.digitalocean.com/bci/fitnessmealplanner:prod
+
+  # Quick workflow to test everything
+  test-full-workflow:
+    desc: Test the complete workflow locally before deploying
+    cmds:
+      - task: verify-build-files
+      - task: test-local-container
+      - echo "✅ Full workflow test completed successfully!"
+
+  clean-images:
+    desc: Clean up old/dangling images
+    cmds:
+      - docker image prune -f
+      - docker system prune -f
