@@ -1,0 +1,40 @@
+# Single-stage build for debugging
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install PostgreSQL client
+RUN apk add --no-cache postgresql-client
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy all source code
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Install drizzle-kit
+RUN npm install -g drizzle-kit
+RUN npm install drizzle-kit
+
+# Create simple startup script
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'if [ ! -z "$DATABASE_CA_CERT" ]; then' >> /app/start.sh && \
+    echo '  echo "Setting up DigitalOcean CA certificate..."' >> /app/start.sh && \
+    echo '  echo -e "$DATABASE_CA_CERT" > /app/digitalocean-ca-cert.pem' >> /app/start.sh && \
+    echo '  export NODE_EXTRA_CA_CERTS=/app/digitalocean-ca-cert.pem' >> /app/start.sh && \
+    echo '  echo "CA certificate configured"' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo 'echo "Running migrations..."' >> /app/start.sh && \
+    echo 'npx drizzle-kit push || echo "Migration failed"' >> /app/start.sh && \
+    echo 'echo "Starting app..."' >> /app/start.sh && \
+    echo 'npm run start' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+EXPOSE 5001
+ENV NODE_ENV=production
+
+CMD ["/app/start.sh"]
