@@ -6,57 +6,114 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Check if we're in development mode
-const isDevelopment = process.env.NODE_ENV === 'development';
-const isReplitProduction = process.env.REPLIT_ENVIRONMENT === 'production';
+const isDevelopment = process.env.NODE_ENV === "development";
+const isReplitProduction = process.env.REPLIT_ENVIRONMENT === "production";
 
 // Log environment info for debugging
-console.log(`Environment - NODE_ENV: ${isDevelopment}, REPLIT_ENVIRONMENT: ${isReplitProduction}`);
-console.log(`Database mode: ${isDevelopment ? 'Development' : 'Production'}`);
+console.log(
+  `Environment - NODE_ENV: ${isDevelopment}, REPLIT_ENVIRONMENT: ${isReplitProduction}`,
+);
+console.log(`Database mode: ${isDevelopment ? "Development" : "Production"}`);
 
 const getSslConfig = () => {
-  // Explicitly control SSL mode via an environment variable for clarity.
-  const sslMode = process.env.DB_SSL_MODE;
+  if (isDevelopment) {
+    // In development, we're typically using a local PostgreSQL container
+    console.log("Database SSL mode: Development - using relaxed SSL settings");
 
-  // For managed databases that require SSL but may use self-signed certs.
-  // This allows the connection without failing on certificate validation.
-  if (sslMode === 'require' || sslMode === 'allow') {
-    console.log("Database SSL mode enabled with 'rejectUnauthorized: false'.");
+    const databaseUrl = process.env.DATABASE_URL!;
+    if (
+      databaseUrl.includes("localhost") ||
+      databaseUrl.includes("postgres:5432")
+    ) {
+      console.log("Local database detected - SSL disabled");
+      return false;
+    }
+
+    console.log(
+      "Remote development database - SSL enabled with relaxed validation",
+    );
     return { rejectUnauthorized: false };
-  }
+  } else {
+    // Production: Use simple SSL configuration
+    // NODE_EXTRA_CA_CERTS (set by Docker startup script) handles the certificate
+    console.log("Database SSL mode: Production - using standard SSL");
 
-  // For local Docker databases or others that do not support SSL.
-  console.log("Database SSL mode disabled.");
-  return false;
+    if (process.env.NODE_EXTRA_CA_CERTS) {
+      console.log(
+        `Using NODE_EXTRA_CA_CERTS: ${process.env.NODE_EXTRA_CA_CERTS}`,
+      );
+      // Node.js will automatically trust the CA certificate file
+      return { rejectUnauthorized: true };
+    } else {
+      console.log("No NODE_EXTRA_CA_CERTS found, using permissive SSL");
+      return { rejectUnauthorized: false };
+    }
+  }
 };
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: getSslConfig(),
-  max: 3, // Reduce max connections to prevent overload
-  min: 1, // Keep minimum connections alive
-  idleTimeoutMillis: 60000, // Keep connections alive longer
-  connectionTimeoutMillis: 15000, // Increased timeout for reliability
-  allowExitOnIdle: true, // Allow process to exit when idle
+  max: 3,
+  min: 1,
+  idleTimeoutMillis: 60000,
+  connectionTimeoutMillis: 15000,
+  allowExitOnIdle: true,
 });
 
 // Add error handling for the pool
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle client", err);
+
+  if (
+    err.message.includes("certificate") ||
+    err.message.includes("SSL") ||
+    err.message.includes("TLS")
+  ) {
+    console.error("\n🔧 SSL Certificate Error:");
+    console.error(
+      "Make sure DATABASE_CA_CERT environment variable is set with your DigitalOcean CA certificate",
+    );
+    console.error(
+      "The Docker container should automatically configure NODE_EXTRA_CA_CERTS",
+    );
+  }
 });
 
+// Test connection on startup
+pool
+  .connect()
+  .then((client) => {
+    console.log("✅ Database connection successful");
+    if (process.env.NODE_EXTRA_CA_CERTS) {
+      console.log("✅ Using custom CA certificate for SSL");
+    }
+    client.release();
+  })
+  .catch((err) => {
+    console.error("❌ Database connection failed:", err.message);
+
+    if (err.message.includes("self-signed certificate")) {
+      console.error("\n🔧 Fix: Set the DATABASE_CA_CERT environment variable");
+      console.error(
+        "Get the CA certificate from DigitalOcean dashboard → Your Database → Connection Details → Download CA Certificate",
+      );
+    }
+  });
+
 // Handle graceful shutdown
-process.on('SIGINT', () => {
-  console.log('Received SIGINT, shutting down gracefully...');
+process.on("SIGINT", () => {
+  console.log("Received SIGINT, shutting down gracefully...");
   pool.end(() => {
-    console.log('Database pool has ended');
+    console.log("Database pool has ended");
     process.exit(0);
   });
 });
 
-process.on('SIGTERM', () => {
-  console.log('Received SIGTERM, shutting down gracefully...');
+process.on("SIGTERM", () => {
+  console.log("Received SIGTERM, shutting down gracefully...");
   pool.end(() => {
-    console.log('Database pool has ended');
+    console.log("Database pool has ended");
     process.exit(0);
   });
 });
