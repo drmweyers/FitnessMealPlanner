@@ -175,10 +175,20 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     const refreshTokenExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
     await storage.createRefreshToken(user.id, refreshToken, refreshTokenExpires);
 
+    const accessTokenExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Set the main access token as a secure, HttpOnly cookie
+    res.cookie('token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax', // Use 'lax' for better cross-site dev compatibility
+      expires: accessTokenExpires,
+    });
+
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax', // Use 'lax' for better cross-site dev compatibility
       expires: refreshTokenExpires,
     });
 

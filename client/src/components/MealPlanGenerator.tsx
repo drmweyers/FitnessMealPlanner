@@ -261,101 +261,71 @@ export default function MealPlanGenerator() {
 
   const generateMealPlan = useMutation({
     mutationFn: async (data: MealPlanGeneration): Promise<MealPlanResult> => {
-      console.log("Generating meal plan with data:", data);
-
-      try {
-        // Use direct fetch instead of apiRequest to bypass auth error handling
-        const response = await fetch("/api/meal-plan/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`API Error: ${response.status} - ${errorText}`);
-        }
-
-        const result = await response.json();
-        console.log("Meal plan generation result:", result);
-
-        // Validate the response structure
-        if (!result.mealPlan || !result.nutrition) {
-          throw new Error("Invalid response format from server");
-        }
-
-        return result as MealPlanResult;
-      } catch (error) {
-        console.error("Meal plan generation error:", error);
-        throw error;
-      }
+      const response = await apiRequest(
+        "POST",
+        "/api/meal-plan/generate",
+        data,
+      );
+      return response.json();
     },
-    onSuccess: (data: MealPlanResult) => {
-      console.log("Meal plan generation successful:", data);
-
-      // Check if backend indicates completion
-      if (data.completed) {
-        console.log(
-          "Backend confirmed meal plan generation completed at:",
-          data.timestamp,
-        );
-
-        // Force synchronous state update to immediately render the meal plan
-        flushSync(() => {
-          setGeneratedPlan(data);
-          setRefreshKey((prev) => prev + 1);
-        });
-
-        // Multiple auto-refresh triggers after confirmed completion
-        setTimeout(() => {
-          console.log("Auto-refresh trigger 1: Scrolling to meal plan");
-          if (mealPlanRef.current) {
-            mealPlanRef.current.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }
-          setRefreshKey((prev) => prev + 1);
-          setForceRender((prev) => prev + 1);
-        }, 50);
-
-        setTimeout(() => {
-          console.log("Auto-refresh trigger 2: Force re-render");
-          setRefreshKey((prev) => prev + 1);
-          setForceRender((prev) => prev + 1);
-        }, 200);
-
-        setTimeout(() => {
-          console.log("Auto-refresh trigger 3: Final refresh");
-          setRefreshKey((prev) => prev + 1);
-          setForceRender((prev) => prev + 1);
-        }, 500);
-
-        toast({
-          title: "Meal Plan Generated Successfully",
-          description: "Generation completed - auto-refreshing table",
-        });
-      } else {
-        // Fallback for responses without completion flag
-        setGeneratedPlan(data);
-        toast({
-          title: "Meal Plan Generated",
-          description: "Please scroll down to view your meal plan",
-        });
-      }
+    onSuccess: (data) => {
+      setGeneratedPlan(data);
+      toast({
+        title: "Meal Plan Generated!",
+        description: "Your personalized meal plan is ready.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/meal-plans"] });
     },
     onError: (error: Error) => {
-      console.error("Meal plan generation failed:", error);
       toast({
         title: "Generation Failed",
-        description:
-          error.message ||
-          "An unexpected error occurred during meal plan generation",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
+
+  const exportToPDF = async () => {
+    const mealPlanElement = document.getElementById("meal-plan-content");
+    if (!mealPlanElement) {
+      toast({
+        title: "Error",
+        description: "Could not find meal plan content to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Temporarily increase resolution for better quality
+    const originalWidth = mealPlanElement.style.width;
+    const originalHeight = mealPlanElement.style.height;
+    mealPlanElement.style.width = '1000px'; 
+    
+    // Give a bit of time for re-render if needed
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const canvas = await html2canvas(mealPlanElement, {
+      scale: 2, // Higher scale for better quality
+      useCORS: true,
+      logging: true,
+    });
+
+    // Restore original dimensions
+    mealPlanElement.style.width = originalWidth;
+    mealPlanElement.style.height = originalHeight;
+    
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "px",
+      format: [canvas.width, canvas.height],
+    });
+
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+    pdf.save(
+      `${generatedPlan?.mealPlan.planName.replace(/\s/g, "_") || "meal-plan"}.pdf`,
+    );
+  };
 
   const handleNaturalLanguageParse = () => {
     if (!naturalLanguageInput.trim()) {
@@ -370,152 +340,11 @@ export default function MealPlanGenerator() {
     parseNaturalLanguage.mutate(naturalLanguageInput);
   };
 
-  const handleDirectGeneration = async () => {
-    if (!naturalLanguageInput.trim()) {
-      toast({
-        title: "Input Required",
-        description:
-          "Please enter a description of your meal plan requirements.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // First parse the natural language input
-      const response = await fetch("/api/meal-plan/parse-natural-language", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ naturalLanguageInput }),
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Parsing failed: ${response.status} - ${errorText}`);
-      }
-      const parsedData = await response.json();
-
-      // Map the parsed data to the generation format
-      const generationData: MealPlanGeneration = {
-        planName: parsedData.planName || "",
-        fitnessGoal: parsedData.fitnessGoal || "",
-        description: parsedData.description || "",
-        dailyCalorieTarget: Number(parsedData.dailyCalorieTarget) || 2000,
-        days: Number(parsedData.days) || 7,
-        mealsPerDay: Number(parsedData.mealsPerDay) || 3,
-        clientName: parsedData.clientName || "",
-        // Initialize optional filter fields
-        mealType: undefined,
-        dietaryTag: undefined,
-        maxPrepTime: undefined,
-        maxCalories: undefined,
-        minCalories: undefined,
-        minProtein: undefined,
-        maxProtein: undefined,
-        minCarbs: undefined,
-        maxCarbs: undefined,
-        minFat: undefined,
-        maxFat: undefined,
-      };
-
-      // Directly generate the meal plan
-      generateMealPlan.mutate(generationData);
-    } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description:
-          "Failed to parse and generate meal plan. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const exportToPDF = async () => {
-    if (!generatedPlan) return;
-
-    try {
-      const element = document.getElementById("meal-plan-content");
-      if (!element) return;
-
-      toast({
-        title: "Generating PDF",
-        description: "Creating PDF document...",
-      });
-
-      // Ensure element is visible and has content
-      element.style.display = "block";
-      element.style.visibility = "visible";
-
-      const canvas = await html2canvas(element, {
-        scale: 2.5,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: true,
-        height: element.scrollHeight,
-        width: element.scrollWidth,
-        scrollX: 0,
-        scrollY: 0,
-      });
-
-      console.log("Canvas dimensions:", canvas.width, "x", canvas.height);
-
-      if (canvas.width === 0 || canvas.height === 0) {
-        throw new Error("Canvas has zero dimensions");
-      }
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      const availableWidth = pdfWidth - margin * 2;
-      const availableHeight = pdfHeight - margin * 2;
-
-      const imgAspectRatio = canvas.width / canvas.height;
-      let imgWidth = availableWidth;
-      let imgHeight = availableWidth / imgAspectRatio;
-
-      // If image is too tall for one page, scale it down
-      if (imgHeight > availableHeight) {
-        imgHeight = availableHeight;
-        imgWidth = availableHeight * imgAspectRatio;
-      }
-
-      // Calculate total height in PDF units
-      const scaledHeight = (canvas.height * imgWidth) / canvas.width;
-      const pageCount = Math.ceil(scaledHeight / availableHeight);
-
-      for (let i = 0; i < pageCount; i++) {
-        if (i > 0) {
-          pdf.addPage();
-        }
-
-        const yPosition = margin - i * availableHeight;
-
-        pdf.addImage(imgData, "PNG", margin, yPosition, imgWidth, scaledHeight);
-      }
-
-      const fileName = `${generatedPlan.mealPlan.planName.replace(/[^a-z0-9\s]/gi, "")}_${new Date().toISOString().split("T")[0]}.pdf`;
-      pdf.save(fileName);
-
-      toast({
-        title: "PDF Exported",
-        description: "Meal plan PDF downloaded successfully.",
-      });
-    } catch (error) {
-      console.error("PDF generation error:", error);
-      toast({
-        title: "Export Failed",
-        description: `Failed to generate PDF: ${(error as Error).message}`,
-        variant: "destructive",
-      });
-    }
-  };
-
   const onSubmit = (data: MealPlanGeneration) => {
+    // If we have natural language input, add it to the description
+    if (naturalLanguageInput.trim() && !data.description) {
+      data.description = `Generated from prompt: "${naturalLanguageInput.trim()}"`;
+    }
     generateMealPlan.mutate(data);
   };
 
@@ -629,7 +458,7 @@ export default function MealPlanGenerator() {
                 </Button>
                 <Button
                   type="button"
-                  onClick={handleDirectGeneration}
+                  onClick={() => onSubmit(form.getValues())}
                   disabled={
                     generateMealPlan.isPending || !naturalLanguageInput.trim()
                   }

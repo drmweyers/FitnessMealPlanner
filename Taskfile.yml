@@ -2,25 +2,25 @@ version: "3"
 
 tasks:
   up:
-    desc: "Start services in dev mode. Use --prod for production."
+    desc: "Start services. Use variables for options. Ex: task up PROFILE=prod ARGS='--build -d'"
     cmds:
       - echo "🚀 Starting FitMeal Pro services..."
-      - docker compose --profile {{.CLI_ARGS | default "dev"}} up
+      - docker-compose --profile {{.PROFILE | default "dev"}} up {{.ARGS}}
 
   down:
     desc: Stop running services
     cmds:
-      - docker compose down
+      - docker-compose down
 
   console:
     desc: Open a bash shell in the running dev container
     cmds:
-      - docker compose exec app-dev bash
+      - docker-compose exec app-dev bash
 
   logs:
     desc: "Follow logs for a service. Args: -- service (default: app-dev)"
     cmds:
-      - docker compose logs -f {{.CLI_ARGS | default "app-dev"}}
+      - docker-compose logs -f {{.CLI_ARGS | default "app-dev"}}
 
   dockerlogin:
     desc: (DevOps only) Log in to a private Docker registry

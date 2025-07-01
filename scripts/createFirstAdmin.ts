@@ -5,11 +5,11 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Load environment variables from .env file
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 console.log('--- Environment Variables ---');
-console.log('DATABASE_URL (first 20 chars):', process.env.DATABASE_URL?.substring(0, 20) + '...');
-console.log('NODE_ENV:', process.env.NODE_ENV);
+// console.log('DATABASE_URL (first 20 chars):', process.env.DATABASE_URL?.substring(0, 20) + '...');
+// console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('---------------------------');
 
 const ADMIN_EMAIL = 'admin@fitmeal.pro';

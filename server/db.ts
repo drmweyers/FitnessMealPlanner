@@ -45,8 +45,8 @@ const getSslConfig = () => {
       // Node.js will automatically trust the CA certificate file
       return { rejectUnauthorized: true };
     } else {
-      console.log("No NODE_EXTRA_CA_CERTS found, using permissive SSL");
-      return { rejectUnauthorized: false };
+      console.log("No NODE_EXTRA_CA_CERTS found, SSL is disabled for this connection.");
+      return false; // Explicitly disable SSL
     }
   }
 };

@@ -1,0 +1,60 @@
+import express from 'express';
+import { parseNaturalLanguageForMealPlan } from '../services/openai';
+import { MealPlanGeneratorService } from '../services/mealPlanGenerator';
+import { requireAuth } from '../middleware/auth';
+import type { MealPlanGeneration } from '@shared/schema';
+
+const mealPlanRouter = express.Router();
+
+mealPlanRouter.post('/parse-natural-language', async (req, res) => {
+  const { naturalLanguageInput } = req.body;
+
+  if (!naturalLanguageInput) {
+    return res.status(400).json({ error: 'naturalLanguageInput is required' });
+  }
+
+  try {
+    console.log("Parsing natural language input:", naturalLanguageInput);
+    const parsedData = await parseNaturalLanguageForMealPlan(naturalLanguageInput);
+    console.log("Successfully parsed data:", parsedData);
+    res.json(parsedData);
+  } catch (error) {
+    console.error('Error parsing natural language input:', error);
+    res.status(500).json({ error: 'Failed to parse natural language input' });
+  }
+});
+
+mealPlanRouter.post('/generate', requireAuth, async (req, res) => {
+  const mealPlanParams = req.body as MealPlanGeneration;
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+
+  try {
+    const mealPlanService = new MealPlanGeneratorService();
+    
+    console.log('Generating meal plan with params:', mealPlanParams);
+    const mealPlan = await mealPlanService.generateMealPlan(mealPlanParams, userId);
+
+    console.log('Calculating nutrition for generated meal plan...');
+    const nutrition = mealPlanService.calculateMealPlanNutrition(mealPlan);
+
+    console.log('Meal plan generated successfully.');
+    res.json({ 
+      mealPlan,
+      nutrition,
+      message: 'Meal plan generated successfully',
+      completed: true,
+      timestamp: new Date().toISOString(),
+    });
+
+  } catch (error) {
+    console.error('Error generating meal plan:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    res.status(500).json({ error: 'Failed to generate meal plan', details: errorMessage });
+  }
+});
+
+export { mealPlanRouter }; 

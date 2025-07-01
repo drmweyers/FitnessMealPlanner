@@ -1,4 +1,8 @@
 import OpenAI from "openai";
+import {
+  mealPlanGenerationSchema,
+  type MealPlanGeneration,
+} from "@shared/schema";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -214,4 +218,53 @@ export async function generateImageForRecipe(recipe: GeneratedRecipe): Promise<s
 
   // In a real application, you would upload this to your own cloud storage
   return imageUrl;
+}
+
+export async function parseNaturalLanguageForMealPlan(
+  naturalLanguageInput: string,
+): Promise<Partial<MealPlanGeneration>> {
+  const systemPrompt = `
+You are an intelligent assistant for a meal planning application.
+A user has provided a natural language request to create a meal plan.
+Your task is to parse this request and extract the key parameters into a structured JSON object.
+The JSON object must strictly adhere to the following Zod schema:
+${JSON.stringify(mealPlanGenerationSchema.shape, null, 2)}
+
+- Infer the values from the user's text.
+- If a value isn't mentioned, omit the key from the JSON object.
+- Be smart about interpreting flexible language (e.g., "for a week" means 7 days).
+- For 'fitnessGoal', choose from common goals like 'weight loss', 'muscle gain', 'maintenance', 'athletic performance'.
+- The output MUST be a single, valid JSON object. Do not include any other text or explanations.
+`;
+
+  const userPrompt = `Parse the following meal plan request: "${naturalLanguageInput}"`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+
+    const parsedJson = parsePartialJson(content);
+
+    // No need to validate against the full schema here,
+    // the frontend form and its resolver will do that.
+    // We are just extracting what the AI could find.
+    return parsedJson as Partial<MealPlanGeneration>;
+
+  } catch (error) {
+    console.error("Full error in parseNaturalLanguageForMealPlan:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    throw new Error(`Failed to parse natural language for meal plan: ${errorMessage}`);
+  }
 }

@@ -10,6 +10,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { recipeRouter } from './routes/recipes';
+import { mealPlanRouter } from './routes/mealPlan';
 import authRouter from './authRoutes';
 import adminRouter from './routes/adminRoutes';
 import path from 'path';
@@ -41,6 +42,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 app.use('/api/auth', authRouter);
 app.use('/api/recipes', recipeRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/meal-plan', mealPlanRouter);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../client/dist')));
