@@ -1,19 +1,24 @@
-import { writeFileSync } from "fs";
+import { existsSync } from "fs";
 
-// Set up SSL certificate synchronously BEFORE any database imports
-try {
-  if (process.env.DATABASE_CA_CERT && !process.env.NODE_EXTRA_CA_CERTS) {
-    console.log(
-      "🔒 Setting up DigitalOcean CA certificate before any database imports...",
-    );
-    const certPath = "/app/digitalocean-ca-cert.pem";
-    writeFileSync(certPath, process.env.DATABASE_CA_CERT);
+// Check if the certificate file already exists (created by Docker startup)
+const certPath = "/app/digitalocean-ca-cert.pem";
+
+if (existsSync(certPath)) {
+  console.log("✅ Found existing CA certificate at:", certPath);
+  process.env.NODE_EXTRA_CA_CERTS = certPath;
+} else if (process.env.DATABASE_CA_CERT && !process.env.NODE_EXTRA_CA_CERTS) {
+  // Only create the file if it doesn't exist
+  console.log("🔒 Setting up DigitalOcean CA certificate...");
+  try {
+    const { writeFileSync } = await import("fs");
+    const certContent = process.env.DATABASE_CA_CERT.replace(/\\n/g, "\n");
+    writeFileSync(certPath, certContent);
     process.env.NODE_EXTRA_CA_CERTS = certPath;
-    console.log("✅ CA certificate configured:", certPath);
+    console.log("✅ CA certificate created at:", certPath);
+  } catch (error) {
+    console.error("❌ Failed to create CA certificate:", error);
+    process.exit(1);
   }
-} catch (error) {
-  console.error("❌ Failed to set up CA certificate:", error);
-  process.exit(1);
 }
 
 const ADMIN_EMAIL = "admin@fitmeal.pro";
@@ -117,7 +122,6 @@ async function createFirstAdmin() {
       console.log(
         "Make sure the DATABASE_CA_CERT environment variable is properly set.",
       );
-      console.log("You can also try the direct database method below.");
     }
 
     throw error;
