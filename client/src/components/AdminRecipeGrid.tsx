@@ -10,11 +10,15 @@ interface AdminRecipeGridProps {
   onDelete: (id: string) => void;
   onBulkDelete: (ids: string[]) => void;
   onApprove: (id: string) => void;
+  onUnapprove: (id: string) => void;
   onBulkApprove: (ids: string[]) => void;
+  onBulkUnapprove: (ids: string[]) => void;
   deletePending: boolean;
   bulkDeletePending: boolean;
   approvePending: boolean;
+  unapprovePending: boolean;
   bulkApprovePending: boolean;
+  bulkUnapprovePending: boolean;
 }
 
 export default function AdminRecipeGrid({
@@ -23,11 +27,15 @@ export default function AdminRecipeGrid({
   onDelete,
   onBulkDelete,
   onApprove,
+  onUnapprove,
   onBulkApprove,
+  onBulkUnapprove,
   deletePending,
   bulkDeletePending,
   approvePending,
-  bulkApprovePending
+  unapprovePending,
+  bulkApprovePending,
+  bulkUnapprovePending
 }: AdminRecipeGridProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
@@ -59,9 +67,16 @@ export default function AdminRecipeGrid({
     }
   };
 
-  const handleBulkApprove = () => {
+  const handleBulkApproveOrUnapprove = () => {
     if (selectedIds.length > 0) {
-      onBulkApprove(selectedIds);
+      const selectedRecipes = recipes.filter(r => selectedIds.includes(r.id));
+      const allApproved = selectedRecipes.every(r => r.isApproved);
+      
+      if (allApproved) {
+        onBulkUnapprove(selectedIds);
+      } else {
+        onBulkApprove(selectedIds);
+      }
       setSelectedIds([]);
     }
   };
@@ -138,15 +153,15 @@ export default function AdminRecipeGrid({
               <Button
                 size="sm"
                 variant="default"
-                onClick={handleBulkApprove}
-                disabled={bulkApprovePending}
+                onClick={handleBulkApproveOrUnapprove}
+                disabled={bulkApprovePending || bulkUnapprovePending}
                 className={`${
                   selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
                     ? 'bg-yellow-600 hover:bg-yellow-700'
                     : 'bg-green-600 hover:bg-green-700'
                 }`}
               >
-                {bulkApprovePending ? (
+                {bulkApprovePending || bulkUnapprovePending ? (
                   <span className="flex items-center">
                     <i className="fas fa-spinner fa-spin mr-2"></i>
                     {selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
@@ -207,7 +222,7 @@ export default function AdminRecipeGrid({
                 <Checkbox
                   checked={isSelected}
                   onCheckedChange={(checked) => handleSelectRecipe(recipe.id, checked as boolean)}
-                  disabled={deletePending || bulkDeletePending || approvePending || bulkApprovePending}
+                  disabled={deletePending || bulkDeletePending || approvePending || unapprovePending || bulkApprovePending || bulkUnapprovePending}
                   className="bg-white/90 backdrop-blur-sm"
                 />
               </div>
@@ -219,9 +234,9 @@ export default function AdminRecipeGrid({
                   variant="default"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onApprove(recipe.id);
+                    recipe.isApproved ? onUnapprove(recipe.id) : onApprove(recipe.id);
                   }}
-                  disabled={approvePending || isSelected}
+                  disabled={approvePending || unapprovePending || isSelected}
                   className={`
                     transition-all duration-200
                     shadow-md hover:shadow-lg
@@ -248,7 +263,6 @@ export default function AdminRecipeGrid({
                     shadow-md hover:shadow-lg
                     backdrop-blur-sm
                     bg-red-500 hover:bg-red-600
-                    text-white
                   "
                   title="Delete Recipe"
                 >

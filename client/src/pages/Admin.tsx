@@ -59,8 +59,6 @@ export default function Admin() {
     setFilters(prev => ({ ...prev, page }));
   };
 
-
-
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await apiRequest('PATCH', `/api/admin/recipes/${id}/approve`);
@@ -211,6 +209,84 @@ export default function Admin() {
       toast({
         title: "Error",
         description: "Failed to approve recipes",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unapproveMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRequest('PATCH', `/api/admin/recipes/${id}/unapprove`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Recipe Unapproved",
+        description: "Recipe has been unapproved and is now pending review.",
+      });
+      // Aggressively refresh all related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      
+      // Force refetch to ensure immediate updates
+      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to unapprove recipe",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkUnapproveMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const response = await apiRequest('POST', '/api/admin/recipes/bulk-unapprove', { ids });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Recipes Unapproved",
+        description: data.message || "Selected recipes have been unapproved.",
+      });
+      // Aggressively refresh all related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
+      
+      // Force refetch to ensure immediate updates
+      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to unapprove recipes",
         variant: "destructive",
       });
     },
@@ -488,29 +564,39 @@ export default function Admin() {
 
         {/* Recipe Display */}
         {viewMode === 'grid' ? (
-                  <AdminRecipeGrid
-                    recipes={displayRecipes}
-                    isLoading={isLoading}
-                    onDelete={(id) => deleteMutation.mutate(id)}
-                    onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
+          <AdminRecipeGrid
+            recipes={displayRecipes}
+            isLoading={isLoading}
+            onDelete={(id) => deleteMutation.mutate(id)}
+            onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
             onApprove={(id) => approveMutation.mutate(id)}
+            onUnapprove={(id) => unapproveMutation.mutate(id)}
             onBulkApprove={(ids) => bulkApproveMutation.mutate(ids)}
-                    deletePending={deleteMutation.isPending}
-                    bulkDeletePending={bulkDeleteMutation.isPending}
+            onBulkUnapprove={(ids) => bulkUnapproveMutation.mutate(ids)}
+            deletePending={deleteMutation.isPending}
+            bulkDeletePending={bulkDeleteMutation.isPending}
             approvePending={approveMutation.isPending}
+            unapprovePending={unapproveMutation.isPending}
             bulkApprovePending={bulkApproveMutation.isPending}
-                  />
-                ) : (
-                  <AdminTable
-                    recipes={displayRecipes}
-                    isLoading={isLoading}
-                    onApprove={(id) => approveMutation.mutate(id)}
-                    onDelete={(id) => deleteMutation.mutate(id)}
-                    onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
-                    approvePending={approveMutation.isPending}
-                    deletePending={deleteMutation.isPending}
-                    bulkDeletePending={bulkDeleteMutation.isPending}
-                  />
+            bulkUnapprovePending={bulkUnapproveMutation.isPending}
+          />
+        ) : (
+          <AdminTable
+            recipes={displayRecipes}
+            isLoading={isLoading}
+            onApprove={(id) => approveMutation.mutate(id)}
+            onUnapprove={(id) => unapproveMutation.mutate(id)}
+            onDelete={(id) => deleteMutation.mutate(id)}
+            onBulkDelete={(ids) => bulkDeleteMutation.mutate(ids)}
+            onBulkApprove={(ids) => bulkApproveMutation.mutate(ids)}
+            onBulkUnapprove={(ids) => bulkUnapproveMutation.mutate(ids)}
+            approvePending={approveMutation.isPending}
+            unapprovePending={unapproveMutation.isPending}
+            deletePending={deleteMutation.isPending}
+            bulkDeletePending={bulkDeleteMutation.isPending}
+            bulkApprovePending={bulkApproveMutation.isPending}
+            bulkUnapprovePending={bulkUnapproveMutation.isPending}
+          />
         )}
 
         {/* Pagination */}

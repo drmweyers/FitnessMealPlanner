@@ -7,22 +7,34 @@ interface AdminTableProps {
   recipes: Recipe[];
   isLoading: boolean;
   onApprove: (id: string) => void;
+  onUnapprove: (id: string) => void;
   onDelete: (id: string) => void;
   onBulkDelete: (ids: string[]) => void;
+  onBulkApprove: (ids: string[]) => void;
+  onBulkUnapprove: (ids: string[]) => void;
   approvePending: boolean;
+  unapprovePending: boolean;
   deletePending: boolean;
   bulkDeletePending: boolean;
+  bulkApprovePending: boolean;
+  bulkUnapprovePending: boolean;
 }
 
 export default function AdminTable({ 
   recipes, 
   isLoading, 
-  onApprove, 
+  onApprove,
+  onUnapprove, 
   onDelete, 
   onBulkDelete,
-  approvePending, 
+  onBulkApprove,
+  onBulkUnapprove,
+  approvePending,
+  unapprovePending, 
   deletePending,
-  bulkDeletePending
+  bulkDeletePending,
+  bulkApprovePending,
+  bulkUnapprovePending
 }: AdminTableProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
@@ -101,6 +113,42 @@ export default function AdminTable({
               className="text-slate-600 border-slate-300 hover:bg-slate-100"
             >
               Clear Selection
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const selectedRecipes = recipes.filter(r => selectedIds.includes(r.id));
+                const allApproved = selectedRecipes.every(r => r.isApproved);
+                if (allApproved) {
+                  onBulkUnapprove(selectedIds);
+                } else {
+                  onBulkApprove(selectedIds);
+                }
+                setSelectedIds([]);
+              }}
+              disabled={bulkApprovePending || bulkUnapprovePending}
+              className={`${
+                recipes.filter(r => selectedIds.includes(r.id)).every(r => r.isApproved)
+                  ? 'text-yellow-600 border-yellow-200 hover:bg-yellow-50'
+                  : 'text-green-600 border-green-200 hover:bg-green-50'
+              }`}
+            >
+              {bulkApprovePending || bulkUnapprovePending ? (
+                <span className="flex items-center">
+                  <i className="fas fa-spinner fa-spin mr-2"></i>
+                  {recipes.filter(r => selectedIds.includes(r.id)).every(r => r.isApproved)
+                    ? 'Unapproving...'
+                    : 'Approving...'}
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  <i className={`fas fa-${recipes.filter(r => selectedIds.includes(r.id)).every(r => r.isApproved) ? 'times' : 'check'} mr-2`}></i>
+                  {recipes.filter(r => selectedIds.includes(r.id)).every(r => r.isApproved)
+                    ? 'Unapprove Selected'
+                    : 'Approve Selected'}
+                </span>
+              )}
             </Button>
             <Button
               size="sm"
@@ -216,8 +264,8 @@ export default function AdminTable({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onApprove(recipe.id)}
-                      disabled={approvePending || selectedIds.includes(recipe.id)}
+                      onClick={() => recipe.isApproved ? onUnapprove(recipe.id) : onApprove(recipe.id)}
+                      disabled={approvePending || unapprovePending || selectedIds.includes(recipe.id)}
                       className={`${
                         recipe.isApproved 
                           ? 'text-yellow-600 border-yellow-200 hover:bg-yellow-50'

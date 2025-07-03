@@ -186,6 +186,36 @@ adminRouter.patch('/recipes/:id/approve', requireAdmin, async (req, res) => {
   }
 });
 
+// Add unapprove endpoint
+adminRouter.patch('/recipes/:id/unapprove', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const recipe = await storage.updateRecipe(id, { isApproved: false });
+    res.json(recipe);
+  } catch (error) {
+    console.error(`Failed to unapprove recipe ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to unapprove recipe' });
+  }
+});
+
+// Add bulk unapprove endpoint
+adminRouter.post('/recipes/bulk-unapprove', requireAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Invalid request: "ids" must be a non-empty array.' });
+    }
+    
+    // Update all recipes to unapproved state
+    await Promise.all(ids.map(id => storage.updateRecipe(id, { isApproved: false })));
+    
+    res.json({ message: `Successfully unapproved ${ids.length} recipes.` });
+  } catch (error) {
+    console.error('Failed to bulk unapprove recipes:', error);
+    res.status(500).json({ error: 'Failed to bulk unapprove recipes' });
+  }
+});
+
 adminRouter.delete('/recipes/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
