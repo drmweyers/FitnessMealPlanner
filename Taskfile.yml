@@ -158,3 +158,8 @@ tasks:
     cmds:
       - docker image prune -f
       - docker system prune -f
+
+  undelast:
+    desc: Undue last commit which was not pushed. Special thanks to https://www.nobledesktop.com/learn/git/undo-changes.
+    cmds:
+      - git reset --soft HEAD~

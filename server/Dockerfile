@@ -19,6 +19,7 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY --link server ./server
 COPY --link shared ./shared
 COPY --link client ./client
+COPY --link scripts ./scripts
 COPY --link vite.config.ts ./
 COPY --link tsconfig.json ./
 COPY --link postcss.config.js ./
@@ -62,6 +63,9 @@ COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/shared ./shared
 
+# Copy scripts directory for admin commands
+COPY --from=builder /app/scripts ./scripts
+
 # Copy configuration files that server might need
 COPY --from=builder /app/vite.config.ts ./
 COPY --from=builder /app/postcss.config.js ./
@@ -78,6 +82,7 @@ RUN echo "🔍 Verifying production files..." && \
     ls -la drizzle.config.ts && \
     ls -la server/index.ts && \
     ls -la shared/ && \
+    ls -la scripts/ && \
     ls -la client/dist/ && \
     echo "✅ All critical files present"
 
@@ -105,6 +110,7 @@ RUN echo '#!/bin/bash' > /app/start.sh && \
     echo 'echo "📁 Critical files check:"' >> /app/start.sh && \
     echo 'ls -la server/index.ts && echo "✅ server entry point found" || echo "❌ server/index.ts missing"' >> /app/start.sh && \
     echo 'ls -la shared/ && echo "✅ shared directory found" || echo "❌ shared directory missing"' >> /app/start.sh && \
+    echo 'ls -la scripts/ && echo "✅ scripts directory found" || echo "❌ scripts directory missing"' >> /app/start.sh && \
     echo 'ls -la client/dist/index.html && echo "✅ client build found" || echo "❌ client build missing"' >> /app/start.sh && \
     echo 'ls -la drizzle.config.ts && echo "✅ drizzle config found" || echo "❌ drizzle config missing"' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
