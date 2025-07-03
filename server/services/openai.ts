@@ -31,6 +31,18 @@ export interface GeneratedRecipe {
 interface GenerateOptions {
   mealTypes?: string[];
   dietaryRestrictions?: string[];
+  targetCalories?: number;
+  mainIngredient?: string;
+  fitnessGoal?: string;
+  naturalLanguagePrompt?: string;
+  maxPrepTime?: number;
+  maxCalories?: number;
+  minProtein?: number;
+  maxProtein?: number;
+  minCarbs?: number;
+  maxCarbs?: number;
+  minFat?: number;
+  maxFat?: number;
 }
 
 /**
@@ -86,14 +98,16 @@ function parsePartialJson(jsonString: string): any {
  * Enhanced recipe batch generation with detailed system prompts
  */
 export async function generateRecipeBatch(
-  count: number = 10,
-  options: {
-    mealTypes?: string[];
-    dietaryRestrictions?: string[];
-  } = {}
+  count: number,
+  options: GenerateOptions = {}
 ): Promise<GeneratedRecipe[]> {
   const systemPrompt = `You are an expert nutritionist and professional chef.
 Generate a batch of ${count} diverse and healthy recipes.
+${options.fitnessGoal ? `Focus on recipes that support this fitness goal: ${options.fitnessGoal}.` : ''}
+${options.targetCalories ? `Target approximately ${options.targetCalories} calories per recipe.` : ''}
+${options.maxCalories ? `Ensure recipes do not exceed ${options.maxCalories} calories.` : ''}
+${options.mainIngredient ? `Feature "${options.mainIngredient}" as a primary ingredient when possible.` : ''}
+${options.maxPrepTime ? `Keep preparation time under ${options.maxPrepTime} minutes.` : ''}
 IMPORTANT: Respond with a single JSON object containing a 'recipes' array: { "recipes": [...] }.
 Each recipe object in the array MUST be complete and strictly follow this TypeScript interface:
 interface GeneratedRecipe {
@@ -117,9 +131,53 @@ interface GeneratedRecipe {
 }
 Ensure the final JSON is perfectly valid and complete. Do not omit any fields.`;
 
-  const userPrompt = `Generate ${count} recipes.
-${options.mealTypes ? `Meal types: ${options.mealTypes.join(", ")}` : ""}
-${options.dietaryRestrictions ? `Dietary restrictions: ${options.dietaryRestrictions.join(", ")}` : ""}
+  const contextLines = [];
+  if (options.naturalLanguagePrompt) {
+    contextLines.push(`User requirements: "${options.naturalLanguagePrompt}"`);
+  }
+  if (options.mealTypes?.length) {
+    contextLines.push(`Meal types: ${options.mealTypes.join(", ")}`);
+  }
+  if (options.dietaryRestrictions?.length) {
+    contextLines.push(`Dietary restrictions: ${options.dietaryRestrictions.join(", ")}`);
+  }
+  if (options.fitnessGoal) {
+    contextLines.push(`Fitness goal: ${options.fitnessGoal}`);
+  }
+  if (options.targetCalories) {
+    contextLines.push(`Target calories per recipe: ~${options.targetCalories}`);
+  }
+  if (options.maxCalories) {
+    contextLines.push(`Maximum calories per recipe: ${options.maxCalories}`);
+  }
+  if (options.mainIngredient) {
+    contextLines.push(`Main ingredient focus: ${options.mainIngredient}`);
+  }
+  if (options.maxPrepTime) {
+    contextLines.push(`Maximum prep time: ${options.maxPrepTime} minutes`);
+  }
+  
+  // Macro nutrient constraints
+  const macroConstraints = [];
+  if (options.minProtein || options.maxProtein) {
+    const proteinRange = `${options.minProtein || 0}g - ${options.maxProtein || '∞'}g protein`;
+    macroConstraints.push(proteinRange);
+  }
+  if (options.minCarbs || options.maxCarbs) {
+    const carbRange = `${options.minCarbs || 0}g - ${options.maxCarbs || '∞'}g carbs`;
+    macroConstraints.push(carbRange);
+  }
+  if (options.minFat || options.maxFat) {
+    const fatRange = `${options.minFat || 0}g - ${options.maxFat || '∞'}g fat`;
+    macroConstraints.push(fatRange);
+  }
+  if (macroConstraints.length > 0) {
+    contextLines.push(`Macro nutrient targets per recipe: ${macroConstraints.join(", ")}`);
+  }
+
+  const userPrompt = `Generate ${count} recipes with the following specifications:
+${contextLines.length > 0 ? contextLines.join('\n') : 'No specific requirements - create diverse, healthy recipes.'}
+
 Respond with { "recipes": [ ... ] }`;
 
   try {

@@ -12,6 +12,16 @@ interface GenerationOptions {
   dietaryRestrictions?: string[];
   targetCalories?: number;
   mainIngredient?: string;
+  fitnessGoal?: string;
+  naturalLanguagePrompt?: string;
+  maxPrepTime?: number;
+  maxCalories?: number;
+  minProtein?: number;
+  maxProtein?: number;
+  minCarbs?: number;
+  maxCarbs?: number;
+  minFat?: number;
+  maxFat?: number;
 }
 
 interface GenerationResult {
@@ -36,6 +46,18 @@ export class RecipeGeneratorService {
         generateRecipeBatch(options.count, {
           mealTypes: options.mealTypes,
           dietaryRestrictions: options.dietaryRestrictions,
+          targetCalories: options.targetCalories,
+          mainIngredient: options.mainIngredient,
+          fitnessGoal: options.fitnessGoal,
+          naturalLanguagePrompt: options.naturalLanguagePrompt,
+          maxPrepTime: options.maxPrepTime,
+          maxCalories: options.maxCalories,
+          minProtein: options.minProtein,
+          maxProtein: options.maxProtein,
+          minCarbs: options.minCarbs,
+          maxCarbs: options.maxCarbs,
+          minFat: options.minFat,
+          maxFat: options.maxFat,
         })
       );
       

@@ -12,6 +12,7 @@ import SearchFilters from "@/components/SearchFilters";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MealPlanGenerator from "@/components/MealPlanGenerator";
+import RecipeGenerationModal from "@/components/RecipeGenerationModal";
 
 export default function Admin() {
   const { toast } = useToast();
@@ -24,6 +25,7 @@ export default function Admin() {
   });
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
   const [activeTab, setActiveTab] = useState("admin");
+  const [showRecipeGenerationModal, setShowRecipeGenerationModal] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery<{
     total: number;
@@ -57,50 +59,7 @@ export default function Admin() {
     setFilters(prev => ({ ...prev, page }));
   };
 
-  const generateMutation = useMutation({
-    mutationFn: async (count: number) => {
-      const response = await apiRequest('POST', '/api/admin/generate', { count });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Recipe Generation Started",
-        description: data.message,
-      });
-      // Immediate refresh to show generation started
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      
-      // Progressive refresh during generation
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      }, 10000); // 10 seconds
-      
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-        queryClient.refetchQueries({ queryKey: ['/api/admin/recipes'] });
-      }, 30000); // 30 seconds - when generation should be complete
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to start recipe generation",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -398,20 +357,12 @@ export default function Admin() {
                 <p className="text-slate-600 mb-4">Create new recipes using OpenAI integration</p>
                 <Button 
                   className="w-full bg-primary hover:bg-primary/90" 
-                  onClick={() => generateMutation.mutate(20)}
-                  disabled={generateMutation.isPending}
+                  onClick={() => setShowRecipeGenerationModal(true)}
                 >
-                  {generateMutation.isPending ? (
-                    <span className="flex items-center justify-center">
-                      <i className="fas fa-spinner fa-spin mr-2"></i>
-                      Generating...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center">
-                      <i className="fas fa-magic mr-2"></i>
-                      Generate New Batch
-                    </span>
-                  )}
+                  <span className="flex items-center justify-center">
+                    <i className="fas fa-magic mr-2"></i>
+                    Generate New Batch
+                  </span>
                 </Button>
               </CardContent>
             </Card>
@@ -489,78 +440,6 @@ export default function Admin() {
       
       {/* Recipe Management Section - Now outside tabs */}
       <div id="recipe-management-section">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Recipes */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Total Recipes</p>
-                  <h3 className="text-2xl font-bold text-slate-900 mt-1">
-                    {statsLoading ? '...' : stats?.total || 0}
-                  </h3>
-                </div>
-                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <i className="fas fa-book-open text-primary text-xl"></i>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Approved Recipes */}
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" 
-                onClick={() => handleFilterChange({ approved: true })}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Approved</p>
-                  <h3 className="text-2xl font-bold text-green-600 mt-1">
-                    {statsLoading ? '...' : stats?.approved || 0}
-                  </h3>
-                </div>
-                <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <i className="fas fa-check text-green-600 text-xl"></i>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pending Recipes */}
-          <Card className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => handleFilterChange({ approved: false })}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Pending Approval</p>
-                  <h3 className="text-2xl font-bold text-yellow-600 mt-1">
-                    {statsLoading ? '...' : stats?.pending || 0}
-                  </h3>
-                </div>
-                <div className="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <i className="fas fa-clock text-yellow-600 text-xl"></i>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Average Rating */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-              <div>
-                  <p className="text-sm font-medium text-slate-600">Avg Rating</p>
-                  <h3 className="text-2xl font-bold text-slate-900 mt-1">
-                    {statsLoading ? '...' : (stats?.avgRating || 0).toFixed(1)}
-                  </h3>
-                </div>
-                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <i className="fas fa-star text-primary text-xl"></i>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Quick Actions */}
         <div className="flex items-center justify-between mb-6">
@@ -652,6 +531,12 @@ export default function Admin() {
           </div>
         )}
       </div>
+
+      {/* Recipe Generation Modal */}
+      <RecipeGenerationModal
+        isOpen={showRecipeGenerationModal}
+        onClose={() => setShowRecipeGenerationModal(false)}
+      />
     </div>
   );
 }

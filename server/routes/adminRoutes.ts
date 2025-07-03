@@ -12,10 +12,62 @@ const adminRouter = Router();
 // Admin-only routes
 adminRouter.post('/generate', requireAdmin, async (req, res) => {
   try {
-    const { count = 10 } = req.body;
+    const { 
+      count, 
+      mealTypes,
+      dietaryRestrictions,
+      targetCalories,
+      mainIngredient,
+      fitnessGoal,
+      naturalLanguagePrompt,
+      maxPrepTime,
+      maxCalories,
+      minProtein,
+      maxProtein,
+      minCarbs,
+      maxCarbs,
+      minFat,
+      maxFat
+    } = req.body;
+    
+    // Validate required count parameter
+    if (!count || count < 1 || count > 100) {
+      return res.status(400).json({ 
+        message: "Count is required and must be between 1 and 100" 
+      });
+    }
+    
+    // Prepare generation options with context
+    const generationOptions = {
+      count,
+      mealTypes,
+      dietaryRestrictions,
+      targetCalories,
+      mainIngredient,
+      fitnessGoal,
+      naturalLanguagePrompt,
+      maxPrepTime,
+      maxCalories,
+      minProtein,
+      maxProtein,
+      minCarbs,
+      maxCarbs,
+      minFat,
+      maxFat
+    };
+    
+    console.log('Recipe generation started with context:', generationOptions);
+    
     // Do not await this, let it run in the background
-    recipeGenerator.generateAndStoreRecipes({ count });
-    res.status(202).json({ message: `Recipe generation started for ${count} recipes.` });
+    recipeGenerator.generateAndStoreRecipes(generationOptions);
+    
+    const contextMessage = naturalLanguagePrompt || fitnessGoal || mealTypes?.length || dietaryRestrictions?.length
+      ? ` with context-based targeting`
+      : '';
+    
+    res.status(202).json({ 
+      message: `Recipe generation started for ${count} recipes${contextMessage}.` 
+    });
   } catch (error) {
     console.error("Error starting recipe generation:", error);
     res.status(500).json({ message: "Failed to start recipe generation" });
