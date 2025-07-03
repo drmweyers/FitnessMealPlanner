@@ -19,17 +19,7 @@ interface RegisterCredentials {
   role: 'customer' | 'trainer' | 'admin';
 }
 
-// Support both old and new response formats
-interface LegacyAuthResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    role: UserRole;
-  };
-}
-
-interface NewAuthResponse {
+interface AuthResponse {
   status: 'success' | 'error';
   data?: {
     accessToken: string;
@@ -42,8 +32,6 @@ interface NewAuthResponse {
   message?: string;
   code?: string;
 }
-
-type AuthResponse = LegacyAuthResponse | NewAuthResponse;
 
 interface AuthContextType {
   user: User | null;
@@ -61,24 +49,48 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Helper function to normalize response
 function normalizeAuthResponse(response: AuthResponse): { token: string; user: User } {
-  if ('status' in response) {
-    // New format
-    if (response.status === 'error' || !response.data) {
-      throw new Error(response.message || 'Authentication failed');
-    }
-    return { token: response.data.accessToken, user: response.data.user };
-  } else {
-    // Legacy format
-    return response;
+  if (response.status === 'error' || !response.data) {
+    throw new Error(response.message || 'Authentication failed');
   }
+  return { token: response.data.accessToken, user: response.data.user };
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const queryClient = useQueryClient();
   const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [, navigate] = useLocation();
+
+  // Handle token refresh
+  const refreshToken = async (): Promise<string | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh_token`, {
+        method: 'POST',
+        credentials: 'include', // Important for cookies
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Clear invalid auth state
+          localStorage.removeItem('token');
+          setAuthToken(null);
+          return null;
+        }
+        throw new Error('Token refresh failed');
+      }
+
+      const data = await response.json();
+      if (data.status === 'success' && data.data?.accessToken) {
+        localStorage.setItem('token', data.data.accessToken);
+        setAuthToken(data.data.accessToken);
+        return data.data.accessToken;
+      }
+      return null;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -96,11 +108,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
-      // Clear auth token and notify other tabs
+      // Clear auth state and notify other tabs
       localStorage.removeItem('token');
       window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
       setAuthToken(null);
@@ -120,20 +135,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
     queryKey: [`${API_BASE_URL}/auth/me`],
     queryFn: async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        });
-        
-        if (response.status === 401) {
-          // Token is expired or invalid
-          await handleLogout();
-          throw new Error('Session expired. Please login again.');
-        }
+        const makeRequest = async (token: string) => {
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            credentials: 'include',
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          return response;
+        };
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
+        let response;
+        try {
+          // Try with current token
+          response = await makeRequest(authToken!);
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('401')) {
+            // Try to refresh token
+            const newToken = await refreshToken();
+            if (!newToken) {
+              throw new Error('Session expired. Please login again.');
+            }
+            // Retry with new token
+            response = await makeRequest(newToken);
+          } else {
+            throw error;
+          }
         }
         
         const data = await response.json();
@@ -141,28 +173,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return normalized.user;
       } catch (error) {
         if (error instanceof Error && error.message.includes('Session expired')) {
-          throw error;
+          await handleLogout();
         }
-        console.error('Auth check failed:', error);
-        throw new Error('Failed to validate session');
+        throw error;
       }
     },
     retry: (failureCount, error) => {
-      // Don't retry on 401 errors
-      if (error instanceof Error && error.message.includes('Session expired')) {
+      // Don't retry on auth errors
+      if (error instanceof Error && 
+         (error.message.includes('Session expired') || 
+          error.message.includes('401'))) {
         return false;
       }
       return failureCount < 1;
     },
     retryDelay: 1000,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: !!authToken, // Only fetch user data if we have a token
+    enabled: !!authToken,
     throwOnError: false
   });
-
-  // If authentication fails due to server issues, treat as unauthenticated
-  // but don't block the UI from loading
-  const isAuthError = error && (error as any)?.status >= 500;
 
   const login = async (credentials: LoginCredentials): Promise<User> => {
     try {
@@ -171,6 +200,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(credentials),
       });
 
@@ -207,8 +237,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(credentials.role === 'admin' && authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify(credentials),
       });
 
@@ -219,9 +249,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const data: AuthResponse = await response.json();
       const { token, user } = normalizeAuthResponse(data);
-      
+
       if (!token || !user || !user.role) {
-        console.error('Invalid server response:', data);
         throw new Error('Invalid response from server');
       }
 
@@ -240,18 +269,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const value = {
-    user: user as User | null,
-    isLoading: isLoading && !isAuthError,
-    isAuthenticated: !!user && !error,
-    error: error as Error | undefined,
-    login,
-    register,
-    logout: handleLogout,
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={{
+        user: user || null,
+        isLoading,
+        isAuthenticated: !!user,
+        error: error as Error | undefined,
+        login,
+        register,
+        logout: handleLogout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -216,6 +216,67 @@ adminRouter.post('/recipes/bulk-unapprove', requireAdmin, async (req, res) => {
   }
 });
 
+// Add bulk approve endpoint
+const bulkApproveSchema = z.object({
+  recipeIds: z.array(z.string().uuid()),
+});
+
+adminRouter.post('/recipes/bulk-approve', requireAdmin, async (req, res) => {
+  try {
+    const { recipeIds } = bulkApproveSchema.parse(req.body);
+    
+    if (!recipeIds.length) {
+      return res.status(400).json({ error: 'No recipe IDs provided' });
+    }
+
+    // Update all recipes in parallel
+    const updatePromises = recipeIds.map(id => 
+      storage.updateRecipe(id, { isApproved: true })
+    );
+
+    const results = await Promise.allSettled(updatePromises);
+
+    // Count successes and failures
+    const succeeded = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+
+    // If all failed, return 500
+    if (failed === recipeIds.length) {
+      return res.status(500).json({ 
+        error: 'Failed to approve any recipes',
+        details: {
+          total: recipeIds.length,
+          succeeded: 0,
+          failed
+        }
+      });
+    }
+
+    // Return partial success if some succeeded
+    res.status(succeeded === recipeIds.length ? 200 : 207).json({
+      message: succeeded === recipeIds.length 
+        ? 'All recipes approved successfully'
+        : `Approved ${succeeded} recipes, ${failed} failed`,
+      details: {
+        total: recipeIds.length,
+        succeeded,
+        failed
+      }
+    });
+
+  } catch (error) {
+    console.error('Failed to bulk approve recipes:', error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ 
+        error: 'Invalid request data', 
+        details: error.errors 
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to approve recipes' });
+    }
+  }
+});
+
 adminRouter.delete('/recipes/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;

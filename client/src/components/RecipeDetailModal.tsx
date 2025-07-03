@@ -43,7 +43,7 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
           <div className="space-y-6">
             {/* Recipe Title and Status */}
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-slate-900">{recipe.title}</h2>
+              <h2 className="text-2xl font-bold text-slate-900">{recipe.name}</h2>
               <Badge variant={recipe.isApproved ? "success" : "warning"}>
                 {recipe.isApproved ? "Approved" : "Pending"}
               </Badge>
@@ -57,24 +57,30 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
               <div className="relative h-64 rounded-lg overflow-hidden">
                 <img
                   src={recipe.imageUrl}
-                  alt={recipe.title}
+                  alt={recipe.name}
                   className="w-full h-full object-cover"
                 />
               </div>
             )}
 
             {/* Recipe Details Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Preparation Time */}
               <div className="p-4 bg-slate-50 rounded-lg">
                 <p className="text-sm text-slate-500">Prep Time</p>
-                <p className="text-lg font-semibold">{recipe.prepTime} mins</p>
+                <p className="text-lg font-semibold">{recipe.prepTimeMinutes} mins</p>
+              </div>
+
+              {/* Cook Time */}
+              <div className="p-4 bg-slate-50 rounded-lg">
+                <p className="text-sm text-slate-500">Cook Time</p>
+                <p className="text-lg font-semibold">{recipe.cookTimeMinutes} mins</p>
               </div>
 
               {/* Calories */}
               <div className="p-4 bg-slate-50 rounded-lg">
                 <p className="text-sm text-slate-500">Calories</p>
-                <p className="text-lg font-semibold">{recipe.calories} kcal</p>
+                <p className="text-lg font-semibold">{recipe.caloriesKcal} kcal</p>
               </div>
 
               {/* Servings */}
@@ -88,15 +94,15 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 bg-blue-50 rounded-lg">
                 <p className="text-sm text-blue-600">Protein</p>
-                <p className="text-lg font-semibold">{recipe.protein}g</p>
+                <p className="text-lg font-semibold">{recipe.proteinGrams}g</p>
               </div>
               <div className="p-4 bg-green-50 rounded-lg">
                 <p className="text-sm text-green-600">Carbs</p>
-                <p className="text-lg font-semibold">{recipe.carbs}g</p>
+                <p className="text-lg font-semibold">{recipe.carbsGrams}g</p>
               </div>
               <div className="p-4 bg-yellow-50 rounded-lg">
                 <p className="text-sm text-yellow-600">Fat</p>
-                <p className="text-lg font-semibold">{recipe.fat}g</p>
+                <p className="text-lg font-semibold">{recipe.fatGrams}g</p>
               </div>
             </div>
 
@@ -105,7 +111,7 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
               <h3 className="text-lg font-semibold">Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {recipe.mealTypes?.map((type) => (
-                  <Badge key={type} variant="outline">{type}</Badge>
+                  <Badge key={type} variant="outline" className="bg-purple-50">{type}</Badge>
                 ))}
                 {recipe.dietaryTags?.map((tag) => (
                   <Badge key={tag} variant="outline" className="bg-green-50">{tag}</Badge>
@@ -131,18 +137,23 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
             {/* Instructions */}
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Instructions</h3>
-              <ol className="list-decimal list-inside space-y-2">
-                {recipe.instructions?.map((step, index) => (
-                  <li key={index} className="text-slate-600">{step}</li>
-                ))}
-              </ol>
+              <div className="text-slate-600 whitespace-pre-wrap">
+                {recipe.instructionsText}
+              </div>
             </div>
+
+            {/* Source Reference */}
+            {recipe.sourceReference && (
+              <div className="text-sm text-slate-500">
+                <p>Source: {recipe.sourceReference}</p>
+              </div>
+            )}
 
             {/* Metadata */}
             <div className="text-sm text-slate-500 space-y-1">
-              <p>Created: {new Date(recipe.createdTimestamp).toLocaleDateString()}</p>
+                <p>Created: {recipe.creationTimestamp ? new Date(recipe.creationTimestamp).toLocaleDateString() : ''}</p>
               {recipe.lastUpdatedTimestamp && (
-                <p>Last Updated: {new Date(recipe.lastUpdatedTimestamp).toLocaleDateString()}</p>
+                <p>Last Updated: {recipe.lastUpdatedTimestamp ? new Date(recipe.lastUpdatedTimestamp).toLocaleDateString() : ''}</p>
               )}
             </div>
           </div>

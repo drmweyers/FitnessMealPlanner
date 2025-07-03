@@ -177,7 +177,7 @@ export default function Admin() {
 
   const bulkApproveMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      const response = await apiRequest('POST', '/api/admin/recipes/bulk-approve', { ids });
+      const response = await apiRequest('POST', '/api/admin/recipes/bulk-approve', { recipeIds: ids });
       return response.json();
     },
     onSuccess: (data) => {

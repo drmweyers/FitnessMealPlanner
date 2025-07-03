@@ -22,36 +22,85 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-app.use(cors({
-    origin: 'http://localhost:3000', // Allow requests from your frontend
-    credentials: true,
-}));
+// Configure CORS based on environment
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? process.env.FRONTEND_URL || 'https://yourdomain.com'
+    : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Refresh-Token'],
+  exposedHeaders: ['X-Access-Token', 'X-Refresh-Token'],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cookieParser());
+app.use(cookieParser(process.env.COOKIE_SECRET || 'your-secret-key'));
+
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
+// Global error handler
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error('Error:', err);
+
+  // Handle JWT and auth errors
+  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+    return res.status(401).json({
+      status: 'error',
+      code: err.name === 'TokenExpiredError' ? 'TOKEN_EXPIRED' : 'INVALID_TOKEN',
+      message: 'Authentication failed'
+    });
+  }
+
+  // Handle validation errors
+  if (err.name === 'ValidationError' || err.name === 'ZodError') {
+    return res.status(400).json({
+      status: 'error',
+      code: 'VALIDATION_ERROR',
+      message: err.message
+    });
+  }
+
+  // Default error response
+  res.status(err.status || 500).json({
+    status: 'error',
+    code: err.code || 'SERVER_ERROR',
+    message: process.env.NODE_ENV === 'production' 
+      ? 'An unexpected error occurred' 
+      : err.message
+  });
 });
 
+// API Routes
 app.use('/api/auth', authRouter);
 app.use('/api/recipes', recipeRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/meal-plan', mealPlanRouter);
 
 // Serve static files from the React app
-app.use(express.static(path.join(__dirname, '../client/dist')));
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// The "catchall" handler: for any request that doesn't match one above,
-// send back React's index.html file.
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-});
+  // The "catchall" handler: for any request that doesn't match one above,
+  // send back React's index.html file.
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+}
 
 const port = process.env.PORT || 5001;
 ViteExpress.listen(app, Number(port), () =>

@@ -286,7 +286,7 @@ export default function AdminRecipeGrid({
                   {recipe.imageUrl ? (
                     <img
                       src={recipe.imageUrl}
-                      alt={recipe.title}
+                      alt={recipe.name}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -299,7 +299,7 @@ export default function AdminRecipeGrid({
                 {/* Recipe Info */}
                 <div className="p-4">
                   <h3 className="font-semibold text-slate-900 mb-1 line-clamp-2">
-                    {recipe.title}
+                    {recipe.name}
                   </h3>
                   <p className="text-sm text-slate-500 line-clamp-2 mb-2">
                     {recipe.description}
@@ -309,11 +309,11 @@ export default function AdminRecipeGrid({
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center text-slate-600">
                       <i className="fas fa-clock mr-1"></i>
-                      {recipe.prepTime} mins
+                      {recipe.prepTimeMinutes} mins
                     </div>
                     <div className="flex items-center text-slate-600">
                       <i className="fas fa-fire mr-1"></i>
-                      {recipe.calories} kcal
+                      {recipe.caloriesKcal} kcal
                     </div>
                   </div>
                 </div>
