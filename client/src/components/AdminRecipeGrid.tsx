@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Recipe } from "@shared/schema";
+import RecipeDetailModal from "./RecipeDetailModal";
 
 interface AdminRecipeGridProps {
   recipes: Recipe[];
@@ -39,6 +40,7 @@ export default function AdminRecipeGrid({
 }: AdminRecipeGridProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsAllSelected(selectedIds.length > 0 && selectedIds.length === recipes.length);
@@ -79,6 +81,10 @@ export default function AdminRecipeGrid({
       }
       setSelectedIds([]);
     }
+  };
+
+  const handleRecipeClick = (recipeId: string) => {
+    setSelectedRecipeId(recipeId);
   };
 
   if (isLoading) {
@@ -213,12 +219,13 @@ export default function AdminRecipeGrid({
           return (
             <Card 
               key={recipe.id} 
-              className={`group relative transition-all duration-200 hover:shadow-lg ${
+              className={`group relative transition-all duration-200 hover:shadow-lg cursor-pointer ${
                 isSelected ? 'ring-2 ring-primary shadow-lg' : ''
               }`}
+              onClick={() => handleRecipeClick(recipe.id)}
             >
               {/* Selection Checkbox */}
-              <div className="absolute top-3 left-3 z-10">
+              <div className="absolute top-3 left-3 z-10" onClick={e => e.stopPropagation()}>
                 <Checkbox
                   checked={isSelected}
                   onCheckedChange={(checked) => handleSelectRecipe(recipe.id, checked as boolean)}
@@ -228,7 +235,7 @@ export default function AdminRecipeGrid({
               </div>
 
               {/* Action Buttons */}
-              <div className="absolute top-3 right-3 z-10 flex space-x-2">
+              <div className="absolute top-3 right-3 z-10 flex space-x-2" onClick={e => e.stopPropagation()}>
                 <Button
                   size="sm"
                   variant="default"
@@ -248,7 +255,11 @@ export default function AdminRecipeGrid({
                   `}
                   title={recipe.isApproved ? "Unapprove Recipe" : "Approve Recipe"}
                 >
-                  <i className={`fas fa-${recipe.isApproved ? 'times' : 'check'} text-sm`}></i>
+                  {approvePending || unapprovePending ? (
+                    <i className="fas fa-spinner fa-spin"></i>
+                  ) : (
+                    <i className={`fas fa-${recipe.isApproved ? 'times' : 'check'}`}></i>
+                  )}
                 </Button>
                 <Button
                   size="sm"
@@ -258,91 +269,52 @@ export default function AdminRecipeGrid({
                     onDelete(recipe.id);
                   }}
                   disabled={deletePending || isSelected}
-                  className="
-                    transition-all duration-200
-                    shadow-md hover:shadow-lg
-                    backdrop-blur-sm
-                    bg-red-500 hover:bg-red-600
-                  "
+                  className="shadow-md hover:shadow-lg backdrop-blur-sm"
                   title="Delete Recipe"
                 >
-                  <i className="fas fa-trash text-sm"></i>
+                  {deletePending ? (
+                    <i className="fas fa-spinner fa-spin"></i>
+                  ) : (
+                    <i className="fas fa-trash"></i>
+                  )}
                 </Button>
               </div>
 
               <CardContent className="p-0">
                 {/* Recipe Image */}
-                <div className="relative h-48 overflow-hidden rounded-t-lg">
-                  <img
-                    src={recipe.imageUrl || '/api/placeholder/300/200'}
-                    alt={recipe.name}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  {/* Approval Status Badge - Moved to top-left for better visibility */}
-                  <div className="absolute top-2 left-2 z-10">
-                    <span className={`
-                      px-3 py-1.5 
-                      text-xs font-semibold rounded-full 
-                      shadow-md backdrop-blur-sm
-                      ${recipe.isApproved 
-                        ? 'bg-green-100/90 text-green-800' 
-                        : 'bg-yellow-100/90 text-yellow-800'
-                      }
-                    `}>
-                      {recipe.isApproved ? 'Approved' : 'Pending'}
-                    </span>
-                  </div>
-                  {/* Click to View Hint */}
-                  <div className="
-                    absolute bottom-0 left-0 right-0
-                    bg-gradient-to-t from-black/50 to-transparent
-                    text-white text-center
-                    py-2 text-sm
-                    opacity-0 group-hover:opacity-100
-                    transition-opacity duration-200
-                  ">
-                    Click to view details
-                  </div>
+                <div className="relative h-48 bg-slate-100 rounded-t-lg overflow-hidden">
+                  {recipe.imageUrl ? (
+                    <img
+                      src={recipe.imageUrl}
+                      alt={recipe.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-slate-400">
+                      <i className="fas fa-image text-4xl"></i>
+                    </div>
+                  )}
                 </div>
 
-                {/* Recipe Info - Enhanced styling */}
-                <div className="p-4 space-y-3">
-                  <div>
-                    <h3 className="font-semibold text-slate-900 text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                      {recipe.name}
-                    </h3>
-                    <p className="text-sm text-slate-600 line-clamp-2 mt-2">
-                      {recipe.description}
-                    </p>
-                  </div>
-
-                  {/* Recipe Stats - Enhanced with better icons and layout */}
-                  <div className="flex items-center gap-4 text-sm text-slate-600">
-                    <span className="flex items-center bg-orange-50 px-2 py-1 rounded-full">
-                      <i className="fas fa-fire text-orange-500 mr-1.5"></i>
-                      {recipe.caloriesKcal} cal
-                    </span>
-                    <span className="flex items-center bg-blue-50 px-2 py-1 rounded-full">
-                      <i className="fas fa-clock text-blue-500 mr-1.5"></i>
-                      {recipe.prepTimeMinutes}min
-                    </span>
-                  </div>
-
-                  {/* Meal Types - Enhanced styling */}
-                  <div className="flex flex-wrap gap-2">
-                    {recipe.mealTypes?.slice(0, 2).map((type, index) => (
-                      <span 
-                        key={index}
-                        className="px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full"
-                      >
-                        {type}
-                      </span>
-                    ))}
-                    {recipe.mealTypes && recipe.mealTypes.length > 2 && (
-                      <span className="px-2.5 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">
-                        +{recipe.mealTypes.length - 2}
-                      </span>
-                    )}
+                {/* Recipe Info */}
+                <div className="p-4">
+                  <h3 className="font-semibold text-slate-900 mb-1 line-clamp-2">
+                    {recipe.title}
+                  </h3>
+                  <p className="text-sm text-slate-500 line-clamp-2 mb-2">
+                    {recipe.description}
+                  </p>
+                  
+                  {/* Recipe Stats */}
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center text-slate-600">
+                      <i className="fas fa-clock mr-1"></i>
+                      {recipe.prepTime} mins
+                    </div>
+                    <div className="flex items-center text-slate-600">
+                      <i className="fas fa-fire mr-1"></i>
+                      {recipe.calories} kcal
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -350,6 +322,13 @@ export default function AdminRecipeGrid({
           );
         })}
       </div>
+
+      {/* Recipe Detail Modal */}
+      <RecipeDetailModal
+        recipeId={selectedRecipeId}
+        isOpen={!!selectedRecipeId}
+        onClose={() => setSelectedRecipeId(null)}
+      />
     </div>
   );
 }

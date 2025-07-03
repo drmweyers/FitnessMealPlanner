@@ -241,4 +241,21 @@ adminRouter.delete('/recipes', requireAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/recipes/:id - Fetch a single recipe by ID (admin access)
+adminRouter.get('/recipes/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const recipe = await storage.getRecipe(id);
+    
+    if (!recipe) {
+      return res.status(404).json({ error: 'Recipe not found' });
+    }
+    
+    res.json(recipe);
+  } catch (error) {
+    console.error(`Failed to fetch recipe ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to fetch recipe' });
+  }
+});
+
 export default adminRouter; 
