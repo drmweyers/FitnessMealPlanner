@@ -275,6 +275,13 @@ export default function MealPlanGenerator() {
         description: "Your personalized meal plan is ready.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/meal-plans"] });
+      
+      // Force refresh the page when meal plan generation is completed
+      if (data.completed) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000); // Wait 2 seconds to let user see the success message
+      }
     },
     onError: (error: Error) => {
       toast({

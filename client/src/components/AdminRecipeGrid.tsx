@@ -118,41 +118,43 @@ export default function AdminRecipeGrid({
   return (
     <div className="space-y-6">
       {/* Bulk Actions Header */}
-      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 rounded-lg border gap-4 sm:gap-0">
+        <div className="flex items-center space-x-4 w-full sm:w-auto">
           <Checkbox
             checked={isAllSelected && recipes.length > 0}
             onCheckedChange={handleSelectAll}
             disabled={recipes.length === 0}
           />
-          <span className="text-sm font-medium text-slate-700">
-            Select All ({recipes.length} recipes)
-          </span>
-          {selectedIds.length > 0 && (
-            <span className="text-sm text-primary">
-              {selectedIds.length} selected
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
+              {recipes.length} recipes
             </span>
-          )}
+            {selectedIds.length > 0 && (
+              <span className="text-sm text-primary whitespace-nowrap">
+                {selectedIds.length} selected
+              </span>
+            )}
+          </div>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
           {/* Status Summary */}
-          <div className="flex items-center space-x-2 text-sm">
-            <span className="px-2 py-1 rounded-full bg-green-100 text-green-800 font-medium">
+          <div className="flex flex-wrap gap-2 text-sm w-full sm:w-auto">
+            <span className="px-2 py-1 rounded-full bg-green-100 text-green-800 font-medium whitespace-nowrap">
               {recipes.filter(r => r.isApproved).length} Approved
             </span>
-            <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">
+            <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium whitespace-nowrap">
               {recipes.filter(r => !r.isApproved).length} Pending
             </span>
           </div>
           
           {selectedIds.length > 0 && (
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setSelectedIds([])}
-                className="text-slate-600 border-slate-300 hover:bg-slate-100"
+                className="text-slate-600 border-slate-300 hover:bg-slate-100 w-full sm:w-auto"
               >
                 Clear Selection
               </Button>
@@ -161,29 +163,43 @@ export default function AdminRecipeGrid({
                 variant="default"
                 onClick={handleBulkApproveOrUnapprove}
                 disabled={bulkApprovePending || bulkUnapprovePending}
-                className={`${
+                className={`w-full sm:w-auto ${
                   selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
                     ? 'bg-yellow-600 hover:bg-yellow-700'
                     : 'bg-green-600 hover:bg-green-700'
                 }`}
               >
                 {bulkApprovePending || bulkUnapprovePending ? (
-                  <span className="flex items-center">
+                  <span className="flex items-center justify-center">
                     <i className="fas fa-spinner fa-spin mr-2"></i>
-                    {selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
-                      ? 'Unapproving...'
-                      : 'Approving...'}
+                    <span className="hidden sm:inline">
+                      {selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
+                        ? 'Unapproving...'
+                        : 'Approving...'}
+                    </span>
+                    <span className="sm:hidden">
+                      {selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
+                        ? 'Unapprove'
+                        : 'Approve'}
+                    </span>
                   </span>
                 ) : (
-                  <span className="flex items-center">
+                  <span className="flex items-center justify-center">
                     <i className={`fas fa-${
                       selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
                         ? 'times'
                         : 'check'
                     } mr-2`}></i>
-                    {selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
-                      ? 'Unapprove Selected'
-                      : 'Approve Selected'} ({selectedIds.length})
+                    <span className="hidden sm:inline">
+                      {selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
+                        ? 'Unapprove Selected'
+                        : 'Approve Selected'} ({selectedIds.length})
+                    </span>
+                    <span className="sm:hidden">
+                      {selectedIds.every(id => recipes.find(r => r.id === id)?.isApproved)
+                        ? 'Unapprove'
+                        : 'Approve'} ({selectedIds.length})
+                    </span>
                   </span>
                 )}
               </Button>
@@ -192,17 +208,19 @@ export default function AdminRecipeGrid({
                 variant="destructive"
                 onClick={handleBulkDelete}
                 disabled={bulkDeletePending}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
               >
                 {bulkDeletePending ? (
-                  <span className="flex items-center">
+                  <span className="flex items-center justify-center">
                     <i className="fas fa-spinner fa-spin mr-2"></i>
-                    Deleting...
+                    <span className="hidden sm:inline">Deleting...</span>
+                    <span className="sm:hidden">Delete</span>
                   </span>
                 ) : (
-                  <span className="flex items-center">
-                    <i className="fas fa-trash mr-2"></i>
-                    Delete Selected ({selectedIds.length})
+                  <span className="flex items-center justify-center">
+                    <i className="fas fa-trash-alt mr-2"></i>
+                    <span className="hidden sm:inline">Delete Selected ({selectedIds.length})</span>
+                    <span className="sm:hidden">Delete ({selectedIds.length})</span>
                   </span>
                 )}
               </Button>

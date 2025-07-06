@@ -75,7 +75,7 @@ const Layout = ({ children }: LayoutProps) => {
             {/* Logo and Navigation */}
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-xl font-bold text-primary">FitMeal Pro</h1>
+                <h1 className="text-xl font-bold text-primary">Evofit Meal</h1>
               </div>
               {/* Desktop Navigation */}
               <nav className="hidden md:ml-8 md:flex md:space-x-8">

@@ -6,9 +6,9 @@
  * instead of random recipe generation.
  */
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -50,6 +50,9 @@ export default function RecipeGenerationModal({
   const queryClient = useQueryClient();
   const [recipeCount, setRecipeCount] = useState(10);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [initialRecipeCount, setInitialRecipeCount] = useState<number | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [formData, setFormData] = useState({
     fitnessGoal: "all",
     dailyCalorieTarget: 2000,
@@ -66,6 +69,54 @@ export default function RecipeGenerationModal({
     maxFat: undefined as number | undefined,
   });
 
+  // Query to get current recipe stats
+  const { data: stats } = useQuery({
+    queryKey: ['adminStats'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/admin/stats');
+      return res.json();
+    },
+    enabled: isOpen,
+    refetchInterval: isGenerating ? 5000 : false, // Poll every 5 seconds while generating
+  });
+
+  // Check for completion when stats change
+  useEffect(() => {
+    if (isGenerating && stats && initialRecipeCount !== null) {
+      const currentTotal = stats.total;
+      const expectedTotal = initialRecipeCount + recipeCount;
+      
+      if (currentTotal >= expectedTotal) {
+        // Generation completed
+        setIsGenerating(false);
+        setInitialRecipeCount(null);
+        
+        toast({
+          title: "Recipe Generation Completed!",
+          description: `Successfully generated ${recipeCount} new recipes. The page will refresh to show them.`,
+        });
+        
+        // Close modal and refresh page
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      }
+    }
+  }, [stats, isGenerating, initialRecipeCount, recipeCount, toast, onClose]);
+
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
+
   // Extract meal plan context for recipe generation
   const generateRecipesFromContext = useMutation({
     mutationFn: async (context: RecipeGenerationContext) => {
@@ -73,27 +124,18 @@ export default function RecipeGenerationModal({
       return response.json();
     },
     onSuccess: (data) => {
+      // Store initial count and start monitoring
+      setInitialRecipeCount(stats?.total || 0);
+      setIsGenerating(true);
+      
       toast({
         title: "Recipe Generation Started",
         description: data.message,
       });
+      
       // Refresh recipe lists
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/recipes"] });
-      
-      // Progressive refresh during generation
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/admin/recipes"] });
-      }, 10000);
-      
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/admin/recipes"] });
-        queryClient.refetchQueries({ queryKey: ["/api/admin/recipes"] });
-      }, 30000);
-      
-      onClose();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
