@@ -170,6 +170,25 @@ export const personalizedRecipes = pgTable("personalized_recipes", {
 });
 
 /**
+ * Personalized Meal Plans Table
+ *
+ * Stores meal plan assignments from trainers to customers.
+ * Unlike recipes, meal plans are stored with their complete structure
+ * as JSONB to preserve the exact meal plan generated at assignment time.
+ */
+export const personalizedMealPlans = pgTable("personalized_meal_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  trainerId: uuid("trainer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  mealPlanData: jsonb("meal_plan_data").$type<MealPlan>().notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow(),
+});
+
+/**
  * Recipe Validation Schemas
  *
  * These schemas provide runtime validation for recipe data coming from
@@ -332,3 +351,7 @@ export const mealPlanSchema = z.object({
 });
 
 export type MealPlan = z.infer<typeof mealPlanSchema>;
+
+// Type definitions for meal plan assignment operations
+export type InsertPersonalizedMealPlan = typeof personalizedMealPlans.$inferInsert;
+export type PersonalizedMealPlan = typeof personalizedMealPlans.$inferSelect;

@@ -4,7 +4,7 @@ import { storage } from '../storage';
 import { z } from 'zod';
 import { recipeGenerator } from '../services/recipeGenerator';
 import { eq } from 'drizzle-orm';
-import { personalizedRecipes } from '@shared/schema';
+import { personalizedRecipes, personalizedMealPlans, type MealPlan } from '@shared/schema';
 import { db } from '../db';
 
 const adminRouter = Router();
@@ -77,8 +77,11 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
 // Routes accessible by both trainers and admins
 adminRouter.get('/customers', requireTrainerOrAdmin, async (req, res) => {
   try {
-    const { recipeId } = req.query;
-    const customers = await storage.getCustomers(recipeId as string | undefined);
+    const { recipeId, mealPlanId } = req.query;
+    const customers = await storage.getCustomers(
+      recipeId as string | undefined,
+      mealPlanId as string | undefined
+    );
     res.json(customers);
   } catch (error) {
     console.error('Failed to fetch customers:', error);
@@ -131,6 +134,74 @@ adminRouter.post('/assign-recipe', requireTrainerOrAdmin, async (req, res) => {
       res.status(400).json({ error: 'Invalid request data', details: error.errors });
     } else {
       res.status(500).json({ error: 'Failed to assign recipe' });
+    }
+  }
+});
+
+// Assign meal plan to customers
+const assignMealPlanSchema = z.object({
+  mealPlanData: z.object({
+    id: z.string(),
+    planName: z.string(),
+    fitnessGoal: z.string(),
+    description: z.string().optional(),
+    dailyCalorieTarget: z.number(),
+    clientName: z.string().optional(),
+    days: z.number(),
+    mealsPerDay: z.number(),
+    generatedBy: z.string(),
+    createdAt: z.coerce.date(), // Convert string to date automatically
+    meals: z.array(z.object({
+      day: z.number(),
+      mealNumber: z.number(),
+      mealType: z.string(),
+      recipe: z.object({
+        id: z.string(),
+        name: z.string(),
+        description: z.string(),
+        caloriesKcal: z.number(),
+        proteinGrams: z.string(),
+        carbsGrams: z.string(),
+        fatGrams: z.string(),
+        prepTimeMinutes: z.number(),
+        cookTimeMinutes: z.number().optional(),
+        servings: z.number(),
+        mealTypes: z.array(z.string()),
+        dietaryTags: z.array(z.string()).optional(),
+        mainIngredientTags: z.array(z.string()).optional(),
+        ingredientsJson: z.array(z.object({
+          name: z.string(),
+          amount: z.string(),
+          unit: z.string().optional(),
+        })).optional(),
+        instructionsText: z.string().optional(),
+        imageUrl: z.string().optional(),
+      }),
+    })),
+  }),
+  customerIds: z.array(z.string().uuid()),
+});
+
+adminRouter.post('/assign-meal-plan', requireTrainerOrAdmin, async (req, res) => {
+  try {
+    const { mealPlanData, customerIds } = assignMealPlanSchema.parse(req.body);
+    const trainerId = req.user!.id;
+    
+    await storage.assignMealPlanToCustomers(trainerId, mealPlanData, customerIds);
+    
+    res.json({ 
+      message: customerIds.length > 0 
+        ? `Meal plan assigned to ${customerIds.length} customer(s) successfully`
+        : 'Meal plan unassigned from all customers',
+      added: customerIds.length,
+      removed: 0, // Simplified for now
+    });
+  } catch (error) {
+    console.error('Failed to assign meal plan:', error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    } else {
+      res.status(500).json({ error: 'Failed to assign meal plan' });
     }
   }
 });

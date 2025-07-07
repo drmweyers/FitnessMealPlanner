@@ -2,6 +2,7 @@ import express from 'express';
 import { parseNaturalLanguageForMealPlan } from '../services/openai';
 import { MealPlanGeneratorService } from '../services/mealPlanGenerator';
 import { requireAuth } from '../middleware/auth';
+import { storage } from '../storage';
 import type { MealPlanGeneration } from '@shared/schema';
 
 const mealPlanRouter = express.Router();
@@ -54,6 +55,23 @@ mealPlanRouter.post('/generate', requireAuth, async (req, res) => {
     console.error('Error generating meal plan:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     res.status(500).json({ error: 'Failed to generate meal plan', details: errorMessage });
+  }
+});
+
+// GET /api/meal-plan/personalized - Fetch meal plans assigned to the logged-in customer
+mealPlanRouter.get('/personalized', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const mealPlans = await storage.getPersonalizedMealPlans(userId);
+    res.json({ mealPlans, total: mealPlans.length });
+  } catch (error) {
+    console.error('Failed to fetch personalized meal plans:', error);
+    res.status(500).json({ error: 'Failed to fetch personalized meal plans' });
   }
 });
 

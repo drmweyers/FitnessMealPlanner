@@ -1,171 +1,138 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { Recipe } from '../../../shared/schema';
-import RecipeCard from '../components/RecipeCard';
-import RecipeListItem from '../components/RecipeListItem';
-import RecipeFilters, { FilterOptions } from '../components/RecipeFilters';
+import type { MealPlan } from '../../../shared/schema';
+import MealPlanCard from '../components/MealPlanCard';
+import MealPlanModal from '../components/MealPlanModal';
 import { useAuth } from '@/hooks/useAuth';
 import { apiRequest } from '@/lib/queryClient';
-import RecipeModal from '@/components/RecipeModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Search, Filter } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const fetchPersonalizedRecipes = async (): Promise<Recipe[]> => {
-  const res = await apiRequest('GET', '/api/recipes/personalized');
+const fetchPersonalizedMealPlans = async (): Promise<MealPlan[]> => {
+  const res = await apiRequest('GET', '/api/meal-plan/personalized');
   const data = await res.json();
-  return data.recipes || []; // Ensure we always return an array
+  return data.mealPlans || []; // Ensure we always return an array
 };
 
 const Customer = () => {
   const { isAuthenticated } = useAuth();
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [filters, setFilters] = useState<FilterOptions>({
-    search: '',
-    mealType: 'all',
-    sortBy: 'default',
-    dietaryRestrictions: [],
-    prepTimeRange: [0, 180],
-    calorieRange: [0, 1500],
-    proteinRange: [0, 100],
-  });
+  const [selectedMealPlan, setSelectedMealPlan] = useState<MealPlan | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [fitnessGoalFilter, setFitnessGoalFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
 
-  const { data: recipes, isLoading, error } = useQuery<Recipe[], Error>({
-    queryKey: ['personalizedRecipes'],
-    queryFn: fetchPersonalizedRecipes,
+  const { data: mealPlans, isLoading, error } = useQuery<MealPlan[], Error>({
+    queryKey: ['personalizedMealPlans'],
+    queryFn: fetchPersonalizedMealPlans,
     enabled: isAuthenticated,
   });
 
-  const filteredRecipes = useMemo(() => {
-    if (!recipes) return [];
+  const filteredMealPlans = useMemo(() => {
+    if (!mealPlans) return [];
 
-    return recipes
-      .filter((recipe) => {
+    return mealPlans
+      .filter((mealPlan) => {
         // Search filter
-        if (filters.search && !recipe.name.toLowerCase().includes(filters.search.toLowerCase())) {
+        if (searchTerm && !mealPlan.planName.toLowerCase().includes(searchTerm.toLowerCase())) {
           return false;
         }
 
-        // Meal type filter
-        if (filters.mealType !== 'all' && !recipe.mealTypes?.includes(filters.mealType)) {
-          return false;
-        }
-
-        // Dietary restrictions filter
-        if (filters.dietaryRestrictions.length > 0) {
-          const recipeTags = recipe.dietaryTags || [];
-          if (!filters.dietaryRestrictions.every(restriction => 
-            recipeTags.includes(restriction))) {
-            return false;
-          }
-        }
-
-        // Preparation time filter
-        const prepTime = recipe.prepTimeMinutes || 0;
-        if (prepTime < filters.prepTimeRange[0] || prepTime > filters.prepTimeRange[1]) {
-          return false;
-        }
-
-        // Calorie filter
-        const calories = recipe.caloriesKcal || 0;
-        if (calories < filters.calorieRange[0] || calories > filters.calorieRange[1]) {
-          return false;
-        }
-
-        // Protein filter
-        const protein = Number(recipe.proteinGrams) || 0;
-        if (protein < filters.proteinRange[0] || protein > filters.proteinRange[1]) {
+        // Fitness goal filter
+        if (fitnessGoalFilter !== 'all' && mealPlan.fitnessGoal !== fitnessGoalFilter) {
           return false;
         }
 
         return true;
       })
       .sort((a, b) => {
-        switch (filters.sortBy) {
-          case 'calories-asc':
-            return (a.caloriesKcal || 0) - (b.caloriesKcal || 0);
-          case 'calories-desc':
-            return (b.caloriesKcal || 0) - (a.caloriesKcal || 0);
-          case 'protein-asc':
-            return (Number(a.proteinGrams) || 0) - (Number(b.proteinGrams) || 0);
-          case 'protein-desc':
-            return (Number(b.proteinGrams) || 0) - (Number(a.proteinGrams) || 0);
-          case 'time-asc':
-            return (a.prepTimeMinutes || 0) - (b.prepTimeMinutes || 0);
+        switch (sortBy) {
+          case 'date':
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          case 'name':
+            return a.planName.localeCompare(b.planName);
+          case 'days':
+            return b.days - a.days;
+          case 'calories':
+            const aCalories = a.meals.reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0) / a.days;
+            const bCalories = b.meals.reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0) / b.days;
+            return bCalories - aCalories;
           default:
             return 0;
         }
       });
-  }, [recipes, filters]);
+  }, [mealPlans, searchTerm, fitnessGoalFilter, sortBy]);
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">My Personalized Recipes</h1>
-      <p className="mb-8">Here are the recipes assigned to you by your trainer.</p>
+      <h1 className="text-2xl font-bold mb-4">My Personalized Meal Plans</h1>
+      <p className="mb-8">Here are the meal plans assigned to you by your trainer.</p>
 
       {/* Filters Section */}
-      <div className="mb-8">
-        <RecipeFilters onFilterChange={setFilters} />
-      </div>
+      <div className="mb-8 space-y-4">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Search meal plans..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
 
-      {/* View Toggle */}
-      <div className="flex justify-end mb-6">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-slate-600">View:</span>
-          <div className="flex border border-slate-300 rounded-lg overflow-hidden">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="rounded-none px-3 py-1"
-            >
-              <i className="fas fa-th mr-2"></i>
-              Grid
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="rounded-none px-3 py-1"
-            >
-              <i className="fas fa-list mr-2"></i>
-              List
-            </Button>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center space-x-2">
+            <Filter className="h-4 w-4 text-slate-600" />
+            <span className="text-sm text-slate-600">Filters:</span>
           </div>
+          
+          <Select value={fitnessGoalFilter} onValueChange={setFitnessGoalFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Fitness Goal" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Goals</SelectItem>
+              <SelectItem value="weight_loss">Weight Loss</SelectItem>
+              <SelectItem value="muscle_gain">Muscle Gain</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+              <SelectItem value="athletic_performance">Athletic Performance</SelectItem>
+              <SelectItem value="general_health">General Health</SelectItem>
+              <SelectItem value="cutting">Cutting</SelectItem>
+              <SelectItem value="bulking">Bulking</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Sort By" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">Newest First</SelectItem>
+              <SelectItem value="name">Plan Name</SelectItem>
+              <SelectItem value="days">Number of Days</SelectItem>
+              <SelectItem value="calories">Average Calories</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       {isLoading ? (
-        viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <div className="h-48 bg-slate-200 rounded-t-xl"></div>
-                <CardContent className="p-4">
-                  <div className="h-4 bg-slate-200 rounded mb-2"></div>
-                  <div className="h-3 bg-slate-200 rounded w-2/3"></div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-24 h-24 bg-slate-200 rounded-lg"></div>
-                    <div className="flex-1">
-                      <div className="h-4 bg-slate-200 rounded mb-2"></div>
-                      <div className="h-3 bg-slate-200 rounded w-2/3 mb-2"></div>
-                      <div className="h-3 bg-slate-200 rounded w-1/3"></div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <div className="h-32 bg-slate-200 rounded-t-xl"></div>
+              <CardContent className="p-4">
+                <div className="h-4 bg-slate-200 rounded mb-2"></div>
+                <div className="h-3 bg-slate-200 rounded w-2/3 mb-2"></div>
+                <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
         <>
           {error && (
@@ -174,38 +141,26 @@ const Customer = () => {
             </div>
           )}
 
-          {filteredRecipes && filteredRecipes.length > 0 ? (
+          {filteredMealPlans && filteredMealPlans.length > 0 ? (
             <>
               <p className="text-sm text-gray-500 mb-4">
-                Showing {filteredRecipes.length} of {recipes?.length} recipes
+                Showing {filteredMealPlans.length} of {mealPlans?.length} meal plans
               </p>
-              {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {filteredRecipes.map((recipe) => (
-                    <RecipeCard 
-                      key={recipe.id} 
-                      recipe={recipe} 
-                      onClick={() => setSelectedRecipe(recipe)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredRecipes.map((recipe) => (
-                    <RecipeListItem
-                      key={recipe.id}
-                      recipe={recipe}
-                      onClick={() => setSelectedRecipe(recipe)}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredMealPlans.map((mealPlan) => (
+                  <MealPlanCard 
+                    key={mealPlan.id} 
+                    mealPlan={mealPlan} 
+                    onClick={() => setSelectedMealPlan(mealPlan)}
+                  />
+                ))}
+              </div>
             </>
           ) : (
             !isLoading && (
               <div className="text-center py-8">
                 <p className="text-gray-500">
-                  {recipes?.length ? 'No recipes match your filters.' : 'You have no personalized recipes yet.'}
+                  {mealPlans?.length ? 'No meal plans match your filters.' : 'You have no personalized meal plans yet.'}
                 </p>
               </div>
             )
@@ -213,11 +168,11 @@ const Customer = () => {
         </>
       )}
 
-      {/* Recipe Modal */}
-      {selectedRecipe && (
-        <RecipeModal
-          recipe={selectedRecipe}
-          onClose={() => setSelectedRecipe(null)}
+      {/* Meal Plan Modal */}
+      {selectedMealPlan && (
+        <MealPlanModal
+          mealPlan={selectedMealPlan}
+          onClose={() => setSelectedMealPlan(null)}
         />
       )}
     </div>

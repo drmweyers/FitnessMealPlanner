@@ -16,12 +16,14 @@ import {
   users,
   recipes,
   personalizedRecipes,
+  personalizedMealPlans,
   type User,
   type InsertUser,
   type Recipe,
   type InsertRecipe,
   type UpdateRecipe,
   type RecipeFilter,
+  type MealPlan,
   passwordResetTokens,
   refreshTokens,
 } from "@shared/schema";
@@ -42,7 +44,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserPassword(userId: string, password: string): Promise<void>;
-  getCustomers(recipeId?: string): Promise<(User & { hasRecipe?: boolean })[]>;
+  getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]>;
   
   // Password Reset
   createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void>;
@@ -76,6 +78,10 @@ export interface IStorage {
   getPersonalizedRecipes(customerId: string): Promise<Recipe[]>;
   assignRecipeToCustomers(trainerId: string, recipeId: string, customerIds: string[]): Promise<void>;
   
+  // Personalized meal plans
+  assignMealPlanToCustomers(trainerId: string, mealPlanData: MealPlan, customerIds: string[]): Promise<void>;
+  getPersonalizedMealPlans(customerId: string): Promise<MealPlan[]>;
+  
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
 }
@@ -101,8 +107,11 @@ export class DatabaseStorage implements IStorage {
     await db.update(users).set({ password }).where(eq(users.id, userId));
   }
 
-  async getCustomers(recipeId?: string): Promise<(User & { hasRecipe?: boolean })[]> {
+  async getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]> {
     const customers = await db.select().from(users).where(eq(users.role, 'customer'));
+    
+    let recipeAssignments: Set<string> = new Set();
+    let mealPlanAssignments: Set<string> = new Set();
     
     if (recipeId) {
       const assignments = await db
@@ -110,15 +119,22 @@ export class DatabaseStorage implements IStorage {
         .from(personalizedRecipes)
         .where(eq(personalizedRecipes.recipeId, recipeId));
       
-      const assignedCustomerIds = new Set(assignments.map(a => a.customerId));
-      
-      return customers.map(customer => ({
-        ...customer,
-        hasRecipe: assignedCustomerIds.has(customer.id)
-      }));
+      recipeAssignments = new Set(assignments.map(a => a.customerId));
     }
     
-    return customers;
+    // Check for existing meal plan assignments for each customer
+    // This shows which customers already have ANY meal plan assigned to them
+    const existingMealPlanAssignments = await db
+      .select({ customerId: personalizedMealPlans.customerId })
+      .from(personalizedMealPlans);
+    
+    mealPlanAssignments = new Set(existingMealPlanAssignments.map(a => a.customerId));
+    
+    return customers.map(customer => ({
+      ...customer,
+      hasRecipe: recipeId ? recipeAssignments.has(customer.id) : false,
+      hasMealPlan: mealPlanAssignments.has(customer.id)
+    }));
   }
 
   // Password Reset
@@ -258,6 +274,38 @@ export class DatabaseStorage implements IStorage {
       
       await db.insert(personalizedRecipes).values(assignments);
     }
+  }
+
+  async assignMealPlanToCustomers(trainerId: string, mealPlanData: MealPlan, customerIds: string[]): Promise<void> {
+    // Remove any existing meal plan assignments for these specific customers
+    // This prevents duplicate assignments and replaces existing ones
+    if (customerIds.length > 0) {
+      await db
+        .delete(personalizedMealPlans)
+        .where(inArray(personalizedMealPlans.customerId, customerIds));
+      
+      // Add new assignments
+      const assignments = customerIds.map(customerId => ({
+        customerId,
+        trainerId,
+        mealPlanData,
+      }));
+      
+      await db.insert(personalizedMealPlans).values(assignments);
+    }
+  }
+
+  async getPersonalizedMealPlans(customerId: string): Promise<MealPlan[]> {
+    const assignedMealPlans = await db
+      .select({
+        mealPlanData: personalizedMealPlans.mealPlanData,
+        assignedAt: personalizedMealPlans.assignedAt,
+      })
+      .from(personalizedMealPlans)
+      .where(eq(personalizedMealPlans.customerId, customerId))
+      .orderBy(desc(personalizedMealPlans.assignedAt));
+
+    return assignedMealPlans.map(assignment => assignment.mealPlanData);
   }
 
   async searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }> {

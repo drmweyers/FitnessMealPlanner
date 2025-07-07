@@ -48,8 +48,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import {
   mealPlanGenerationSchema,
   type MealPlanGeneration,
@@ -68,10 +70,12 @@ import {
   Wand2,
   Sparkles,
   Download,
+  UserPlus,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import RecipeModal from "./RecipeModal";
+import MealPlanAssignment from "./MealPlanAssignment";
 
 /**
  * Type definition for meal plan generation results
@@ -103,6 +107,7 @@ interface MealPlanResult {
 export default function MealPlanGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Component state management
   const [generatedPlan, setGeneratedPlan] = useState<MealPlanResult | null>(
@@ -114,6 +119,7 @@ export default function MealPlanGenerator() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [forceRender, setForceRender] = useState(0);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
   const mealPlanRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -277,11 +283,11 @@ export default function MealPlanGenerator() {
       queryClient.invalidateQueries({ queryKey: ["/api/meal-plans"] });
       
       // Force refresh the page when meal plan generation is completed
-      if (data.completed) {
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000); // Wait 2 seconds to let user see the success message
-      }
+      // if (data.completed) {
+      //   setTimeout(() => {
+      //     window.location.reload();
+      //   }, 2000); // Wait 2 seconds to let user see the success message
+      // }
     },
     onError: (error: Error) => {
       toast({
@@ -1109,6 +1115,17 @@ export default function MealPlanGenerator() {
                 {generatedPlan.mealPlan.planName}
               </div>
               <div className="flex gap-2">
+                {(user?.role === 'trainer' || user?.role === 'admin') && (
+                  <Button
+                    onClick={() => setIsAssignmentModalOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Assign to Customers
+                  </Button>
+                )}
                 <Button
                   onClick={() => {
                     setRefreshKey((prev) => prev + 1);
@@ -1339,6 +1356,47 @@ export default function MealPlanGenerator() {
       {/* Recipe Detail Modal */}
       {selectedRecipe && (
         <RecipeModal recipe={selectedRecipe} onClose={closeRecipeModal} />
+      )}
+
+      {/* Meal Plan Assignment Modal */}
+      {generatedPlan && (
+        <Dialog open={isAssignmentModalOpen} onOpenChange={setIsAssignmentModalOpen}>
+          <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <UserPlus className="h-5 w-5 text-blue-600" />
+                <span>Assign Meal Plan to Customers</span>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-4 p-4 bg-slate-50 rounded-lg border">
+              <h4 className="font-semibold text-slate-900 mb-2">
+                {generatedPlan.mealPlan.planName}
+              </h4>
+              <div className="flex flex-wrap gap-2 mb-2">
+                <Badge variant="outline" className="text-xs">
+                  {generatedPlan.mealPlan.fitnessGoal}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {generatedPlan.mealPlan.days} days
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {generatedPlan.mealPlan.mealsPerDay} meals/day
+                </Badge>
+              </div>
+              <div className="text-sm text-slate-600">
+                <span className="mr-4">🔥 {generatedPlan.nutrition.averageDaily.calories} avg cal/day</span>
+                <span className="mr-4">💪 {generatedPlan.nutrition.averageDaily.protein}g avg protein/day</span>
+                <span>🍽️ {generatedPlan.mealPlan.meals.length} total meals</span>
+              </div>
+              {generatedPlan.mealPlan.clientName && (
+                <p className="text-sm text-slate-600 mt-2">
+                  👤 For: {generatedPlan.mealPlan.clientName}
+                </p>
+              )}
+            </div>
+            <MealPlanAssignment mealPlan={generatedPlan.mealPlan} />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
