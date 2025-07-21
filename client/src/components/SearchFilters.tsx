@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { RecipeFilter } from "@shared/schema";
 
 interface SearchFiltersProps {
@@ -18,18 +19,18 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
   };
 
   return (
-    <Card className="p-6 mb-8">
-      <div className="flex flex-col lg:flex-row gap-6">
+    <Card className="p-3 sm:p-4 lg:p-6 mb-6 sm:mb-8 shadow-sm border-0 ring-1 ring-slate-200">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Search Input */}
         <div className="flex-1">
           <div className="relative">
-            <i className="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+            <i className="fas fa-search absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm"></i>
             <Input
               type="text"
               placeholder="Search recipes by name or ingredients..."
               value={filters.search || ''}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-12"
+              className="pl-10 sm:pl-12 h-11 sm:h-12 text-sm sm:text-base"
             />
           </div>
         </div>
@@ -38,25 +39,34 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
         <Button
           variant="outline"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="lg:w-auto w-full"
+          className="lg:w-auto w-full text-sm sm:text-base py-2 sm:py-3 h-11 sm:h-12"
         >
           <i className="fas fa-filter mr-2"></i>
-          Advanced Filters
+          <span className="hidden sm:inline">Advanced Filters</span>
+          <span className="sm:hidden">Filters</span>
+          {showAdvanced ? (
+            <ChevronUp className="ml-2 h-4 w-4" />
+          ) : (
+            <ChevronDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       </div>
 
       {/* Advanced Filters */}
       {showAdvanced && (
-        <div className="mt-6 pt-6 border-t border-slate-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-200">
+          {/* Basic Filters Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Meal Type Filter */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Meal Type</label>
+              <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                Meal Type
+              </label>
               <Select
                 value={filters.mealType || 'all'}
                 onValueChange={(value) => onFilterChange({ mealType: value === 'all' ? undefined : value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                   <SelectValue placeholder="All Meals" />
                 </SelectTrigger>
                 <SelectContent>
@@ -71,12 +81,14 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
 
             {/* Dietary Tags Filter */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Dietary</label>
+              <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                Dietary
+              </label>
               <Select
                 value={filters.dietaryTag || 'all'}
                 onValueChange={(value) => onFilterChange({ dietaryTag: value === 'all' ? undefined : value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                   <SelectValue placeholder="All Diets" />
                 </SelectTrigger>
                 <SelectContent>
@@ -94,12 +106,14 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
 
             {/* Prep Time Filter */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Max Prep Time</label>
+              <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                Max Prep Time
+              </label>
               <Select
                 value={filters.maxPrepTime?.toString() || 'all'}
                 onValueChange={(value) => onFilterChange({ maxPrepTime: value === 'all' ? undefined : parseInt(value) })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                   <SelectValue placeholder="Any Time" />
                 </SelectTrigger>
                 <SelectContent>
@@ -114,12 +128,14 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
 
             {/* Calories Range Filter */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Calories Range</label>
+              <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
+                Calories Range
+              </label>
               <Select
                 value={filters.maxCalories?.toString() || 'all'}
                 onValueChange={(value) => onFilterChange({ maxCalories: value === 'all' ? undefined : parseInt(value) })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                   <SelectValue placeholder="Any Amount" />
                 </SelectTrigger>
                 <SelectContent>
@@ -134,21 +150,25 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
           </div>
 
           {/* Macro Nutrients Section */}
-          <div className="mt-6 pt-6 border-t border-slate-200">
-            <h4 className="text-sm font-medium text-slate-700 mb-4">Macro Nutrients (per serving)</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-200">
+            <h4 className="text-xs sm:text-sm font-medium text-slate-700 mb-3 sm:mb-4">
+              Macro Nutrients (per serving)
+            </h4>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               
               {/* Protein Filters */}
               <div className="space-y-3">
-                <h5 className="text-sm font-medium text-slate-600">Protein (g)</h5>
-                <div className="grid grid-cols-2 gap-2">
+                <h5 className="text-xs sm:text-sm font-medium text-slate-600">
+                  Protein (g)
+                </h5>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Min</label>
                     <Select
                       value={filters.minProtein?.toString() || 'all'}
                       onValueChange={(value) => onFilterChange({ minProtein: value === 'all' ? undefined : parseInt(value) })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent>
@@ -167,7 +187,7 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                       value={filters.maxProtein?.toString() || 'all'}
                       onValueChange={(value) => onFilterChange({ maxProtein: value === 'all' ? undefined : parseInt(value) })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent>
@@ -185,15 +205,17 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
 
               {/* Carbohydrates Filters */}
               <div className="space-y-3">
-                <h5 className="text-sm font-medium text-slate-600">Carbohydrates (g)</h5>
-                <div className="grid grid-cols-2 gap-2">
+                <h5 className="text-xs sm:text-sm font-medium text-slate-600">
+                  Carbohydrates (g)
+                </h5>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Min</label>
                     <Select
                       value={filters.minCarbs?.toString() || 'all'}
                       onValueChange={(value) => onFilterChange({ minCarbs: value === 'all' ? undefined : parseInt(value) })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent>
@@ -212,7 +234,7 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                       value={filters.maxCarbs?.toString() || 'all'}
                       onValueChange={(value) => onFilterChange({ maxCarbs: value === 'all' ? undefined : parseInt(value) })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent>
@@ -230,15 +252,17 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
 
               {/* Fat Filters */}
               <div className="space-y-3">
-                <h5 className="text-sm font-medium text-slate-600">Fat (g)</h5>
-                <div className="grid grid-cols-2 gap-2">
+                <h5 className="text-xs sm:text-sm font-medium text-slate-600">
+                  Fat (g)
+                </h5>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Min</label>
                     <Select
                       value={filters.minFat?.toString() || 'all'}
                       onValueChange={(value) => onFilterChange({ minFat: value === 'all' ? undefined : parseInt(value) })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent>
@@ -257,7 +281,7 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                       value={filters.maxFat?.toString() || 'all'}
                       onValueChange={(value) => onFilterChange({ maxFat: value === 'all' ? undefined : parseInt(value) })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
                       </SelectTrigger>
                       <SelectContent>
@@ -276,7 +300,7 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
           </div>
 
           {/* Clear Filters Button */}
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 sm:mt-6 flex justify-center sm:justify-end">
             <Button
               variant="outline"
               onClick={() => onFilterChange({ 
@@ -293,8 +317,10 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                 minFat: undefined,
                 maxFat: undefined,
               })}
+              className="text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3 w-full sm:w-auto"
             >
-              Clear Filters
+              <i className="fas fa-times mr-2"></i>
+              Clear All Filters
             </Button>
           </div>
         </div>

@@ -10,6 +10,7 @@ interface RecipeCardProps {
 export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  
   const getMealTypeColor = (mealType: string) => {
     const colors = {
       breakfast: "bg-orange-100 text-orange-700",
@@ -38,14 +39,14 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
+      className="overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group h-full border-0 shadow-sm"
       onClick={onClick}
     >
-      <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
+      <div className="relative w-full h-36 sm:h-40 lg:h-48 bg-gray-100 overflow-hidden">
         {imageLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
             <div className="animate-pulse text-gray-400">
-              <i className="fas fa-image text-2xl"></i>
+              <i className="fas fa-image text-lg sm:text-xl lg:text-2xl"></i>
             </div>
           </div>
         )}
@@ -53,7 +54,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           <img 
             src={recipe.imageUrl ?? '/api/placeholder/400/250'} 
             alt={recipe.name}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-36 sm:h-40 lg:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
             onLoad={() => setImageLoading(false)}
             onError={() => {
               setImageError(true);
@@ -62,63 +63,79 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
             style={{ display: imageLoading ? 'none' : 'block' }}
           />
         ) : (
-          <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <i className="fas fa-utensils text-3xl mb-2"></i>
-              <p className="text-sm font-medium">{recipe.name}</p>
+          <div className="w-full h-36 sm:h-40 lg:h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <div className="text-center text-gray-500 px-2">
+              <i className="fas fa-utensils text-xl sm:text-2xl lg:text-3xl mb-2"></i>
+              <p className="text-xs sm:text-sm font-medium line-clamp-2">{recipe.name}</p>
             </div>
           </div>
         )}
       </div>
       
-      <CardContent className="p-4">
-        {/* Meal Type - More Prominent */}
-        <div className="mb-3">
-          <div className={`inline-block text-sm font-semibold px-3 py-2 rounded-lg ${getMealTypeColor(primaryMealType)} shadow-sm`}>
+      <CardContent className="p-3 sm:p-4 flex flex-col h-auto">
+        {/* Meal Type and Dietary Tags */}
+        <div className="mb-2 sm:mb-3 flex flex-wrap gap-1 sm:gap-2">
+          <div className={`inline-block text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 sm:py-2 rounded-lg ${getMealTypeColor(primaryMealType)} shadow-sm`}>
             {primaryMealType.charAt(0).toUpperCase() + primaryMealType.slice(1)}
           </div>
           {primaryDietaryTag && (
-            <span className={`ml-2 text-xs font-medium px-2 py-1 rounded-full ${getDietaryTagColor(primaryDietaryTag)}`}>
+            <span className={`text-xs font-medium px-2 py-1 rounded-full ${getDietaryTagColor(primaryDietaryTag)}`}>
               {primaryDietaryTag.charAt(0).toUpperCase() + primaryDietaryTag.slice(1)}
             </span>
           )}
         </div>
         
-        <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-primary transition-colors">
+        {/* Recipe Name */}
+        <h3 className="font-semibold text-slate-900 mb-2 sm:mb-3 group-hover:text-primary transition-colors text-sm sm:text-base line-clamp-2 leading-tight">
           {recipe.name}
         </h3>
         
-        <div className="grid grid-cols-2 gap-2 text-sm text-slate-600 mb-3">
+        {/* Basic Info */}
+        <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4">
           <div className="flex items-center space-x-1">
-            <i className="fas fa-clock text-slate-400"></i>
-            <span>{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span>
+            <i className="fas fa-clock text-slate-400 text-xs"></i>
+            <span className="truncate">{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span>
           </div>
           <div className="flex items-center space-x-1">
-            <i className="fas fa-fire text-slate-400"></i>
-            <span>{recipe.caloriesKcal} cal</span>
+            <i className="fas fa-fire text-slate-400 text-xs"></i>
+            <span className="truncate">{recipe.caloriesKcal} cal</span>
           </div>
         </div>
         
-        {/* Nutrition Information with Brand Colors */}
-        <div>
-          <h4 className="text-sm font-medium text-slate-700 mb-2">Nutrition Information</h4>
-          <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{recipe.caloriesKcal}</div>
+        {/* Nutrition Information */}
+        <div className="mt-auto">
+          <h4 className="text-xs sm:text-sm font-medium text-slate-700 mb-2">
+            Nutrition
+          </h4>
+          
+          {/* Primary Nutrition - Mobile Layout */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm mb-2 sm:mb-3">
+            <div className="text-center bg-orange-50 rounded-lg p-2 sm:p-3">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">
+                {recipe.caloriesKcal}
+              </div>
               <div className="text-xs text-slate-500">Calories</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{Number(recipe.proteinGrams).toFixed(0)}g</div>
+            <div className="text-center bg-red-50 rounded-lg p-2 sm:p-3">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">
+                {Number(recipe.proteinGrams).toFixed(0)}g
+              </div>
               <div className="text-xs text-slate-500">Protein</div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{Number(recipe.carbsGrams).toFixed(0)}g</div>
+          
+          {/* Secondary Nutrition - Compact */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
+            <div className="text-center bg-blue-50 rounded-lg p-2 sm:p-3">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">
+                {Number(recipe.carbsGrams).toFixed(0)}g
+              </div>
               <div className="text-xs text-slate-500">Carbs</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{Number(recipe.fatGrams).toFixed(0)}g</div>
+            <div className="text-center bg-green-50 rounded-lg p-2 sm:p-3">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
+                {Number(recipe.fatGrams).toFixed(0)}g
+              </div>
               <div className="text-xs text-slate-500">Fat</div>
             </div>
           </div>

@@ -71,65 +71,125 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="your@email.com" 
-                        type="email"
-                        autoComplete="email"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="password"
-                        autoComplete="current-password"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={form.formState.isSubmitting}
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo/Brand Section */}
+        <div className="text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Evofit Meal
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            Your personalized nutrition companion
+          </p>
+        </div>
+
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="space-y-1 pb-4 sm:pb-6 px-4 sm:px-6">
+            <CardTitle className="text-xl sm:text-2xl font-semibold text-center text-gray-900">
+              Welcome Back
+            </CardTitle>
+            <CardDescription className="text-center text-sm sm:text-base text-gray-600">
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="px-4 sm:px-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm sm:text-base font-medium text-gray-700">
+                        Email Address
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="your@email.com" 
+                          type="email"
+                          autoComplete="email"
+                          className="h-11 sm:h-12 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs sm:text-sm" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm sm:text-base font-medium text-gray-700">
+                        Password
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password"
+                          autoComplete="current-password"
+                          className="h-11 sm:h-12 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs sm:text-sm" />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 sm:h-12 text-sm sm:text-base font-medium bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 rounded-lg transition-all duration-200"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Logging in...
+                    </div>
+                  ) : (
+                    'Sign In'
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col items-center space-y-3 sm:space-y-4 px-4 sm:px-6 pt-4 sm:pt-6 pb-6 sm:pb-8">
+            <div className="text-center">
+              <p className="text-xs sm:text-sm text-gray-600">
+                Don't have an account?{' '}
+                <Link 
+                  href="/register" 
+                  className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                >
+                  Create one here
+                </Link>
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <Link 
+                href="/forgot-password" 
+                className="text-xs sm:text-sm text-blue-600 hover:text-blue-500 font-medium transition-colors"
               >
-                {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex flex-col items-center">
-          <p>Don't have an account? <Link href="/register" className="text-blue-600 hover:underline">Register</Link></p>
-          <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline mt-2">Forgot password?</Link>
-        </CardFooter>
-      </Card>
+                Forgot your password?
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+
+        {/* Additional Info */}
+        <div className="text-center">
+          <p className="text-xs text-gray-500">
+            By signing in, you agree to our{' '}
+            <a href="/terms" className="text-blue-600 hover:underline">Terms</a> and{' '}
+            <a href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

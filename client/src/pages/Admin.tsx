@@ -324,75 +324,83 @@ export default function Admin() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Admin Dashboard</h1>
-          <p className="text-slate-600">Manage recipes, generate new content, and monitor system status.</p>
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-6">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2 truncate">
+            Admin Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600">
+            Manage recipes, generate new content, and monitor system status.
+          </p>
         </div>
-        <Button onClick={logout} variant="destructive">
+        <Button onClick={logout} variant="destructive" className="flex-shrink-0 text-sm sm:text-base">
           <i className="fas fa-sign-out-alt mr-2"></i>
-          Logout
+          <span className="hidden sm:inline">Logout</span>
+          <span className="sm:hidden">Exit</span>
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="recipes">
-            <i className="fas fa-book-open mr-2"></i>
-            Browse Recipes
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6 sm:mb-8">
+        <TabsList className="grid w-full grid-cols-3 h-auto p-1">
+          <TabsTrigger value="recipes" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+            <i className="fas fa-book-open text-sm sm:text-base"></i>
+            <span className="hidden sm:inline">Browse Recipes</span>
+            <span className="sm:hidden">Recipes</span>
           </TabsTrigger>
-          <TabsTrigger value="meal-plan">
-            <i className="fas fa-utensils mr-2"></i>
-            Meal Plan Generator
+          <TabsTrigger value="meal-plan" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+            <i className="fas fa-utensils text-sm sm:text-base"></i>
+            <span className="hidden sm:inline">Meal Plan Generator</span>
+            <span className="sm:hidden">Plans</span>
           </TabsTrigger>
-          <TabsTrigger value="admin">
-            <i className="fas fa-cog mr-2"></i>
-            Admin
+          <TabsTrigger value="admin" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+            <i className="fas fa-cog text-sm sm:text-base"></i>
+            <span className="hidden sm:inline">Admin</span>
+            <span className="sm:hidden">Admin</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="recipes">
           {/* Stats Cards */}
           {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mt-6 sm:mt-8">
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-600">Total Recipes</p>
-                      <p className="text-2xl font-bold text-slate-900">{stats.total.toLocaleString()}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">Total Recipes</p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900">{stats.total.toLocaleString()}</p>
                     </div>
-                    <div className="p-3 bg-primary/10 rounded-full">
-                      <i className="fas fa-book text-primary text-xl"></i>
+                    <div className="p-2 sm:p-3 bg-primary/10 rounded-full flex-shrink-0 ml-2">
+                      <i className="fas fa-book text-primary text-sm sm:text-lg lg:text-xl"></i>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-600">Approved</p>
-                      <p className="text-2xl font-bold text-green-600">{stats.approved.toLocaleString()}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">Approved</p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">{stats.approved.toLocaleString()}</p>
                     </div>
-                    <div className="p-3 bg-green-100 rounded-full">
-                      <i className="fas fa-check-circle text-green-600 text-xl"></i>
+                    <div className="p-2 sm:p-3 bg-green-100 rounded-full flex-shrink-0 ml-2">
+                      <i className="fas fa-check-circle text-green-600 text-sm sm:text-lg lg:text-xl"></i>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-600">Pending Review</p>
-                      <p className="text-2xl font-bold text-secondary">{stats.pending.toLocaleString()}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">Pending Review</p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-secondary">{stats.pending.toLocaleString()}</p>
                     </div>
-                    <div className="p-3 bg-amber-100 rounded-full">
-                      <i className="fas fa-clock text-secondary text-xl"></i>
+                    <div className="p-2 sm:p-3 bg-amber-100 rounded-full flex-shrink-0 ml-2">
+                      <i className="fas fa-clock text-secondary text-sm sm:text-lg lg:text-xl"></i>
                     </div>
                   </div>
                 </CardContent>

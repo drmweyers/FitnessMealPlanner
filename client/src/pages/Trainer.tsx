@@ -61,50 +61,65 @@ export default function Trainer() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome, {user?.email}</h1>
-        <p className="text-slate-600">Browse recipes and create meal plans for your clients.</p>
+    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      {/* Header Section */}
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
+          Welcome, {user?.email?.split('@')[0] || 'Trainer'}
+        </h1>
+        <p className="text-sm sm:text-base text-slate-600">
+          Browse recipes and create meal plans for your clients.
+        </p>
       </div>
 
       <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="recipes">
-            <i className="fas fa-book-open mr-2"></i>
-            Browse Recipes
+        <TabsList className="grid w-full grid-cols-2 mb-6 sm:mb-8 h-auto p-1">
+          <TabsTrigger 
+            value="recipes" 
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+          >
+            <i className="fas fa-book-open text-sm sm:text-base"></i>
+            <span className="hidden sm:inline">Browse Recipes</span>
+            <span className="sm:hidden">Recipes</span>
           </TabsTrigger>
-          <TabsTrigger value="meal-plan">
-            <i className="fas fa-utensils mr-2"></i>
-            Meal Plan Generator
+          <TabsTrigger 
+            value="meal-plan"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+          >
+            <i className="fas fa-utensils text-sm sm:text-base"></i>
+            <span className="hidden sm:inline">Meal Plan Generator</span>
+            <span className="sm:hidden">Plans</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="recipes" className="space-y-6">
+        <TabsContent value="recipes" className="space-y-4 sm:space-y-6">
           {/* Search and Filters */}
           <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
 
           {/* View Toggle */}
-          <div className="flex justify-end mb-6">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-slate-600">View:</span>
+          <div className="flex flex-col sm:flex-row sm:justify-end mb-4 sm:mb-6 gap-3 sm:gap-0">
+            <div className="flex items-center justify-between sm:justify-end sm:space-x-2">
+              <span className="text-sm text-slate-600 font-medium">View:</span>
               <div className="flex border border-slate-300 rounded-lg overflow-hidden">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className="rounded-none px-3 py-1"
+                  className="rounded-none px-3 py-2 text-xs sm:text-sm"
                 >
-                  <i className="fas fa-th mr-2"></i>
-                  Grid
+                  <i className="fas fa-th mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+                  <span className="hidden sm:inline">Grid</span>
+                  <span className="sm:hidden">⬜</span>
                 </Button>
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="rounded-none px-3 py-1"
+                  className="rounded-none px-3 py-2 text-xs sm:text-sm"
                 >
-                  <i className="fas fa-list mr-2"></i>
-                  List
+                  <i className="fas fa-list mr-1 sm:mr-2 text-xs sm:text-sm"></i>
+                  <span className="hidden sm:inline">List</span>
+                  <span className="sm:hidden">☰</span>
                 </Button>
               </div>
             </div>
@@ -113,11 +128,11 @@ export default function Trainer() {
           {/* Recipe Display */}
           {isLoading ? (
             viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
-                    <div className="h-48 bg-slate-200 rounded-t-xl"></div>
-                    <CardContent className="p-4">
+                    <div className="h-36 sm:h-40 lg:h-48 bg-slate-200 rounded-t-xl"></div>
+                    <CardContent className="p-3 sm:p-4">
                       <div className="h-4 bg-slate-200 rounded mb-2"></div>
                       <div className="h-3 bg-slate-200 rounded w-2/3"></div>
                     </CardContent>
@@ -125,13 +140,13 @@ export default function Trainer() {
                 ))}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
-                    <CardContent className="p-4">
-                      <div className="flex items-start space-x-4">
-                        <div className="w-24 h-24 bg-slate-200 rounded-lg"></div>
-                        <div className="flex-1">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex items-start space-x-3 sm:space-x-4">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-200 rounded-lg flex-shrink-0"></div>
+                        <div className="flex-1 min-w-0">
                           <div className="h-4 bg-slate-200 rounded mb-2"></div>
                           <div className="h-3 bg-slate-200 rounded w-2/3 mb-2"></div>
                           <div className="h-3 bg-slate-200 rounded w-1/3"></div>
@@ -145,7 +160,7 @@ export default function Trainer() {
           ) : (
             <>
               {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {recipes.map((recipe) => (
                     user?.role === 'trainer' || user?.role === 'admin' ? (
                       <RecipeCardWithAssignment
@@ -164,7 +179,7 @@ export default function Trainer() {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {recipes.map((recipe) => (
                     user?.role === 'trainer' || user?.role === 'admin' ? (
                       <RecipeListItemWithAssignment
@@ -186,14 +201,15 @@ export default function Trainer() {
 
               {/* Pagination */}
               {total > filters.limit && (
-                <div className="mt-8 flex justify-center">
-                  <div className="flex space-x-2">
+                <div className="mt-6 sm:mt-8 flex justify-center">
+                  <div className="flex flex-wrap gap-1 sm:gap-2 max-w-full">
                     {Array.from({ length: Math.ceil(total / filters.limit) }).map((_, i) => (
                       <Button
                         key={i}
                         variant={filters.page === i + 1 ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => handlePageChange(i + 1)}
+                        className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 min-w-[32px] sm:min-w-[40px]"
                       >
                         {i + 1}
                       </Button>
