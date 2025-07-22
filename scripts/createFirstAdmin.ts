@@ -1,4 +1,8 @@
+import { config } from "dotenv";
 import { existsSync } from "fs";
+
+// Load environment variables from .env file
+config();
 
 // Check if the certificate file already exists (created by Docker startup)
 const certPath = "/app/digitalocean-ca-cert.pem";

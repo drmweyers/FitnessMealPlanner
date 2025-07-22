@@ -143,11 +143,11 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
             </div>
 
             {/* Source Reference */}
-            {recipe.sourceReference && (
+            {/* {recipe.sourceReference && (
               <div className="text-sm text-slate-500">
                 <p>Source: {recipe.sourceReference}</p>
               </div>
-            )}
+            )} */}
 
             {/* Metadata */}
             <div className="text-sm text-slate-500 space-y-1">

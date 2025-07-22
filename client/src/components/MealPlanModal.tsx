@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MealPlan } from "@shared/schema";
 import { Calendar, Users, Utensils, Clock, Zap, Target, Activity } from "lucide-react";
+import { useState } from "react";
+import RecipeDetailModal from "./RecipeDetailModal";
 
 interface MealPlanModalProps {
   mealPlan: MealPlan;
@@ -10,6 +12,8 @@ interface MealPlanModalProps {
 }
 
 export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps) {
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
+
   // Calculate nutrition totals
   const totalCalories = mealPlan.meals.reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0);
   const totalProtein = mealPlan.meals.reduce((sum, meal) => sum + Number(meal.recipe.proteinGrams || 0), 0);
@@ -50,6 +54,10 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
       default:
         return "🍽️";
     }
+  };
+
+  const handleRecipeClick = (recipeId: string) => {
+    setSelectedRecipeId(recipeId);
   };
 
   return (
@@ -157,7 +165,8 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                             return (
                               <tr
                                 key={mealIndex}
-                                className="border-b hover:bg-gray-50 transition-colors"
+                                className="border-b hover:bg-gray-50 transition-colors cursor-pointer"
+                                onClick={() => handleRecipeClick(recipe.id)}
                               >
                                 <td className="py-4 px-4">
                                   <div className="flex items-center space-x-3">
@@ -230,6 +239,13 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
             </p>
           </div>
         </div>
+
+        {/* Recipe Detail Modal */}
+        <RecipeDetailModal
+          recipeId={selectedRecipeId}
+          isOpen={!!selectedRecipeId}
+          onClose={() => setSelectedRecipeId(null)}
+        />
       </DialogContent>
     </Dialog>
   );

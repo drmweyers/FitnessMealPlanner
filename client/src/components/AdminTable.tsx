@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import type { Recipe } from "@shared/schema";
+import RecipeDetailModal from "./RecipeDetailModal";
 
 interface AdminTableProps {
   recipes: Recipe[];
@@ -39,6 +40,7 @@ export default function AdminTable({
 }: AdminTableProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
 
   useEffect(() => {
     const allRecipeIds = recipes.map(recipe => recipe.id);
@@ -66,6 +68,10 @@ export default function AdminTable({
       onBulkDelete(selectedIds);
       setSelectedIds([]);
     }
+  };
+
+  const handleRecipeClick = (recipeId: string) => {
+    setSelectedRecipeId(recipeId);
   };
 
   if (isLoading) {
@@ -189,11 +195,15 @@ export default function AdminTable({
       {/* Mobile Card View */}
       <div className="lg:hidden space-y-3">
         {recipes.map((recipe) => (
-          <Card key={recipe.id} className="shadow-sm border-0 ring-1 ring-slate-200">
+          <Card 
+            key={recipe.id} 
+            className="shadow-sm border-0 ring-1 ring-slate-200 cursor-pointer hover:bg-slate-50 transition-colors"
+            onClick={() => handleRecipeClick(recipe.id)}
+          >
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-start space-x-3">
                 {/* Checkbox */}
-                <div className="pt-1">
+                <div className="pt-1" onClick={e => e.stopPropagation()}>
                   <Checkbox
                     checked={selectedIds.includes(recipe.id)}
                     onCheckedChange={(checked) => handleSelectRecipe(recipe.id, checked as boolean)}
@@ -242,11 +252,14 @@ export default function AdminTable({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2" onClick={e => e.stopPropagation()}>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => recipe.isApproved ? onUnapprove(recipe.id) : onApprove(recipe.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        recipe.isApproved ? onUnapprove(recipe.id) : onApprove(recipe.id);
+                      }}
                       disabled={approvePending || unapprovePending || selectedIds.includes(recipe.id)}
                       className={`text-xs ${
                         recipe.isApproved 
@@ -260,7 +273,10 @@ export default function AdminTable({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onDelete(recipe.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(recipe.id);
+                      }}
                       disabled={deletePending || selectedIds.includes(recipe.id)}
                       className="text-red-600 border-red-200 hover:bg-red-50 text-xs"
                     >
@@ -312,8 +328,12 @@ export default function AdminTable({
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
             {recipes.map((recipe) => (
-              <tr key={recipe.id} className="hover:bg-slate-50">
-                <td className="px-6 py-4 whitespace-nowrap">
+              <tr 
+                key={recipe.id} 
+                className="hover:bg-slate-50 cursor-pointer transition-colors"
+                onClick={() => handleRecipeClick(recipe.id)}
+              >
+                <td className="px-6 py-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                   <Checkbox
                     checked={selectedIds.includes(recipe.id)}
                     onCheckedChange={(checked) => handleSelectRecipe(recipe.id, checked as boolean)}
@@ -362,12 +382,15 @@ export default function AdminTable({
                     : 'N/A'
                   }
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" onClick={e => e.stopPropagation()}>
                   <div className="flex space-x-2 min-w-[180px]">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => recipe.isApproved ? onUnapprove(recipe.id) : onApprove(recipe.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        recipe.isApproved ? onUnapprove(recipe.id) : onApprove(recipe.id);
+                      }}
                       disabled={approvePending || unapprovePending || selectedIds.includes(recipe.id)}
                       className={`${
                         recipe.isApproved 
@@ -381,7 +404,10 @@ export default function AdminTable({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onDelete(recipe.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(recipe.id);
+                      }}
                       disabled={deletePending || selectedIds.includes(recipe.id)}
                       className="text-red-600 border-red-200 hover:bg-red-50"
                     >
@@ -395,6 +421,13 @@ export default function AdminTable({
           </tbody>
         </table>
       </div>
+
+      {/* Recipe Detail Modal */}
+      <RecipeDetailModal
+        recipeId={selectedRecipeId}
+        isOpen={!!selectedRecipeId}
+        onClose={() => setSelectedRecipeId(null)}
+      />
     </div>
   );
 }

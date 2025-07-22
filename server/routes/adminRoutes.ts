@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAdmin, requireTrainerOrAdmin } from '../middleware/auth';
+import { requireAdmin, requireTrainerOrAdmin, requireAuth } from '../middleware/auth';
 import { storage } from '../storage';
 import { z } from 'zod';
 import { recipeGenerator } from '../services/recipeGenerator';
@@ -373,14 +373,19 @@ adminRouter.delete('/recipes', requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/recipes/:id - Fetch a single recipe by ID (admin access)
-adminRouter.get('/recipes/:id', requireAdmin, async (req, res) => {
+// GET /api/admin/recipes/:id - Fetch a single recipe by ID (authenticated access)
+adminRouter.get('/recipes/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const recipe = await storage.getRecipe(id);
     
     if (!recipe) {
       return res.status(404).json({ error: 'Recipe not found' });
+    }
+    
+    // Admins can see all recipes, regular users can only see approved recipes
+    if (req.user!.role !== 'admin' && !recipe.isApproved) {
+      return res.status(404).json({ error: 'Recipe not found or not approved' });
     }
     
     res.json(recipe);
