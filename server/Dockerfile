@@ -28,9 +28,9 @@ COPY --link tailwind.config.ts ./
 # Copy migration files
 COPY --link drizzle.config.ts ./drizzle.config.ts
 
-# Build the client using vite
+# Build the client using vite (FIXED: changed build:client to build)
 RUN --mount=type=cache,target=/root/.npm \
-    npm run build:client
+    npm run build
 
 # Verify client build succeeded
 RUN echo "✅ Verifying client build..." && \
