@@ -60,7 +60,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "npm run db:push && npm run build:client && npm run dev"
+    command: sh -c "npm run db:push && npm run build && npm run dev"
     profiles:
       - dev
 
