@@ -1,10 +1,10 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { apiRequest } from "@/lib/queryClient";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { Recipe } from "@shared/schema";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { apiRequest } from "../lib/queryClient";
+import { Badge } from "./ui/badge";
+import { Skeleton } from "./ui/skeleton";
+import type { Recipe } from "../../shared/schema.ts";
 
 interface RecipeDetailModalProps {
   recipeId: string | null;

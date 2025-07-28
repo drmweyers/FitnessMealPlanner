@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { apiRequest } from '@/lib/queryClient';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Badge } from '../components/ui/badge';
+import { useToast } from '../hooks/use-toast';
+import { useAuth } from '../contexts/AuthContext';
+import { apiRequest } from '../lib/queryClient';
+import PDFExportButton from '../components/PDFExportButton';
 import { 
   User, 
   Shield, 
@@ -20,7 +21,9 @@ import {
   Calendar,
   Edit2,
   Save,
-  X
+  X,
+  FileText,
+  Download
 } from 'lucide-react';
 
 interface AdminStats {
@@ -68,6 +71,53 @@ export default function AdminProfile() {
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/auth/profile');
       return res.json();
+    },
+    enabled: !!user
+  });
+
+  // Fetch all meal plans for PDF export (admin has access to all)
+  const { data: allMealPlans } = useQuery({
+    queryKey: ['adminAllMealPlans'],
+    queryFn: async () => {
+      try {
+        // Get all users first
+        const usersRes = await apiRequest('GET', '/api/admin/users');
+        const usersData = await usersRes.json();
+        const trainers = usersData.filter((u: any) => u.role === 'trainer');
+        
+        // Get meal plans for each trainer
+        const mealPlansPromises = trainers.map(async (trainer: any) => {
+          try {
+            const res = await apiRequest('GET', `/api/trainer/customers`);
+            const customersData = await res.json();
+            
+            if (customersData.customers) {
+              const customerMealPlans = await Promise.all(
+                customersData.customers.map(async (customer: any) => {
+                  const mealPlansRes = await apiRequest('GET', `/api/trainer/customers/${customer.id}/meal-plans`);
+                  const mealPlansData = await mealPlansRes.json();
+                  return {
+                    customer,
+                    trainer,
+                    mealPlans: mealPlansData.mealPlans || []
+                  };
+                })
+              );
+              return customerMealPlans.filter(c => c.mealPlans.length > 0);
+            }
+            return [];
+          } catch (error) {
+            console.error('Error fetching trainer meal plans:', error);
+            return [];
+          }
+        });
+        
+        const results = await Promise.all(mealPlansPromises);
+        return results.flat();
+      } catch (error) {
+        console.error('Error fetching all meal plans:', error);
+        return [];
+      }
     },
     enabled: !!user
   });
@@ -344,6 +394,93 @@ export default function AdminProfile() {
                   </div>
                   <div className="text-xs sm:text-sm text-slate-600">Meal Plans</div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* PDF Export Section */}
+          <Card>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span>System-wide Recipe Export</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-4">
+                <p className="text-sm text-slate-600">
+                  Export all recipe cards from the system to PDF format for administrative purposes and backups.
+                </p>
+                
+                {allMealPlans && allMealPlans.length > 0 ? (
+                  <div className="space-y-3">
+                    {/* Export All System Button */}
+                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
+                      <div>
+                        <div className="font-medium text-slate-900">Export All System Meal Plans</div>
+                        <div className="text-sm text-slate-600">
+                          {allMealPlans.reduce((total, entry) => total + entry.mealPlans.length, 0)} total meal plans across all customers
+                        </div>
+                      </div>
+                      <PDFExportButton
+                        mealPlans={allMealPlans.flatMap(entry => entry.mealPlans)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Export All
+                      </PDFExportButton>
+                    </div>
+
+                    {/* Statistics */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center p-3 bg-slate-50 rounded-lg">
+                        <div className="text-lg font-bold text-slate-900">
+                          {allMealPlans.length}
+                        </div>
+                        <div className="text-xs text-slate-600">Active Customers</div>
+                      </div>
+                      <div className="text-center p-3 bg-slate-50 rounded-lg">
+                        <div className="text-lg font-bold text-slate-900">
+                          {allMealPlans.reduce((total, entry) => total + entry.mealPlans.length, 0)}
+                        </div>
+                        <div className="text-xs text-slate-600">Total Meal Plans</div>
+                      </div>
+                    </div>
+
+                    {/* Export by Customer */}
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-slate-700">Export by Customer:</div>
+                      <div className="max-h-48 overflow-y-auto space-y-1">
+                        {allMealPlans.map((entry) => (
+                          <div key={`${entry.customer.id}-${entry.trainer.id}`} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium truncate">{entry.customer.email}</div>
+                              <div className="text-xs text-slate-600 truncate">
+                                Trainer: {entry.trainer.email} • {entry.mealPlans.length} plan{entry.mealPlans.length !== 1 ? 's' : ''}
+                              </div>
+                            </div>
+                            <PDFExportButton
+                              mealPlans={entry.mealPlans}
+                              customerName={entry.customer.email}
+                              variant="ghost"
+                              size="sm"
+                            >
+                              <Download className="w-3 h-3" />
+                            </PDFExportButton>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-slate-500">
+                    <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                    <p className="text-sm">No meal plans available for export</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Meal plans will appear here when trainers create and assign them to customers
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

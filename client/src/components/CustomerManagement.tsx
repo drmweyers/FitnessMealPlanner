@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
   DialogTrigger 
-} from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+} from './ui/dialog';
+import { useToast } from '../hooks/use-toast';
+import { apiRequest } from '../lib/queryClient';
+import { SimplePDFExportButton } from './PDFExportButton';
 import { 
   Users, 
   Plus, 
@@ -25,9 +26,10 @@ import {
   Trash2,
   User,
   Mail,
-  Clock
+  Clock,
+  Download
 } from 'lucide-react';
-import type { MealPlan } from '@shared/schema';
+import type { MealPlan } from '../../shared/schema.ts';
 
 interface Customer {
   id: string;
@@ -274,15 +276,22 @@ function CustomerMealPlans({ customerId, customerEmail }: { customerId: string; 
                       </div>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeMealPlanMutation.mutate(assignment.id)}
-                    disabled={removeMealPlanMutation.isPending}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex space-x-2">
+                    <SimplePDFExportButton
+                      mealPlan={assignment}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      size="sm"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeMealPlanMutation.mutate(assignment.id)}
+                      disabled={removeMealPlanMutation.isPending}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

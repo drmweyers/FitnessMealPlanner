@@ -2,19 +2,19 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
-import { createCacheManager } from "@/lib/cacheUtils";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
+import { Badge } from "./ui/badge";
+import { Separator } from "./ui/separator";
+import { useToast } from "../hooks/use-toast";
+import { createCacheManager } from "../lib/cacheUtils";
 import { ChefHat, Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown, Wand2, CheckCircle, Circle } from "lucide-react";
 import { z } from "zod";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "./ui/textarea";
 
 const adminRecipeGenerationSchema = z.object({
   count: z.number().min(1).max(50).default(10),

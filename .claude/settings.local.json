@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run check:*)",
+      "Bash(curl:*)",
+      "Bash(npx tsx:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(docker:*)",
+      "Bash(powershell:*)",
+      "Bash(timeout:*)",
+      "Bash(npm test:*)",
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(for f in *.tsx)",
+      "Bash(do if grep -q \"@/\" \"$f\")",
+      "Bash(then echo \"$f\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(sed:*)",
+      "Bash(do if [ -f \"$f\" ])",
+      "Bash(then sed -i 's|@/components/ui/|./ui/|g' \"$f\")",
+      "Bash(then sed -i 's|@/components/ui/|./|g' \"$f\")",
+      "Bash(cat:*)",
+      "Bash(export:*)",
+      "Bash(for i in {1..5})",
+      "Bash(do echo \"Test $i:\")",
+      "Bash(time curl:*)",
+      "Bash(for i in {1..3})",
+      "Bash(do echo \"PDF Export Test $i:\")",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

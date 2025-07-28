@@ -1,6 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import type { MealPlan } from "@shared/schema";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+import type { MealPlan } from "../../shared/schema.ts";
 import { Calendar, Users, Utensils, Clock, Zap, Target, Activity } from "lucide-react";
 
 interface MealPlanCardProps {

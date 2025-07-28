@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
 import { useLocation } from 'wouter';
 import {

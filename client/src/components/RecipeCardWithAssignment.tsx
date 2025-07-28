@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import RecipeAssignment from "@/components/RecipeAssignment";
-import type { Recipe } from "@shared/schema";
+import { Card, CardContent } from "./ui/card";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import RecipeAssignment from "./RecipeAssignment";
+import type { Recipe } from "../../shared/schema.ts";
 
 interface RecipeCardWithAssignmentProps {
   recipe: Recipe;

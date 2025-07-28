@@ -1,7 +1,7 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { MealPlan } from "@shared/schema";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Badge } from "./ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import type { MealPlan } from "../../shared/schema.ts";
 import { Calendar, Users, Utensils, Clock, Zap, Target, Activity } from "lucide-react";
 import { useState } from "react";
 import RecipeDetailModal from "./RecipeDetailModal";

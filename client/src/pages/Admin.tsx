@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { apiRequest } from "@/lib/queryClient";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { createCacheManager } from "@/lib/cacheUtils";
-import AdminTable from "@/components/AdminTable";
-import AdminRecipeGrid from "@/components/AdminRecipeGrid";
-import SearchFilters from "@/components/SearchFilters";
-import type { Recipe, RecipeFilter } from "@shared/schema";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MealPlanGenerator from "@/components/MealPlanGenerator";
-import RecipeGenerationModal from "@/components/RecipeGenerationModal";
-import CacheDebugger from "@/components/CacheDebugger";
+import { Card, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { useToast } from "../hooks/use-toast";
+import { useAuth } from "../contexts/AuthContext";
+import { apiRequest } from "../lib/queryClient";
+import { isUnauthorizedError } from "../lib/authUtils";
+import { createCacheManager } from "../lib/cacheUtils";
+import AdminTable from "../components/AdminTable";
+import AdminRecipeGrid from "../components/AdminRecipeGrid";
+import SearchFilters from "../components/SearchFilters";
+import type { Recipe, RecipeFilter } from "../../shared/schema.ts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import MealPlanGenerator from "../components/MealPlanGenerator";
+import RecipeGenerationModal from "../components/RecipeGenerationModal";
+import CacheDebugger from "../components/CacheDebugger";
 
 export default function Admin() {
   const { toast } = useToast();

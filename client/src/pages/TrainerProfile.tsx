@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { apiRequest } from '@/lib/queryClient';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Badge } from '../components/ui/badge';
+import { Textarea } from '../components/ui/textarea';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { useToast } from '../hooks/use-toast';
+import { useAuth } from '../contexts/AuthContext';
+import { apiRequest } from '../lib/queryClient';
+import PDFExportButton from '../components/PDFExportButton';
 import { 
   User, 
   Dumbbell, 
@@ -26,7 +27,9 @@ import {
   Heart,
   Mail,
   Plus,
-  Copy
+  Copy,
+  FileText,
+  Download
 } from 'lucide-react';
 
 interface TrainerStats {
@@ -129,6 +132,36 @@ export default function TrainerProfile() {
       return data.data.invitations;
     },
     enabled: !!user,
+  });
+
+  // Fetch trainer customers for PDF export
+  const { data: customers } = useQuery({
+    queryKey: ['trainerCustomers'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/trainer/customers');
+      return res.json();
+    },
+    enabled: !!user
+  });
+
+  // Fetch all customer meal plans for PDF export
+  const { data: allCustomerMealPlans } = useQuery({
+    queryKey: ['allCustomerMealPlans'],
+    queryFn: async () => {
+      if (!customers?.customers) return [];
+      
+      const mealPlansPromises = customers.customers.map(async (customer: any) => {
+        const res = await apiRequest('GET', `/api/trainer/customers/${customer.id}/meal-plans`);
+        const data = await res.json();
+        return {
+          customer,
+          mealPlans: data.mealPlans || []
+        };
+      });
+      
+      return Promise.all(mealPlansPromises);
+    },
+    enabled: !!customers?.customers,
   });
 
   // Update profile mutation
@@ -575,6 +608,77 @@ export default function TrainerProfile() {
               </div>
             </CardContent>
           </Card>
+
+          {/* PDF Export Section */}
+          <Card>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span>Recipe Card Export</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-4">
+                <p className="text-sm text-slate-600">
+                  Export recipe cards from customer meal plans to PDF format for easy printing and sharing.
+                </p>
+                
+                {allCustomerMealPlans && allCustomerMealPlans.length > 0 ? (
+                  <div className="space-y-3">
+                    {/* Export All Button */}
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <div>
+                        <div className="font-medium text-slate-900">Export All Customer Meal Plans</div>
+                        <div className="text-sm text-slate-600">
+                          {allCustomerMealPlans.reduce((total, customer) => total + customer.mealPlans.length, 0)} total meal plans
+                        </div>
+                      </div>
+                      <PDFExportButton
+                        mealPlans={allCustomerMealPlans.flatMap(customer => customer.mealPlans)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Export All
+                      </PDFExportButton>
+                    </div>
+
+                    {/* Individual Customer Exports */}
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-slate-700">Export by Customer:</div>
+                      {allCustomerMealPlans.map((customerData) => (
+                        customerData.mealPlans.length > 0 && (
+                          <div key={customerData.customer.id} className="flex items-center justify-between p-2 border rounded-lg">
+                            <div>
+                              <div className="font-medium text-sm">{customerData.customer.email}</div>
+                              <div className="text-xs text-slate-600">
+                                {customerData.mealPlans.length} meal plan{customerData.mealPlans.length !== 1 ? 's' : ''}
+                              </div>
+                            </div>
+                            <PDFExportButton
+                              mealPlans={customerData.mealPlans}
+                              customerName={customerData.customer.email}
+                              variant="ghost"
+                              size="sm"
+                            >
+                              <Download className="w-3 h-3" />
+                            </PDFExportButton>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-slate-500">
+                    <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                    <p className="text-sm">No meal plans available for export</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Create meal plans and assign them to customers to enable PDF export
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Statistics Sidebar */}
@@ -615,12 +719,7 @@ export default function TrainerProfile() {
               <Button
                 variant="outline"
                 className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
-                onClick={() => {
-                  toast({
-                    title: "Client Management",
-                    description: "Client management feature would be implemented here.",
-                  });
-                }}
+                onClick={() => window.location.href = '/trainer/customers'}
               >
                 <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">Manage Clients</span>

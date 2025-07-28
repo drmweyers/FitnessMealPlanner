@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import MealPlanGenerator from "@/components/MealPlanGenerator";
+import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../hooks/use-toast";
+import MealPlanGenerator from "../components/MealPlanGenerator";
 
 export default function MealPlanGeneratorPage() {
   const { toast } = useToast();

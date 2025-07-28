@@ -1,0 +1,1 @@
+{"status":"error","message":"Failed to generate PDF","code":"PDF_GENERATION_FAILED","details":"Failed to launch the browser process! spawn /root/.cache/puppeteer/chrome/linux-138.0.7204.168/chrome-linux64/chrome ENOENT\n\n\nTROUBLESHOOTING: https://pptr.dev/troubleshooting\n"}

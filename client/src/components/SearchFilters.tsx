@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import type { RecipeFilter } from "@shared/schema";
+import type { RecipeFilter } from "../../shared/schema.ts";
 
 interface SearchFiltersProps {
   filters: RecipeFilter;

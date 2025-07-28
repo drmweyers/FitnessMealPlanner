@@ -25,17 +25,17 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "./ui/select";
 import {
   Form,
   FormControl,
@@ -44,19 +44,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
+} from "./ui/form";
+import { Badge } from "./ui/badge";
+import { Separator } from "./ui/separator";
+import { Textarea } from "./ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { useToast } from "../hooks/use-toast";
+import { apiRequest } from "../lib/queryClient";
+import { useAuth } from "../contexts/AuthContext";
+import jsPDF from 'jspdf';
 import {
   mealPlanGenerationSchema,
   type MealPlanGeneration,
   type MealPlan,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import {
   ChefHat,
   Calendar,
@@ -72,7 +73,7 @@ import {
   Download,
   UserPlus,
 } from "lucide-react";
-import jsPDF from "jspdf";
+import EvoFitPDFExport from "./EvoFitPDFExport";
 import html2canvas from "html2canvas";
 import RecipeModal from "./RecipeModal";
 import MealPlanAssignment from "./MealPlanAssignment";
@@ -298,6 +299,8 @@ export default function MealPlanGenerator() {
     },
   });
 
+  // PDF export is now handled by the EvoFitPDFExport component
+  // This function remains for backward compatibility
   const exportToPDF = async () => {
     if (!generatedPlan) {
       toast({
@@ -1739,16 +1742,17 @@ export default function MealPlanGenerator() {
                   <span className="hidden sm:inline">Refresh List</span>
                   <span className="sm:hidden">Refresh</span>
                 </Button>
-                <Button
-                  onClick={exportToPDF}
+                <EvoFitPDFExport
+                  mealPlan={generatedPlan?.mealPlan}
+                  customerName={generatedPlan?.mealPlan?.clientName || 'Customer'}
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                 >
                   <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Export to PDF</span>
+                  <span className="hidden sm:inline">Export EvoFit PDF</span>
                   <span className="sm:hidden">Export</span>
-                </Button>
+                </EvoFitPDFExport>
               </div>
             </CardTitle>
             <CardDescription className="space-y-2 sm:space-y-1">

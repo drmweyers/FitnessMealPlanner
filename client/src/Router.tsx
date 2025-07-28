@@ -1,20 +1,20 @@
 import React from "react";
 import { Route, Switch, Redirect } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
-import Landing from "@/pages/Landing";
-import Trainer from "@/pages/Trainer";
-import Admin from "@/pages/Admin";
-import Customer from "@/pages/Customer";
-import AdminProfile from "@/pages/AdminProfile";
-import TrainerProfile from "@/pages/TrainerProfile";
-import CustomerProfile from "@/pages/CustomerProfile";
-import LoginPage from "@/pages/LoginPage";
-import RegisterPage from "@/pages/RegisterPage";
-import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
-import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import NotFound from "@/pages/NotFound";
-import FallbackUI from "@/components/FallbackUI";
-import Layout from "@/components/Layout";
+import { useAuth } from "./contexts/AuthContext";
+import Landing from "./pages/Landing";
+import Trainer from "./pages/Trainer";
+import Admin from "./pages/Admin";
+import Customer from "./pages/Customer";
+import AdminProfile from "./pages/AdminProfile";
+import TrainerProfile from "./pages/TrainerProfile";
+import CustomerProfile from "./pages/CustomerProfile";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import NotFound from "./pages/NotFound";
+import FallbackUI from "./components/FallbackUI";
+import Layout from "./components/Layout";
 
 export default function Router() {
   const { user, isLoading } = useAuth();

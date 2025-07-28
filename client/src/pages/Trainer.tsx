@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/useAuth";
-import SearchFilters from "@/components/SearchFilters";
-import RecipeCard from "@/components/RecipeCard";
-import RecipeCardWithAssignment from "@/components/RecipeCardWithAssignment";
-import RecipeListItem from "@/components/RecipeListItem";
-import RecipeListItemWithAssignment from "@/components/RecipeListItemWithAssignment";
-import RecipeModal from "@/components/RecipeModal";
-import RecipeAssignment from "@/components/RecipeAssignment";
-import MealPlanGenerator from "@/components/MealPlanGenerator";
-import CustomerManagement from "@/components/CustomerManagement";
-import type { Recipe, RecipeFilter } from "@shared/schema";
+import { Card, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { useAuth } from "../contexts/AuthContext";
+import SearchFilters from "../components/SearchFilters";
+import RecipeCard from "../components/RecipeCard";
+import RecipeCardWithAssignment from "../components/RecipeCardWithAssignment";
+import RecipeListItem from "../components/RecipeListItem";
+import RecipeListItemWithAssignment from "../components/RecipeListItemWithAssignment";
+import RecipeModal from "../components/RecipeModal";
+import RecipeAssignment from "../components/RecipeAssignment";
+import MealPlanGenerator from "../components/MealPlanGenerator";
+import CustomerManagement from "../components/CustomerManagement";
+import type { Recipe, RecipeFilter } from "../../shared/schema.ts";
 
 export default function Trainer() {
   const { user } = useAuth();

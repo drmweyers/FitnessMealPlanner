@@ -15,9 +15,9 @@
  * - Fallback image handling for missing recipe photos
  */
 
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button";
 import { X } from "lucide-react";
-import type { Recipe } from "@shared/schema";
+import type { Recipe } from "../../shared/schema.ts";
 
 interface RecipeModalProps {
   recipe: Recipe;

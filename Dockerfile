@@ -1,7 +1,17 @@
 # FIXED Dockerfile - Ensuring drizzle.config.ts is properly copied
 FROM node:20-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache postgresql-client
+RUN apk add --no-cache postgresql-client \
+    && apk add --no-cache chromium \
+    && apk add --no-cache nss \
+    && apk add --no-cache freetype \
+    && apk add --no-cache harfbuzz \
+    && apk add --no-cache ca-certificates \
+    && apk add --no-cache ttf-freefont
+
+# Tell Puppeteer to skip downloading Chrome and use the installed version
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Development stage
 FROM base AS dev

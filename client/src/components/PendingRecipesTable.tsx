@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import RecipeModal from "@/components/RecipeModal";
-import type { Recipe, RecipeFilter } from "@shared/schema";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { useToast } from "../hooks/use-toast";
+import { apiRequest } from "../lib/queryClient";
+import { isUnauthorizedError } from "../lib/authUtils";
+import RecipeModal from "./RecipeModal";
+import type { Recipe, RecipeFilter } from "../../shared/schema.ts";
 
 export default function PendingRecipesTable() {
   const { toast } = useToast();

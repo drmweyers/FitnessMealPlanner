@@ -19,6 +19,7 @@ import passwordRouter from "./passwordRoutes";
 import recipeRouter from "./recipeRoutes";
 import invitationRouter from "./invitationRoutes";
 import adminRouter from "./routes/adminRoutes";
+import pdfRouter from "./routes/pdf";
 import { recipeGenerator } from "./services/recipeGenerator";
 import { mealPlanGenerator } from "./services/mealPlanGenerator";
 import { recipeFilterSchema, insertRecipeSchema, updateRecipeSchema, mealPlanGenerationSchema } from "@shared/schema";
@@ -38,6 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/recipes', recipeRouter);
   app.use('/api/invitations', invitationRouter);
   app.use('/api/admin', adminRouter);
+  app.use('/api/pdf', pdfRouter);
 
   /**
    * Public Recipe Routes

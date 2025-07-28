@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= mealPlan.planName %> - <%= brandInfo.name %></title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS Variables for EvoFit Brand */
+    :root {
+      --primary: <%= brandInfo.colors.primary %>;
+      --accent: <%= brandInfo.colors.accent %>;
+      --text: <%= brandInfo.colors.text %>;
+      --grey: <%= brandInfo.colors.grey %>;
+      --white: #ffffff;
+      --shadow: rgba(0, 0, 0, 0.08);
+    }
+
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--white);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      margin-bottom: 0.5em;
+    }
+
+    h1 { font-size: 24pt; font-weight: 700; }
+    h2 { font-size: 18pt; }
+    h3 { font-size: 14pt; }
+    h4 { font-size: 12pt; }
+
+    /* Page Break Utilities */
+    .page-break {
+      break-after: always;
+    }
+
+    .no-break {
+      break-inside: avoid;
+    }
+
+    /* Layout Containers */
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary) 0%, rgba(235, 87, 87, 0.3) 100%);
+      color: var(--white);
+      position: relative;
+    }
+
+    .brand-logo {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 32pt;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .brand-tagline {
+      font-size: 14pt;
+      margin-bottom: 40px;
+      opacity: 0.9;
+    }
+
+    .plan-title {
+      font-size: 28pt;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .plan-subtitle {
+      font-size: 16pt;
+      margin-bottom: 30px;
+      opacity: 0.8;
+    }
+
+    .plan-meta {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+    }
+
+    .plan-meta p {
+      margin: 5px 0;
+      font-size: 12pt;
+    }
+
+    /* Table of Contents */
+    .toc-page {
+      padding: 40px 0;
+    }
+
+    .toc-title {
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 10px;
+      margin-bottom: 30px;
+    }
+
+    .toc-list {
+      list-style: none;
+    }
+
+    .toc-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dotted #ccc;
+    }
+
+    .toc-item:last-child {
+      border-bottom: none;
+    }
+
+    .toc-title-text {
+      flex-grow: 1;
+    }
+
+    .toc-page-number {
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    /* Overview Page */
+    .overview-page {
+      padding: 40px 0;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .overview-content h3 {
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+
+    .overview-stats {
+      background: var(--grey);
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .stat-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .stat-label {
+      font-weight: 500;
+    }
+
+    .stat-value {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Weekly Schedule */
+    .schedule-page {
+      padding: 40px 0;
+    }
+
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .day-column {
+      break-inside: avoid;
+    }
+
+    .day-header {
+      background: var(--primary);
+      color: var(--white);
+      padding: 10px;
+      text-align: center;
+      font-weight: 600;
+      border-radius: 5px 5px 0 0;
+    }
+
+    .day-meals {
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 5px 5px;
+    }
+
+    .meal-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      font-size: 9pt;
+    }
+
+    .meal-item:last-child {
+      border-bottom: none;
+    }
+
+    .meal-type {
+      font-weight: 500;
+      color: var(--accent);
+      font-size: 8pt;
+      text-transform: uppercase;
+    }
+
+    .meal-name {
+      margin-top: 2px;
+    }
+
+    /* Daily Meal Pages */
+    .daily-page {
+      padding: 40px 0;
+    }
+
+    .daily-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .daily-title {
+      color: var(--primary);
+    }
+
+    .daily-totals {
+      text-align: right;
+      font-size: 10pt;
+    }
+
+    .meal-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .meal-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px var(--shadow);
+      break-inside: avoid;
+    }
+
+    .meal-card-header {
+      background: var(--grey);
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .meal-card-type {
+      font-size: 9pt;
+      color: var(--accent);
+      font-weight: 500;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .meal-card-title {
+      font-size: 12pt;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .meal-card-body {
+      padding: 12px;
+    }
+
+    .meal-description {
+      font-size: 9pt;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .nutrition-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .nutrition-badge {
+      background: var(--primary);
+      color: var(--white);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 8pt;
+      font-weight: 500;
+    }
+
+    .prep-time {
+      font-size: 9pt;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    /* Recipe Detail Pages */
+    .recipe-page {
+      padding: 40px 0;
+    }
+
+    .recipe-header {
+      margin-bottom: 30px;
+    }
+
+    .recipe-title {
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .recipe-meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .recipe-meta-item {
+      text-align: center;
+      padding: 10px;
+      background: var(--grey);
+      border-radius: 5px;
+    }
+
+    .meta-value {
+      font-size: 14pt;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .meta-label {
+      font-size: 9pt;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .recipe-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .ingredients-section h4,
+    .instructions-section h4 {
+      color: var(--accent);
+      margin-bottom: 15px;
+    }
+
+    .ingredients-list {
+      list-style: none;
+    }
+
+    .ingredient-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .ingredient-name {
+      flex-grow: 1;
+    }
+
+    .ingredient-amount {
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    .instructions-list {
+      list-style: none;
+      counter-reset: step-counter;
+    }
+
+    .instruction-step {
+      counter-increment: step-counter;
+      margin-bottom: 15px;
+      padding-left: 30px;
+      position: relative;
+    }
+
+    .instruction-step::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: var(--accent);
+      color: var(--white);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9pt;
+      font-weight: 600;
+    }
+
+    /* Shopping List */
+    .shopping-page {
+      padding: 40px 0;
+    }
+
+    .shopping-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .shopping-category {
+      break-inside: avoid;
+    }
+
+    .category-title {
+      background: var(--accent);
+      color: var(--white);
+      padding: 8px 12px;
+      font-weight: 600;
+      border-radius: 5px 5px 0 0;
+      margin-bottom: 0;
+    }
+
+    .shopping-items {
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 5px 5px;
+    }
+
+    .shopping-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .shopping-item:last-child {
+      border-bottom: none;
+    }
+
+    .shopping-item:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .shopping-checkbox {
+      width: 12px;
+      height: 12px;
+      border: 1px solid #ccc;
+      margin-right: 8px;
+    }
+
+    .item-name {
+      flex-grow: 1;
+    }
+
+    .item-amount {
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    /* Nutrition Summary */
+    .nutrition-page {
+      padding: 40px 0;
+    }
+
+    .macro-chart {
+      width: 200px;
+      height: 200px;
+      margin: 20px auto;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--primary) 0deg,
+        var(--primary) calc(<%= nutritionTotals ? generateMacroChartData(nutritionTotals).protein : 33 %>% * 3.6deg),
+        var(--accent) calc(<%= nutritionTotals ? generateMacroChartData(nutritionTotals).protein : 33 %>% * 3.6deg),
+        var(--accent) calc((<%= nutritionTotals ? generateMacroChartData(nutritionTotals).protein + generateMacroChartData(nutritionTotals).carbs : 66 %>%) * 3.6deg),
+        #ffd700 calc((<%= nutritionTotals ? generateMacroChartData(nutritionTotals).protein + generateMacroChartData(nutritionTotals).carbs : 66 %>%) * 3.6deg),
+        #ffd700 360deg
+      );
+      position: relative;
+    }
+
+    .macro-legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .legend-item {
+      text-align: center;
+      padding: 15px;
+      border-radius: 8px;
+      background: var(--grey);
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      margin: 0 auto 8px;
+    }
+
+    .legend-protein { background: var(--primary); }
+    .legend-carbs { background: var(--accent); }
+    .legend-fat { background: #ffd700; }
+
+    .nutrition-details {
+      margin-top: 40px;
+    }
+
+    .nutrition-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .nutrition-card {
+      text-align: center;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .nutrition-value {
+      font-size: 18pt;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .nutrition-label {
+      font-size: 10pt;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    /* Footer */
+    .page-footer {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 9pt;
+      color: #666;
+    }
+
+    /* Print-specific styles */
+    @media print {
+      body { -webkit-print-color-adjust: exact; }
+      .page-break { page-break-after: always; }
+      .no-break { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cover Page -->
+  <div class="cover-page">
+    <div class="brand-logo"><%= brandInfo.name %></div>
+    <div class="brand-tagline"><%= brandInfo.tagline %></div>
+    
+    <div class="plan-title"><%= mealPlan.planName %></div>
+    <div class="plan-subtitle">Personalized Nutrition Plan</div>
+    
+    <div class="plan-meta">
+      <p><strong>For:</strong> <%= customerName %></p>
+      <p><strong>Goal:</strong> <%= helpers.formatFitnessGoal(mealPlan.fitnessGoal) %></p>
+      <p><strong>Duration:</strong> <%= mealPlan.days %> Days</p>
+      <p><strong>Target:</strong> <%= mealPlan.dailyCalorieTarget %> calories/day</p>
+      <p><strong>Generated:</strong> <%= generatedDate %></p>
+      <p><strong>By:</strong> <%= generatedBy %></p>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Table of Contents -->
+  <div class="toc-page">
+    <div class="container">
+      <h2 class="toc-title">Table of Contents</h2>
+      <ul class="toc-list">
+        <% tableOfContents.forEach(item => { %>
+          <li class="toc-item">
+            <span class="toc-title-text"><%= item.title %></span>
+            <span class="toc-page-number"><%= item.page %></span>
+          </li>
+        <% }); %>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Overview Page -->
+  <div class="overview-page">
+    <div class="container">
+      <h2 style="color: var(--primary);">Plan Overview</h2>
+      
+      <div class="overview-grid">
+        <div class="overview-content">
+          <h3>About This Plan</h3>
+          <p><%= mealPlan.description || `This ${mealPlan.days}-day nutrition plan is specifically designed for ${helpers.formatFitnessGoal(mealPlan.fitnessGoal)} with a daily calorie target of ${mealPlan.dailyCalorieTarget} calories.` %></p>
+          
+          <h3>Key Features</h3>
+          <ul>
+            <li><%= mealPlan.meals.length %> delicious recipes</li>
+            <li><%= mealPlan.mealsPerDay %> meals per day structure</li>
+            <li>Complete nutritional breakdown</li>
+            <li>Detailed cooking instructions</li>
+            <li>Consolidated shopping list</li>
+          </ul>
+        </div>
+        
+        <div class="overview-stats">
+          <h3>Plan Statistics</h3>
+          <div class="stat-item">
+            <span class="stat-label">Total Days</span>
+            <span class="stat-value"><%= mealPlan.days %></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Recipes</span>
+            <span class="stat-value"><%= mealPlan.meals.length %></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Avg Calories/Day</span>
+            <span class="stat-value"><%= helpers.formatNumber(nutritionTotals.avgCaloriesPerDay) %></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Avg Protein/Day</span>
+            <span class="stat-value"><%= helpers.formatNumber(nutritionTotals.avgProteinPerDay) %>g</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Avg Carbs/Day</span>
+            <span class="stat-value"><%= helpers.formatNumber(nutritionTotals.avgCarbsPerDay) %>g</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Avg Fat/Day</span>
+            <span class="stat-value"><%= helpers.formatNumber(nutritionTotals.avgFatPerDay) %>g</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Weekly Schedule -->
+  <div class="schedule-page">
+    <div class="container">
+      <h2 style="color: var(--primary);">Weekly Meal Schedule</h2>
+      
+      <% if (mealPlan.days <= 7) { %>
+        <div class="week-grid">
+          <% for (let day = 1; day <= mealPlan.days; day++) { %>
+            <div class="day-column no-break">
+              <div class="day-header">Day <%= day %></div>
+              <div class="day-meals">
+                <% if (mealsByDay[day]) { %>
+                  <% mealsByDay[day].forEach(meal => { %>
+                    <div class="meal-item">
+                      <div class="meal-type"><%= helpers.formatMealType(meal.mealType) %></div>
+                      <div class="meal-name"><%= meal.recipe.name %></div>
+                    </div>
+                  <% }); %>
+                <% } else { %>
+                  <div class="meal-item">No meals planned</div>
+                <% } %>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      <% } else { %>
+        <!-- For plans longer than 7 days, show a different layout -->
+        <p>This <%= mealPlan.days %>-day plan contains detailed daily schedules in the following pages.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Daily Meal Pages -->
+  <% Object.keys(mealsByDay).forEach(day => { %>
+    <div class="page-break"></div>
+    <div class="daily-page">
+      <div class="container">
+        <div class="daily-header">
+          <h2 class="daily-title">Day <%= day %> Meals</h2>
+          <div class="daily-totals">
+            <% 
+              const dayCalories = mealsByDay[day].reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0);
+              const dayProtein = mealsByDay[day].reduce((sum, meal) => sum + parseFloat(meal.recipe.proteinGrams), 0);
+            %>
+            <div><strong><%= dayCalories %></strong> calories</div>
+            <div><strong><%= helpers.formatNumber(dayProtein) %>g</strong> protein</div>
+          </div>
+        </div>
+        
+        <div class="meal-cards">
+          <% mealsByDay[day].forEach(meal => { %>
+            <div class="meal-card no-break">
+              <div class="meal-card-header">
+                <div class="meal-card-type"><%= helpers.formatMealType(meal.mealType) %></div>
+                <h4 class="meal-card-title"><%= meal.recipe.name %></h4>
+              </div>
+              <div class="meal-card-body">
+                <% if (meal.recipe.description) { %>
+                  <p class="meal-description"><%= meal.recipe.description %></p>
+                <% } %>
+                
+                <div class="nutrition-badges">
+                  <span class="nutrition-badge"><%= meal.recipe.caloriesKcal %> cal</span>
+                  <span class="nutrition-badge"><%= meal.recipe.proteinGrams %>g protein</span>
+                  <span class="nutrition-badge"><%= meal.recipe.carbsGrams %>g carbs</span>
+                  <span class="nutrition-badge"><%= meal.recipe.fatGrams %>g fat</span>
+                </div>
+                
+                <div class="prep-time">
+                  ⏱️ <%= meal.recipe.prepTimeMinutes %> minutes • Serves <%= meal.recipe.servings %>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+  <% }); %>
+
+  <!-- Recipe Detail Pages -->
+  <% mealPlan.meals.forEach(meal => { %>
+    <div class="page-break"></div>
+    <div class="recipe-page">
+      <div class="container">
+        <div class="recipe-header">
+          <h2 class="recipe-title"><%= meal.recipe.name %></h2>
+          <p><em><%= meal.recipe.description %></em></p>
+          
+          <div class="recipe-meta">
+            <div class="recipe-meta-item">
+              <div class="meta-value"><%= meal.recipe.prepTimeMinutes %></div>
+              <div class="meta-label">Minutes</div>
+            </div>
+            <div class="recipe-meta-item">
+              <div class="meta-value"><%= meal.recipe.servings %></div>
+              <div class="meta-label">Servings</div>
+            </div>
+            <div class="recipe-meta-item">
+              <div class="meta-value"><%= meal.recipe.caloriesKcal %></div>
+              <div class="meta-label">Calories</div>
+            </div>
+            <div class="recipe-meta-item">
+              <div class="meta-value"><%= meal.recipe.proteinGrams %>g</div>
+              <div class="meta-label">Protein</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="recipe-content">
+          <div class="ingredients-section">
+            <h4>Ingredients</h4>
+            <ul class="ingredients-list">
+              <% meal.recipe.ingredientsJson.forEach(ingredient => { %>
+                <li class="ingredient-item">
+                  <span class="ingredient-name"><%= ingredient.name %></span>
+                  <span class="ingredient-amount"><%= ingredient.amount %> <%= ingredient.unit %></span>
+                </li>
+              <% }); %>
+            </ul>
+          </div>
+          
+          <div class="instructions-section">
+            <h4>Instructions</h4>
+            <ol class="instructions-list">
+              <% 
+                const instructions = meal.recipe.instructionsText.split(/\d+\.|\n/).filter(step => step.trim());
+                instructions.forEach(instruction => { 
+              %>
+                <li class="instruction-step"><%= instruction.trim() %></li>
+              <% }); %>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% }); %>
+
+  <!-- Shopping List -->
+  <% if (options.includeShoppingList && shoppingList) { %>
+    <div class="page-break"></div>
+    <div class="shopping-page">
+      <div class="container">
+        <h2 style="color: var(--primary);">Shopping List</h2>
+        <p>Complete ingredient list for your <%= mealPlan.days %>-day meal plan.</p>
+        
+        <div class="shopping-grid">
+          <%
+            // Group shopping list by category (simplified)
+            const produce = shoppingList.filter(item => 
+              ['tomato', 'lettuce', 'onion', 'garlic', 'pepper', 'carrot', 'spinach', 'broccoli', 'cucumber', 'avocado', 'lemon', 'lime', 'apple', 'banana', 'berry', 'fruit', 'vegetable'].some(keyword => 
+                item.name.toLowerCase().includes(keyword)
+              )
+            );
+            const proteins = shoppingList.filter(item => 
+              ['chicken', 'beef', 'pork', 'fish', 'salmon', 'tuna', 'egg', 'tofu', 'protein', 'meat'].some(keyword => 
+                item.name.toLowerCase().includes(keyword)
+              )
+            );
+            const pantry = shoppingList.filter(item => 
+              !produce.includes(item) && !proteins.includes(item)
+            );
+          %>
+          
+          <div class="shopping-category no-break">
+            <h4 class="category-title">Produce</h4>
+            <div class="shopping-items">
+              <% (produce.length > 0 ? produce : [{name: 'No produce items', formattedAmount: '', unit: ''}]).forEach(item => { %>
+                <div class="shopping-item">
+                  <input type="checkbox" class="shopping-checkbox">
+                  <span class="item-name"><%= item.name %></span>
+                  <span class="item-amount"><%= item.formattedAmount %> <%= item.unit %></span>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+          
+          <div class="shopping-category no-break">
+            <h4 class="category-title">Proteins</h4>
+            <div class="shopping-items">
+              <% (proteins.length > 0 ? proteins : [{name: 'No protein items', formattedAmount: '', unit: ''}]).forEach(item => { %>
+                <div class="shopping-item">
+                  <input type="checkbox" class="shopping-checkbox">
+                  <span class="item-name"><%= item.name %></span>
+                  <span class="item-amount"><%= item.formattedAmount %> <%= item.unit %></span>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+          
+          <div class="shopping-category no-break">
+            <h4 class="category-title">Pantry</h4>
+            <div class="shopping-items">
+              <% (pantry.length > 0 ? pantry : [{name: 'No pantry items', formattedAmount: '', unit: ''}]).forEach(item => { %>
+                <div class="shopping-item">
+                  <input type="checkbox" class="shopping-checkbox">
+                  <span class="item-name"><%= item.name %></span>
+                  <span class="item-amount"><%= item.formattedAmount %> <%= item.unit %></span>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Nutrition Summary -->
+  <% if (options.includeMacroSummary) { %>
+    <div class="page-break"></div>
+    <div class="nutrition-page">
+      <div class="container">
+        <h2 style="color: var(--primary);">Nutrition Summary</h2>
+        
+        <div class="macro-chart"></div>
+        
+        <div class="macro-legend">
+          <div class="legend-item">
+            <div class="legend-color legend-protein"></div>
+            <div><strong>Protein</strong></div>
+            <div><%= nutritionTotals ? generateMacroChartData(nutritionTotals).protein : 0 %>%</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color legend-carbs"></div>
+            <div><strong>Carbs</strong></div>
+            <div><%= nutritionTotals ? generateMacroChartData(nutritionTotals).carbs : 0 %>%</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color legend-fat"></div>
+            <div><strong>Fat</strong></div>
+            <div><%= nutritionTotals ? generateMacroChartData(nutritionTotals).fat : 0 %>%</div>
+          </div>
+        </div>
+        
+        <div class="nutrition-details">
+          <h3>Daily Averages</h3>
+          <div class="nutrition-grid">
+            <div class="nutrition-card">
+              <div class="nutrition-value"><%= helpers.formatNumber(nutritionTotals.avgCaloriesPerDay) %></div>
+              <div class="nutrition-label">Calories</div>
+            </div>
+            <div class="nutrition-card">
+              <div class="nutrition-value"><%= helpers.formatNumber(nutritionTotals.avgProteinPerDay) %></div>
+              <div class="nutrition-label">Protein (g)</div>
+            </div>
+            <div class="nutrition-card">
+              <div class="nutrition-value"><%= helpers.formatNumber(nutritionTotals.avgCarbsPerDay) %></div>
+              <div class="nutrition-label">Carbs (g)</div>
+            </div>
+            <div class="nutrition-card">
+              <div class="nutrition-value"><%= helpers.formatNumber(nutritionTotals.avgFatPerDay) %></div>
+              <div class="nutrition-label">Fat (g)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Footer (appears on all pages) -->
+  <div class="page-footer">
+    <%= brandInfo.name %> • <%= brandInfo.website %> • Generated <%= generatedDate %>
+  </div>
+
+</body>
+</html>

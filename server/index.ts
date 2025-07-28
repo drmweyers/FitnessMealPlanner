@@ -17,6 +17,7 @@ import invitationRouter from './invitationRoutes';
 import adminRouter from './routes/adminRoutes';
 import trainerRouter from './routes/trainerRoutes';
 import customerRouter from './routes/customerRoutes';
+import pdfRouter from './routes/pdf';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
@@ -97,6 +98,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/trainer', trainerRouter);
 app.use('/api/customer', customerRouter);
 app.use('/api/meal-plan', mealPlanRouter);
+app.use('/api/pdf', pdfRouter);
 
 // Serve static files from the React app
 if (process.env.NODE_ENV === 'production') {
@@ -109,7 +111,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5000;
 
 // In development, ViteExpress handles the frontend, but API routes should be handled by Express first
 if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
