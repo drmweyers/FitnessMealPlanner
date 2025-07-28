@@ -46,13 +46,13 @@ services:
       target: dev
     container_name: fitnessmealplanner-dev
     ports:
-      - "5001:5001"
+      - "4000:4000"
       - "24678:24678"
     env_file:
       - .env
     environment:
       - NODE_ENV=development
-      - PORT=5001
+      - PORT=4000
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/fitmeal
     depends_on:
       postgres:

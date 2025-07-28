@@ -352,4 +352,148 @@ authRouter.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Profile endpoint for detailed user data
+authRouter.get('/profile', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await storage.getUser(req.user!.id);
+    if (!user) {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Return mock extended profile data for now
+    // In a real implementation, this would come from an extended user profile table
+    const profileData = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt || new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      
+      // Mock additional profile fields based on role
+      ...(user.role === 'trainer' && {
+        specializations: ['Weight Loss', 'Muscle Building'],
+        certifications: ['NASM-CPT', 'ACSM'],
+        yearsExperience: 5,
+        bio: 'Experienced personal trainer passionate about helping clients achieve their fitness goals.'
+      }),
+      
+      ...(user.role === 'customer' && {
+        fitnessGoals: ['Weight Loss', 'General Health'],
+        dietaryRestrictions: ['Vegetarian'],
+        preferredCuisines: ['Mediterranean', 'Asian'],
+        activityLevel: 'moderately_active',
+        age: 30,
+        weight: 70,
+        height: 175,
+        bio: 'Fitness enthusiast looking to maintain a healthy lifestyle.'
+      })
+    };
+
+    res.json(profileData);
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Internal server error',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Update profile endpoint
+const updateProfileSchema = z.object({
+  email: z.string().email().optional(),
+  bio: z.string().max(500).optional(),
+  specializations: z.array(z.string()).optional(),
+  certifications: z.array(z.string()).optional(),
+  yearsExperience: z.number().min(0).max(50).optional(),
+  fitnessGoals: z.array(z.string()).optional(),
+  dietaryRestrictions: z.array(z.string()).optional(),
+  preferredCuisines: z.array(z.string()).optional(),
+  activityLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extremely_active']).optional(),
+  age: z.number().min(13).max(120).optional(),
+  weight: z.number().min(30).max(300).optional(),
+  height: z.number().min(100).max(250).optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().min(8).optional(),
+});
+
+authRouter.put('/profile', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const updateData = updateProfileSchema.parse(req.body);
+    
+    const user = await storage.getUser(req.user!.id);
+    if (!user) {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Handle password change
+    if (updateData.newPassword) {
+      if (!updateData.currentPassword) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Current password is required to change password',
+          code: 'CURRENT_PASSWORD_REQUIRED'
+        });
+      }
+
+      const isCurrentPasswordValid = await comparePasswords(updateData.currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Current password is incorrect',
+          code: 'INVALID_CURRENT_PASSWORD'
+        });
+      }
+
+      const hashedNewPassword = await hashPassword(updateData.newPassword);
+      await storage.updateUserPassword(user.id, hashedNewPassword);
+    }
+
+    // Handle email update
+    if (updateData.email && updateData.email !== user.email) {
+      const existingUser = await storage.getUserByEmail(updateData.email);
+      if (existingUser && existingUser.id !== user.id) {
+        return res.status(409).json({
+          status: 'error',
+          message: 'Email already in use',
+          code: 'EMAIL_IN_USE'
+        });
+      }
+      await storage.updateUserEmail(user.id, updateData.email);
+    }
+
+    // In a real implementation, you would save the additional profile fields
+    // to an extended user profile table. For now, we'll just return success.
+    
+    res.json({
+      status: 'success',
+      message: 'Profile updated successfully'
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        status: 'error',
+        message: fromZodError(error).toString(),
+        code: 'VALIDATION_ERROR'
+      });
+    }
+    console.error('Update profile error:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Internal server error',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
 export default authRouter;

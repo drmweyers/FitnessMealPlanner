@@ -5,6 +5,9 @@ import Landing from "@/pages/Landing";
 import Trainer from "@/pages/Trainer";
 import Admin from "@/pages/Admin";
 import Customer from "@/pages/Customer";
+import AdminProfile from "@/pages/AdminProfile";
+import TrainerProfile from "@/pages/TrainerProfile";
+import CustomerProfile from "@/pages/CustomerProfile";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
@@ -93,6 +96,41 @@ export default function Router() {
             return <Redirect to="/" />;
           }
           return <Trainer />;
+        }} />
+        
+        {/* Profile Routes */}
+        <Route path="/profile" component={() => {
+          switch (user.role) {
+            case 'admin':
+              return <AdminProfile />;
+            case 'trainer':
+              return <TrainerProfile />;
+            case 'customer':
+              return <CustomerProfile />;
+            default:
+              return <Redirect to="/" />;
+          }
+        }} />
+        
+        <Route path="/admin/profile" component={() => {
+          if (user.role !== 'admin') {
+            return <Redirect to="/" />;
+          }
+          return <AdminProfile />;
+        }} />
+        
+        <Route path="/trainer/profile" component={() => {
+          if (user.role !== 'trainer') {
+            return <Redirect to="/" />;
+          }
+          return <TrainerProfile />;
+        }} />
+        
+        <Route path="/customer/profile" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <CustomerProfile />;
         }} />
         
         <Route path="*" component={NotFound} />

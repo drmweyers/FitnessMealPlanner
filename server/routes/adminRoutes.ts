@@ -3,8 +3,8 @@ import { requireAdmin, requireTrainerOrAdmin, requireAuth } from '../middleware/
 import { storage } from '../storage';
 import { z } from 'zod';
 import { recipeGenerator } from '../services/recipeGenerator';
-import { eq } from 'drizzle-orm';
-import { personalizedRecipes, personalizedMealPlans, type MealPlan } from '@shared/schema';
+import { eq, sql } from 'drizzle-orm';
+import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
 import { db } from '../db';
 
 const adminRouter = Router();
@@ -392,6 +392,50 @@ adminRouter.get('/recipes/:id', requireAuth, async (req, res) => {
   } catch (error) {
     console.error(`Failed to fetch recipe ${req.params.id}:`, error);
     res.status(500).json({ error: 'Failed to fetch recipe' });
+  }
+});
+
+// Admin profile statistics endpoint
+adminRouter.get('/profile/stats', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    // Get basic recipe stats
+    const recipeStats = await storage.getRecipeStats();
+    
+    // Get user counts by role
+    const userStats = await db.select({
+      role: users.role,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(users)
+    .groupBy(users.role);
+
+    const userCounts = userStats.reduce((acc, stat) => {
+      acc[stat.role] = stat.count;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Get total meal plans count
+    const [mealPlansCount] = await db.select({
+      count: sql<number>`count(*)::int`,
+    }).from(personalizedMealPlans);
+
+    const stats = {
+      totalUsers: (userCounts.admin || 0) + (userCounts.trainer || 0) + (userCounts.customer || 0),
+      totalRecipes: recipeStats.total,
+      pendingRecipes: recipeStats.pending,
+      totalMealPlans: mealPlansCount?.count || 0,
+      activeTrainers: userCounts.trainer || 0,
+      activeCustomers: userCounts.customer || 0,
+    };
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Admin stats error:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to fetch admin statistics',
+      code: 'SERVER_ERROR'
+    });
   }
 });
 

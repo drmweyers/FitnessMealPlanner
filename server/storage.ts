@@ -17,6 +17,7 @@ import {
   recipes,
   personalizedRecipes,
   personalizedMealPlans,
+  customerInvitations,
   type User,
   type InsertUser,
   type Recipe,
@@ -24,6 +25,8 @@ import {
   type UpdateRecipe,
   type RecipeFilter,
   type MealPlan,
+  type CustomerInvitation,
+  type InsertCustomerInvitation,
   passwordResetTokens,
   refreshTokens,
 } from "@shared/schema";
@@ -44,6 +47,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserPassword(userId: string, password: string): Promise<void>;
+  updateUserEmail(userId: string, email: string): Promise<void>;
   getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]>;
   
   // Password Reset
@@ -55,6 +59,13 @@ export interface IStorage {
   createRefreshToken(userId: string, token: string, expiresAt: Date): Promise<void>;
   getRefreshToken(token: string): Promise<{ userId: string, expiresAt: Date } | undefined>;
   deleteRefreshToken(token: string): Promise<void>;
+  
+  // Customer Invitation Operations
+  createInvitation(invitation: InsertCustomerInvitation): Promise<CustomerInvitation>;
+  getInvitation(token: string): Promise<CustomerInvitation | undefined>;
+  getInvitationsByTrainer(trainerId: string): Promise<CustomerInvitation[]>;
+  markInvitationAsUsed(token: string): Promise<void>;
+  deleteExpiredInvitations(): Promise<number>;
   
   // Recipe CRUD operations
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
@@ -105,6 +116,10 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPassword(userId: string, password: string): Promise<void> {
     await db.update(users).set({ password }).where(eq(users.id, userId));
+  }
+
+  async updateUserEmail(userId: string, email: string): Promise<void> {
+    await db.update(users).set({ email }).where(eq(users.id, userId));
   }
 
   async getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]> {
@@ -415,6 +430,44 @@ export class DatabaseStorage implements IStorage {
     };
   }
   
+  // Customer Invitation Operations
+  async createInvitation(invitationData: InsertCustomerInvitation): Promise<CustomerInvitation> {
+    const [invitation] = await db.insert(customerInvitations).values(invitationData).returning();
+    return invitation;
+  }
+
+  async getInvitation(token: string): Promise<CustomerInvitation | undefined> {
+    const [invitation] = await db.select().from(customerInvitations).where(eq(customerInvitations.token, token));
+    return invitation;
+  }
+
+  async getInvitationsByTrainer(trainerId: string): Promise<CustomerInvitation[]> {
+    return await db
+      .select()
+      .from(customerInvitations)
+      .where(eq(customerInvitations.trainerId, trainerId))
+      .orderBy(desc(customerInvitations.createdAt));
+  }
+
+  async markInvitationAsUsed(token: string): Promise<void> {
+    await db
+      .update(customerInvitations)
+      .set({ usedAt: new Date() })
+      .where(eq(customerInvitations.token, token));
+  }
+
+  async deleteExpiredInvitations(): Promise<number> {
+    try {
+      const result = await db
+        .delete(customerInvitations)
+        .where(lte(customerInvitations.expiresAt, new Date()));
+      return Number(result.rowCount) || 0;
+    } catch (error) {
+      console.error('Error deleting expired invitations:', error);
+      return 0;
+    }
+  }
+
   // Transaction support
   async transaction<T>(action: (trx: any) => Promise<T>): Promise<T> {
     return db.transaction(action);

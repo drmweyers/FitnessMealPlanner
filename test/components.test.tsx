@@ -26,6 +26,14 @@ vi.mock('lucide-react', () => ({
   Eye: () => <div data-testid="eye-icon" />,
   Calendar: () => <div data-testid="calendar-icon" />,
   ChefHat: () => <div data-testid="chef-hat-icon" />,
+  ChevronDown: () => <div data-testid="chevron-down-icon" />,
+  ChevronUp: () => <div data-testid="chevron-up-icon" />,
+  Check: () => <div data-testid="check-icon" />,
+  X: () => <div data-testid="x-icon" />,
+  Plus: () => <div data-testid="plus-icon" />,
+  Minus: () => <div data-testid="minus-icon" />,
+  Edit: () => <div data-testid="edit-icon" />,
+  MoreHorizontal: () => <div data-testid="more-icon" />,
 }));
 
 const mockRecipe: Recipe = {

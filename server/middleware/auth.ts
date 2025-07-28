@@ -182,4 +182,18 @@ export const requireTrainerOrAdmin = async (req: Request, res: Response, next: N
     }
     next();
   });
+};
+
+export const requireRole = (role: 'admin' | 'trainer' | 'customer') => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    await requireAuth(req, res, () => {
+      if (req.user?.role !== role) {
+        return res.status(403).json({ 
+          error: `${role.charAt(0).toUpperCase() + role.slice(1)} access required`,
+          code: 'ROLE_REQUIRED'
+        });
+      }
+      next();
+    });
+  };
 }; 

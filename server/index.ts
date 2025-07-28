@@ -6,6 +6,7 @@
  * both development (Vite) and production (static) environments.
  */
 
+import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -13,6 +14,8 @@ import { recipeRouter } from './routes/recipes';
 import { mealPlanRouter } from './routes/mealPlan';
 import authRouter from './authRoutes';
 import adminRouter from './routes/adminRoutes';
+import trainerRouter from './routes/trainerRoutes';
+import customerRouter from './routes/customerRoutes';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
@@ -85,10 +88,12 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// API Routes
+// API Routes - These must be defined BEFORE ViteExpress
 app.use('/api/auth', authRouter);
 app.use('/api/recipes', recipeRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/trainer', trainerRouter);
+app.use('/api/customer', customerRouter);
 app.use('/api/meal-plan', mealPlanRouter);
 
 // Serve static files from the React app
@@ -103,8 +108,27 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const port = process.env.PORT || 5001;
-ViteExpress.listen(app, Number(port), () =>
-  console.log(`Server is listening on port ${port}...`),
-);
+
+// In development, ViteExpress handles the frontend, but API routes should be handled by Express first
+if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+  // Configure ViteExpress with the correct client directory
+  ViteExpress.config({
+    mode: 'development',
+    viteOptions: {
+      root: path.join(__dirname, '../client'),
+      server: {
+        middlewareMode: true
+      }
+    }
+  });
+  
+  ViteExpress.listen(app, Number(port), () =>
+    console.log(`Server is listening on port ${port}...`),
+  );
+} else {
+  app.listen(Number(port), () =>
+    console.log(`Server is listening on port ${port}...`),
+  );
+}
 
 export { app };

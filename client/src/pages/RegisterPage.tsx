@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
@@ -25,10 +26,20 @@ const registerSchema = z.object({
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
+interface InvitationData {
+  customerEmail: string;
+  trainerEmail: string;
+  expiresAt: string;
+}
+
 const RegisterPage = () => {
   const { register } = useAuth();
   const { toast } = useToast();
   const [, redirect] = useLocation();
+  const [invitationData, setInvitationData] = useState<InvitationData | null>(null);
+  const [invitationToken, setInvitationToken] = useState<string | null>(null);
+  const [isVerifyingInvitation, setIsVerifyingInvitation] = useState(false);
+  
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -39,32 +50,106 @@ const RegisterPage = () => {
     },
   });
 
-  const onSubmit = async (values: RegisterFormData) => {
-    try {
-      // Only send the required fields to the register function
-      const { confirmPassword, ...registerData } = values;
-      const user = await register(registerData);
+  // Check for invitation token in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('invitation');
+    
+    if (token) {
+      setInvitationToken(token);
+      verifyInvitation(token);
+    }
+  }, []);
 
-      if (!user || !user.role) {
-        throw new Error('Invalid user data received');
+  const verifyInvitation = async (token: string) => {
+    setIsVerifyingInvitation(true);
+    try {
+      const response = await fetch(`/api/invitations/verify/${token}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Invalid invitation');
       }
       
+      const data = await response.json();
+      setInvitationData(data.data.invitation);
+      
+      // Pre-fill email and set role to customer
+      form.setValue('email', data.data.invitation.customerEmail);
+      form.setValue('role', 'customer');
+      
       toast({
-        title: 'Registration successful',
-        description: 'Welcome to FitMeal Pro!',
+        title: "Invitation Verified",
+        description: `You've been invited by ${data.data.invitation.trainerEmail}`,
       });
+      
+    } catch (error: any) {
+      toast({
+        title: "Invalid Invitation",
+        description: error.message,
+        variant: "destructive",
+      });
+      setInvitationToken(null);
+    } finally {
+      setIsVerifyingInvitation(false);
+    }
+  };
 
-      // Navigate based on role
-      switch (user.role) {
-        case 'customer':
-          redirect('/my-meal-plans');
-          break;
-        case 'trainer':
-          redirect('/');
-          break;
-        default:
-          console.warn('Unknown user role:', user.role);
-          redirect('/');
+  const onSubmit = async (values: RegisterFormData) => {
+    try {
+      if (invitationToken) {
+        // Register via invitation
+        const response = await fetch('/api/invitations/accept', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: invitationToken,
+            password: values.password,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to accept invitation');
+        }
+
+        const data = await response.json();
+        
+        toast({
+          title: 'Account Created Successfully',
+          description: 'You can now log in with your new account.',
+        });
+
+        // Redirect to login page
+        redirect('/login');
+      } else {
+        // Regular registration
+        const { confirmPassword, ...registerData } = values;
+        const user = await register(registerData);
+
+        if (!user || !user.role) {
+          throw new Error('Invalid user data received');
+        }
+        
+        toast({
+          title: 'Registration successful',
+          description: 'Welcome to FitMeal Pro!',
+        });
+
+        // Navigate based on role
+        switch (user.role) {
+          case 'customer':
+            redirect('/my-meal-plans');
+            break;
+          case 'trainer':
+            redirect('/');
+            break;
+          default:
+            console.warn('Unknown user role:', user.role);
+            redirect('/');
+        }
       }
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -160,6 +245,28 @@ const RegisterPage = () => {
             </CardHeader>
             
             <CardContent className="px-4 sm:px-6">
+              {/* Invitation Info */}
+              {invitationData && (
+                <Alert className="mb-6 border-green-200 bg-green-50">
+                  <i className="fas fa-envelope text-green-600"></i>
+                  <AlertDescription className="text-green-800">
+                    <strong>Trainer Invitation</strong><br />
+                    You've been invited by <strong>{invitationData.trainerEmail}</strong> to join FitMeal Pro.
+                    Complete your registration below to get started.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Loading State for Invitation Verification */}
+              {isVerifyingInvitation && (
+                <Alert className="mb-6">
+                  <i className="fas fa-spinner fa-spin text-blue-600"></i>
+                  <AlertDescription>
+                    Verifying invitation...
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
                   <FormField
@@ -176,8 +283,9 @@ const RegisterPage = () => {
                               placeholder="your@email.com" 
                               type="email"
                               autoComplete="email"
+                              disabled={!!invitationData}
                               {...field} 
-                              className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                              className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg disabled:bg-gray-50 disabled:text-gray-500"
                             />
                             <i className={`fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 ${styles.iconMuted} text-sm`}></i>
                           </div>
@@ -246,8 +354,12 @@ const RegisterPage = () => {
                           Account Type
                         </FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <SelectTrigger className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg relative">
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                            disabled={!!invitationData}
+                          >
+                            <SelectTrigger className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg relative disabled:bg-gray-50 disabled:text-gray-500">
                               <i className={`fas fa-user absolute left-3 top-1/2 -translate-y-1/2 ${styles.iconMuted} text-sm`}></i>
                               <SelectValue placeholder="Select your account type" />
                             </SelectTrigger>
@@ -258,12 +370,14 @@ const RegisterPage = () => {
                                   <span>Customer - Looking for meal plans</span>
                                 </div>
                               </SelectItem>
-                              <SelectItem value="trainer">
-                                <div className="flex items-center space-x-2">
-                                  <i className={`fas fa-dumbbell ${styles.icon} text-sm`}></i>
-                                  <span>Trainer - Creating meal plans</span>
-                                </div>
-                              </SelectItem>
+                              {!invitationData && (
+                                <SelectItem value="trainer">
+                                  <div className="flex items-center space-x-2">
+                                    <i className={`fas fa-dumbbell ${styles.icon} text-sm`}></i>
+                                    <span>Trainer - Creating meal plans</span>
+                                  </div>
+                                </SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         </FormControl>

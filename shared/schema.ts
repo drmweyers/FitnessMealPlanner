@@ -95,6 +95,34 @@ export const refreshTokens = pgTable("refresh_tokens", {
   expiresAt: timestamp("expires_at").notNull(),
 });
 
+/**
+ * Customer Invitation Tokens Table
+ *
+ * Stores invitation tokens that trainers send to customers.
+ * Customers can use these tokens to register and automatically
+ * be linked to the trainer who invited them.
+ *
+ * Fields:
+ * - id: Unique token identifier (UUID)
+ * - trainer_id: Foreign key to the trainer who sent the invitation
+ * - customer_email: Email address of the invited customer
+ * - token: Secure invitation token
+ * - expires_at: Token expiration timestamp (typically 7 days)
+ * - used_at: Timestamp when the invitation was used (null if unused)
+ * - created_at: When the invitation was created
+ */
+export const customerInvitations = pgTable("customer_invitations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  trainerId: uuid("trainer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  customerEmail: varchar("customer_email", { length: 255 }).notNull(),
+  token: text("token").unique().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Type definitions for user operations
 export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -355,3 +383,39 @@ export type MealPlan = z.infer<typeof mealPlanSchema>;
 // Type definitions for meal plan assignment operations
 export type InsertPersonalizedMealPlan = typeof personalizedMealPlans.$inferInsert;
 export type PersonalizedMealPlan = typeof personalizedMealPlans.$inferSelect;
+
+// Type definitions for customer invitation operations
+export type InsertCustomerInvitation = typeof customerInvitations.$inferInsert;
+export type CustomerInvitation = typeof customerInvitations.$inferSelect;
+
+/**
+ * Customer Invitation Schema
+ *
+ * Validation schema for creating customer invitations.
+ * Used when trainers send invitations to customers.
+ */
+export const createInvitationSchema = z.object({
+  customerEmail: z.string().email('Invalid email format'),
+  message: z.string().max(500).optional(), // Optional personal message from trainer
+});
+
+/**
+ * Accept Invitation Schema
+ *
+ * Validation schema for customers accepting invitations.
+ * Used during customer registration with invitation token.
+ */
+export const acceptInvitationSchema = z.object({
+  token: z.string().min(1, 'Invitation token is required'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+  firstName: z.string().min(1, 'First name is required').optional(),
+  lastName: z.string().min(1, 'Last name is required').optional(),
+});
+
+export type CreateInvitation = z.infer<typeof createInvitationSchema>;
+export type AcceptInvitation = z.infer<typeof acceptInvitationSchema>;
