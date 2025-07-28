@@ -2,6 +2,7 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
+import { Readable } from 'stream';
 import { s3Config } from './S3Config'; // Import the new centralized config
 
 // Create a single, reusable S3 client instance
@@ -32,13 +33,16 @@ export async function uploadImageToS3(imageUrl: string, recipeName: string): Pro
         const uniqueId = uuidv4().split('-')[0];
         const key = `recipes/${sanitizedName}_${uniqueId}.png`;
 
+        // Convert the fetch response body to a buffer first for compatibility
+        const buffer = await response.buffer();
+
         // Use the high-level Upload utility for efficient streaming
         const upload = new Upload({
             client: s3Client,
             params: {
                 Bucket: s3Config.bucketName,
                 Key: key,
-                Body: response.body, // Stream the body directly, no buffering
+                Body: buffer,
                 ContentType: 'image/png',
                 ACL: s3Config.isPublicBucket ? 'public-read' : undefined,
             },

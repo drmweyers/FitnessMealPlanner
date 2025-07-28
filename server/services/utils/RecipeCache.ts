@@ -46,10 +46,11 @@ export class RecipeCache {
     // If we have missing keys, fetch them
     if (missingKeys.length > 0) {
       const newValues = await batchGetter(missingKeys);
-      for (const [key, value] of newValues.entries()) {
+      // Use forEach to avoid iterator issues
+      newValues.forEach((value, key) => {
         this.cache.set(key, { value, timestamp: Date.now() });
         result.set(key, value);
-      }
+      });
     }
 
     return result;

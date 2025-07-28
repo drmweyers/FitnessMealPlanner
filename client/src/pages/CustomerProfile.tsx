@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,21 +109,25 @@ export default function CustomerProfile() {
       const res = await apiRequest('GET', '/api/auth/profile');
       return res.json();
     },
-    enabled: !!user,
-    onSuccess: (data) => {
+    enabled: !!user
+  });
+
+  // Update form when profile data changes
+  useEffect(() => {
+    if (profile) {
       setEditForm(prev => ({
         ...prev,
-        bio: data.bio || '',
-        fitnessGoals: data.fitnessGoals?.join(', ') || '',
-        dietaryRestrictions: data.dietaryRestrictions?.join(', ') || '',
-        preferredCuisines: data.preferredCuisines?.join(', ') || '',
-        activityLevel: data.activityLevel || '',
-        weight: data.weight?.toString() || '',
-        height: data.height?.toString() || '',
-        age: data.age?.toString() || ''
+        bio: profile.bio || '',
+        fitnessGoals: profile.fitnessGoals?.join(', ') || '',
+        dietaryRestrictions: profile.dietaryRestrictions?.join(', ') || '',
+        preferredCuisines: profile.preferredCuisines?.join(', ') || '',
+        activityLevel: profile.activityLevel || '',
+        weight: profile.weight?.toString() || '',
+        height: profile.height?.toString() || '',
+        age: profile.age?.toString() || ''
       }));
     }
-  });
+  }, [profile]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
@@ -264,32 +268,32 @@ export default function CustomerProfile() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Heart className="w-8 h-8 text-white" />
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+            <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">My Profile</h1>
-            <p className="text-slate-600">Manage your fitness journey and preferences</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 truncate">My Profile</h1>
+            <p className="text-sm sm:text-base text-slate-600">Manage your fitness journey and preferences</p>
           </div>
         </div>
-        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200 text-xs sm:text-sm">
           <Heart className="w-3 h-3 mr-1" />
           Fitness Enthusiast
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {/* Profile Information */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Personal Details Card */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                <User className="w-5 h-5" />
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Personal Details</span>
               </CardTitle>
               {!isEditing ? (
@@ -297,45 +301,45 @@ export default function CustomerProfile() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9"
                 >
-                  <Edit2 className="w-4 h-4" />
-                  <span>Edit</span>
+                  <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Edit Profile</span>
                 </Button>
               ) : (
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleCancelEdit}
-                    className="flex items-center space-x-2"
+                    className="flex items-center justify-center space-x-2 text-xs sm:text-sm h-8 sm:h-9"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span>Cancel</span>
                   </Button>
                   <Button
                     size="sm"
                     onClick={handleSaveProfile}
                     disabled={updateProfileMutation.isPending}
-                    className="flex items-center space-x-2"
+                    className="flex items-center justify-center space-x-2 text-xs sm:text-sm h-8 sm:h-9"
                   >
-                    <Save className="w-4 h-4" />
-                    <span>Save</span>
+                    <Save className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span>Save Changes</span>
                   </Button>
                 </div>
               )}
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 sm:p-6">
               {!isEditing ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-slate-600">Email Address</Label>
-                      <p className="text-slate-900 font-medium">{user?.email}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="min-w-0">
+                      <Label className="text-xs sm:text-sm font-medium text-slate-600">Email Address</Label>
+                      <p className="text-sm sm:text-base text-slate-900 font-medium truncate">{user?.email}</p>
                     </div>
-                    <div>
-                      <Label className="text-sm font-medium text-slate-600">Activity Level</Label>
-                      <p className="text-slate-900">
+                    <div className="min-w-0">
+                      <Label className="text-xs sm:text-sm font-medium text-slate-600">Activity Level</Label>
+                      <p className="text-sm sm:text-base text-slate-900 truncate">
                         {profile?.activityLevel ? 
                           activityLevels.find(level => level.value === profile.activityLevel)?.label.split('(')[0].trim() ||
                           profile.activityLevel : 'Not specified'}
@@ -343,106 +347,106 @@ export default function CustomerProfile() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     <div>
-                      <Label className="text-sm font-medium text-slate-600">Age</Label>
-                      <p className="text-slate-900">{profile?.age || 'Not specified'} years</p>
+                      <Label className="text-xs sm:text-sm font-medium text-slate-600">Age</Label>
+                      <p className="text-sm sm:text-base text-slate-900">{profile?.age || 'Not specified'} years</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-slate-600">Weight</Label>
-                      <p className="text-slate-900">{profile?.weight || 'Not specified'} kg</p>
+                      <Label className="text-xs sm:text-sm font-medium text-slate-600">Weight</Label>
+                      <p className="text-sm sm:text-base text-slate-900">{profile?.weight || 'Not specified'} kg</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-slate-600">Height</Label>
-                      <p className="text-slate-900">{profile?.height || 'Not specified'} cm</p>
+                      <Label className="text-xs sm:text-sm font-medium text-slate-600">Height</Label>
+                      <p className="text-sm sm:text-base text-slate-900">{profile?.height || 'Not specified'} cm</p>
                     </div>
                   </div>
 
                   {calculateBMI() && (
                     <div>
-                      <Label className="text-sm font-medium text-slate-600">BMI</Label>
-                      <p className="text-slate-900 font-medium">{calculateBMI()}</p>
+                      <Label className="text-xs sm:text-sm font-medium text-slate-600">BMI</Label>
+                      <p className="text-sm sm:text-base text-slate-900 font-medium">{calculateBMI()}</p>
                     </div>
                   )}
                   
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Bio</Label>
-                    <p className="text-slate-900">{profile?.bio || 'No bio provided'}</p>
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Bio</Label>
+                    <p className="text-sm sm:text-base text-slate-900 leading-relaxed">{profile?.bio || 'No bio provided'}</p>
                   </div>
                   
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Fitness Goals</Label>
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Fitness Goals</Label>
+                    <div className="flex flex-wrap gap-1 sm:gap-2 mt-1 sm:mt-2">
                       {profile?.fitnessGoals && profile.fitnessGoals.length > 0 ? (
                         profile.fitnessGoals.map((goal, index) => (
-                          <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700">
-                            <Target className="w-3 h-3 mr-1" />
+                          <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700 text-xs">
+                            <Target className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
                             {goal}
                           </Badge>
                         ))
                       ) : (
-                        <p className="text-slate-500 text-sm">No fitness goals set</p>
+                        <p className="text-slate-500 text-xs sm:text-sm">No fitness goals set</p>
                       )}
                     </div>
                   </div>
                   
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Dietary Restrictions</Label>
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Dietary Restrictions</Label>
+                    <div className="flex flex-wrap gap-1 sm:gap-2 mt-1 sm:mt-2">
                       {profile?.dietaryRestrictions && profile.dietaryRestrictions.length > 0 ? (
                         profile.dietaryRestrictions.map((restriction, index) => (
-                          <Badge key={index} variant="outline" className="bg-red-50 text-red-700">
+                          <Badge key={index} variant="outline" className="bg-red-50 text-red-700 text-xs">
                             {restriction}
                           </Badge>
                         ))
                       ) : (
-                        <p className="text-slate-500 text-sm">No dietary restrictions</p>
+                        <p className="text-slate-500 text-xs sm:text-sm">No dietary restrictions</p>
                       )}
                     </div>
                   </div>
                   
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Preferred Cuisines</Label>
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Preferred Cuisines</Label>
+                    <div className="flex flex-wrap gap-1 sm:gap-2 mt-1 sm:mt-2">
                       {profile?.preferredCuisines && profile.preferredCuisines.length > 0 ? (
                         profile.preferredCuisines.map((cuisine, index) => (
-                          <Badge key={index} variant="outline" className="bg-green-50 text-green-700">
-                            <ChefHat className="w-3 h-3 mr-1" />
+                          <Badge key={index} variant="outline" className="bg-green-50 text-green-700 text-xs">
+                            <ChefHat className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
                             {cuisine}
                           </Badge>
                         ))
                       ) : (
-                        <p className="text-slate-500 text-sm">No cuisine preferences</p>
+                        <p className="text-slate-500 text-xs sm:text-sm">No cuisine preferences</p>
                       )}
                     </div>
                   </div>
                 </>
               ) : (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <Label htmlFor="email">Email Address</Label>
+                      <Label htmlFor="email" className="text-xs sm:text-sm">Email Address</Label>
                       <Input
                         id="email"
                         type="email"
                         value={editForm.email}
                         onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                        className="mt-1"
+                        className="mt-1 h-9 sm:h-10 text-sm"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="activityLevel">Activity Level</Label>
+                      <Label htmlFor="activityLevel" className="text-xs sm:text-sm">Activity Level</Label>
                       <Select 
                         value={editForm.activityLevel} 
                         onValueChange={(value) => setEditForm(prev => ({ ...prev, activityLevel: value }))}
                       >
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="mt-1 h-9 sm:h-10 text-sm">
                           <SelectValue placeholder="Select activity level" />
                         </SelectTrigger>
                         <SelectContent>
                           {activityLevels.map((level) => (
-                            <SelectItem key={level.value} value={level.value}>
-                              {level.label}
+                            <SelectItem key={level.value} value={level.value} className="text-sm">
+                              <span className="truncate">{level.label}</span>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -450,100 +454,100 @@ export default function CustomerProfile() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     <div>
-                      <Label htmlFor="age">Age</Label>
+                      <Label htmlFor="age" className="text-xs sm:text-sm">Age</Label>
                       <Input
                         id="age"
                         type="number"
                         value={editForm.age}
                         onChange={(e) => setEditForm(prev => ({ ...prev, age: e.target.value }))}
-                        className="mt-1"
+                        className="mt-1 h-9 sm:h-10 text-sm"
                         min="13"
                         max="120"
-                        placeholder="Enter age"
+                        placeholder="Age"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="weight">Weight (kg)</Label>
+                      <Label htmlFor="weight" className="text-xs sm:text-sm">Weight (kg)</Label>
                       <Input
                         id="weight"
                         type="number"
                         value={editForm.weight}
                         onChange={(e) => setEditForm(prev => ({ ...prev, weight: e.target.value }))}
-                        className="mt-1"
+                        className="mt-1 h-9 sm:h-10 text-sm"
                         min="30"
                         max="300"
                         step="0.1"
-                        placeholder="Enter weight"
+                        placeholder="Weight"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="height">Height (cm)</Label>
+                      <Label htmlFor="height" className="text-xs sm:text-sm">Height (cm)</Label>
                       <Input
                         id="height"
                         type="number"
                         value={editForm.height}
                         onChange={(e) => setEditForm(prev => ({ ...prev, height: e.target.value }))}
-                        className="mt-1"
+                        className="mt-1 h-9 sm:h-10 text-sm"
                         min="100"
                         max="250"
-                        placeholder="Enter height"
+                        placeholder="Height"
                       />
                     </div>
                   </div>
                   
                   <div>
-                    <Label htmlFor="bio">Bio</Label>
+                    <Label htmlFor="bio" className="text-xs sm:text-sm">Bio</Label>
                     <Textarea
                       id="bio"
                       value={editForm.bio}
                       onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
-                      className="mt-1"
+                      className="mt-1 text-sm"
                       placeholder="Tell us about your fitness journey..."
                       rows={3}
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor="fitnessGoals">Fitness Goals (comma-separated)</Label>
+                    <Label htmlFor="fitnessGoals" className="text-xs sm:text-sm">Fitness Goals (comma-separated)</Label>
                     <Input
                       id="fitnessGoals"
                       value={editForm.fitnessGoals}
                       onChange={(e) => setEditForm(prev => ({ ...prev, fitnessGoals: e.target.value }))}
-                      className="mt-1"
-                      placeholder="Weight Loss, Muscle Gain, Athletic Performance..."
+                      className="mt-1 h-9 sm:h-10 text-sm"
+                      placeholder="Weight Loss, Muscle Gain..."
                     />
-                    <p className="text-xs text-slate-500 mt-1">
-                      Suggestions: {commonFitnessGoals.join(', ')}
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                      Suggestions: {commonFitnessGoals.slice(0, 5).join(', ')}...
                     </p>
                   </div>
                   
                   <div>
-                    <Label htmlFor="dietaryRestrictions">Dietary Restrictions (comma-separated)</Label>
+                    <Label htmlFor="dietaryRestrictions" className="text-xs sm:text-sm">Dietary Restrictions (comma-separated)</Label>
                     <Input
                       id="dietaryRestrictions"
                       value={editForm.dietaryRestrictions}
                       onChange={(e) => setEditForm(prev => ({ ...prev, dietaryRestrictions: e.target.value }))}
-                      className="mt-1"
-                      placeholder="Vegetarian, Gluten-Free, Dairy-Free..."
+                      className="mt-1 h-9 sm:h-10 text-sm"
+                      placeholder="Vegetarian, Gluten-Free..."
                     />
-                    <p className="text-xs text-slate-500 mt-1">
-                      Suggestions: {commonDietaryRestrictions.join(', ')}
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                      Suggestions: {commonDietaryRestrictions.slice(0, 5).join(', ')}...
                     </p>
                   </div>
                   
                   <div>
-                    <Label htmlFor="preferredCuisines">Preferred Cuisines (comma-separated)</Label>
+                    <Label htmlFor="preferredCuisines" className="text-xs sm:text-sm">Preferred Cuisines (comma-separated)</Label>
                     <Input
                       id="preferredCuisines"
                       value={editForm.preferredCuisines}
                       onChange={(e) => setEditForm(prev => ({ ...prev, preferredCuisines: e.target.value }))}
-                      className="mt-1"
+                      className="mt-1 h-9 sm:h-10 text-sm"
                       placeholder="Italian, Mexican, Asian..."
                     />
-                    <p className="text-xs text-slate-500 mt-1">
-                      Suggestions: {commonCuisines.join(', ')}
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                      Suggestions: {commonCuisines.slice(0, 5).join(', ')}...
                     </p>
                   </div>
                   
@@ -592,36 +596,36 @@ export default function CustomerProfile() {
         </div>
 
         {/* Statistics Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Progress Stats */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Progress Stats</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <ChefHat className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-slate-900">
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+              <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
+                <ChefHat className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+                <div className="text-xl sm:text-2xl font-bold text-slate-900">
                   {statsLoading ? '...' : stats?.totalMealPlans || 0}
                 </div>
-                <div className="text-sm text-slate-600">Meal Plans</div>
+                <div className="text-xs sm:text-sm text-slate-600">Meal Plans</div>
               </div>
               
-              <div className="grid grid-cols-2 gap-3">
-                <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <Calendar className="w-6 h-6 text-blue-600 mx-auto mb-1" />
-                  <div className="text-lg font-bold text-slate-900">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg">
+                  <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600 mx-auto mb-1" />
+                  <div className="text-base sm:text-lg font-bold text-slate-900">
                     {statsLoading ? '...' : stats?.completedDays || 0}
                   </div>
                   <div className="text-xs text-slate-600">Days Done</div>
                 </div>
                 
-                <div className="text-center p-3 bg-orange-50 rounded-lg">
-                  <Activity className="w-6 h-6 text-orange-600 mx-auto mb-1" />
-                  <div className="text-lg font-bold text-slate-900">
+                <div className="text-center p-2 sm:p-3 bg-orange-50 rounded-lg">
+                  <Activity className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600 mx-auto mb-1" />
+                  <div className="text-base sm:text-lg font-bold text-slate-900">
                     {statsLoading ? '...' : stats?.currentStreak || 0}
                   </div>
                   <div className="text-xs text-slate-600">Day Streak</div>
@@ -633,22 +637,22 @@ export default function CustomerProfile() {
           {/* Health Metrics */}
           {(profile?.weight || profile?.height) && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Scale className="w-5 h-5" />
+              <CardHeader className="pb-3 sm:pb-4">
+                <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                  <Scale className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                   <span>Health Metrics</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                 {calculateBMI() && (
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <Scale className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-slate-900">{calculateBMI()}</div>
-                    <div className="text-sm text-slate-600">BMI</div>
+                  <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg">
+                    <Scale className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 mx-auto mb-2" />
+                    <div className="text-xl sm:text-2xl font-bold text-slate-900">{calculateBMI()}</div>
+                    <div className="text-xs sm:text-sm text-slate-600">BMI</div>
                   </div>
                 )}
                 
-                <div className="space-y-3 text-sm">
+                <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
                   {profile?.weight && (
                     <div className="flex justify-between">
                       <span className="text-slate-600">Weight:</span>
@@ -674,24 +678,24 @@ export default function CustomerProfile() {
 
           {/* Quick Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Target className="w-5 h-5" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Quick Actions</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6">
               <Button
                 variant="outline"
-                className="w-full justify-start"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => window.location.href = '/my-meal-plans'}
               >
-                <ChefHat className="w-4 h-4 mr-2" />
-                My Meal Plans
+                <ChefHat className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">My Meal Plans</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full justify-start"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => {
                   toast({
                     title: "Progress Tracking",
@@ -699,16 +703,16 @@ export default function CustomerProfile() {
                   });
                 }}
               >
-                <TrendingUp className="w-4 h-4 mr-2" />
-                View Progress
+                <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">View Progress</span>
               </Button>
               <Button
                 variant="destructive"
-                className="w-full justify-start"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={logout}
               >
-                <User className="w-4 h-4 mr-2" />
-                Sign Out
+                <User className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Sign Out</span>
               </Button>
             </CardContent>
           </Card>
@@ -716,23 +720,23 @@ export default function CustomerProfile() {
           {/* Session Info */}
           {profile && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5" />
+              <CardHeader className="pb-3 sm:pb-4">
+                <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                   <span>Account Info</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
+              <CardContent className="space-y-2 sm:space-y-3 text-xs sm:text-sm p-4 sm:p-6">
                 <div>
                   <span className="text-slate-600">Member Since:</span>
-                  <div className="font-medium text-slate-900">
+                  <div className="font-medium text-slate-900 break-words">
                     {formatDate(profile.createdAt)}
                   </div>
                 </div>
                 {profile.lastLoginAt && (
                   <div>
                     <span className="text-slate-600">Last Visit:</span>
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-slate-900 break-words">
                       {formatDate(profile.lastLoginAt)}
                     </div>
                   </div>

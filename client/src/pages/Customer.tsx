@@ -185,44 +185,44 @@ const Customer = () => {
 
           {/* Statistics Cards */}
           {stats && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8">
               <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/70 backdrop-blur-sm hover:bg-white/90">
-                <CardContent className="p-4 lg:p-6 text-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <Target className="w-6 h-6 text-white" />
+                <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
-                  <div className="text-2xl lg:text-3xl font-bold text-slate-900 mb-1">{stats.totalPlans}</div>
-                  <div className="text-sm lg:text-base text-slate-600 font-medium">Active Plans</div>
+                  <div className="text-lg sm:text-xl lg:text-3xl font-bold text-slate-900 mb-1">{stats.totalPlans}</div>
+                  <div className="text-xs sm:text-sm lg:text-base text-slate-600 font-medium">Active Plans</div>
                 </CardContent>
               </Card>
 
               <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/70 backdrop-blur-sm hover:bg-white/90">
-                <CardContent className="p-4 lg:p-6 text-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <Calendar className="w-6 h-6 text-white" />
+                <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
-                  <div className="text-2xl lg:text-3xl font-bold text-slate-900 mb-1">{stats.totalDays}</div>
-                  <div className="text-sm lg:text-base text-slate-600 font-medium">Total Days</div>
+                  <div className="text-lg sm:text-xl lg:text-3xl font-bold text-slate-900 mb-1">{stats.totalDays}</div>
+                  <div className="text-xs sm:text-sm lg:text-base text-slate-600 font-medium">Total Days</div>
                 </CardContent>
               </Card>
 
               <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/70 backdrop-blur-sm hover:bg-white/90">
-                <CardContent className="p-4 lg:p-6 text-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <Zap className="w-6 h-6 text-white" />
+                <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <Zap className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
-                  <div className="text-2xl lg:text-3xl font-bold text-slate-900 mb-1">{stats.avgCalories}</div>
-                  <div className="text-sm lg:text-base text-slate-600 font-medium">Avg Calories</div>
+                  <div className="text-lg sm:text-xl lg:text-3xl font-bold text-slate-900 mb-1">{stats.avgCalories}</div>
+                  <div className="text-xs sm:text-sm lg:text-base text-slate-600 font-medium">Avg Calories</div>
                 </CardContent>
               </Card>
 
-              <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/70 backdrop-blur-sm hover:bg-white/90">
-                <CardContent className="p-4 lg:p-6 text-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <TrendingUp className="w-6 h-6 text-white" />
+              <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/70 backdrop-blur-sm hover:bg-white/90 col-span-2 md:col-span-1">
+                <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
-                  <div className="text-lg lg:text-xl font-bold text-slate-900 mb-1 truncate">{formatGoalName(stats.primaryGoal)}</div>
-                  <div className="text-sm lg:text-base text-slate-600 font-medium">Primary Goal</div>
+                  <div className="text-sm sm:text-base lg:text-xl font-bold text-slate-900 mb-1 truncate">{formatGoalName(stats.primaryGoal)}</div>
+                  <div className="text-xs sm:text-sm lg:text-base text-slate-600 font-medium">Primary Goal</div>
                 </CardContent>
               </Card>
             </div>
@@ -230,48 +230,48 @@ const Customer = () => {
         </div>
 
         {/* Enhanced Search and Filters */}
-        <Card className="mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-6">
+        <Card className="mb-6 sm:mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-4 sm:p-6">
             {/* Search Bar */}
-            <div className="relative mb-6">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <div className="relative mb-4 sm:mb-6">
+              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
               <Input
                 placeholder="Search your meal plans..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-14 text-base border-0 bg-slate-50/80 focus:bg-white transition-colors duration-200 rounded-xl shadow-sm"
+                className="pl-10 sm:pl-12 h-12 sm:h-14 text-sm sm:text-base border-0 bg-slate-50/80 focus:bg-white transition-colors duration-200 rounded-lg sm:rounded-xl shadow-sm"
               />
             </div>
 
             {/* Filter Toggle */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <SlidersHorizontal className="h-5 w-5 text-slate-600" />
-                <span className="text-slate-700 font-semibold">Filter & Sort</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <SlidersHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 flex-shrink-0" />
+                <span className="text-slate-700 font-semibold text-sm sm:text-base">Filter & Sort</span>
                 {(fitnessGoalFilter !== 'all' || sortBy !== 'date' || searchTerm) && (
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200 text-xs">
                     {fitnessGoalFilter !== 'all' ? 1 : 0 + (sortBy !== 'date' ? 1 : 0) + (searchTerm ? 1 : 0)} active
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-wrap gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="text-slate-600 hover:text-slate-900"
+                  className="text-slate-600 hover:text-slate-900 text-xs sm:text-sm h-8 sm:h-9"
                 >
-                  <Filter className="h-4 w-4 mr-2" />
-                  {showFilters ? 'Hide' : 'Show'} Filters
+                  <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">{showFilters ? 'Hide' : 'Show'} </span>Filters
                 </Button>
                 {(fitnessGoalFilter !== 'all' || sortBy !== 'date' || searchTerm) && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={clearFilters}
-                    className="text-slate-600 hover:text-slate-900"
+                    className="text-slate-600 hover:text-slate-900 text-xs sm:text-sm h-8 sm:h-9"
                   >
-                    <RotateCcw className="h-4 w-4 mr-2" />
+                    <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     Reset
                   </Button>
                 )}
@@ -280,11 +280,11 @@ const Customer = () => {
 
             {/* Collapsible Filters */}
             {showFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-4 border-t border-slate-200">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Fitness Goal</label>
+                  <label className="text-xs sm:text-sm font-medium text-slate-700">Fitness Goal</label>
                   <Select value={fitnessGoalFilter} onValueChange={setFitnessGoalFilter}>
-                    <SelectTrigger className="h-12 border-slate-200 focus:border-blue-400 transition-colors duration-200">
+                    <SelectTrigger className="h-10 sm:h-12 border-slate-200 focus:border-blue-400 transition-colors duration-200 text-sm">
                       <SelectValue placeholder="Select fitness goal" />
                     </SelectTrigger>
                     <SelectContent>
@@ -301,9 +301,9 @@ const Customer = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Sort By</label>
+                  <label className="text-xs sm:text-sm font-medium text-slate-700">Sort By</label>
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="h-12 border-slate-200 focus:border-blue-400 transition-colors duration-200">
+                    <SelectTrigger className="h-10 sm:h-12 border-slate-200 focus:border-blue-400 transition-colors duration-200 text-sm">
                       <SelectValue placeholder="Sort plans by" />
                     </SelectTrigger>
                     <SelectContent>
@@ -321,17 +321,17 @@ const Customer = () => {
 
         {/* Content Section */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i} className="animate-pulse border-0 shadow-lg overflow-hidden">
-                <div className="h-32 bg-gradient-to-r from-slate-200 to-slate-300"></div>
-                <CardContent className="p-6">
+                <div className="h-24 sm:h-32 bg-gradient-to-r from-slate-200 to-slate-300"></div>
+                <CardContent className="p-4 sm:p-6">
                   <div className="space-y-3">
-                    <div className="h-5 bg-slate-200 rounded-lg"></div>
-                    <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                    <div className="h-4 sm:h-5 bg-slate-200 rounded-lg"></div>
+                    <div className="h-3 sm:h-4 bg-slate-200 rounded w-3/4"></div>
                     <div className="flex space-x-2">
-                      <div className="h-6 bg-slate-200 rounded-full w-16"></div>
-                      <div className="h-6 bg-slate-200 rounded-full w-20"></div>
+                      <div className="h-5 sm:h-6 bg-slate-200 rounded-full w-12 sm:w-16"></div>
+                      <div className="h-5 sm:h-6 bg-slate-200 rounded-full w-16 sm:w-20"></div>
                     </div>
                   </div>
                 </CardContent>
@@ -370,7 +370,7 @@ const Customer = () => {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {filteredMealPlans.map((mealPlan, index) => (
                     <div 
                       key={mealPlan.id} 

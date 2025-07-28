@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { User } from '../shared/schema';
 
 console.log('JWT_SECRET in use:', process.env.JWT_SECRET);
@@ -44,7 +44,7 @@ export function generateToken(user: User, expiresIn: string): string {
   };
   return jwt.sign(payload, JWT_SECRET, { 
     expiresIn: expiresIn
-  });
+  } as SignOptions);
 }
 
 export function generateTokens(user: User): { accessToken: string, refreshToken: string } {

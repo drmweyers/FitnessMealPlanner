@@ -116,11 +116,8 @@ if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'producti
   // Configure ViteExpress with the correct client directory
   ViteExpress.config({
     mode: 'development',
-    viteOptions: {
-      root: path.join(__dirname, '../client'),
-      server: {
-        middlewareMode: true
-      }
+    inlineViteConfig: {
+      root: path.join(__dirname, '../client')
     }
   });
   
