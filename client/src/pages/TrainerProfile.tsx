@@ -319,19 +319,19 @@ export default function TrainerProfile() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Dumbbell className="w-8 h-8 text-white" />
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+            <Dumbbell className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Trainer Profile</h1>
-            <p className="text-slate-600">Professional fitness trainer dashboard and settings</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 truncate">Trainer Profile</h1>
+            <p className="text-sm sm:text-base text-slate-600">Professional fitness trainer dashboard and settings</p>
           </div>
         </div>
-        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200 text-xs sm:text-sm">
           <Dumbbell className="w-3 h-3 mr-1" />
           Personal Trainer
         </Badge>
@@ -342,9 +342,9 @@ export default function TrainerProfile() {
         <div className="lg:col-span-2 space-y-6">
           {/* Account Details Card */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                <User className="w-5 h-5" />
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Account Details</span>
               </CardTitle>
               {!isEditing ? (
@@ -352,48 +352,48 @@ export default function TrainerProfile() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9"
                 >
-                  <Edit2 className="w-4 h-4" />
-                  <span>Edit</span>
+                  <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Edit Profile</span>
                 </Button>
               ) : (
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleCancelEdit}
-                    className="flex items-center space-x-2"
+                    className="flex items-center justify-center space-x-2 text-xs sm:text-sm h-8 sm:h-9"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span>Cancel</span>
                   </Button>
                   <Button
                     size="sm"
                     onClick={handleSaveProfile}
                     disabled={updateProfileMutation.isPending}
-                    className="flex items-center space-x-2"
+                    className="flex items-center justify-center space-x-2 text-xs sm:text-sm h-8 sm:h-9"
                   >
-                    <Save className="w-4 h-4" />
-                    <span>Save</span>
+                    <Save className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span>Save Changes</span>
                   </Button>
                 </div>
               )}
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
               {!isEditing ? (
                 <>
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Email Address</Label>
-                    <p className="text-slate-900 font-medium">{user?.email}</p>
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Email Address</Label>
+                    <p className="text-sm sm:text-base text-slate-900 font-medium truncate">{user?.email}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Bio</Label>
-                    <p className="text-slate-900">{profile?.bio || 'No bio provided'}</p>
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Bio</Label>
+                    <p className="text-sm sm:text-base text-slate-900 leading-relaxed">{profile?.bio || 'No bio provided'}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Specializations</Label>
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Specializations</Label>
+                    <div className="flex flex-wrap gap-1 sm:gap-2 mt-1 sm:mt-2">
                       {profile?.specializations && profile.specializations.length > 0 ? (
                         profile.specializations.map((spec, index) => (
                           <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700">
@@ -536,41 +536,41 @@ export default function TrainerProfile() {
 
           {/* Performance Overview */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Performance Overview</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-slate-900">
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
+                  <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mx-auto mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-slate-900">
                     {statsLoading ? '...' : stats?.totalClients || 0}
                   </div>
-                  <div className="text-sm text-slate-600">Total Clients</div>
+                  <div className="text-xs sm:text-sm text-slate-600">Total Clients</div>
                 </div>
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <ChefHat className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-slate-900">
+                <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
+                  <ChefHat className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-slate-900">
                     {statsLoading ? '...' : stats?.totalMealPlansCreated || 0}
                   </div>
-                  <div className="text-sm text-slate-600">Meal Plans</div>
+                  <div className="text-xs sm:text-sm text-slate-600">Meal Plans</div>
                 </div>
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <Target className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-slate-900">
+                <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
+                  <Target className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 mx-auto mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-slate-900">
                     {statsLoading ? '...' : stats?.activeMealPlans || 0}
                   </div>
-                  <div className="text-sm text-slate-600">Active Plans</div>
+                  <div className="text-xs sm:text-sm text-slate-600">Active Plans</div>
                 </div>
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <Heart className="w-8 h-8 text-red-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-slate-900">
+                <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
+                  <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 mx-auto mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-slate-900">
                     {statsLoading ? '...' : `${stats?.clientSatisfactionRate || 0}%`}
                   </div>
-                  <div className="text-sm text-slate-600">Satisfaction</div>
+                  <div className="text-xs sm:text-sm text-slate-600">Satisfaction</div>
                 </div>
               </div>
             </CardContent>
@@ -578,43 +578,43 @@ export default function TrainerProfile() {
         </div>
 
         {/* Statistics Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Quick Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Target className="w-5 h-5" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Quick Actions</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6">
               <Button
                 variant="outline"
-                className="w-full justify-start"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => window.location.href = '/trainer'}
               >
-                <ChefHat className="w-4 h-4 mr-2" />
-                Browse Recipes
+                <ChefHat className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Browse Recipes</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full justify-start"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => window.location.href = '/meal-plan-generator'}
               >
-                <Target className="w-4 h-4 mr-2" />
-                Create Meal Plan
+                <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Create Meal Plan</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full justify-start"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => setShowInvitationForm(!showInvitationForm)}
               >
-                <Mail className="w-4 h-4 mr-2" />
-                Send Customer Invitation
+                <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Send Customer Invitation</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full justify-start"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => {
                   toast({
                     title: "Client Management",
@@ -622,16 +622,16 @@ export default function TrainerProfile() {
                   });
                 }}
               >
-                <Users className="w-4 h-4 mr-2" />
-                Manage Clients
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Manage Clients</span>
               </Button>
               <Button
                 variant="destructive"
-                className="w-full justify-start"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={logout}
               >
-                <User className="w-4 h-4 mr-2" />
-                Sign Out
+                <User className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Sign Out</span>
               </Button>
             </CardContent>
           </Card>

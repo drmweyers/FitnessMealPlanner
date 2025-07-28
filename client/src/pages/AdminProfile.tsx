@@ -162,19 +162,19 @@ export default function AdminProfile() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Shield className="w-8 h-8 text-white" />
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Admin Profile</h1>
-            <p className="text-slate-600">System administrator dashboard and account settings</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 truncate">Admin Profile</h1>
+            <p className="text-sm sm:text-base text-slate-600">System administrator dashboard and account settings</p>
           </div>
         </div>
-        <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200">
+        <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200 text-xs sm:text-sm">
           <Shield className="w-3 h-3 mr-1" />
           Administrator
         </Badge>
@@ -185,9 +185,9 @@ export default function AdminProfile() {
         <div className="lg:col-span-2 space-y-6">
           {/* Account Details Card */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                <User className="w-5 h-5" />
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Account Details</span>
               </CardTitle>
               {!isEditing ? (
@@ -195,49 +195,49 @@ export default function AdminProfile() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-9"
                 >
-                  <Edit2 className="w-4 h-4" />
-                  <span>Edit</span>
+                  <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Edit Profile</span>
                 </Button>
               ) : (
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleCancelEdit}
-                    className="flex items-center space-x-2"
+                    className="flex items-center justify-center space-x-2 text-xs sm:text-sm h-8 sm:h-9"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span>Cancel</span>
                   </Button>
                   <Button
                     size="sm"
                     onClick={handleSaveProfile}
                     disabled={updateProfileMutation.isPending}
-                    className="flex items-center space-x-2"
+                    className="flex items-center justify-center space-x-2 text-xs sm:text-sm h-8 sm:h-9"
                   >
-                    <Save className="w-4 h-4" />
-                    <span>Save</span>
+                    <Save className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span>Save Changes</span>
                   </Button>
                 </div>
               )}
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
               {!isEditing ? (
                 <>
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Email Address</Label>
-                    <p className="text-slate-900 font-medium">{user?.email}</p>
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Email Address</Label>
+                    <p className="text-sm sm:text-base text-slate-900 font-medium truncate">{user?.email}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">User ID</Label>
-                    <p className="text-slate-900 font-mono text-sm">{user?.id}</p>
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">User ID</Label>
+                    <p className="text-xs sm:text-sm text-slate-900 font-mono break-all">{user?.id}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Role</Label>
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Role</Label>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="bg-red-100 text-red-700">
+                      <Badge variant="secondary" className="bg-red-100 text-red-700 text-xs">
                         Administrator
                       </Badge>
                     </div>
@@ -315,34 +315,34 @@ export default function AdminProfile() {
 
           {/* System Overview Card */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Settings className="w-5 h-5" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>System Overview</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <Database className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-slate-900">
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
+                  <Database className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mx-auto mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-slate-900">
                     {statsLoading ? '...' : stats?.totalRecipes || 0}
                   </div>
-                  <div className="text-sm text-slate-600">Total Recipes</div>
+                  <div className="text-xs sm:text-sm text-slate-600">Total Recipes</div>
                 </div>
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-slate-900">
+                <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
+                  <Users className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-slate-900">
                     {statsLoading ? '...' : stats?.totalUsers || 0}
                   </div>
-                  <div className="text-sm text-slate-600">Total Users</div>
+                  <div className="text-xs sm:text-sm text-slate-600">Total Users</div>
                 </div>
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <ChefHat className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-slate-900">
+                <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg col-span-2 sm:col-span-1">
+                  <ChefHat className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 mx-auto mb-2" />
+                  <div className="text-lg sm:text-2xl font-bold text-slate-900">
                     {statsLoading ? '...' : stats?.totalMealPlans || 0}
                   </div>
-                  <div className="text-sm text-slate-600">Meal Plans</div>
+                  <div className="text-xs sm:text-sm text-slate-600">Meal Plans</div>
                 </div>
               </div>
             </CardContent>
@@ -350,31 +350,31 @@ export default function AdminProfile() {
         </div>
 
         {/* Statistics Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Quick Stats */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Quick Stats</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Pending Reviews</span>
-                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                <span className="text-xs sm:text-sm text-slate-600">Pending Reviews</span>
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">
                   {statsLoading ? '...' : stats?.pendingRecipes || 0}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Active Trainers</span>
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <span className="text-xs sm:text-sm text-slate-600">Active Trainers</span>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
                   {statsLoading ? '...' : stats?.activeTrainers || 0}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Active Customers</span>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                <span className="text-xs sm:text-sm text-slate-600">Active Customers</span>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
                   {statsLoading ? '...' : stats?.activeCustomers || 0}
                 </Badge>
               </div>
@@ -383,20 +383,20 @@ export default function AdminProfile() {
 
           {/* Account Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Target className="w-5 h-5" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                 <span>Account Actions</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6">
               <Button
                 variant="outline"
-                className="w-full justify-start"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => window.location.href = '/admin'}
               >
-                <Settings className="w-4 h-4 mr-2" />
-                Admin Dashboard
+                <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Admin Dashboard</span>
               </Button>
               <Button
                 variant="outline"
