@@ -91,7 +91,7 @@ export interface IStorage {
   
   // Personalized meal plans
   assignMealPlanToCustomers(trainerId: string, mealPlanData: MealPlan, customerIds: string[]): Promise<void>;
-  getPersonalizedMealPlans(customerId: string): Promise<MealPlan[]>;
+  getPersonalizedMealPlans(customerId: string): Promise<any[]>;
   
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
@@ -292,14 +292,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async assignMealPlanToCustomers(trainerId: string, mealPlanData: MealPlan, customerIds: string[]): Promise<void> {
-    // Remove any existing meal plan assignments for these specific customers
-    // This prevents duplicate assignments and replaces existing ones
+    // Add new meal plan assignments without removing existing ones
+    // This allows customers to have multiple meal plans assigned
     if (customerIds.length > 0) {
-      await db
-        .delete(personalizedMealPlans)
-        .where(inArray(personalizedMealPlans.customerId, customerIds));
-      
-      // Add new assignments
       const assignments = customerIds.map(customerId => ({
         customerId,
         trainerId,
@@ -310,9 +305,12 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getPersonalizedMealPlans(customerId: string): Promise<MealPlan[]> {
+  async getPersonalizedMealPlans(customerId: string): Promise<any[]> {
     const assignedMealPlans = await db
       .select({
+        id: personalizedMealPlans.id,
+        customerId: personalizedMealPlans.customerId,
+        trainerId: personalizedMealPlans.trainerId,
         mealPlanData: personalizedMealPlans.mealPlanData,
         assignedAt: personalizedMealPlans.assignedAt,
       })
@@ -320,7 +318,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(personalizedMealPlans.customerId, customerId))
       .orderBy(desc(personalizedMealPlans.assignedAt));
 
-    return assignedMealPlans.map(assignment => assignment.mealPlanData);
+    return assignedMealPlans;
   }
 
   async searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }> {

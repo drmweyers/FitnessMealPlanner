@@ -676,6 +676,52 @@ export default function CustomerProfile() {
             </Card>
           )}
 
+          {/* Meal Plan Summary */}
+          <Card>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span>My Meal Plans</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+              {stats ? (
+                <>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <div className="text-lg sm:text-xl font-bold text-blue-600">
+                        {stats.totalMealPlans}
+                      </div>
+                      <div className="text-xs sm:text-sm text-blue-700">Active Plans</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <div className="text-lg sm:text-xl font-bold text-green-600">
+                        {stats.completedDays}
+                      </div>
+                      <div className="text-xs sm:text-sm text-green-700">Days Completed</div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-center text-xs sm:text-sm"
+                      onClick={() => window.location.href = '/customer'}
+                    >
+                      <ChefHat className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                      View All Plans
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4 text-slate-500">
+                  <ChefHat className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                  <p className="text-xs sm:text-sm">No meal plans assigned yet</p>
+                  <p className="text-xs text-slate-400">Your trainer will assign plans soon!</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Quick Actions */}
           <Card>
             <CardHeader className="pb-3 sm:pb-4">
@@ -688,14 +734,6 @@ export default function CustomerProfile() {
               <Button
                 variant="outline"
                 className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
-                onClick={() => window.location.href = '/my-meal-plans'}
-              >
-                <ChefHat className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">My Meal Plans</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => {
                   toast({
                     title: "Progress Tracking",
@@ -705,6 +743,19 @@ export default function CustomerProfile() {
               >
                 <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">View Progress</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
+                onClick={() => {
+                  toast({
+                    title: "Meal Plan Feedback",
+                    description: "Meal plan feedback feature would be implemented here.",
+                  });
+                }}
+              >
+                <Heart className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Rate Meal Plans</span>
               </Button>
               <Button
                 variant="destructive"

@@ -4,16 +4,29 @@ import type { MealPlan } from "@shared/schema";
 import { Calendar, Users, Utensils, Clock, Zap, Target, Activity } from "lucide-react";
 
 interface MealPlanCardProps {
-  mealPlan: MealPlan;
+  mealPlan: MealPlan & {
+    planName?: string;
+    fitnessGoal?: string;
+    dailyCalorieTarget?: number;
+    totalDays?: number;
+    mealsPerDay?: number;
+    assignedAt?: string;
+    isActive?: boolean;
+    description?: string;
+  };
   onClick: () => void;
 }
 
 export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
+  // Use enhanced data when available, fallback to calculated values
+  const days = mealPlan.totalDays || mealPlan.days;
+  const avgCaloriesPerDay = mealPlan.dailyCalorieTarget || 
+    Math.round(mealPlan.meals.reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0) / days);
+  
   // Calculate nutrition totals
   const totalCalories = mealPlan.meals.reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0);
   const totalProtein = mealPlan.meals.reduce((sum, meal) => sum + Number(meal.recipe.proteinGrams || 0), 0);
-  const avgCaloriesPerDay = Math.round(totalCalories / mealPlan.days);
-  const avgProteinPerDay = Math.round(totalProtein / mealPlan.days);
+  const avgProteinPerDay = Math.round(totalProtein / days);
 
   // Get unique meal types
   const mealTypes = mealPlan.meals
@@ -28,7 +41,7 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
           <div className="text-center px-2">
             <Utensils className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-blue-600 mx-auto mb-1 sm:mb-2" />
             <span className="text-blue-700 font-medium text-xs sm:text-sm">
-              {mealPlan.days} Day Plan
+              {days} Day Plan
             </span>
           </div>
         </div>
@@ -94,7 +107,7 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
           <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
             <div className="flex items-center gap-1">
               <Utensils className="h-3 w-3" />
-              <span>{mealPlan.mealsPerDay} meals/day</span>
+              <span>{mealPlan.mealsPerDay || Math.round(mealPlan.meals.length / days)} meals/day</span>
             </div>
             <div className="flex items-center gap-1">
               <Users className="h-3 w-3" />
@@ -102,13 +115,32 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
             </div>
           </div>
 
-          {/* Client Name if available */}
-          {mealPlan.clientName && (
-            <div className="flex items-center gap-1 text-xs text-slate-600 bg-slate-50 px-2 py-1 rounded">
-              <Users className="h-3 w-3" />
-              <span className="truncate">For: {mealPlan.clientName}</span>
-            </div>
-          )}
+          {/* Status and Assignment Info */}
+          <div className="space-y-2">
+            {mealPlan.isActive !== undefined && (
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${mealPlan.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className="text-xs text-slate-600">
+                  {mealPlan.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            )}
+            
+            {mealPlan.assignedAt && (
+              <div className="flex items-center gap-1 text-xs text-slate-500">
+                <Calendar className="h-3 w-3" />
+                <span>Assigned {new Date(mealPlan.assignedAt).toLocaleDateString()}</span>
+              </div>
+            )}
+
+            {/* Client Name if available */}
+            {mealPlan.clientName && (
+              <div className="flex items-center gap-1 text-xs text-slate-600 bg-slate-50 px-2 py-1 rounded">
+                <Users className="h-3 w-3" />
+                <span className="truncate">For: {mealPlan.clientName}</span>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

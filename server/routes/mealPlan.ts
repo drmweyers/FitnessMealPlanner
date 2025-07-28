@@ -68,7 +68,32 @@ mealPlanRouter.get('/personalized', requireAuth, async (req, res) => {
     }
 
     const mealPlans = await storage.getPersonalizedMealPlans(userId);
-    res.json({ mealPlans, total: mealPlans.length });
+    
+    // Enhance meal plans with additional metadata for better display
+    const enhancedMealPlans = mealPlans.map(plan => ({
+      ...plan,
+      planName: plan.mealPlanData?.planName || 'Unnamed Plan',
+      fitnessGoal: plan.mealPlanData?.fitnessGoal || 'General Fitness',
+      dailyCalorieTarget: plan.mealPlanData?.dailyCalorieTarget || 0,
+      totalDays: plan.mealPlanData?.days || 0,
+      mealsPerDay: plan.mealPlanData?.mealsPerDay || 0,
+      assignedAt: plan.assignedAt || new Date().toISOString(),
+      isActive: true, // Could be enhanced with actual status tracking
+      description: plan.mealPlanData?.description,
+    }));
+    
+    res.json({ 
+      mealPlans: enhancedMealPlans, 
+      total: enhancedMealPlans.length,
+      summary: {
+        totalPlans: enhancedMealPlans.length,
+        activePlans: enhancedMealPlans.filter(p => p.isActive).length,
+        totalCalorieTargets: enhancedMealPlans.reduce((sum, p) => sum + (p.dailyCalorieTarget || 0), 0),
+        avgCaloriesPerDay: enhancedMealPlans.length > 0 
+          ? Math.round(enhancedMealPlans.reduce((sum, p) => sum + (p.dailyCalorieTarget || 0), 0) / enhancedMealPlans.length)
+          : 0
+      }
+    });
   } catch (error) {
     console.error('Failed to fetch personalized meal plans:', error);
     res.status(500).json({ error: 'Failed to fetch personalized meal plans' });

@@ -12,11 +12,33 @@ import { Search, Filter, TrendingUp, Calendar, Target, Zap, ChefHat, RotateCcw, 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const fetchPersonalizedMealPlans = async (): Promise<MealPlan[]> => {
+interface EnhancedMealPlan extends MealPlan {
+  planName: string;
+  fitnessGoal: string;
+  dailyCalorieTarget: number;
+  totalDays: number;
+  mealsPerDay: number;
+  assignedAt: string;
+  isActive: boolean;
+  description?: string;
+}
+
+interface MealPlanResponse {
+  mealPlans: EnhancedMealPlan[];
+  total: number;
+  summary: {
+    totalPlans: number;
+    activePlans: number;
+    totalCalorieTargets: number;
+    avgCaloriesPerDay: number;
+  };
+}
+
+const fetchPersonalizedMealPlans = async (): Promise<MealPlanResponse> => {
   const res = await apiRequest('GET', '/api/meal-plan/personalized');
   const data = await res.json();
   console.log('API Response:', data); // Debug log
-  return data.mealPlans || []; // Ensure we always return an array
+  return data;
 };
 
 const Customer = () => {
@@ -28,11 +50,14 @@ const Customer = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
 
-  const { data: mealPlans, isLoading, error } = useQuery<MealPlan[], Error>({
+  const { data: mealPlanResponse, isLoading, error } = useQuery<MealPlanResponse, Error>({
     queryKey: ['personalizedMealPlans'],
     queryFn: fetchPersonalizedMealPlans,
     enabled: isAuthenticated,
   });
+
+  const mealPlans = mealPlanResponse?.mealPlans || [];
+  const summary = mealPlanResponse?.summary;
 
   const filteredMealPlans = useMemo(() => {
     if (!mealPlans) return [];
@@ -54,32 +79,38 @@ const Customer = () => {
       .sort((a, b) => {
         switch (sortBy) {
           case 'date':
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            return new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime();
           case 'name':
             return a.planName.localeCompare(b.planName);
           case 'days':
-            return b.days - a.days;
+            return b.totalDays - a.totalDays;
           case 'calories':
-            const aCalories = a.meals.reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0) / a.days;
-            const bCalories = b.meals.reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0) / b.days;
-            return bCalories - aCalories;
+            return b.dailyCalorieTarget - a.dailyCalorieTarget;
           default:
             return 0;
         }
       });
   }, [mealPlans, searchTerm, fitnessGoalFilter, sortBy]);
 
-  // Calculate statistics
+  // Use summary from API response or calculate fallback stats
   const stats = useMemo(() => {
+    if (summary) {
+      return {
+        totalPlans: summary.totalPlans,
+        activePlans: summary.activePlans,
+        avgCalories: summary.avgCaloriesPerDay,
+        totalDays: mealPlans.reduce((sum, plan) => sum + plan.totalDays, 0),
+        primaryGoal: mealPlans.length > 0 ? mealPlans[0].fitnessGoal : ''
+      };
+    }
+    
     if (!mealPlans || mealPlans.length === 0) return null;
     
     const totalPlans = mealPlans.length;
-    const totalDays = mealPlans.reduce((sum, plan) => sum + plan.days, 0);
+    const activePlans = mealPlans.filter(plan => plan.isActive).length;
+    const totalDays = mealPlans.reduce((sum, plan) => sum + plan.totalDays, 0);
     const avgCalories = Math.round(
-      mealPlans.reduce((sum, plan) => {
-        const planCalories = plan.meals.reduce((mealSum, meal) => mealSum + meal.recipe.caloriesKcal, 0) / plan.days;
-        return sum + planCalories;
-      }, 0) / totalPlans
+      mealPlans.reduce((sum, plan) => sum + plan.dailyCalorieTarget, 0) / totalPlans
     );
     const mostCommonGoal = mealPlans.reduce((acc, plan) => {
       acc[plan.fitnessGoal] = (acc[plan.fitnessGoal] || 0) + 1;
@@ -87,8 +118,8 @@ const Customer = () => {
     }, {} as Record<string, number>);
     const primaryGoal = Object.entries(mostCommonGoal).sort(([,a], [,b]) => b - a)[0]?.[0] || '';
 
-    return { totalPlans, totalDays, avgCalories, primaryGoal };
-  }, [mealPlans]);
+    return { totalPlans, activePlans, totalDays, avgCalories, primaryGoal };
+  }, [mealPlans, summary]);
 
   const clearFilters = () => {
     setSearchTerm('');

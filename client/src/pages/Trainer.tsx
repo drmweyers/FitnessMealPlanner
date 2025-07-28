@@ -13,6 +13,7 @@ import RecipeListItemWithAssignment from "@/components/RecipeListItemWithAssignm
 import RecipeModal from "@/components/RecipeModal";
 import RecipeAssignment from "@/components/RecipeAssignment";
 import MealPlanGenerator from "@/components/MealPlanGenerator";
+import CustomerManagement from "@/components/CustomerManagement";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Trainer() {
@@ -29,6 +30,7 @@ export default function Trainer() {
   // Determine active tab based on URL
   const getActiveTab = () => {
     if (location === '/meal-plan-generator') return 'meal-plan';
+    if (location === '/trainer/customers') return 'customers';
     return 'recipes';
   };
 
@@ -36,6 +38,9 @@ export default function Trainer() {
     switch (value) {
       case 'meal-plan':
         navigate('/meal-plan-generator');
+        break;
+      case 'customers':
+        navigate('/trainer/customers');
         break;
       default:
         navigate('/trainer');
@@ -73,7 +78,7 @@ export default function Trainer() {
       </div>
 
       <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6 sm:mb-8 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8 h-auto p-1">
           <TabsTrigger 
             value="recipes" 
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
@@ -89,6 +94,14 @@ export default function Trainer() {
             <i className="fas fa-utensils text-sm sm:text-base"></i>
             <span className="hidden sm:inline">Meal Plan Generator</span>
             <span className="sm:hidden">Plans</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="customers"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+          >
+            <i className="fas fa-users text-sm sm:text-base"></i>
+            <span className="hidden sm:inline">Manage Customers</span>
+            <span className="sm:hidden">Customers</span>
           </TabsTrigger>
         </TabsList>
 
@@ -223,6 +236,10 @@ export default function Trainer() {
 
         <TabsContent value="meal-plan">
           <MealPlanGenerator />
+        </TabsContent>
+
+        <TabsContent value="customers">
+          <CustomerManagement />
         </TabsContent>
       </Tabs>
 
