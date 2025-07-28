@@ -11,6 +11,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { createCacheManager } from "@/lib/cacheUtils";
 import { ChefHat, Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown, Wand2, CheckCircle, Circle } from "lucide-react";
 import { z } from "zod";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,6 +51,7 @@ interface GenerationResult {
 export default function AdminRecipeGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const cacheManager = createCacheManager(queryClient);
   const [lastGeneration, setLastGeneration] = useState<GenerationResult | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -102,8 +104,8 @@ export default function AdminRecipeGenerator() {
         description: `${data.message} - Generating ${data.count} recipes...`,
       });
 
-      // Immediate refresh to show generation started
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      // Use smart cache management for recipe generation
+      cacheManager.handleRecipeGeneration(data.count);
 
       // Simulate progress updates with more granular steps
       const updateStep = (index: number, progress: number) => {
@@ -186,16 +188,8 @@ export default function AdminRecipeGenerator() {
         description: data.message,
       });
 
-      // Refresh all recipe data after generation completes
-      setTimeout(() => {
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-
-        setTimeout(() => {
-          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-        }, 8000);
-      }, 15000);
+      // Use smart cache management for bulk generation
+      cacheManager.handleRecipeGeneration(data.count);
     },
     onError: (error: Error) => {
       toast({

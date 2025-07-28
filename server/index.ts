@@ -13,6 +13,7 @@ import cookieParser from 'cookie-parser';
 import { recipeRouter } from './routes/recipes';
 import { mealPlanRouter } from './routes/mealPlan';
 import authRouter from './authRoutes';
+import invitationRouter from './invitationRoutes';
 import adminRouter from './routes/adminRoutes';
 import trainerRouter from './routes/trainerRoutes';
 import customerRouter from './routes/customerRoutes';
@@ -90,6 +91,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 // API Routes - These must be defined BEFORE ViteExpress
 app.use('/api/auth', authRouter);
+app.use('/api/invitations', invitationRouter);
 app.use('/api/recipes', recipeRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/trainer', trainerRouter);

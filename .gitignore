@@ -8,3 +8,4 @@ vite.config.ts.*
 
 # Private and developer documentation files
 _md/*
+server/env

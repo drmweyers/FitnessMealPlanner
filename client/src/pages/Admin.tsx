@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { createCacheManager } from "@/lib/cacheUtils";
 import AdminTable from "@/components/AdminTable";
 import AdminRecipeGrid from "@/components/AdminRecipeGrid";
 import SearchFilters from "@/components/SearchFilters";
@@ -13,11 +14,13 @@ import type { Recipe, RecipeFilter } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MealPlanGenerator from "@/components/MealPlanGenerator";
 import RecipeGenerationModal from "@/components/RecipeGenerationModal";
+import CacheDebugger from "@/components/CacheDebugger";
 
 export default function Admin() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const queryClient = useQueryClient();
+  const cacheManager = createCacheManager(queryClient);
   const [filters, setFilters] = useState<RecipeFilter>({
     page: 1,
     limit: 50,
@@ -26,6 +29,14 @@ export default function Admin() {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
   const [activeTab, setActiveTab] = useState("admin");
   const [showRecipeGenerationModal, setShowRecipeGenerationModal] = useState(false);
+
+  // Periodic cache refresh to keep data fresh
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const cleanup = cacheManager.startPeriodicRefresh(60000); // Every minute
+    return cleanup;
+  }, [isAuthenticated, cacheManager]);
 
   const { data: stats, isLoading: statsLoading } = useQuery<{
     total: number;
@@ -64,19 +75,13 @@ export default function Admin() {
       const response = await apiRequest('PATCH', `/api/admin/recipes/${id}/approve`);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Recipe Approved",
         description: "Recipe has been approved and is now visible to users.",
       });
-      // Aggressively refresh all related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      
-      // Force refetch to ensure immediate updates
-      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      // Use centralized cache management
+      await cacheManager.invalidateRecipes();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -102,19 +107,13 @@ export default function Admin() {
     mutationFn: async (id: string) => {
       await apiRequest('DELETE', `/api/admin/recipes/${id}`);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Recipe Deleted",
         description: "Recipe has been removed from the system.",
       });
-      // Aggressively refresh all related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      
-      // Force refetch to ensure immediate updates
-      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      // Use centralized cache management
+      await cacheManager.invalidateRecipes();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -141,19 +140,13 @@ export default function Admin() {
       const response = await apiRequest('DELETE', '/api/admin/recipes', { ids });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast({
         title: "Recipes Deleted",
         description: data.message,
       });
-      // Aggressively refresh all related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      
-      // Force refetch to ensure immediate updates
-      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      // Use centralized cache management for bulk operations
+      await cacheManager.handleBulkOperation('delete', data.removed || data.count || 1);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -180,19 +173,13 @@ export default function Admin() {
       const response = await apiRequest('POST', '/api/admin/recipes/bulk-approve', { recipeIds: ids });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast({
         title: "Recipes Approved",
         description: data.message || "Selected recipes have been approved.",
       });
-      // Aggressively refresh all related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      
-      // Force refetch to ensure immediate updates
-      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      // Use centralized cache management for bulk operations
+      await cacheManager.handleBulkOperation('approve', data.succeeded || data.count || 1);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -219,19 +206,13 @@ export default function Admin() {
       const response = await apiRequest('PATCH', `/api/admin/recipes/${id}/unapprove`);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Recipe Unapproved",
         description: "Recipe has been unapproved and is now pending review.",
       });
-      // Aggressively refresh all related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      
-      // Force refetch to ensure immediate updates
-      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      // Use centralized cache management
+      await cacheManager.invalidateRecipes();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -258,19 +239,13 @@ export default function Admin() {
       const response = await apiRequest('POST', '/api/admin/recipes/bulk-unapprove', { ids });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast({
         title: "Recipes Unapproved",
         description: data.message || "Selected recipes have been unapproved.",
       });
-      // Aggressively refresh all related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      
-      // Force refetch to ensure immediate updates
-      queryClient.refetchQueries({ queryKey: ['/api/admin/recipes', filters] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      // Use centralized cache management for bulk operations
+      await cacheManager.handleBulkOperation('update', data.succeeded || data.count || 1);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -361,6 +336,8 @@ export default function Admin() {
         </TabsList>
 
         <TabsContent value="recipes">
+          <CacheDebugger />
+          
           {/* Stats Cards */}
           {stats && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mt-6 sm:mt-8">
