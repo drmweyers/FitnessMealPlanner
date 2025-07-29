@@ -35,8 +35,6 @@ export default defineConfig({
       allow: [".."],
     },
     hmr: {
-      port: 24678,
-      host: "0.0.0.0",
       overlay: false,
     },
   },

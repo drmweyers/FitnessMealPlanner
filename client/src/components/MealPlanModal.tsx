@@ -14,16 +14,23 @@ interface MealPlanModalProps {
 export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps) {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
 
-  // Calculate nutrition totals
-  const totalCalories = mealPlan.meals.reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0);
-  const totalProtein = mealPlan.meals.reduce((sum, meal) => sum + Number(meal.recipe.proteinGrams || 0), 0);
-  const totalCarbs = mealPlan.meals.reduce((sum, meal) => sum + Number(meal.recipe.carbsGrams || 0), 0);
-  const totalFat = mealPlan.meals.reduce((sum, meal) => sum + Number(meal.recipe.fatGrams || 0), 0);
+  // Get meals from the correct nested path and add safety checks
+  const meals = Array.isArray(mealPlan.mealPlanData?.meals) ? mealPlan.mealPlanData.meals : [];
+  const days = mealPlan.totalDays || mealPlan.mealPlanData?.days || 1;
 
-  const avgCaloriesPerDay = Math.round(totalCalories / mealPlan.days);
-  const avgProteinPerDay = Math.round(totalProtein / mealPlan.days);
-  const avgCarbsPerDay = Math.round(totalCarbs / mealPlan.days);
-  const avgFatPerDay = Math.round(totalFat / mealPlan.days);
+  // Filter out meals with missing recipe data
+  const validMeals = meals.filter(meal => meal && meal.recipe);
+
+  // Calculate nutrition totals with safety checks
+  const totalCalories = validMeals.reduce((sum, meal) => sum + (meal.recipe.caloriesKcal || 0), 0);
+  const totalProtein = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.proteinGrams || 0), 0);
+  const totalCarbs = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.carbsGrams || 0), 0);
+  const totalFat = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.fatGrams || 0), 0);
+
+  const avgCaloriesPerDay = Math.round(totalCalories / days);
+  const avgProteinPerDay = Math.round(totalProtein / days);
+  const avgCarbsPerDay = Math.round(totalCarbs / days);
+  const avgFatPerDay = Math.round(totalFat / days);
 
   const formatMealType = (mealType: string) => {
     return mealType.charAt(0).toUpperCase() + mealType.slice(1);
@@ -103,20 +110,20 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
             <div className="flex flex-wrap gap-4 text-sm">
               <div className="flex items-center gap-1">
                 <Target className="h-4 w-4 text-green-500" />
-                <span>{mealPlan.fitnessGoal.replace('_', ' ')}</span>
+                <span>{mealPlan.fitnessGoal?.replace('_', ' ') || 'General'}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4 text-blue-500" />
-                <span>{mealPlan.days} days</span>
+                <span>{days} days</span>
               </div>
               <div className="flex items-center gap-1">
                 <Utensils className="h-4 w-4 text-purple-500" />
-                <span>{mealPlan.mealsPerDay} meals/day</span>
+                <span>{mealPlan.mealsPerDay || Math.round(meals.length / days)} meals/day</span>
               </div>
-              {mealPlan.clientName && (
+              {mealPlan.mealPlanData?.clientName && (
                 <div className="flex items-center gap-1">
                   <Users className="h-4 w-4 text-slate-500" />
-                  <span>For: {mealPlan.clientName}</span>
+                  <span>For: {mealPlan.mealPlanData.clientName}</span>
                 </div>
               )}
             </div>
@@ -131,9 +138,9 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
           {/* Daily Meal Plan */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Daily Meal Schedule</h3>
-            {Array.from({ length: mealPlan.days }, (_, dayIndex) => {
+            {Array.from({ length: days }, (_, dayIndex) => {
               const day = dayIndex + 1;
-              const dayMeals = mealPlan.meals.filter((meal) => meal.day === day);
+              const dayMeals = meals.filter((meal) => meal.day === day);
 
               return (
                 <Card key={day} className="border-l-4 border-l-blue-500">
@@ -235,7 +242,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
               <span className="font-medium">Assignment Details</span>
             </div>
             <p className="text-blue-600 text-sm mt-1">
-              This meal plan was assigned to you on {new Date(mealPlan.createdAt).toLocaleDateString()}
+              This meal plan was assigned to you on {new Date(mealPlan.assignedAt || mealPlan.mealPlanData?.createdAt || new Date()).toLocaleDateString()}
             </p>
           </div>
         </div>

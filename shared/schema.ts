@@ -384,6 +384,18 @@ export type MealPlan = z.infer<typeof mealPlanSchema>;
 export type InsertPersonalizedMealPlan = typeof personalizedMealPlans.$inferInsert;
 export type PersonalizedMealPlan = typeof personalizedMealPlans.$inferSelect;
 
+// Frontend-specific type that combines database record with nested meal plan data
+export type CustomerMealPlan = PersonalizedMealPlan & {
+  // Add flattened access to commonly used meal plan properties
+  planName?: string;
+  fitnessGoal?: string;
+  dailyCalorieTarget?: number;
+  totalDays?: number;
+  mealsPerDay?: number;
+  isActive?: boolean;
+  description?: string;
+};
+
 // Type definitions for customer invitation operations
 export type InsertCustomerInvitation = typeof customerInvitations.$inferInsert;
 export type CustomerInvitation = typeof customerInvitations.$inferSelect;
