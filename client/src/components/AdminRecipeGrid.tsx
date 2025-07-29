@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Card, CardContent } from "./ui/card";
-import type { Recipe } from "../../shared/schema.ts";
+import type { Recipe } from "@shared/schema";
 import RecipeDetailModal from "./RecipeDetailModal";
 
 interface AdminRecipeGridProps {

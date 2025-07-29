@@ -19,9 +19,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: [
-      { find: "@", replacement: path.resolve(process.cwd(), "src") },
-      { find: "@shared", replacement: path.resolve(process.cwd(), "../shared") },
-      { find: "@assets", replacement: path.resolve(process.cwd(), "../attached_assets") },
+      { find: "@", replacement: path.resolve(__dirname, "client/src") },
+      { find: "@shared", replacement: path.resolve(__dirname, "shared") },
+      { find: "@assets", replacement: path.resolve(__dirname, "attached_assets") },
     ],
   },
   root: "client",

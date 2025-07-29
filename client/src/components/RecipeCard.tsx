@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "./ui/card";
-import type { Recipe } from "../../shared/schema.ts";
+import type { Recipe } from "@shared/schema";
 
 interface RecipeCardProps {
   recipe: Recipe;

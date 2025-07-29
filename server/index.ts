@@ -90,6 +90,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // API Routes - These must be defined BEFORE ViteExpress
 app.use('/api/auth', authRouter);
 app.use('/api/invitations', invitationRouter);
@@ -115,12 +120,10 @@ const port = process.env.PORT || 5000;
 
 // In development, ViteExpress handles the frontend, but API routes should be handled by Express first
 if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
-  // Configure ViteExpress with the correct client directory
+  // Configure ViteExpress to use the vite.config.ts file
   ViteExpress.config({
     mode: 'development',
-    inlineViteConfig: {
-      root: path.join(__dirname, '../client')
-    }
+    viteConfigFile: path.join(__dirname, '../vite.config.ts')
   });
   
   ViteExpress.listen(app, Number(port), () =>

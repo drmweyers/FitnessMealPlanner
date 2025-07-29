@@ -14,7 +14,7 @@ import RecipeModal from "../components/RecipeModal";
 import RecipeAssignment from "../components/RecipeAssignment";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import CustomerManagement from "../components/CustomerManagement";
-import type { Recipe, RecipeFilter } from "../../shared/schema.ts";
+import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Trainer() {
   const { user } = useAuth();

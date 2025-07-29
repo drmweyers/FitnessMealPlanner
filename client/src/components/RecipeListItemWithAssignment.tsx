@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import RecipeAssignment from "./RecipeAssignment";
-import type { Recipe } from "../../shared/schema.ts";
+import type { Recipe } from "@shared/schema";
 
 interface RecipeListItemWithAssignmentProps {
   recipe: Recipe;

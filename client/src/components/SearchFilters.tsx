@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import type { RecipeFilter } from "../../shared/schema.ts";
+import type { RecipeFilter } from "@shared/schema";
 
 interface SearchFiltersProps {
   filters: RecipeFilter;

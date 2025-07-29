@@ -6,7 +6,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Label } from "./ui/label";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest } from "../lib/queryClient";
-import type { MealPlan, User } from "../../shared/schema.ts";
+import type { MealPlan, User } from "@shared/schema";
 
 interface MealPlanAssignmentProps {
   mealPlan: MealPlan;

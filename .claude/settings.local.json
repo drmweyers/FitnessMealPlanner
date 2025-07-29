@@ -32,7 +32,9 @@
       "Bash(time curl:*)",
       "Bash(for i in {1..3})",
       "Bash(do echo \"PDF Export Test $i:\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git config:*)"
     ],
     "deny": []
   }

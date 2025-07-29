@@ -17,7 +17,7 @@
 
 import { Button } from "./ui/button";
 import { X } from "lucide-react";
-import type { Recipe } from "../../shared/schema.ts";
+import type { Recipe } from "@shared/schema";
 
 interface RecipeModalProps {
   recipe: Recipe;

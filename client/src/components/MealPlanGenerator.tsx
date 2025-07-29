@@ -57,7 +57,7 @@ import {
   mealPlanGenerationSchema,
   type MealPlanGeneration,
   type MealPlan,
-} from "../../shared/schema.ts";
+} from "@shared/schema";
 import {
   ChefHat,
   Calendar,

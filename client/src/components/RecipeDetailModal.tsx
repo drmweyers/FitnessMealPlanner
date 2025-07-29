@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { apiRequest } from "../lib/queryClient";
 import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";
-import type { Recipe } from "../../shared/schema.ts";
+import type { Recipe } from "@shared/schema";
 
 interface RecipeDetailModalProps {
   recipeId: string | null;

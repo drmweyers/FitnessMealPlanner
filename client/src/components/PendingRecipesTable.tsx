@@ -6,7 +6,7 @@ import { useToast } from "../hooks/use-toast";
 import { apiRequest } from "../lib/queryClient";
 import { isUnauthorizedError } from "../lib/authUtils";
 import RecipeModal from "./RecipeModal";
-import type { Recipe, RecipeFilter } from "../../shared/schema.ts";
+import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function PendingRecipesTable() {
   const { toast } = useToast();

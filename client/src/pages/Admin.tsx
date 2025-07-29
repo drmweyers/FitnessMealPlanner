@@ -10,7 +10,7 @@ import { createCacheManager } from "../lib/cacheUtils";
 import AdminTable from "../components/AdminTable";
 import AdminRecipeGrid from "../components/AdminRecipeGrid";
 import SearchFilters from "../components/SearchFilters";
-import type { Recipe, RecipeFilter } from "../../shared/schema.ts";
+import type { Recipe, RecipeFilter } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import RecipeGenerationModal from "../components/RecipeGenerationModal";
