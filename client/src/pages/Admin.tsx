@@ -384,14 +384,14 @@ export default function Admin() {
               </Card>
 
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-600">Avg Rating</p>
-                      <p className="text-2xl font-bold text-slate-900">{stats.avgRating}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">Avg Rating</p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900">{stats.avgRating}</p>
                     </div>
-                    <div className="p-3 bg-yellow-100 rounded-full">
-                      <i className="fas fa-star text-yellow-500 text-xl"></i>
+                    <div className="p-2 sm:p-3 bg-yellow-100 rounded-full flex-shrink-0 ml-2">
+                      <i className="fas fa-star text-yellow-500 text-sm sm:text-lg lg:text-xl"></i>
                     </div>
                   </div>
                 </CardContent>
@@ -406,16 +406,16 @@ export default function Admin() {
 
         <TabsContent value="admin">
           {/* Admin Action Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <i className="fas fa-plus-circle text-primary text-xl"></i>
+                  <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                    <i className="fas fa-plus-circle text-primary text-lg sm:text-xl"></i>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Generate Recipes</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Generate Recipes</h3>
                 </div>
-                <p className="text-slate-600 mb-4">Create new recipes using OpenAI integration</p>
+                <p className="text-sm sm:text-base text-slate-600 mb-4">Create new recipes using OpenAI integration</p>
                 <Button 
                   className="w-full bg-primary hover:bg-primary/90" 
                   onClick={() => setShowRecipeGenerationModal(true)}
@@ -429,14 +429,14 @@ export default function Admin() {
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-secondary/10 rounded-lg">
-                    <i className="fas fa-eye text-secondary text-xl"></i>
+                  <div className="p-2 bg-secondary/10 rounded-lg flex-shrink-0">
+                    <i className="fas fa-eye text-secondary text-lg sm:text-xl"></i>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Review Queue</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Review Queue</h3>
                 </div>
-                <p className="text-slate-600 mb-4">Review and approve pending recipes</p>
+                <p className="text-sm sm:text-base text-slate-600 mb-4">Review and approve pending recipes</p>
                 <Button 
                   variant="outline" 
                   className="w-full border-secondary text-secondary hover:bg-secondary hover:text-white"
@@ -451,14 +451,14 @@ export default function Admin() {
             </Card>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <i className="fas fa-download text-blue-600 text-xl"></i>
+                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                    <i className="fas fa-download text-blue-600 text-lg sm:text-xl"></i>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Export Data</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Export Data</h3>
                 </div>
-                <p className="text-slate-600 mb-4">Download recipe database as JSON</p>
+                <p className="text-sm sm:text-base text-slate-600 mb-4">Download recipe database as JSON</p>
                 <Button 
                   variant="outline" 
                   className="w-full border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
@@ -475,23 +475,24 @@ export default function Admin() {
           </div>
 
           {/* Recipe Database Management Button */}
-          <Card className="mb-8 border-2 border-primary/20 bg-primary/5">
-            <CardContent className="p-8">
+          <Card className="mb-6 sm:mb-8 border-2 border-primary/20 bg-primary/5">
+            <CardContent className="p-4 sm:p-6 lg:p-8">
               <div className="text-center">
-                <div className="mb-4">
-                  <i className="fas fa-database text-primary text-3xl mb-3"></i>
+                <div className="mb-3 sm:mb-4">
+                  <i className="fas fa-database text-primary text-2xl sm:text-3xl mb-2 sm:mb-3"></i>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Recipe Database Management</h3>
-                <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3">Recipe Database Management</h3>
+                <p className="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6 max-w-md mx-auto">
                   Access the complete recipe database with advanced management tools including individual and bulk delete operations
                 </p>
                 <Button
                   size="lg"
                   onClick={handleManageAllClick}
-                  className="bg-primary hover:bg-primary/90 text-lg px-8 py-3"
+                  className="bg-primary hover:bg-primary/90 text-sm sm:text-lg px-4 sm:px-8 py-2 sm:py-3 w-full sm:w-auto"
                 >
-                  <i className="fas fa-database mr-3"></i>
-                  Manage All Recipes ({stats?.total || "0"})
+                  <i className="fas fa-database mr-2 sm:mr-3"></i>
+                  <span className="hidden sm:inline">Manage All Recipes ({stats?.total || "0"})</span>
+                  <span className="sm:hidden">Manage All ({stats?.total || "0"})</span>
                 </Button>
               </div>
             </CardContent>
@@ -503,43 +504,49 @@ export default function Admin() {
       <div id="recipe-management-section">
 
         {/* Quick Actions */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <Button
               variant={filters.approved === undefined ? "default" : "outline"}
               onClick={() => handleFilterChange({ approved: undefined })}
+              className="text-sm"
             >
               <i className="fas fa-list-ul mr-2"></i>
-              All Recipes
+              <span className="hidden sm:inline">All Recipes</span>
+              <span className="sm:hidden">All</span>
             </Button>
             <Button
               variant={filters.approved === false ? "default" : "outline"}
               onClick={() => handleFilterChange({ approved: false })}
-              className="text-yellow-600"
+              className="text-yellow-600 text-sm"
             >
               <i className="fas fa-clock mr-2"></i>
-              Pending Approval ({stats?.pending || 0})
+              <span className="hidden sm:inline">Pending Approval ({stats?.pending || 0})</span>
+              <span className="sm:hidden">Pending ({stats?.pending || 0})</span>
             </Button>
             <Button
               variant={filters.approved === true ? "default" : "outline"}
               onClick={() => handleFilterChange({ approved: true })}
-              className="text-green-600"
+              className="text-green-600 text-sm"
             >
               <i className="fas fa-check mr-2"></i>
-              Approved ({stats?.approved || 0})
+              <span className="hidden sm:inline">Approved ({stats?.approved || 0})</span>
+              <span className="sm:hidden">Approved ({stats?.approved || 0})</span>
             </Button>
           </div>
 
-          <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
-              >
+          <div className="flex items-center justify-center lg:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
+              className="text-sm"
+            >
               <i className={`fas fa-${viewMode === 'grid' ? 'table' : 'th'} mr-2`}></i>
-                {viewMode === 'grid' ? 'Table View' : 'Grid View'}
-              </Button>
-            </div>
+              <span className="hidden sm:inline">{viewMode === 'grid' ? 'Table View' : 'Grid View'}</span>
+              <span className="sm:hidden">{viewMode === 'grid' ? 'Table' : 'Grid'}</span>
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -586,14 +593,15 @@ export default function Admin() {
 
         {/* Pagination */}
         {total > filters.limit && (
-          <div className="mt-8 flex justify-center">
-            <div className="flex space-x-2">
+          <div className="mt-6 sm:mt-8 flex justify-center">
+            <div className="flex flex-wrap gap-1 sm:gap-2 justify-center max-w-full">
               {Array.from({ length: Math.ceil(total / filters.limit) }).map((_, i) => (
                 <Button
                   key={i}
                   variant={filters.page === i + 1 ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handlePageChange(i + 1)}
+                  className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 min-w-[32px] sm:min-w-[40px]"
                 >
                   {i + 1}
                 </Button>

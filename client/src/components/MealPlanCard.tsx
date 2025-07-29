@@ -1,33 +1,33 @@
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import type { MealPlan } from "@shared/schema";
+import type { CustomerMealPlan } from "@shared/schema";
 import { Calendar, Users, Utensils, Clock, Zap, Target, Activity } from "lucide-react";
+import { useSafeMealPlan } from '../hooks/useSafeMealPlan';
 
 interface MealPlanCardProps {
-  mealPlan?: MealPlan & {
-    planName?: string;
-    fitnessGoal?: string;
-    dailyCalorieTarget?: number;
-    totalDays?: number;
-    mealsPerDay?: number;
-    assignedAt?: string;
-    isActive?: boolean;
-    description?: string;
-  };
+  mealPlan: CustomerMealPlan;
   onClick?: () => void;
 }
 
-export default function MealPlanCard(props: MealPlanCardProps) {
-  // Destructure with defaults to avoid undefined issues
-  const { mealPlan = null, onClick = () => {} } = props || {};
+export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
+  const {
+    isValid,
+    validMeals,
+    days,
+    planName,
+    fitnessGoal,
+    nutrition,
+    mealTypes,
+    hasMeals
+  } = useSafeMealPlan(mealPlan);
   
-  // Early return with error display if no mealPlan
-  if (!mealPlan) {
+  // Early return with error display if invalid meal plan
+  if (!isValid) {
     return (
       <Card className="border-red-200 bg-red-50">
         <CardContent className="p-4">
           <div className="text-red-600">
-            <h3 className="font-semibold">Error: No meal plan data</h3>
+            <h3 className="font-semibold">Error: Invalid meal plan data</h3>
           </div>
         </CardContent>
       </Card>
@@ -35,27 +35,7 @@ export default function MealPlanCard(props: MealPlanCardProps) {
   }
 
   try {
-    // Get meals from the correct nested path: mealPlanData.meals
-    const meals = Array.isArray(mealPlan.mealPlanData?.meals) ? mealPlan.mealPlanData.meals : [];
-    
-    // Use enhanced data when available, fallback to calculated values
-    const days = mealPlan.totalDays || mealPlan.mealPlanData?.days || 1;
-    
-    // Filter out meals with missing recipe data
-    const validMeals = meals.filter(meal => meal && meal.recipe);
-    
-    const avgCaloriesPerDay = mealPlan.dailyCalorieTarget || 
-      (validMeals.length > 0 ? Math.round(validMeals.reduce((sum, meal) => sum + (meal.recipe.caloriesKcal || 0), 0) / days) : 0);
-    
-    // Calculate nutrition totals
-    const totalCalories = validMeals.reduce((sum, meal) => sum + (meal.recipe.caloriesKcal || 0), 0);
-    const totalProtein = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.proteinGrams || 0), 0);
-    const avgProteinPerDay = Math.round(totalProtein / days);
-
-    // Get unique meal types
-    const mealTypes = validMeals
-      .map(meal => meal.mealType)
-      .filter((type, index, array) => array.indexOf(type) === index);
+    const { avgCaloriesPerDay, avgProteinPerDay } = nutrition;
 
     return (
       <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border border-slate-200 hover:border-slate-300 h-full">
@@ -75,21 +55,21 @@ export default function MealPlanCard(props: MealPlanCardProps) {
           <div className="space-y-2 sm:space-y-3">
             {/* Plan Name */}
             <h3 className="font-semibold text-slate-900 line-clamp-2 leading-tight text-sm sm:text-base">
-              {mealPlan.planName}
+              {planName}
             </h3>
 
             {/* Fitness Goal */}
             <div className="flex items-center gap-1 min-w-0">
               <Target className="h-3 w-3 text-green-500 flex-shrink-0" />
               <Badge variant="outline" className="text-xs px-2 py-1 truncate max-w-full">
-                {mealPlan.fitnessGoal?.replace('_', ' ') || 'General'}
+                {fitnessGoal}
               </Badge>
             </div>
 
             {/* Meal Types */}
             {mealTypes.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {mealTypes.slice(0, 3).map((type) => (
+                {mealTypes.slice(0, 3).map((type: string) => (
                   <Badge key={type} variant="secondary" className="text-xs px-2 py-1">
                     {type}
                   </Badge>
@@ -131,11 +111,11 @@ export default function MealPlanCard(props: MealPlanCardProps) {
             <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
               <div className="flex items-center gap-1">
                 <Utensils className="h-3 w-3" />
-                <span>{mealPlan.mealsPerDay || Math.round(meals.length / days)} meals/day</span>
+                <span>{Math.round(validMeals.length / days)} meals/day</span>
               </div>
               <div className="flex items-center gap-1">
                 <Users className="h-3 w-3" />
-                <span>{meals.length} total meals</span>
+                <span>{validMeals.length} total meals</span>
               </div>
             </div>
 
@@ -182,4 +162,4 @@ export default function MealPlanCard(props: MealPlanCardProps) {
       </Card>
     );
   }
-} 
+}

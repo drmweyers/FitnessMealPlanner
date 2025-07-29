@@ -265,9 +265,15 @@ export async function validateMealPlanData(data: any): Promise<MealPlanPdfData> 
     }
     
     // Additional validation logic
-    validateMealPlanLogic(validated);
+    validateMealPlanLogic({
+      ...validated,
+      description: validated.description || 'No description provided'
+    });
     
-    return validated;
+    return {
+      ...validated,
+      description: validated.description || 'No description provided'
+    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessage = error.errors.map(err => 

@@ -292,11 +292,11 @@ export default function AdminTable({
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden lg:block overflow-x-auto rounded-lg border">
-        <table className="w-full">
+      <div className="hidden lg:block overflow-x-auto rounded-lg border shadow-sm">
+        <table className="w-full min-w-[800px]">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              <th className="px-4 xl:px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     checked={isAllSelected && recipes.length > 0}

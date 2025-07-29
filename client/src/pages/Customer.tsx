@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { MealPlan } from '../../../shared/schema.ts';
+import type { CustomerMealPlan, MealPlan } from '@shared/schema';
 import MealPlanCard from '../components/MealPlanCard';
 import MealPlanModal from '../components/MealPlanModal';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,6 +12,7 @@ import { Search, Filter, TrendingUp, Calendar, Target, Zap, ChefHat, RotateCcw, 
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
+// Enhanced MealPlan includes the flattened properties from the API
 interface EnhancedMealPlan extends MealPlan {
   planName: string;
   fitnessGoal: string;
@@ -43,7 +44,14 @@ const fetchPersonalizedMealPlans = async (): Promise<MealPlanResponse> => {
 
 const Customer = () => {
   const { isAuthenticated, user } = useAuth();
-  const [selectedMealPlan, setSelectedMealPlan] = useState<MealPlan | null>(null);
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Customer component mounted');
+    console.log('User:', user);
+    console.log('Authenticated:', isAuthenticated);
+  }, [user, isAuthenticated]);
+  const [selectedMealPlan, setSelectedMealPlan] = useState<EnhancedMealPlan | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [fitnessGoalFilter, setFitnessGoalFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
@@ -54,7 +62,18 @@ const Customer = () => {
     queryKey: ['personalizedMealPlans'],
     queryFn: fetchPersonalizedMealPlans,
     enabled: isAuthenticated,
+    retry: (failureCount: number, error: Error) => {
+      console.error('Meal plans query failed:', error);
+      return failureCount < 2;
+    }
   });
+
+  // Log errors when they occur
+  React.useEffect(() => {
+    if (error) {
+      console.error('Meal plans query error:', error);
+    }
+  }, [error]);
 
   const mealPlans = mealPlanResponse?.mealPlans || [];
   const summary = mealPlanResponse?.summary;
@@ -63,7 +82,7 @@ const Customer = () => {
     if (!mealPlans) return [];
 
     return mealPlans
-      .filter((mealPlan) => {
+      .filter((mealPlan: EnhancedMealPlan) => {
         // Search filter
         if (searchTerm && !mealPlan.planName.toLowerCase().includes(searchTerm.toLowerCase())) {
           return false;
@@ -76,7 +95,7 @@ const Customer = () => {
 
         return true;
       })
-      .sort((a, b) => {
+      .sort((a: EnhancedMealPlan, b: EnhancedMealPlan) => {
         switch (sortBy) {
           case 'date':
             return new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime();
@@ -99,7 +118,7 @@ const Customer = () => {
         totalPlans: summary.totalPlans,
         activePlans: summary.activePlans,
         avgCalories: summary.avgCaloriesPerDay,
-        totalDays: mealPlans.reduce((sum, plan) => sum + plan.totalDays, 0),
+        totalDays: mealPlans.reduce((sum: number, plan: EnhancedMealPlan) => sum + plan.totalDays, 0),
         primaryGoal: mealPlans.length > 0 ? mealPlans[0].fitnessGoal : ''
       };
     }
@@ -107,16 +126,16 @@ const Customer = () => {
     if (!mealPlans || mealPlans.length === 0) return null;
     
     const totalPlans = mealPlans.length;
-    const activePlans = mealPlans.filter(plan => plan.isActive).length;
-    const totalDays = mealPlans.reduce((sum, plan) => sum + plan.totalDays, 0);
+    const activePlans = mealPlans.filter((plan: EnhancedMealPlan) => plan.isActive).length;
+    const totalDays = mealPlans.reduce((sum: number, plan: EnhancedMealPlan) => sum + plan.totalDays, 0);
     const avgCalories = Math.round(
-      mealPlans.reduce((sum, plan) => sum + plan.dailyCalorieTarget, 0) / totalPlans
+      mealPlans.reduce((sum: number, plan: EnhancedMealPlan) => sum + plan.dailyCalorieTarget, 0) / totalPlans
     );
-    const mostCommonGoal = mealPlans.reduce((acc, plan) => {
+    const mostCommonGoal = mealPlans.reduce((acc: Record<string, number>, plan: EnhancedMealPlan) => {
       acc[plan.fitnessGoal] = (acc[plan.fitnessGoal] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    const primaryGoal = Object.entries(mostCommonGoal).sort(([,a], [,b]) => b - a)[0]?.[0] || '';
+    const primaryGoal = Object.entries(mostCommonGoal).sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || '';
 
     return { totalPlans, activePlans, totalDays, avgCalories, primaryGoal };
   }, [mealPlans, summary]);
@@ -131,6 +150,18 @@ const Customer = () => {
   const formatGoalName = (goal: string) => {
     return goal.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
+
+  // Early return if not authenticated or user data missing
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading your meal plans...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
@@ -247,7 +278,7 @@ const Customer = () => {
                 </CardContent>
               </Card>
 
-              <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/70 backdrop-blur-sm hover:bg-white/90 col-span-2 md:col-span-1">
+              <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/70 backdrop-blur-sm hover:bg-white/90">
                 <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
                     <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
@@ -402,14 +433,14 @@ const Customer = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  {filteredMealPlans.map((mealPlan, index) => (
+                  {filteredMealPlans.map((mealPlan: EnhancedMealPlan, index: number) => (
                     <div 
                       key={mealPlan.id} 
                       className="transform hover:scale-105 transition-all duration-300"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <MealPlanCard 
-                        mealPlan={mealPlan} 
+                        mealPlan={mealPlan as CustomerMealPlan} 
                         onClick={() => setSelectedMealPlan(mealPlan)}
                       />
                     </div>

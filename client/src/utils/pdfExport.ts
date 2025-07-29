@@ -7,7 +7,7 @@
  */
 
 import jsPDF from 'jspdf';
-import type { MealPlan } from '../../shared/schema.ts';
+import type { MealPlan } from '@shared/schema';
 
 interface RecipeCardData {
   recipeName: string;

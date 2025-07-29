@@ -1,36 +1,48 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import type { MealPlan } from "@shared/schema";
+import type { CustomerMealPlan } from "@shared/schema";
 import { Calendar, Users, Utensils, Clock, Zap, Target, Activity } from "lucide-react";
 import { useState } from "react";
 import RecipeDetailModal from "./RecipeDetailModal";
+import { useSafeMealPlan } from '../hooks/useSafeMealPlan';
 
 interface MealPlanModalProps {
-  mealPlan: MealPlan;
+  mealPlan: CustomerMealPlan;
   onClose: () => void;
 }
 
 export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps) {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
 
-  // Get meals from the correct nested path and add safety checks
-  const meals = Array.isArray(mealPlan.mealPlanData?.meals) ? mealPlan.mealPlanData.meals : [];
-  const days = mealPlan.totalDays || mealPlan.mealPlanData?.days || 1;
+  const {
+    isValid,
+    validMeals,
+    days,
+    planName,
+    fitnessGoal,
+    clientName,
+    dailyCalorieTarget,
+    nutrition,
+    getMealsForDay
+  } = useSafeMealPlan(mealPlan);
 
-  // Filter out meals with missing recipe data
-  const validMeals = meals.filter(meal => meal && meal.recipe);
+  if (!isValid) {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Error</DialogTitle>
+          </DialogHeader>
+          <div className="text-red-600 p-4">
+            <p>Invalid meal plan data. Cannot display details.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
-  // Calculate nutrition totals with safety checks
-  const totalCalories = validMeals.reduce((sum, meal) => sum + (meal.recipe.caloriesKcal || 0), 0);
-  const totalProtein = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.proteinGrams || 0), 0);
-  const totalCarbs = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.carbsGrams || 0), 0);
-  const totalFat = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.fatGrams || 0), 0);
-
-  const avgCaloriesPerDay = Math.round(totalCalories / days);
-  const avgProteinPerDay = Math.round(totalProtein / days);
-  const avgCarbsPerDay = Math.round(totalCarbs / days);
-  const avgFatPerDay = Math.round(totalFat / days);
+  const { avgCaloriesPerDay, avgProteinPerDay, avgCarbsPerDay, avgFatPerDay } = nutrition;
 
   const formatMealType = (mealType: string) => {
     return mealType.charAt(0).toUpperCase() + mealType.slice(1);
@@ -73,7 +85,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Utensils className="h-5 w-5 text-blue-600" />
-            <span>{mealPlan.planName}</span>
+            <span>{planName}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -110,7 +122,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
             <div className="flex flex-wrap gap-4 text-sm">
               <div className="flex items-center gap-1">
                 <Target className="h-4 w-4 text-green-500" />
-                <span>{mealPlan.fitnessGoal?.replace('_', ' ') || 'General'}</span>
+                <span>{fitnessGoal}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4 text-blue-500" />
@@ -118,12 +130,12 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
               </div>
               <div className="flex items-center gap-1">
                 <Utensils className="h-4 w-4 text-purple-500" />
-                <span>{mealPlan.mealsPerDay || Math.round(meals.length / days)} meals/day</span>
+                <span>{Math.round(validMeals.length / days)} meals/day</span>
               </div>
-              {mealPlan.mealPlanData?.clientName && (
+              {clientName && (
                 <div className="flex items-center gap-1">
                   <Users className="h-4 w-4 text-slate-500" />
-                  <span>For: {mealPlan.mealPlanData.clientName}</span>
+                  <span>For: {clientName}</span>
                 </div>
               )}
             </div>
@@ -140,7 +152,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
             <h3 className="text-lg font-semibold">Daily Meal Schedule</h3>
             {Array.from({ length: days }, (_, dayIndex) => {
               const day = dayIndex + 1;
-              const dayMeals = meals.filter((meal) => meal.day === day);
+              const dayMeals = getMealsForDay(day);
 
               return (
                 <Card key={day} className="border-l-4 border-l-blue-500">

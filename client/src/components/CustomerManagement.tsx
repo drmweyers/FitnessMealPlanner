@@ -29,7 +29,7 @@ import {
   Clock,
   Download
 } from 'lucide-react';
-import type { MealPlan } from '../../shared/schema.ts';
+import type { MealPlan } from '@shared/schema';
 
 interface Customer {
   id: string;

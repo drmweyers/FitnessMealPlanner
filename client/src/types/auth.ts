@@ -15,7 +15,7 @@ export interface LoginCredentials {
 export interface RegisterCredentials {
   email: string;
   password: string;
-  role: 'customer' | 'trainer';
+  role: 'customer' | 'trainer' | 'admin';
 }
 
 export interface AuthContextValue {
