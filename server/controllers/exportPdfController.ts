@@ -48,7 +48,7 @@ export async function exportPdfController(req: PdfExportRequest, res: Response):
     }
 
     // Validate and transform meal plan data
-    const validatedData = validateMealPlanData(mealPlanData);
+    const validatedData = await validateMealPlanData(mealPlanData);
     
     // Set default options
     const exportOptions: ExportOptions = {

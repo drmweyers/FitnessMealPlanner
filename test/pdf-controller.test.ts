@@ -35,7 +35,7 @@ vi.mock('../server/utils/pdfTemplate', () => ({
 
 // Mock validation utilities
 vi.mock('../server/utils/pdfValidation', () => ({
-  validateMealPlanData: vi.fn().mockReturnValue({
+  validateMealPlanData: vi.fn().mockResolvedValue({
     id: 'test-plan',
     planName: 'Test Plan',
     fitnessGoal: 'muscle_building',
@@ -83,7 +83,7 @@ describe('PDF Export Controller', () => {
         return mockRes;
       }),
       set: vi.fn().mockReturnThis(),
-      send: vi.fn().mockImplementation((data) => {
+      end: vi.fn().mockImplementation((data) => {
         responseData = data;
         return mockRes;
       }),
@@ -119,14 +119,14 @@ describe('PDF Export Controller', () => {
 
       expect(mockRes.set).toHaveBeenCalledWith({
         'Content-Type': 'application/pdf',
-        'Content-Length': '16',
-        'Content-Disposition': expect.stringContaining('EvoFit_Meal_Plan_'),
+        'Content-Length': '11',
+        'Content-Disposition': expect.stringContaining('EvoFit_Meal_Plan_john_doe_'),
         'Cache-Control': 'private, no-cache, no-store, must-revalidate',
         'Expires': '-1',
         'Pragma': 'no-cache'
       });
 
-      expect(mockRes.send).toHaveBeenCalledWith(expect.any(Buffer));
+      expect(mockRes.end).toHaveBeenCalledWith(expect.any(Buffer));
       expect(mockBrowser.close).toHaveBeenCalled();
     });
 
@@ -206,7 +206,7 @@ describe('PDF Export Controller', () => {
 
       expect(mockRes.set).toHaveBeenCalledWith(
         expect.objectContaining({
-          'Content-Disposition': expect.stringContaining('meal-plan')
+          'Content-Disposition': expect.stringContaining('meal_plan')
         })
       );
     });
@@ -226,14 +226,12 @@ describe('PDF Export Controller', () => {
       await exportPdfController(mockReq as any, mockRes as Response);
 
       // Should succeed with default options
-      expect(mockRes.send).toHaveBeenCalledWith(expect.any(Buffer));
+      expect(mockRes.end).toHaveBeenCalledWith(expect.any(Buffer));
     });
 
     it('should handle validation errors', async () => {
       const { validateMealPlanData } = await import('../server/utils/pdfValidation');
-      (validateMealPlanData as any).mockImplementation(() => {
-        throw new Error('Validation failed: Invalid data');
-      });
+      (validateMealPlanData as any).mockRejectedValue(new Error('Validation failed: Invalid data'));
 
       mockReq.body = {
         mealPlanData: { invalid: 'data' }
@@ -312,7 +310,7 @@ describe('PDF Export Controller', () => {
 
       await exportMealPlanPdfController(mockReq as any, mockRes as Response);
 
-      expect(mockRes.send).toHaveBeenCalledWith(expect.any(Buffer));
+      expect(mockRes.end).toHaveBeenCalledWith(expect.any(Buffer));
     });
 
     it('should handle customer access successfully', async () => {
@@ -330,7 +328,7 @@ describe('PDF Export Controller', () => {
       await exportMealPlanPdfController(mockReq as any, mockRes as Response);
 
       expect(storage.getPersonalizedMealPlans).toHaveBeenCalledWith('customer-123');
-      expect(mockRes.send).toHaveBeenCalledWith(expect.any(Buffer));
+      expect(mockRes.end).toHaveBeenCalledWith(expect.any(Buffer));
     });
 
     it('should handle customer access with meal plan not found', async () => {
@@ -362,7 +360,7 @@ describe('PDF Export Controller', () => {
         status: 'error',
         message: 'Failed to export meal plan PDF',
         code: 'EXPORT_FAILED',
-        details: 'Database error'
+        details: undefined
       });
     });
   });

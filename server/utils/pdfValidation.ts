@@ -5,6 +5,8 @@
  */
 
 import { z } from 'zod';
+import { storage } from '../storage';
+import { mealPlanSchema as sharedMealPlanSchema } from '@shared/schema';
 
 // Recipe validation schema
 const recipeSchema = z.object({
@@ -50,25 +52,217 @@ const mealPlanSchema = z.object({
 export type MealPlanPdfData = z.infer<typeof mealPlanSchema>;
 
 /**
+ * Transform frontend meal plan data to PDF-compatible format
+ */
+function transformMealPlanData(data: any): any {
+  // Handle different data structures that might come from the frontend
+  let mealPlanData = data;
+  
+  // If data is wrapped in mealPlanData property
+  if (data.mealPlanData) {
+    mealPlanData = data.mealPlanData;
+  }
+  
+  // If this looks like a frontend meal plan object, transform it
+  if (data.name && !data.planName) {
+    mealPlanData = {
+      ...mealPlanData,
+      planName: data.name,
+      fitnessGoal: data.fitnessGoal || data.description || 'General Fitness',
+      dailyCalorieTarget: data.dailyCalorieTarget || calculateDailyCalories(data.meals),
+      days: data.days || calculateDays(data.meals),
+      mealsPerDay: data.mealsPerDay || calculateMealsPerDay(data.meals)
+    };
+  }
+  
+  // Transform meals structure if needed
+  if (data.meals) {
+    if (Array.isArray(data.meals)) {
+      // If meals are already in the correct format, use them
+      if (data.meals[0]?.day && data.meals[0]?.mealNumber) {
+        mealPlanData.meals = data.meals;
+      } else {
+        // Transform from array-based meals to correct format
+        mealPlanData.meals = transformMealsStructure(data.meals);
+      }
+    } else if (typeof data.meals === 'object') {
+      // Transform object-based meals structure (Monday: {...}) to array
+      mealPlanData.meals = transformMealsFromObject(data.meals);
+    }
+  }
+  
+  return mealPlanData;
+}
+
+/**
+ * Transform meals from object structure (Monday: {breakfast: ...}) to array format
+ */
+function transformMealsFromObject(mealsObj: any): any[] {
+  const meals: any[] = [];
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  
+  Object.entries(mealsObj).forEach(([dayName, dayMeals]: [string, any]) => {
+    const dayNumber = dayNames.indexOf(dayName) + 1;
+    if (dayNumber === 0) return; // Skip invalid day names
+    
+    Object.entries(dayMeals).forEach(([mealType, mealData]: [string, any], mealIndex) => {
+      if (mealData && mealData.recipeId) {
+        meals.push({
+          day: dayNumber,
+          mealNumber: mealIndex + 1,
+          mealType: mealType,
+          recipe: {
+            id: mealData.recipeId,
+            name: mealData.name || `${mealType} recipe`,
+            description: mealData.description || '',
+            caloriesKcal: mealData.calories || 400,
+            proteinGrams: String(mealData.protein || 20),
+            carbsGrams: String(mealData.carbs || 40),
+            fatGrams: String(mealData.fat || 15),
+            prepTimeMinutes: mealData.prepTime || 15,
+            cookTimeMinutes: mealData.cookTime || 20,
+            servings: mealData.portions || 1,
+            mealTypes: [mealType],
+            dietaryTags: mealData.tags || [],
+            mainIngredientTags: [],
+            ingredientsJson: mealData.ingredients || [],
+            instructionsText: mealData.instructions || 'No instructions provided.',
+            imageUrl: mealData.imageUrl
+          }
+        });
+      }
+    });
+  });
+  
+  return meals;
+}
+
+/**
+ * Transform meals structure to required format
+ */
+function transformMealsStructure(meals: any[]): any[] {
+  return meals.map((meal, index) => ({
+    day: meal.day || Math.floor(index / 3) + 1,
+    mealNumber: meal.mealNumber || (index % 3) + 1,
+    mealType: meal.mealType || 'meal',
+    recipe: meal.recipe || meal
+  }));
+}
+
+/**
+ * Calculate daily calories from meals
+ */
+function calculateDailyCalories(meals: any[]): number {
+  if (!meals || meals.length === 0) return 2000;
+  
+  const totalCalories = meals.reduce((sum, meal) => {
+    const calories = meal.recipe?.caloriesKcal || meal.caloriesKcal || meal.calories || 400;
+    return sum + calories;
+  }, 0);
+  
+  const uniqueDays = new Set(meals.map(meal => meal.day || 1)).size;
+  return Math.round(totalCalories / Math.max(uniqueDays, 1));
+}
+
+/**
+ * Calculate number of days from meals
+ */
+function calculateDays(meals: any[]): number {
+  if (!meals || meals.length === 0) return 7;
+  
+  const uniqueDays = new Set(meals.map(meal => meal.day || 1)).size;
+  return Math.max(uniqueDays, 1);
+}
+
+/**
+ * Calculate meals per day from meals
+ */
+function calculateMealsPerDay(meals: any[]): number {
+  if (!meals || meals.length === 0) return 3;
+  
+  const mealsByDay: { [key: number]: number } = {};
+  meals.forEach(meal => {
+    const day = meal.day || 1;
+    mealsByDay[day] = (mealsByDay[day] || 0) + 1;
+  });
+  
+  return Math.max(...Object.values(mealsByDay), 3);
+}
+
+/**
+ * Enrich meal plan data by fetching full recipe information
+ */
+async function enrichMealPlanWithRecipes(mealPlanData: any): Promise<any> {
+  if (!mealPlanData.meals || !Array.isArray(mealPlanData.meals)) {
+    return mealPlanData;
+  }
+
+  const enrichedMeals = await Promise.all(
+    mealPlanData.meals.map(async (meal: any) => {
+      // If meal already has complete recipe data, use it
+      if (meal.recipe && meal.recipe.name && meal.recipe.ingredientsJson) {
+        return meal;
+      }
+
+      // If we have a recipeId, fetch the full recipe
+      if (meal.recipeId || meal.recipe?.id) {
+        const recipeId = meal.recipeId || meal.recipe.id;
+        try {
+          const fullRecipe = await storage.getRecipe(recipeId);
+          if (fullRecipe) {
+            return {
+              ...meal,
+              recipe: fullRecipe
+            };
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch recipe ${recipeId}:`, error);
+        }
+      }
+
+      // Return meal as-is if we can't enrich it
+      return meal;
+    })
+  );
+
+  return {
+    ...mealPlanData,
+    meals: enrichedMeals
+  };
+}
+
+/**
  * Validate and sanitize meal plan data for PDF generation
  */
-export function validateMealPlanData(data: any): MealPlanPdfData {
+export async function validateMealPlanData(data: any): Promise<MealPlanPdfData> {
   try {
-    // Handle different data structures that might come from the frontend
-    let mealPlanData = data;
+    // Transform the data to the expected format
+    const transformedData = transformMealPlanData(data);
     
-    // If data is wrapped in mealPlanData property
-    if (data.mealPlanData) {
-      mealPlanData = data.mealPlanData;
-    }
+    // Enrich with full recipe data if needed
+    const enrichedData = await enrichMealPlanWithRecipes(transformedData);
     
-    // If data has meals in the root, use it directly
-    if (data.meals && !mealPlanData.meals) {
-      mealPlanData = { ...mealPlanData, meals: data.meals };
-    }
+    // Provide defaults for required fields
+    const dataWithDefaults = {
+      id: enrichedData.id || 'generated-plan',
+      planName: enrichedData.planName || enrichedData.name || 'Meal Plan',
+      fitnessGoal: enrichedData.fitnessGoal || 'General Fitness',
+      description: enrichedData.description || '',
+      dailyCalorieTarget: enrichedData.dailyCalorieTarget || 2000,
+      days: enrichedData.days || 7,
+      mealsPerDay: enrichedData.mealsPerDay || 3,
+      meals: enrichedData.meals || [],
+      ...enrichedData
+    };
 
-    // Sanitize and validate the data
-    const validated = mealPlanSchema.parse(mealPlanData);
+    // Try to use the shared schema first, fallback to our internal schema
+    let validated;
+    try {
+      validated = sharedMealPlanSchema.parse(dataWithDefaults);
+    } catch (sharedError) {
+      // If shared schema fails, try our internal schema
+      validated = mealPlanSchema.parse(dataWithDefaults);
+    }
     
     // Additional validation logic
     validateMealPlanLogic(validated);
