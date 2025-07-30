@@ -199,9 +199,19 @@ async function enrichMealPlanWithRecipes(mealPlanData: any): Promise<any> {
 
   const enrichedMeals = await Promise.all(
     mealPlanData.meals.map(async (meal: any) => {
-      // If meal already has complete recipe data, use it
+      // If meal already has complete recipe data, ensure all fields have defaults
       if (meal.recipe && meal.recipe.name && meal.recipe.ingredientsJson) {
-        return meal;
+        return {
+          ...meal,
+          recipe: {
+            ...meal.recipe,
+            dietaryTags: meal.recipe.dietaryTags || [],
+            mealTypes: meal.recipe.mealTypes || [],
+            ingredientsJson: meal.recipe.ingredientsJson || [],
+            instructionsText: meal.recipe.instructionsText || '',
+            description: meal.recipe.description || ''
+          }
+        };
       }
 
       // If we have a recipeId, fetch the full recipe
@@ -212,7 +222,14 @@ async function enrichMealPlanWithRecipes(mealPlanData: any): Promise<any> {
           if (fullRecipe) {
             return {
               ...meal,
-              recipe: fullRecipe
+              recipe: {
+                ...fullRecipe,
+                dietaryTags: fullRecipe.dietaryTags || [],
+                mealTypes: fullRecipe.mealTypes || [],
+                ingredientsJson: fullRecipe.ingredientsJson || [],
+                instructionsText: fullRecipe.instructionsText || '',
+                description: fullRecipe.description || ''
+              }
             };
           }
         } catch (error) {
@@ -220,7 +237,20 @@ async function enrichMealPlanWithRecipes(mealPlanData: any): Promise<any> {
         }
       }
 
-      // Return meal as-is if we can't enrich it
+      // Return meal with default recipe fields if we can't enrich it
+      if (meal.recipe) {
+        return {
+          ...meal,
+          recipe: {
+            ...meal.recipe,
+            dietaryTags: meal.recipe.dietaryTags || [],
+            mealTypes: meal.recipe.mealTypes || [],
+            ingredientsJson: meal.recipe.ingredientsJson || [],
+            instructionsText: meal.recipe.instructionsText || '',
+            description: meal.recipe.description || ''
+          }
+        };
+      }
       return meal;
     })
   );
@@ -264,16 +294,41 @@ export async function validateMealPlanData(data: any): Promise<MealPlanPdfData> 
       validated = mealPlanSchema.parse(dataWithDefaults);
     }
     
-    // Additional validation logic
-    validateMealPlanLogic({
-      ...validated,
-      description: validated.description || 'No description provided'
-    });
-    
-    return {
-      ...validated,
-      description: validated.description || 'No description provided'
+    // Convert to our internal PDF format
+    const pdfData: MealPlanPdfData = {
+      id: validated.id || 'generated-plan',
+      planName: validated.planName,
+      fitnessGoal: validated.fitnessGoal,
+      description: validated.description || 'No description provided',
+      dailyCalorieTarget: validated.dailyCalorieTarget,
+      days: validated.days,
+      mealsPerDay: validated.mealsPerDay,
+      meals: validated.meals.map((meal: any) => ({
+        day: meal.day,
+        mealNumber: meal.mealNumber,
+        mealType: meal.mealType,
+        recipe: {
+          id: meal.recipe.id,
+          name: meal.recipe.name,
+          description: meal.recipe.description || '',
+          caloriesKcal: meal.recipe.caloriesKcal,
+          proteinGrams: meal.recipe.proteinGrams,
+          carbsGrams: meal.recipe.carbsGrams,
+          fatGrams: meal.recipe.fatGrams,
+          prepTimeMinutes: meal.recipe.prepTimeMinutes,
+          servings: meal.recipe.servings,
+          mealTypes: meal.recipe.mealTypes || [],
+          dietaryTags: meal.recipe.dietaryTags || [],
+          ingredientsJson: meal.recipe.ingredientsJson || [],
+          instructionsText: meal.recipe.instructionsText || ''
+        }
+      }))
     };
+    
+    // Additional validation logic
+    validateMealPlanLogic(pdfData);
+    
+    return pdfData;
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessage = error.errors.map(err => 

@@ -34,7 +34,8 @@
       "Bash(do echo \"PDF Export Test $i:\")",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
