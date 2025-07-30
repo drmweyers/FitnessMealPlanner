@@ -111,6 +111,11 @@ export interface IStorage {
   unassignMealPlanFromCustomer(mealPlanId: string, customerId: string): Promise<boolean>;
   getMealPlanAssignments(mealPlanId: string): Promise<MealPlanAssignment[]>;
   
+  // Customer management
+  getTrainerCustomers(trainerId: string): Promise<{id: string; email: string; firstAssignedAt: string}[]>;
+  getCustomerMealPlans(trainerId: string, customerId: string): Promise<any[]>;
+  removeMealPlanAssignment(trainerId: string, assignmentId: string): Promise<boolean>;
+  
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
 }
@@ -579,6 +584,75 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(mealPlanAssignments)
       .where(eq(mealPlanAssignments.mealPlanId, mealPlanId));
+  }
+
+  // Customer management functions
+  async getTrainerCustomers(trainerId: string): Promise<{id: string; email: string; firstAssignedAt: string}[]> {
+    // Get unique customers who have meal plans assigned by this trainer
+    const customersWithMealPlans = await db.select({
+      customerId: personalizedMealPlans.customerId,
+      customerEmail: users.email,
+      assignedAt: personalizedMealPlans.assignedAt,
+    })
+    .from(personalizedMealPlans)
+    .innerJoin(users, eq(users.id, personalizedMealPlans.customerId))
+    .where(eq(personalizedMealPlans.trainerId, trainerId));
+    
+    const customersWithRecipes = await db.select({
+      customerId: personalizedRecipes.customerId,
+      customerEmail: users.email,
+      assignedAt: personalizedRecipes.assignedAt,
+    })
+    .from(personalizedRecipes)
+    .innerJoin(users, eq(users.id, personalizedRecipes.customerId))
+    .where(eq(personalizedRecipes.trainerId, trainerId));
+    
+    // Combine and deduplicate customers
+    const customerMap = new Map();
+    
+    [...customersWithMealPlans, ...customersWithRecipes].forEach(customer => {
+      if (!customerMap.has(customer.customerId)) {
+        customerMap.set(customer.customerId, {
+          id: customer.customerId,
+          email: customer.customerEmail,
+          firstAssignedAt: customer.assignedAt.toISOString(),
+        });
+      } else {
+        const existing = customerMap.get(customer.customerId);
+        if (customer.assignedAt && existing.firstAssignedAt && customer.assignedAt < new Date(existing.firstAssignedAt)) {
+          existing.firstAssignedAt = customer.assignedAt.toISOString();
+        }
+      }
+    });
+    
+    return Array.from(customerMap.values());
+  }
+
+  async getCustomerMealPlans(trainerId: string, customerId: string): Promise<any[]> {
+    return await db.select()
+      .from(personalizedMealPlans)
+      .where(
+        and(
+          eq(personalizedMealPlans.trainerId, trainerId),
+          eq(personalizedMealPlans.customerId, customerId)
+        )
+      );
+  }
+
+  async removeMealPlanAssignment(trainerId: string, assignmentId: string): Promise<boolean> {
+    try {
+      const result = await db.delete(personalizedMealPlans)
+        .where(
+          and(
+            eq(personalizedMealPlans.id, assignmentId),
+            eq(personalizedMealPlans.trainerId, trainerId)
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error('Error removing meal plan assignment:', error);
+      return false;
+    }
   }
 
   // Transaction support

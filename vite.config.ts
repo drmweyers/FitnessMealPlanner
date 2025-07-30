@@ -37,5 +37,6 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
+    historyApiFallback: true,
   },
 });

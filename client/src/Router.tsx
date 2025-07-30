@@ -83,8 +83,15 @@ export default function Router() {
           return <Customer />;
         }} />
         
-        {/* Trainer Routes */}
-        <Route path="/trainer" component={() => {
+        {/* Trainer Routes - More specific routes first */}
+        <Route path="/trainer/customers" component={() => {
+          if (user.role !== 'trainer') {
+            return <Redirect to="/" />;
+          }
+          return <Trainer />;
+        }} />
+        
+        <Route path="/trainer/meal-plans" component={() => {
           if (user.role !== 'trainer') {
             return <Redirect to="/" />;
           }
@@ -98,14 +105,7 @@ export default function Router() {
           return <Trainer />;
         }} />
         
-        <Route path="/trainer/customers" component={() => {
-          if (user.role !== 'trainer') {
-            return <Redirect to="/" />;
-          }
-          return <Trainer />;
-        }} />
-        
-        <Route path="/trainer/meal-plans" component={() => {
+        <Route path="/trainer" component={() => {
           if (user.role !== 'trainer') {
             return <Redirect to="/" />;
           }

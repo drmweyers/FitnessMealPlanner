@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { apiRequest } from '../lib/api';
+import { apiRequest } from '../lib/queryClient';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { Calendar, Users, Utensils, Search, MoreVertical, Trash2, UserPlus, Eye } from 'lucide-react';
