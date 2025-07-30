@@ -13,6 +13,8 @@
     "test:gui:runner": "tsx test/gui/test-runner.ts",
     "test:invitation": "tsx test/gui/run-invitation-tests.ts",
     "test:invitation:simple": "node test-invitation-feature.js",
+    "test:trainer-meal-plans": "tsx test/integration/run-trainer-meal-plan-tests.ts",
+    "test:integration": "vitest run test/integration/**/*.test.ts",
     "test:all": "npm run test && npm run test:gui",
     "test:baseline": "TEST_MODE=baseline npm run test:gui",
     "check": "tsc",

@@ -197,8 +197,8 @@ trainerRouter.post('/customers/:customerId/meal-plans', requireAuth, requireRole
   }
 });
 
-// Remove a meal plan assignment
-trainerRouter.delete('/meal-plans/:planId', requireAuth, requireRole('trainer'), async (req, res) => {
+// Remove a meal plan assignment from customer
+trainerRouter.delete('/assigned-meal-plans/:planId', requireAuth, requireRole('trainer'), async (req, res) => {
   try {
     const trainerId = req.user!.id;
     const { planId } = req.params;
