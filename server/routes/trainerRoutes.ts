@@ -4,6 +4,7 @@ import { storage } from '../storage';
 import { eq, sql, and } from 'drizzle-orm';
 import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
 import { db } from '../db';
+import { z } from 'zod';
 
 const trainerRouter = Router();
 
@@ -230,6 +231,286 @@ trainerRouter.delete('/meal-plans/:planId', requireAuth, requireRole('trainer'),
     res.status(500).json({ 
       status: 'error',
       message: 'Failed to remove meal plan assignment',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// === Trainer Meal Plan Management Routes ===
+
+// Get all saved meal plans for the trainer
+trainerRouter.get('/meal-plans', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const mealPlans = await storage.getTrainerMealPlans(trainerId);
+    
+    res.json({ 
+      mealPlans,
+      total: mealPlans.length 
+    });
+  } catch (error) {
+    console.error('Failed to fetch trainer meal plans:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to fetch meal plans',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Save a new meal plan to trainer's library
+const saveMealPlanSchema = z.object({
+  mealPlanData: z.any(), // MealPlan schema
+  notes: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  isTemplate: z.boolean().optional(),
+});
+
+trainerRouter.post('/meal-plans', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { mealPlanData, notes, tags, isTemplate } = saveMealPlanSchema.parse(req.body);
+    
+    const savedPlan = await storage.createTrainerMealPlan({
+      trainerId,
+      mealPlanData,
+      notes,
+      tags,
+      isTemplate,
+    });
+    
+    res.status(201).json({ 
+      mealPlan: savedPlan,
+      message: 'Meal plan saved successfully'
+    });
+  } catch (error) {
+    console.error('Failed to save meal plan:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        status: 'error',
+        message: 'Invalid request data',
+        details: error.errors
+      });
+    }
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to save meal plan',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get a specific meal plan
+trainerRouter.get('/meal-plans/:planId', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { planId } = req.params;
+    
+    const plan = await storage.getTrainerMealPlan(planId);
+    
+    if (!plan || plan.trainerId !== trainerId) {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'Meal plan not found',
+        code: 'NOT_FOUND'
+      });
+    }
+    
+    // Get assignments for this plan
+    const assignments = await storage.getMealPlanAssignments(planId);
+    
+    res.json({ 
+      mealPlan: {
+        ...plan,
+        assignments,
+        assignmentCount: assignments.length,
+      }
+    });
+  } catch (error) {
+    console.error('Failed to fetch meal plan:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to fetch meal plan',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Update a meal plan
+const updateMealPlanSchema = z.object({
+  mealPlanData: z.any().optional(),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  isTemplate: z.boolean().optional(),
+});
+
+trainerRouter.put('/meal-plans/:planId', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { planId } = req.params;
+    const updates = updateMealPlanSchema.parse(req.body);
+    
+    // Verify ownership
+    const existing = await storage.getTrainerMealPlan(planId);
+    if (!existing || existing.trainerId !== trainerId) {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'Meal plan not found',
+        code: 'NOT_FOUND'
+      });
+    }
+    
+    const updated = await storage.updateTrainerMealPlan(planId, updates);
+    
+    res.json({ 
+      mealPlan: updated,
+      message: 'Meal plan updated successfully'
+    });
+  } catch (error) {
+    console.error('Failed to update meal plan:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        status: 'error',
+        message: 'Invalid request data',
+        details: error.errors
+      });
+    }
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to update meal plan',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Delete a saved meal plan
+trainerRouter.delete('/meal-plans/:planId', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { planId } = req.params;
+    
+    // Verify ownership
+    const existing = await storage.getTrainerMealPlan(planId);
+    if (!existing || existing.trainerId !== trainerId) {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'Meal plan not found',
+        code: 'NOT_FOUND'
+      });
+    }
+    
+    const deleted = await storage.deleteTrainerMealPlan(planId);
+    
+    if (!deleted) {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'Meal plan not found',
+        code: 'NOT_FOUND'
+      });
+    }
+    
+    res.json({ message: 'Meal plan deleted successfully' });
+  } catch (error) {
+    console.error('Failed to delete meal plan:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to delete meal plan',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Assign a saved meal plan to a customer
+const assignSavedMealPlanSchema = z.object({
+  customerId: z.string().uuid(),
+  notes: z.string().optional(),
+});
+
+trainerRouter.post('/meal-plans/:planId/assign', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { planId } = req.params;
+    const { customerId, notes } = assignSavedMealPlanSchema.parse(req.body);
+    
+    // Verify ownership of meal plan
+    const plan = await storage.getTrainerMealPlan(planId);
+    if (!plan || plan.trainerId !== trainerId) {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'Meal plan not found',
+        code: 'NOT_FOUND'
+      });
+    }
+    
+    // Verify customer exists
+    const customer = await storage.getUser(customerId);
+    if (!customer || customer.role !== 'customer') {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'Customer not found',
+        code: 'NOT_FOUND'
+      });
+    }
+    
+    // Create assignment
+    const assignment = await storage.assignMealPlanToCustomer(planId, customerId, trainerId, notes);
+    
+    // Also create a personalized meal plan record for backward compatibility
+    await storage.assignMealPlanToCustomers(trainerId, plan.mealPlanData as MealPlan, [customerId]);
+    
+    res.status(201).json({ 
+      assignment,
+      message: 'Meal plan assigned successfully'
+    });
+  } catch (error) {
+    console.error('Failed to assign meal plan:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        status: 'error',
+        message: 'Invalid request data',
+        details: error.errors
+      });
+    }
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to assign meal plan',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Unassign a meal plan from a customer
+trainerRouter.delete('/meal-plans/:planId/assign/:customerId', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { planId, customerId } = req.params;
+    
+    // Verify ownership of meal plan
+    const plan = await storage.getTrainerMealPlan(planId);
+    if (!plan || plan.trainerId !== trainerId) {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'Meal plan not found',
+        code: 'NOT_FOUND'
+      });
+    }
+    
+    const unassigned = await storage.unassignMealPlanFromCustomer(planId, customerId);
+    
+    if (!unassigned) {
+      return res.status(404).json({ 
+        status: 'error',
+        message: 'Assignment not found',
+        code: 'NOT_FOUND'
+      });
+    }
+    
+    res.json({ message: 'Meal plan unassigned successfully' });
+  } catch (error) {
+    console.error('Failed to unassign meal plan:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to unassign meal plan',
       code: 'SERVER_ERROR'
     });
   }

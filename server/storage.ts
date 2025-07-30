@@ -18,6 +18,8 @@ import {
   personalizedRecipes,
   personalizedMealPlans,
   customerInvitations,
+  trainerMealPlans,
+  mealPlanAssignments,
   type User,
   type InsertUser,
   type Recipe,
@@ -27,6 +29,10 @@ import {
   type MealPlan,
   type CustomerInvitation,
   type InsertCustomerInvitation,
+  type TrainerMealPlan,
+  type InsertTrainerMealPlan,
+  type TrainerMealPlanWithAssignments,
+  type MealPlanAssignment,
   passwordResetTokens,
   refreshTokens,
 } from "@shared/schema";
@@ -92,6 +98,18 @@ export interface IStorage {
   // Personalized meal plans
   assignMealPlanToCustomers(trainerId: string, mealPlanData: MealPlan, customerIds: string[]): Promise<void>;
   getPersonalizedMealPlans(customerId: string): Promise<any[]>;
+  
+  // Trainer meal plans
+  createTrainerMealPlan(mealPlan: InsertTrainerMealPlan): Promise<TrainerMealPlan>;
+  getTrainerMealPlan(id: string): Promise<TrainerMealPlan | undefined>;
+  getTrainerMealPlans(trainerId: string): Promise<TrainerMealPlanWithAssignments[]>;
+  updateTrainerMealPlan(id: string, updates: Partial<InsertTrainerMealPlan>): Promise<TrainerMealPlan | undefined>;
+  deleteTrainerMealPlan(id: string): Promise<boolean>;
+  
+  // Meal plan assignments
+  assignMealPlanToCustomer(mealPlanId: string, customerId: string, assignedBy: string, notes?: string): Promise<MealPlanAssignment>;
+  unassignMealPlanFromCustomer(mealPlanId: string, customerId: string): Promise<boolean>;
+  getMealPlanAssignments(mealPlanId: string): Promise<MealPlanAssignment[]>;
   
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
@@ -464,6 +482,103 @@ export class DatabaseStorage implements IStorage {
       console.error('Error deleting expired invitations:', error);
       return 0;
     }
+  }
+
+  // Trainer meal plans
+  async createTrainerMealPlan(mealPlan: InsertTrainerMealPlan): Promise<TrainerMealPlan> {
+    const [created] = await db.insert(trainerMealPlans).values(mealPlan).returning();
+    return created;
+  }
+
+  async getTrainerMealPlan(id: string): Promise<TrainerMealPlan | undefined> {
+    const [plan] = await db.select().from(trainerMealPlans).where(eq(trainerMealPlans.id, id));
+    return plan;
+  }
+
+  async getTrainerMealPlans(trainerId: string): Promise<TrainerMealPlanWithAssignments[]> {
+    // Get all meal plans for the trainer
+    const plans = await db
+      .select()
+      .from(trainerMealPlans)
+      .where(eq(trainerMealPlans.trainerId, trainerId))
+      .orderBy(desc(trainerMealPlans.createdAt));
+
+    // Get assignments for each plan
+    const plansWithAssignments = await Promise.all(
+      plans.map(async (plan) => {
+        const assignments = await db
+          .select({
+            customerId: mealPlanAssignments.customerId,
+            customerEmail: users.email,
+            assignedAt: mealPlanAssignments.assignedAt,
+          })
+          .from(mealPlanAssignments)
+          .leftJoin(users, eq(users.id, mealPlanAssignments.customerId))
+          .where(eq(mealPlanAssignments.mealPlanId, plan.id));
+
+        return {
+          ...plan,
+          assignments: assignments.map(a => ({
+            customerId: a.customerId,
+            customerEmail: a.customerEmail || '',
+            assignedAt: a.assignedAt || new Date(),
+          })),
+          assignmentCount: assignments.length,
+        };
+      })
+    );
+
+    return plansWithAssignments;
+  }
+
+  async updateTrainerMealPlan(id: string, updates: Partial<InsertTrainerMealPlan>): Promise<TrainerMealPlan | undefined> {
+    const [updated] = await db
+      .update(trainerMealPlans)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(trainerMealPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrainerMealPlan(id: string): Promise<boolean> {
+    const result = await db.delete(trainerMealPlans).where(eq(trainerMealPlans.id, id));
+    return Number(result.rowCount) > 0;
+  }
+
+  // Meal plan assignments
+  async assignMealPlanToCustomer(mealPlanId: string, customerId: string, assignedBy: string, notes?: string): Promise<MealPlanAssignment> {
+    const [assignment] = await db
+      .insert(mealPlanAssignments)
+      .values({
+        mealPlanId,
+        customerId,
+        assignedBy,
+        notes,
+      })
+      .returning();
+    return assignment;
+  }
+
+  async unassignMealPlanFromCustomer(mealPlanId: string, customerId: string): Promise<boolean> {
+    const result = await db
+      .delete(mealPlanAssignments)
+      .where(
+        and(
+          eq(mealPlanAssignments.mealPlanId, mealPlanId),
+          eq(mealPlanAssignments.customerId, customerId)
+        )
+      );
+    return Number(result.rowCount) > 0;
+  }
+
+  async getMealPlanAssignments(mealPlanId: string): Promise<MealPlanAssignment[]> {
+    return await db
+      .select()
+      .from(mealPlanAssignments)
+      .where(eq(mealPlanAssignments.mealPlanId, mealPlanId));
   }
 
   // Transaction support

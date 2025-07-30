@@ -17,6 +17,7 @@
     "test:baseline": "TEST_MODE=baseline npm run test:gui",
     "check": "tsc",
     "db:generate": "drizzle-kit generate",
+    "migrate": "tsx scripts/runMigration.ts",
     "db:push": "drizzle-kit push",
     "create-admin": "tsx scripts/createFirstAdmin.ts",
     "docker:dev": "docker-compose --profile dev up -d",

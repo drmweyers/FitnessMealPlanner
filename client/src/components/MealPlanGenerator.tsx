@@ -72,6 +72,7 @@ import {
   Sparkles,
   Download,
   UserPlus,
+  Save,
 } from "lucide-react";
 import EvoFitPDFExport from "./EvoFitPDFExport";
 import html2canvas from "html2canvas";
@@ -293,6 +294,38 @@ export default function MealPlanGenerator() {
     onError: (error: Error) => {
       toast({
         title: "Generation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const saveMealPlan = useMutation({
+    mutationFn: async ({ notes, tags }: { notes?: string; tags?: string[] }) => {
+      if (!generatedPlan) throw new Error("No meal plan to save");
+      
+      const response = await apiRequest(
+        "POST",
+        "/api/trainer/meal-plans",
+        {
+          mealPlanData: generatedPlan.mealPlan,
+          notes,
+          tags,
+          isTemplate: false,
+        },
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Meal Plan Saved!",
+        description: "The meal plan has been saved to your library.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/trainer/meal-plans"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Save Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -1712,16 +1745,29 @@ export default function MealPlanGenerator() {
               </div>
               <div className="flex flex-col xs:flex-row gap-2">
                 {(user?.role === 'trainer' || user?.role === 'admin') && (
-                  <Button
-                    onClick={() => setIsAssignmentModalOpen(true)}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
-                  >
-                    <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Assign to Customers</span>
-                    <span className="sm:hidden">Assign</span>
-                  </Button>
+                  <>
+                    <Button
+                      onClick={() => saveMealPlan.mutate({})}
+                      variant="outline"
+                      size="sm"
+                      disabled={saveMealPlan.isPending}
+                      className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                    >
+                      <Save className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Save to Library</span>
+                      <span className="sm:hidden">Save</span>
+                    </Button>
+                    <Button
+                      onClick={() => setIsAssignmentModalOpen(true)}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                    >
+                      <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Assign to Customers</span>
+                      <span className="sm:hidden">Assign</span>
+                    </Button>
+                  </>
                 )}
                 <Button
                   onClick={() => {
