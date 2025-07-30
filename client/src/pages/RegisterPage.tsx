@@ -16,7 +16,12 @@ import styles from '../styles/icons.module.css';
 
 const registerSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+  password: z.string()
+    .min(8, { message: 'Password must be at least 8 characters' })
+    .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
+    .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
+    .regex(/[0-9]/, { message: 'Password must contain at least one number' })
+    .regex(/[^A-Za-z0-9]/, { message: 'Password must contain at least one special character' }),
   confirmPassword: z.string(),
   role: z.enum(['customer', 'trainer']),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -96,6 +101,7 @@ const RegisterPage = () => {
   };
 
   const onSubmit = async (values: RegisterFormData) => {
+    console.log('Registration form submitted:', values);
     try {
       if (invitationToken) {
         // Register via invitation
@@ -126,7 +132,9 @@ const RegisterPage = () => {
         redirect('/login');
       } else {
         // Regular registration
+        console.log('Attempting regular registration...');
         const { confirmPassword, ...registerData } = values;
+        console.log('Registration data:', registerData);
         const user = await register(registerData);
 
         if (!user || !user.role) {
@@ -153,6 +161,7 @@ const RegisterPage = () => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
+      console.log('Full error object:', error);
       toast({
         title: 'Registration failed',
         description: error.message || 'An error occurred during registration',
@@ -308,13 +317,23 @@ const RegisterPage = () => {
                             <Input 
                               type="password" 
                               autoComplete="new-password"
-                              placeholder="Minimum 8 characters"
+                              placeholder="Strong password required"
                               {...field} 
                               className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                             />
                             <i className={`fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 ${styles.iconMuted} text-sm`}></i>
                           </div>
                         </FormControl>
+                        <div className="text-xs text-gray-600 mt-1 space-y-1">
+                          <p>Password must contain:</p>
+                          <ul className="list-disc list-inside space-y-0.5 ml-2">
+                            <li>At least 8 characters</li>
+                            <li>One uppercase letter</li>
+                            <li>One lowercase letter</li>
+                            <li>One number</li>
+                            <li>One special character (!@#$%^&*)</li>
+                          </ul>
+                        </div>
                         <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
@@ -390,6 +409,11 @@ const RegisterPage = () => {
                     type="submit" 
                     className="w-full h-11 sm:h-12 text-sm sm:text-base font-medium bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 rounded-lg transition-all duration-200 mt-6"
                     disabled={form.formState.isSubmitting}
+                    onClick={() => {
+                      console.log('Create Account button clicked');
+                      console.log('Form state:', form.formState);
+                      console.log('Form values:', form.getValues());
+                    }}
                   >
                     {form.formState.isSubmitting ? (
                       <div className="flex items-center justify-center">
