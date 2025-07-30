@@ -165,7 +165,7 @@ const Customer = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
-      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="p-2 xs:p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         {/* Debug Information Panel
         <Card className="mb-6 border-amber-200 bg-amber-50/80 backdrop-blur-sm">
           <CardContent className="p-4">
@@ -247,7 +247,7 @@ const Customer = () => {
 
           {/* Statistics Cards */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 xs:gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
               <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/70 backdrop-blur-sm hover:bg-white/90">
                 <CardContent className="p-3 sm:p-4 lg:p-6 text-center">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
@@ -292,22 +292,22 @@ const Customer = () => {
         </div>
 
         {/* Enhanced Search and Filters */}
-        <Card className="mb-6 sm:mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-4 sm:p-6">
+        <Card className="mb-4 xs:mb-6 sm:mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardContent className="p-2 xs:p-4 sm:p-6">
             {/* Search Bar */}
-            <div className="relative mb-4 sm:mb-6">
-              <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
+            <div className="relative mb-3 xs:mb-4 sm:mb-6">
+              <Search className="absolute left-2 xs:left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
               <Input
-                placeholder="Search your meal plans..."
+                placeholder="Search meal plans..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 sm:pl-12 h-12 sm:h-14 text-sm sm:text-base border-0 bg-slate-50/80 focus:bg-white transition-colors duration-200 rounded-lg sm:rounded-xl shadow-sm"
+                className="pl-8 xs:pl-10 sm:pl-12 h-10 xs:h-12 sm:h-14 text-xs xs:text-sm sm:text-base border-0 bg-slate-50/80 focus:bg-white transition-colors duration-200 rounded-lg sm:rounded-xl shadow-sm"
               />
             </div>
 
             {/* Filter Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
-              <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 xs:mb-4 gap-2 xs:gap-3 sm:gap-0">
+              <div className="flex items-center space-x-1 xs:space-x-2 sm:space-x-3">
                 <SlidersHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600 flex-shrink-0" />
                 <span className="text-slate-700 font-semibold text-sm sm:text-base">Filter & Sort</span>
                 {(fitnessGoalFilter !== 'all' || sortBy !== 'date' || searchTerm) && (
@@ -316,7 +316,7 @@ const Customer = () => {
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center space-x-2 flex-wrap gap-2">
+              <div className="flex items-center space-x-1 xs:space-x-2 flex-wrap gap-1 xs:gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -342,7 +342,7 @@ const Customer = () => {
 
             {/* Collapsible Filters */}
             {showFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-4 border-t border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 xs:gap-3 sm:gap-4 pt-2 xs:pt-4 border-t border-slate-200">
                 <div className="space-y-2">
                   <label className="text-xs sm:text-sm font-medium text-slate-700">Fitness Goal</label>
                   <Select value={fitnessGoalFilter} onValueChange={setFitnessGoalFilter}>
@@ -432,7 +432,7 @@ const Customer = () => {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 xs:gap-4 sm:gap-6">
                   {filteredMealPlans.map((mealPlan: EnhancedMealPlan, index: number) => (
                     <div 
                       key={mealPlan.id} 
@@ -440,7 +440,7 @@ const Customer = () => {
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <MealPlanCard 
-                        mealPlan={mealPlan as CustomerMealPlan} 
+                        mealPlan={mealPlan as unknown as CustomerMealPlan} 
                         onClick={() => setSelectedMealPlan(mealPlan)}
                       />
                     </div>
@@ -493,7 +493,7 @@ const Customer = () => {
         {/* Meal Plan Modal */}
         {selectedMealPlan && (
           <MealPlanModal
-            mealPlan={selectedMealPlan}
+            mealPlan={selectedMealPlan as unknown as CustomerMealPlan}
             onClose={() => setSelectedMealPlan(null)}
           />
         )}

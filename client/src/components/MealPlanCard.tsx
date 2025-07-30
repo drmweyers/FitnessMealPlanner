@@ -51,10 +51,10 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
           </div>
         </div>
 
-        <CardContent className="p-3 sm:p-4" onClick={onClick}>
-          <div className="space-y-2 sm:space-y-3">
+        <CardContent className="p-2 xs:p-3 sm:p-4" onClick={onClick}>
+          <div className="space-y-1 xs:space-y-2 sm:space-y-3">
             {/* Plan Name */}
-            <h3 className="font-semibold text-slate-900 line-clamp-2 leading-tight text-sm sm:text-base">
+            <h3 className="font-semibold text-slate-900 line-clamp-2 leading-tight text-xs xs:text-sm sm:text-base">
               {planName}
             </h3>
 
@@ -83,7 +83,7 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
             )}
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-2 border-t border-slate-100">
+            <div className="grid grid-cols-2 gap-1 xs:gap-2 sm:gap-3 pt-1 xs:pt-2 border-t border-slate-100">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1 mb-1">
                   <Zap className="h-3 w-3 text-orange-500" />
@@ -108,7 +108,7 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
             </div>
 
             {/* Additional Info */}
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-xs text-slate-500 pt-1 xs:pt-2 border-t border-slate-100">
               <div className="flex items-center gap-1">
                 <Utensils className="h-3 w-3" />
                 <span>{Math.round(validMeals.length / days)} meals/day</span>

@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import type { CustomerMealPlan } from "@shared/schema";
@@ -81,18 +81,21 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] xs:w-[90vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Utensils className="h-5 w-5 text-blue-600" />
             <span>{planName}</span>
           </DialogTitle>
+          <DialogDescription>
+            Detailed view of your {days}-day meal plan with nutrition breakdown and daily meal schedule.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Plan Overview */}
-          <div className="bg-slate-50 p-4 rounded-lg">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="bg-slate-50 p-2 xs:p-4 rounded-lg">
+            <div className="grid grid-cols-2 xs:grid-cols-4 md:grid-cols-4 gap-2 xs:gap-4 mb-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-600">
                   {avgCaloriesPerDay}
