@@ -98,6 +98,20 @@ export default function Router() {
           return <Trainer />;
         }} />
         
+        <Route path="/trainer/customers" component={() => {
+          if (user.role !== 'trainer') {
+            return <Redirect to="/" />;
+          }
+          return <Trainer />;
+        }} />
+        
+        <Route path="/trainer/meal-plans" component={() => {
+          if (user.role !== 'trainer') {
+            return <Redirect to="/" />;
+          }
+          return <Trainer />;
+        }} />
+        
         {/* Profile Routes */}
         <Route path="/profile" component={() => {
           switch (user.role) {

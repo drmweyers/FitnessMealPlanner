@@ -14,6 +14,7 @@ import RecipeModal from "../components/RecipeModal";
 import RecipeAssignment from "../components/RecipeAssignment";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import CustomerManagement from "../components/CustomerManagement";
+import TrainerMealPlans from "../components/TrainerMealPlans";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Trainer() {
@@ -31,6 +32,7 @@ export default function Trainer() {
   const getActiveTab = () => {
     if (location === '/meal-plan-generator') return 'meal-plan';
     if (location === '/trainer/customers') return 'customers';
+    if (location === '/trainer/meal-plans') return 'saved-plans';
     return 'recipes';
   };
 
@@ -41,6 +43,9 @@ export default function Trainer() {
         break;
       case 'customers':
         navigate('/trainer/customers');
+        break;
+      case 'saved-plans':
+        navigate('/trainer/meal-plans');
         break;
       default:
         navigate('/trainer');
@@ -78,30 +83,38 @@ export default function Trainer() {
       </div>
 
       <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 sm:mb-8 h-auto p-1 gap-1">
           <TabsTrigger 
             value="recipes" 
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
             <i className="fas fa-book-open text-sm sm:text-base"></i>
-            <span className="hidden sm:inline">Browse Recipes</span>
-            <span className="sm:hidden">Recipes</span>
+            <span className="hidden lg:inline">Browse Recipes</span>
+            <span className="lg:hidden">Recipes</span>
           </TabsTrigger>
           <TabsTrigger 
             value="meal-plan"
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
             <i className="fas fa-utensils text-sm sm:text-base"></i>
-            <span className="hidden sm:inline">Meal Plan Generator</span>
-            <span className="sm:hidden">Plans</span>
+            <span className="hidden lg:inline">Generate Plans</span>
+            <span className="lg:hidden">Generate</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="saved-plans"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+          >
+            <i className="fas fa-save text-sm sm:text-base"></i>
+            <span className="hidden lg:inline">Saved Plans</span>
+            <span className="lg:hidden">Saved</span>
           </TabsTrigger>
           <TabsTrigger 
             value="customers"
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
             <i className="fas fa-users text-sm sm:text-base"></i>
-            <span className="hidden sm:inline">Manage Customers</span>
-            <span className="sm:hidden">Customers</span>
+            <span className="hidden lg:inline">Customers</span>
+            <span className="lg:hidden">Customers</span>
           </TabsTrigger>
         </TabsList>
 
@@ -240,6 +253,10 @@ export default function Trainer() {
 
         <TabsContent value="customers">
           <CustomerManagement />
+        </TabsContent>
+
+        <TabsContent value="saved-plans">
+          <TrainerMealPlans />
         </TabsContent>
       </Tabs>
 
