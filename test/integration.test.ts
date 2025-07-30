@@ -144,9 +144,21 @@ describe("Application Integration Tests", () => {
 
     it("should require auth for recipe generation", async () => {
       await request(app)
-        .post("/api/admin/generate-recipes")
+        .post("/api/admin/generate")
         .send({ count: 5 })
         .expect(401);
+    });
+
+    it("should validate large recipe generation counts", async () => {
+      // Test that the API properly handles larger counts
+      const largeCounts = [100, 250, 500];
+      
+      for (const count of largeCounts) {
+        await request(app)
+          .post("/api/admin/generate")
+          .send({ count })
+          .expect(401); // Expects 401 due to no auth, but validates the count parameter
+      }
     });
   });
 

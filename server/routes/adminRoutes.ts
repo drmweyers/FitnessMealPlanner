@@ -31,9 +31,9 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
     } = req.body;
     
     // Validate required count parameter
-    if (!count || count < 1 || count > 100) {
+    if (!count || count < 1 || count > 500) {
       return res.status(400).json({ 
-        message: "Count is required and must be between 1 and 100" 
+        message: "Count is required and must be between 1 and 500" 
       });
     }
     

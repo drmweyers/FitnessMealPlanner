@@ -35,7 +35,9 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "Bash(git config:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run typecheck:*)"
     ],
     "deny": []
   }

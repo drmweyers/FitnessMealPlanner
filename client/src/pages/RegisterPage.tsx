@@ -101,7 +101,6 @@ const RegisterPage = () => {
   };
 
   const onSubmit = async (values: RegisterFormData) => {
-    console.log('Registration form submitted:', values);
     try {
       if (invitationToken) {
         // Register via invitation
@@ -132,9 +131,7 @@ const RegisterPage = () => {
         redirect('/login');
       } else {
         // Regular registration
-        console.log('Attempting regular registration...');
         const { confirmPassword, ...registerData } = values;
-        console.log('Registration data:', registerData);
         const user = await register(registerData);
 
         if (!user || !user.role) {
@@ -161,10 +158,21 @@ const RegisterPage = () => {
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      console.log('Full error object:', error);
+      
+      // Handle specific error cases with user-friendly messages
+      let errorMessage = 'An error occurred during registration';
+      
+      if (error.message?.includes('User already exists')) {
+        errorMessage = 'An account with this email already exists. Please login or use a different email.';
+      } else if (error.message?.includes('Password must')) {
+        errorMessage = error.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Registration failed',
-        description: error.message || 'An error occurred during registration',
+        description: errorMessage,
         variant: 'destructive',
       });
     }
@@ -409,11 +417,6 @@ const RegisterPage = () => {
                     type="submit" 
                     className="w-full h-11 sm:h-12 text-sm sm:text-base font-medium bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 rounded-lg transition-all duration-200 mt-6"
                     disabled={form.formState.isSubmitting}
-                    onClick={() => {
-                      console.log('Create Account button clicked');
-                      console.log('Form state:', form.formState);
-                      console.log('Form values:', form.getValues());
-                    }}
                   >
                     {form.formState.isSubmitting ? (
                       <div className="flex items-center justify-center">

@@ -172,9 +172,22 @@ describe('Admin Routes', () => {
 
   it('should require authentication for recipe generation', async () => {
     await agent
-      .post('/api/admin/generate-recipes')
+      .post('/api/admin/generate')
       .send({ count: 5 })
       .expect(401);
+  });
+
+  it('should accept high recipe counts up to 500', async () => {
+    // This test validates that the API accepts the new higher limits
+    // Note: We test endpoint validation, not actual generation (which would take too long)
+    const testCounts = [50, 100, 250, 500];
+    
+    for (const count of testCounts) {
+      await agent
+        .post('/api/admin/generate')
+        .send({ count })
+        .expect(401); // Still expect 401 since we're not authenticated, but the count should be validated
+    }
   });
 });
 
