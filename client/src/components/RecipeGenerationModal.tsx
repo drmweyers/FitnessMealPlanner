@@ -254,6 +254,14 @@ export default function RecipeGenerationModal({
                     <SelectItem value="20">20 recipes</SelectItem>
                     <SelectItem value="30">30 recipes</SelectItem>
                     <SelectItem value="50">50 recipes</SelectItem>
+                    <SelectItem value="75">75 recipes</SelectItem>
+                    <SelectItem value="100">100 recipes</SelectItem>
+                    <SelectItem value="150">150 recipes</SelectItem>
+                    <SelectItem value="200">200 recipes</SelectItem>
+                    <SelectItem value="250">250 recipes</SelectItem>
+                    <SelectItem value="300">300 recipes</SelectItem>
+                    <SelectItem value="400">400 recipes</SelectItem>
+                    <SelectItem value="500">500 recipes</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
