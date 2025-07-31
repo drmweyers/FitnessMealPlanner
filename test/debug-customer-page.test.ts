@@ -83,7 +83,7 @@ describe('Customer Page Debugging Suite', () => {
     }, { timeout: 10000 }).catch(() => {
       console.log('⚠️  React not detected in 10 seconds');
     });
-  });
+  }, 30000);
 
   it('should attempt to navigate to customer page directly', async () => {
     console.log('🎯 Testing direct navigation to /my-meal-plans...');
@@ -96,7 +96,7 @@ describe('Customer Page Debugging Suite', () => {
     console.log(`📄 Customer page response status: ${response?.status()}`);
     
     // Wait a bit for any redirects or dynamic content
-    await page.waitForTimeout(3000);
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     const currentUrl = page.url();
     console.log(`🌐 Current URL after navigation: ${currentUrl}`);

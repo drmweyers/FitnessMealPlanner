@@ -19,6 +19,7 @@ import adminRouter from './routes/adminRoutes';
 import trainerRouter from './routes/trainerRoutes';
 import customerRouter from './routes/customerRoutes';
 import pdfRouter from './routes/pdf';
+import progressRouter from './routes/progressRoutes';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
@@ -122,6 +123,7 @@ app.use('/api/trainer', trainerRouter);
 app.use('/api/customer', customerRouter);
 app.use('/api/meal-plan', mealPlanRouter);
 app.use('/api/pdf', pdfRouter);
+app.use('/api/progress', progressRouter);
 
 // Serve static files from the React app
 if (process.env.NODE_ENV === 'production') {

@@ -30,7 +30,10 @@ passport.use(new LocalStrategy({
       return done(null, false, { message: 'Invalid email or password' });
     }
 
-    const isValid = await comparePasswords(password, user.passwordHash);
+    if (!user.password) {
+      return done(null, false, { message: 'Invalid email or password' });
+    }
+    const isValid = await comparePasswords(password, user.password);
     if (!isValid) {
       return done(null, false, { message: 'Invalid email or password' });
     }
@@ -58,7 +61,7 @@ passport.use(new GoogleStrategy({
     // Check if user exists with the same email
     const email = profile.emails?.[0]?.value;
     if (!email) {
-      return done(new Error('No email provided by Google'), null);
+      return done(new Error('No email provided by Google'), false);
     }
 
     const existingEmailUser = await storage.getUserByEmail(email);
@@ -85,7 +88,7 @@ passport.use(new GoogleStrategy({
     return done(null, newUser);
   } catch (error) {
     console.error('Google OAuth error:', error);
-    return done(error, null);
+    return done(error, false);
   }
 }));
 

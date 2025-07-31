@@ -735,10 +735,7 @@ export default function CustomerProfile() {
                 variant="outline"
                 className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => {
-                  toast({
-                    title: "Progress Tracking",
-                    description: "Progress tracking feature would be implemented here.",
-                  });
+                  window.location.href = '/customer?tab=progress';
                 }}
               >
                 <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />

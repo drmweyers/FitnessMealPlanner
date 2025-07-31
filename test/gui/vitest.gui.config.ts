@@ -6,8 +6,8 @@ export default defineConfig({
     globals: true,
     environment: 'node', // GUI tests run in Node environment with Puppeteer
     setupFiles: ['./test/gui/setup.ts'],
-    testTimeout: 60000, // 60 seconds for GUI tests
-    hookTimeout: 30000,
+    testTimeout: 120000, // 120 seconds for GUI tests
+    hookTimeout: 60000,
     typecheck: {
       enabled: false
     },

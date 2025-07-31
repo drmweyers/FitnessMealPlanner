@@ -8,9 +8,11 @@ import { apiRequest } from '../lib/queryClient';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Search, Filter, TrendingUp, Calendar, Target, Zap, ChefHat, RotateCcw, SlidersHorizontal, Info, User, Database } from 'lucide-react';
+import { Search, Filter, TrendingUp, Calendar, Target, Zap, ChefHat, RotateCcw, SlidersHorizontal, Info, User, Database, Activity } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import ProgressTracking from '../components/ProgressTracking';
 
 // Enhanced MealPlan includes the flattened properties from the API
 interface EnhancedMealPlan extends MealPlan {
@@ -53,6 +55,10 @@ const Customer = () => {
   }, [user, isAuthenticated]);
   const [selectedMealPlan, setSelectedMealPlan] = useState<EnhancedMealPlan | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') === 'progress' ? 'progress' : 'meal-plans';
+  });
   const [fitnessGoalFilter, setFitnessGoalFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [showFilters, setShowFilters] = useState(false);
@@ -246,14 +252,39 @@ const Customer = () => {
               <ChefHat className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent mb-4">
-              My Nutrition Journey
+              My Fitness Dashboard
             </h1>
             <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Discover your personalized meal plans crafted by expert trainers to fuel your fitness goals
+              Track your progress and discover personalized meal plans crafted by expert trainers
             </p>
           </div>
 
-          {/* Statistics Cards */}
+          {/* Tabs Component */}
+          <Tabs value={activeTab} onValueChange={(value) => {
+            setActiveTab(value);
+            const url = new URL(window.location.href);
+            if (value === 'progress') {
+              url.searchParams.set('tab', 'progress');
+            } else {
+              url.searchParams.delete('tab');
+            }
+            window.history.replaceState({}, '', url.toString());
+          }} className="w-full">
+            <div className="flex justify-center mb-8">
+              <TabsList className="grid w-full max-w-md grid-cols-2 bg-white/60 backdrop-blur-sm">
+                <TabsTrigger value="meal-plans" className="flex items-center space-x-2">
+                  <ChefHat className="w-4 h-4" />
+                  <span>Meal Plans</span>
+                </TabsTrigger>
+                <TabsTrigger value="progress" className="flex items-center space-x-2">
+                  <Activity className="w-4 h-4" />
+                  <span>Progress</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="meal-plans">
+              {/* Statistics Cards */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 xs:gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
               <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/70 backdrop-blur-sm hover:bg-white/90">
@@ -297,7 +328,6 @@ const Customer = () => {
               </Card>
             </div>
           )}
-        </div>
 
         {/* Enhanced Search and Filters */}
         <Card className="mb-4 xs:mb-6 sm:mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
@@ -497,6 +527,13 @@ const Customer = () => {
             )}
           </>
         )}
+            </TabsContent>
+
+            <TabsContent value="progress">
+              <ProgressTracking />
+            </TabsContent>
+          </Tabs>
+        </div>
 
         {/* Meal Plan Modal */}
         {selectedMealPlan && (

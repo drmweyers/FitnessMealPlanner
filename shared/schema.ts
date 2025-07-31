@@ -497,3 +497,185 @@ export const acceptInvitationSchema = z.object({
 
 export type CreateInvitation = z.infer<typeof createInvitationSchema>;
 export type AcceptInvitation = z.infer<typeof acceptInvitationSchema>;
+
+/**
+ * Progress Measurements Table
+ * 
+ * Stores customer body measurements and weight tracking over time.
+ * Allows customers to track their physical changes and progress.
+ */
+export const progressMeasurements = pgTable("progress_measurements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  measurementDate: timestamp("measurement_date").notNull(),
+  
+  // Weight tracking
+  weightKg: decimal("weight_kg", { precision: 5, scale: 2 }), // Up to 999.99 kg
+  weightLbs: decimal("weight_lbs", { precision: 6, scale: 2 }), // Up to 9999.99 lbs
+  
+  // Body measurements in centimeters
+  neckCm: decimal("neck_cm", { precision: 4, scale: 1 }),
+  shouldersCm: decimal("shoulders_cm", { precision: 5, scale: 1 }),
+  chestCm: decimal("chest_cm", { precision: 5, scale: 1 }),
+  waistCm: decimal("waist_cm", { precision: 5, scale: 1 }),
+  hipsCm: decimal("hips_cm", { precision: 5, scale: 1 }),
+  bicepLeftCm: decimal("bicep_left_cm", { precision: 4, scale: 1 }),
+  bicepRightCm: decimal("bicep_right_cm", { precision: 4, scale: 1 }),
+  thighLeftCm: decimal("thigh_left_cm", { precision: 4, scale: 1 }),
+  thighRightCm: decimal("thigh_right_cm", { precision: 4, scale: 1 }),
+  calfLeftCm: decimal("calf_left_cm", { precision: 4, scale: 1 }),
+  calfRightCm: decimal("calf_right_cm", { precision: 4, scale: 1 }),
+  
+  // Body composition
+  bodyFatPercentage: decimal("body_fat_percentage", { precision: 4, scale: 1 }),
+  muscleMassKg: decimal("muscle_mass_kg", { precision: 5, scale: 2 }),
+  
+  // Additional metrics
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  customerIdIdx: index("progress_measurements_customer_id_idx").on(table.customerId),
+  measurementDateIdx: index("progress_measurements_date_idx").on(table.measurementDate),
+}));
+
+/**
+ * Progress Photos Table
+ * 
+ * Stores progress photo metadata for visual tracking.
+ * Actual images are stored in S3 or similar service.
+ */
+export const progressPhotos = pgTable("progress_photos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  photoDate: timestamp("photo_date").notNull(),
+  photoUrl: text("photo_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  photoType: varchar("photo_type", { length: 50 }).notNull(), // front, side, back, other
+  caption: text("caption"),
+  isPrivate: boolean("is_private").default(true), // Customer privacy control
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  customerIdIdx: index("progress_photos_customer_id_idx").on(table.customerId),
+  photoDateIdx: index("progress_photos_date_idx").on(table.photoDate),
+}));
+
+/**
+ * Customer Goals Table
+ * 
+ * Stores fitness and health goals set by customers.
+ * Supports various goal types with target dates and achievement tracking.
+ */
+export const customerGoals = pgTable("customer_goals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  goalType: varchar("goal_type", { length: 50 }).notNull(), // weight_loss, muscle_gain, body_fat, performance
+  goalName: varchar("goal_name", { length: 255 }).notNull(),
+  description: text("description"),
+  
+  // Goal targets (flexible based on goal type)
+  targetValue: decimal("target_value", { precision: 10, scale: 2 }),
+  targetUnit: varchar("target_unit", { length: 20 }), // kg, lbs, %, reps, minutes, etc.
+  currentValue: decimal("current_value", { precision: 10, scale: 2 }),
+  startingValue: decimal("starting_value", { precision: 10, scale: 2 }),
+  
+  // Timeline
+  startDate: timestamp("start_date").notNull(),
+  targetDate: timestamp("target_date"),
+  achievedDate: timestamp("achieved_date"),
+  
+  // Status tracking
+  status: varchar("status", { length: 20 }).default("active"), // active, achieved, paused, abandoned
+  progressPercentage: integer("progress_percentage").default(0),
+  
+  // Additional fields
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  customerIdIdx: index("customer_goals_customer_id_idx").on(table.customerId),
+  statusIdx: index("customer_goals_status_idx").on(table.status),
+}));
+
+/**
+ * Goal Milestones Table
+ * 
+ * Tracks milestone achievements within larger goals.
+ * Allows breaking down big goals into smaller, achievable steps.
+ */
+export const goalMilestones = pgTable("goal_milestones", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  goalId: uuid("goal_id")
+    .references(() => customerGoals.id, { onDelete: "cascade" })
+    .notNull(),
+  milestoneName: varchar("milestone_name", { length: 255 }).notNull(),
+  targetValue: decimal("target_value", { precision: 10, scale: 2 }).notNull(),
+  achievedValue: decimal("achieved_value", { precision: 10, scale: 2 }),
+  achievedDate: timestamp("achieved_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  goalIdIdx: index("goal_milestones_goal_id_idx").on(table.goalId),
+}));
+
+// Type exports for progress tracking
+export type InsertProgressMeasurement = typeof progressMeasurements.$inferInsert;
+export type ProgressMeasurement = typeof progressMeasurements.$inferSelect;
+
+export type InsertProgressPhoto = typeof progressPhotos.$inferInsert;
+export type ProgressPhoto = typeof progressPhotos.$inferSelect;
+
+export type InsertCustomerGoal = typeof customerGoals.$inferInsert;
+export type CustomerGoal = typeof customerGoals.$inferSelect;
+
+export type InsertGoalMilestone = typeof goalMilestones.$inferInsert;
+export type GoalMilestone = typeof goalMilestones.$inferSelect;
+
+// Validation schemas for progress tracking
+export const createMeasurementSchema = z.object({
+  measurementDate: z.string().datetime(),
+  weightKg: z.number().optional(),
+  weightLbs: z.number().optional(),
+  neckCm: z.number().optional(),
+  shouldersCm: z.number().optional(),
+  chestCm: z.number().optional(),
+  waistCm: z.number().optional(),
+  hipsCm: z.number().optional(),
+  bicepLeftCm: z.number().optional(),
+  bicepRightCm: z.number().optional(),
+  thighLeftCm: z.number().optional(),
+  thighRightCm: z.number().optional(),
+  calfLeftCm: z.number().optional(),
+  calfRightCm: z.number().optional(),
+  bodyFatPercentage: z.number().optional(),
+  muscleMassKg: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+export const createGoalSchema = z.object({
+  goalType: z.enum(['weight_loss', 'weight_gain', 'muscle_gain', 'body_fat', 'performance', 'other']),
+  goalName: z.string().min(1).max(255),
+  description: z.string().optional(),
+  targetValue: z.number(),
+  targetUnit: z.string(),
+  currentValue: z.number().optional(),
+  startingValue: z.number().optional(),
+  startDate: z.string().datetime(),
+  targetDate: z.string().datetime().optional(),
+  notes: z.string().optional(),
+});
+
+export const uploadProgressPhotoSchema = z.object({
+  photoDate: z.string().datetime(),
+  photoType: z.enum(['front', 'side', 'back', 'other']),
+  caption: z.string().optional(),
+  isPrivate: z.boolean().default(true),
+});
+
+export type CreateMeasurement = z.infer<typeof createMeasurementSchema>;
+export type CreateGoal = z.infer<typeof createGoalSchema>;
+export type UploadProgressPhoto = z.infer<typeof uploadProgressPhotoSchema>;

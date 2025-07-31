@@ -158,6 +158,13 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       });
     }
 
+    if (!user.password) {
+      return res.status(401).json({ 
+        status: 'error',
+        message: 'Invalid credentials',
+        code: 'INVALID_CREDENTIALS'
+      });
+    }
     const isPasswordValid = await comparePasswords(password, user.password);
     if (!isPasswordValid) {
       recordLoginAttempt(email);
@@ -446,6 +453,13 @@ authRouter.put('/profile', requireAuth, async (req: AuthRequest, res: Response) 
         });
       }
 
+      if (!user.password) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Cannot change password for OAuth users',
+          code: 'OAUTH_USER_PASSWORD_CHANGE'
+        });
+      }
       const isCurrentPasswordValid = await comparePasswords(updateData.currentPassword, user.password);
       if (!isCurrentPasswordValid) {
         return res.status(400).json({
@@ -571,7 +585,7 @@ authRouter.get('/google/:role', (req: Request, res: Response, next: NextFunction
   }
 
   // Store the intended role in session
-  req.session.intendedRole = role;
+  (req.session as any).intendedRole = role;
   
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });
