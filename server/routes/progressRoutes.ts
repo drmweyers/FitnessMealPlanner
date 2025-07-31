@@ -16,9 +16,37 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 
+/**
+ * Progress Tracking API Routes
+ * 
+ * This module provides comprehensive REST API endpoints for customer progress tracking,
+ * including body measurements, fitness goals, and progress photos. All endpoints require
+ * customer authentication and implement proper data validation and security measures.
+ * 
+ * Features:
+ * - Body measurements CRUD operations with date filtering
+ * - Fitness goals management with automatic progress calculation
+ * - Progress photo upload with S3 storage and image processing
+ * - Comprehensive error handling and input validation
+ * - User data isolation (customers can only access their own data)
+ * 
+ * @author FitnessMealPlanner Team
+ * @since 1.0.0
+ */
 const router = Router();
 
-// Configure S3 client
+/**
+ * AWS S3 Client Configuration
+ * 
+ * Configures S3 client for storing progress photos. Uses environment variables
+ * for credentials and region configuration. Defaults to us-east-1 if not specified.
+ * 
+ * Environment Variables Required:
+ * - AWS_REGION: AWS region for S3 bucket
+ * - AWS_ACCESS_KEY_ID: AWS access key for S3 operations
+ * - AWS_SECRET_ACCESS_KEY: AWS secret key for S3 operations
+ * - S3_BUCKET_NAME: Name of the S3 bucket for photo storage
+ */
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'us-east-1',
   credentials: {
@@ -27,10 +55,19 @@ const s3Client = new S3Client({
   },
 });
 
-// Configure multer for file uploads
+/**
+ * Multer Configuration for File Uploads
+ * 
+ * Configures multer middleware for handling progress photo uploads with:
+ * - 10MB file size limit to prevent abuse
+ * - MIME type validation for security (only images allowed)
+ * - Memory storage (files processed in memory before S3 upload)
+ * 
+ * Supported formats: JPEG, PNG, WebP
+ */
 const upload = multer({
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit to prevent abuse
   },
   fileFilter: (req, file, cb) => {
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -44,7 +81,42 @@ const upload = multer({
 
 // ====== MEASUREMENTS ROUTES ======
 
-// Get all measurements for the current customer
+/**
+ * GET /api/progress/measurements
+ * 
+ * Retrieves all body measurements for the authenticated customer with optional date filtering.
+ * Results are ordered by measurement date (most recent first) for easy progress tracking.
+ * 
+ * Authentication: Requires customer role
+ * 
+ * Query Parameters:
+ * @param {string} [startDate] - ISO date string to filter measurements from (inclusive)
+ * @param {string} [endDate] - ISO date string to filter measurements to (inclusive)
+ * 
+ * @returns {Object} Response object
+ * @returns {string} response.status - 'success' or 'error'
+ * @returns {Array} response.data - Array of measurement objects
+ * 
+ * @example
+ * GET /api/progress/measurements?startDate=2024-01-01&endDate=2024-01-31
+ * 
+ * Response:
+ * {
+ *   "status": "success",
+ *   "data": [
+ *     {
+ *       "id": "uuid",
+ *       "customerId": "uuid",
+ *       "measurementDate": "2024-01-15T00:00:00Z",
+ *       "weightLbs": "175.5",
+ *       "bodyFatPercentage": "18.2",
+ *       "waistCm": "32.0",
+ *       "notes": "Feeling great!",
+ *       "createdAt": "2024-01-15T10:00:00Z"
+ *     }
+ *   ]
+ * }
+ */
 router.get('/measurements', requireRole('customer'), async (req, res) => {
   try {
     const userId = req.user!.id;

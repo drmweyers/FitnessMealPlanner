@@ -8,7 +8,29 @@ import PhotosTab from './progress/PhotosTab';
 import GoalsTab from './progress/GoalsTab';
 import ProgressCharts from './progress/ProgressCharts';
 
+/**
+ * ProgressTracking Component
+ * 
+ * Main dashboard for customer progress tracking functionality. This component serves
+ * as the central hub for customers to monitor their fitness journey through:
+ * - Body measurements tracking
+ * - Progress photo uploads
+ * - Fitness goal management
+ * - Visual progress charts
+ * 
+ * @component
+ * @example
+ * // Usage in a customer dashboard
+ * <ProgressTracking />
+ * 
+ * @author FitnessMealPlanner Team
+ * @since 1.0.0
+ */
 const ProgressTracking: React.FC = () => {
+  /**
+   * State to track which tab is currently active
+   * @type {string} activeTab - Current active tab ('measurements', 'photos', 'goals')
+   */
   const [activeTab, setActiveTab] = useState('measurements');
 
   return (

@@ -1,6 +1,22 @@
 # FitnessMealPlanner
 
-A comprehensive meal planning application for fitness professionals and their clients, featuring recipe management, meal plan generation, PDF exports, and multi-role support.
+A comprehensive meal planning application for fitness professionals and their clients, featuring recipe management, meal plan generation, PDF exports, customer progress tracking, and multi-role support.
+
+## 🎯 Features Overview
+
+### For Fitness Professionals (Trainers/Admins)
+- **Recipe Management**: Create, edit, and approve recipes with AI assistance
+- **Meal Plan Generation**: AI-powered meal plan creation with nutritional analysis
+- **Client Management**: Assign meal plans to customers and track their progress
+- **PDF Export**: Generate professional meal plan documents with EvoFit branding
+- **Progress Monitoring**: View client measurements, goals, and progress photos
+
+### For Customers
+- **Personalized Meal Plans**: Access trainer-assigned meal plans tailored to your goals
+- **Progress Tracking**: Log body measurements, set fitness goals, and upload progress photos
+- **Recipe Access**: Browse and view detailed recipes with nutritional information
+- **PDF Downloads**: Export your meal plans as professional PDF documents
+- **Goal Management**: Set, track, and achieve fitness goals with progress visualization
 
 ## 🚀 Quick Start
 
@@ -138,5 +154,113 @@ EMAIL_PASS=your-app-password
 2. **Check container health** with `docker ps`
 3. **Monitor logs** with `docker logs fitnessmealplanner-dev -f`
 4. **Access the app** at http://localhost:4000
+
+For production deployment, refer to `DEPLOYMENT_GUIDE.md`.
+
+## 🏗️ Architecture Overview
+
+### Database Schema
+- **Users**: Multi-role support (Admin, Trainer, Customer)
+- **Recipes**: AI-generated recipes with nutritional data
+- **Meal Plans**: Structured meal planning with customer assignments
+- **Progress Tracking**: Customer measurements, goals, and photos
+- **Migrations**: Version-controlled database schema changes
+
+### Technology Stack
+- **Frontend**: React 18 + TypeScript + Tailwind CSS + shadcn/ui
+- **Backend**: Express.js + TypeScript + Drizzle ORM
+- **Database**: PostgreSQL with comprehensive indexing
+- **Authentication**: JWT-based with Google OAuth support
+- **AI Integration**: OpenAI GPT-4 for recipe generation
+- **File Storage**: AWS S3 for progress photos
+- **Testing**: Vitest + Puppeteer for comprehensive testing
+- **Containerization**: Docker for consistent development environments
+
+## 📁 Project Structure
+
+```
+FitnessMealPlanner/
+├── client/                     # React Frontend Application
+│   ├── src/
+│   │   ├── components/         # Reusable UI Components
+│   │   │   ├── ui/            # shadcn/ui base components
+│   │   │   ├── progress/      # Progress tracking components
+│   │   │   └── *.tsx          # Feature-specific components
+│   │   ├── pages/             # Main application pages
+│   │   ├── contexts/          # React Context providers
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── lib/               # Utility functions
+│   │   └── types/             # TypeScript type definitions
+├── server/                     # Express.js Backend
+│   ├── routes/                # API route handlers
+│   ├── controllers/           # Business logic controllers
+│   ├── middleware/            # Express middleware functions
+│   ├── services/              # External service integrations
+│   ├── utils/                 # Backend utility functions
+│   └── views/                 # EJS templates for PDFs
+├── shared/                     # Shared code between client/server
+│   └── schema.ts              # Database schema & validation
+├── migrations/                 # Database migration files
+├── test/                      # Comprehensive test suite
+│   ├── unit/                  # Unit tests
+│   ├── integration/           # Integration tests
+│   └── gui/                   # GUI/E2E tests
+└── docs/                      # Documentation files
+```
+
+## 🧪 Testing
+
+The application includes a comprehensive test suite:
+
+### Unit Tests
+```bash
+# Run all unit tests
+npm test
+
+# Run specific test file
+npm test -- test/unit/progressTrackingSimple.test.ts
+
+# Run with coverage
+npm run test:coverage
+```
+
+### Integration Tests
+```bash
+# Run GUI integration tests (requires Docker)
+npm test -- test/integration/progressTrackingGUI.test.ts
+```
+
+### Test Coverage
+- ✅ Backend API endpoints with authentication
+- ✅ Frontend component logic and user interactions  
+- ✅ Database operations and business logic
+- ✅ End-to-end user workflows with Puppeteer
+
+## 📚 Documentation
+
+For detailed information, refer to these guides:
+
+- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Comprehensive development guide
+- **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** - Complete API reference
+- **[COMPONENT_GUIDE.md](./COMPONENT_GUIDE.md)** - React component documentation
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Production deployment guide
+- **[CLAUDE.md](./CLAUDE.md)** - CCA-CTO development workflow
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and add tests
+4. Ensure all tests pass: `npm test`
+5. Commit with conventional commits: `git commit -m "feat: add amazing feature"`
+6. Push to your branch: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+### Code Style
+- TypeScript for type safety
+- ESLint + Prettier for consistent formatting
+- Comprehensive JSDoc comments for functions
+- Meaningful variable and function names
+- Test-driven development approach
 
 For production deployment, refer to `DEPLOYMENT_GUIDE.md`.

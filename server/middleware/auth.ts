@@ -3,14 +3,45 @@ import { storage } from '../storage';
 import { verifyToken, generateTokens } from '../auth';
 import jwt from 'jsonwebtoken';
 
-// Extend Express Request type to include user and tokens
+/**
+ * Authentication Middleware Module
+ * 
+ * This module provides Express middleware functions for handling JWT-based authentication
+ * and role-based authorization in the FitnessMealPlanner application.
+ * 
+ * Features:
+ * - JWT token validation with automatic refresh
+ * - Role-based access control
+ * - Support for both header and cookie-based token transmission
+ * - Comprehensive error handling with specific error codes
+ * - User session validation against database
+ * 
+ * @author FitnessMealPlanner Team
+ * @since 1.0.0
+ */
+
+/**
+ * Extended Express Request interface to include authentication data
+ * 
+ * This global declaration extends the Express Request type to include
+ * user information and token data that will be attached by the authentication
+ * middleware for use in downstream route handlers.
+ */
 declare global {
   namespace Express {
     interface Request {
+      /** 
+       * Authenticated user information
+       * Available after successful authentication via requireAuth middleware
+       */
       user?: {
         id: string;
         role: 'admin' | 'trainer' | 'customer';
       };
+      /** 
+       * JWT tokens for the authenticated user
+       * Available after successful authentication via requireAuth middleware
+       */
       tokens?: {
         accessToken: string;
         refreshToken: string;
@@ -19,20 +50,57 @@ declare global {
   }
 }
 
+/**
+ * Authentication Middleware
+ * 
+ * Validates JWT tokens and attaches user information to the request object.
+ * Supports token transmission via Authorization header (Bearer token) or HTTP cookies.
+ * Automatically handles token refresh if the access token is expired but refresh token is valid.
+ * 
+ * Token Validation Process:
+ * 1. Extract token from Authorization header or cookies
+ * 2. Verify token signature and expiration
+ * 3. Look up user in database to ensure session is still valid
+ * 4. If access token expired, attempt refresh with refresh token
+ * 5. Attach user info and tokens to request object
+ * 6. Continue to next middleware/route handler
+ * 
+ * @param req - Express request object
+ * @param res - Express response object  
+ * @param next - Express next function to continue middleware chain
+ * 
+ * @returns HTTP 401 if authentication fails, otherwise continues to next middleware
+ * 
+ * @example
+ * // Protect a route with authentication
+ * router.get('/protected', requireAuth, (req, res) => {
+ *   // req.user is now available with authenticated user info
+ *   res.json({ message: `Hello ${req.user.id}` });
+ * });
+ * 
+ * @example
+ * // Client-side usage with Authorization header
+ * fetch('/api/protected', {
+ *   headers: {
+ *     'Authorization': `Bearer ${accessToken}`
+ *   }
+ * });
+ */
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // First try to get token from Authorization header
+    // Extract token from Authorization header (preferred method)
     const authHeader = req.headers.authorization;
     let token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 
-    // If no token in header, try cookie
+    // Fallback: try to get token from HTTP cookies (for browser-based requests)
     if (!token) {
       token = req.cookies.token;
     }
 
+    // No token found in either location
     if (!token) {
       return res.status(401).json({ 
-        error: 'Authentication required',
+        error: 'Authentication required. Please provide a valid token.',
         code: 'NO_TOKEN'
       });
     }
