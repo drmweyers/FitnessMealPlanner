@@ -11,7 +11,7 @@ export default function Landing() {
             <div className="flex items-center justify-center space-x-2 mb-4 sm:mb-6">
               <i className="fas fa-utensils text-2xl sm:text-3xl lg:text-4xl"></i>
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold">
-                FitMeal Pro
+                EvoFitMeals
               </h1>
             </div>
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 lg:mb-8 text-primary-foreground/90">
@@ -39,7 +39,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-12 lg:mb-16">
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-3 sm:mb-4">
-              Why Choose FitMeal Pro?
+              Why Choose EvoFitMeals?
             </h2>
             <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-xs sm:max-w-lg lg:max-w-2xl mx-auto leading-relaxed">
               Everything you need to plan, prepare, and enjoy healthy meals that support your fitness journey.
@@ -131,7 +131,7 @@ export default function Landing() {
             Ready to Transform Your Nutrition?
           </h2>
           <p className="text-sm sm:text-base lg:text-xl mb-6 sm:mb-8 text-slate-300 max-w-xs sm:max-w-lg lg:max-w-2xl mx-auto leading-relaxed">
-            Join thousands of fitness enthusiasts who trust FitMeal Pro for their meal planning needs.
+            Join thousands of fitness enthusiasts who trust EvoFitMeals for their meal planning needs.
           </p>
           <Button 
             size="lg" 

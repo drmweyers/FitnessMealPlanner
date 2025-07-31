@@ -140,7 +140,7 @@ export default function TrainerMealPlans() {
                         {planData.planName || 'Unnamed Plan'}
                       </CardTitle>
                       <CardDescription className="text-sm">
-                        Created {formatDate(plan.createdAt)}
+                        Created {formatDate(plan.createdAt || new Date())}
                       </CardDescription>
                     </div>
                     <DropdownMenu>

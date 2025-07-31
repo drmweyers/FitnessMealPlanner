@@ -1,6 +1,7 @@
 import React from "react";
 import { Route, Switch, Redirect } from "wouter";
 import { useAuth } from "./contexts/AuthContext";
+import { useOAuthToken } from "./hooks/useOAuthToken";
 import Landing from "./pages/Landing";
 import Trainer from "./pages/Trainer";
 import Admin from "./pages/Admin";
@@ -15,9 +16,23 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import FallbackUI from "./components/FallbackUI";
 import Layout from "./components/Layout";
+import { OAuthCallback } from "./components/OAuthCallback";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
+  
+  // Check for OAuth token in URL
+  useOAuthToken();
+
+  // Check if this is an OAuth callback with a token
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasToken = urlParams.has('token');
+  
+  // If we have a token in the URL, show the OAuth callback page
+  if (hasToken) {
+    return <OAuthCallbackPage />;
+  }
 
   if (isLoading) {
     return (
@@ -146,6 +161,7 @@ export default function Router() {
           }
           return <CustomerProfile />;
         }} />
+        
         
         <Route path="*" component={NotFound} />
       </Switch>

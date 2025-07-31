@@ -5,6 +5,7 @@ import { storage } from './storage';
 import { hashPassword, comparePasswords, generateTokens, verifyToken } from './auth';
 import { users } from '../shared/schema';
 import crypto from 'crypto';
+import passport from './passport-config';
 
 const authRouter = Router();
 
@@ -494,6 +495,85 @@ authRouter.put('/profile', requireAuth, async (req: AuthRequest, res: Response) 
       code: 'SERVER_ERROR'
     });
   }
+});
+
+// Google OAuth Routes
+authRouter.get('/google', 
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+authRouter.get('/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login?error=oauth_failed' }),
+  async (req: Request, res: Response) => {
+    try {
+      const user = req.user as any;
+      console.log('Google OAuth callback - user:', user);
+      
+      if (!user) {
+        console.error('No user returned from Google OAuth');
+        return res.redirect('/login?error=no_user');
+      }
+
+      // Generate JWT tokens for the user
+      const { accessToken, refreshToken } = generateTokens(user);
+      console.log('Generated tokens for user:', user.email, 'role:', user.role);
+
+      // Set refresh token in HTTP-only cookie
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      });
+
+      // Redirect to frontend with success based on user role
+      let redirectPath = '/';
+      switch (user.role) {
+        case 'admin':
+          redirectPath = '/admin';
+          break;
+        case 'trainer':
+          redirectPath = '/trainer';
+          break;
+        case 'customer':
+          redirectPath = '/my-meal-plans';
+          break;
+      }
+      
+      // In development, we pass the token as a query parameter
+      // In production, the cookie should be sufficient
+      const redirectUrl = process.env.NODE_ENV === 'production' 
+        ? redirectPath 
+        : `http://localhost:4000${redirectPath}?token=${accessToken}`;
+      
+      console.log('Redirecting to:', redirectUrl);
+      console.log('User role:', user.role);
+      console.log('Redirect path:', redirectPath);
+      
+      res.redirect(redirectUrl);
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      res.redirect('/login?error=auth_error');
+    }
+  }
+);
+
+// Route to initiate Google OAuth with role selection
+authRouter.get('/google/:role', (req: Request, res: Response, next: NextFunction) => {
+  const { role } = req.params;
+  
+  if (!['trainer', 'customer'].includes(role)) {
+    return res.status(400).json({ 
+      status: 'error', 
+      message: 'Invalid role specified',
+      code: 'INVALID_ROLE'
+    });
+  }
+
+  // Store the intended role in session
+  req.session.intendedRole = role;
+  
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });
 
 export default authRouter;

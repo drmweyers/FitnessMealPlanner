@@ -38,7 +38,18 @@
       "Bash(git commit:*)",
       "Bash(npm run dev:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(npm run migrate:*)"
+      "Bash(npm run migrate:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run:*)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5432/fitmeal npm run db:push)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5432/fitmeal npm run test:trainer-meal-plans)",
+      "Bash(npm install:*)",
+      "Bash(ctrl+c)",
+      "Bash(NODE_ENV=development tsx test-email-directly.js)",
+      "Bash(NODE_ENV=development npx tsx test-email-directly.js)",
+      "Bash(RESEND_API_KEY=re_BwMktDkm_L7QQMZRhrMmBVj64bn2yehhp NODE_ENV=development npx tsx test-email-directly.js)",
+      "Bash(RESEND_API_KEY=re_BwMktDkm_L7QQMZRhrMmBVj64bn2yehhp FROM_EMAIL=\"FitnessMealPlanner <onboarding@resend.dev>\" NODE_ENV=development npx tsx test-email-directly.js)",
+      "Bash(npx vitest run:*)"
     ],
     "deny": []
   }

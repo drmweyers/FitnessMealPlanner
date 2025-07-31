@@ -49,8 +49,11 @@ export const userRoleEnum = pgEnum("user_role", [
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: varchar("email").unique().notNull(),
-  password: text("password").notNull(),
+  password: text("password"), // Now optional for Google OAuth users
   role: userRoleEnum("role").default("customer").notNull(),
+  googleId: varchar("google_id").unique(),
+  name: varchar("name"),
+  profilePicture: text("profile_picture"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

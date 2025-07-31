@@ -3,11 +3,46 @@ import { z } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import crypto from 'crypto';
 import { storage } from './storage';
+import { emailService } from './services/emailService';
 import { requireAuth, requireRole } from './authRoutes';
 import { hashPassword } from './auth';
 import { createInvitationSchema, acceptInvitationSchema } from '../shared/schema';
 
 const invitationRouter = Router();
+
+// Test email endpoint (development only)
+invitationRouter.post('/test-email', requireAuth, requireRole('admin'), async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV !== 'development') {
+    return res.status(404).json({ message: 'Not found' });
+  }
+
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email address is required'
+      });
+    }
+
+    const result = await emailService.sendTestEmail(email);
+    
+    res.json({
+      status: result.success ? 'success' : 'error',
+      message: result.success 
+        ? `Test email sent successfully to ${email}`
+        : `Failed to send test email: ${result.error}`,
+      data: result.success ? { messageId: result.messageId } : null
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 interface AuthRequest extends Request {
   user?: {
@@ -67,21 +102,56 @@ invitationRouter.post('/send', requireAuth, requireRole('trainer'), async (req: 
       expiresAt,
     });
 
-    // TODO: Send email notification
-    // For now, we'll return the invitation link in the response
-    // In production, this should be sent via email service
-    const invitationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/register?invitation=${token}`;
+    // Send email notification
+    const invitationLink = `${process.env.FRONTEND_URL || 'http://localhost:4000'}/register?invitation=${token}`;
+    
+    // Get trainer info for the email
+    const trainer = await storage.getUser(trainerId);
+    if (!trainer) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to retrieve trainer information',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+
+    // Send invitation email
+    const emailResult = await emailService.sendInvitationEmail({
+      customerEmail,
+      trainerName: trainer.email, // You might want to add a 'name' field to users table
+      trainerEmail: trainer.email,
+      invitationLink,
+      expiresAt
+    });
+
+    // Prepare response data
+    const responseData: any = {
+      invitation: {
+        id: invitation.id,
+        customerEmail: invitation.customerEmail,
+        expiresAt: invitation.expiresAt,
+        emailSent: emailResult.success
+      }
+    };
+
+    // In development, include the invitation link for testing
+    if (process.env.NODE_ENV === 'development') {
+      responseData.invitation.invitationLink = invitationLink;
+    }
+
+    // Log email sending result
+    if (emailResult.success) {
+      console.log(`Invitation email sent successfully to ${customerEmail}, messageId: ${emailResult.messageId}`);
+    } else {
+      console.warn(`Failed to send invitation email to ${customerEmail}: ${emailResult.error}`);
+    }
 
     res.status(201).json({
       status: 'success',
-      data: {
-        invitation: {
-          id: invitation.id,
-          customerEmail: invitation.customerEmail,
-          expiresAt: invitation.expiresAt,
-          invitationLink // Remove this in production
-        }
-      }
+      message: emailResult.success 
+        ? 'Invitation created and email sent successfully'
+        : 'Invitation created but email could not be sent',
+      data: responseData
     });
 
   } catch (error) {

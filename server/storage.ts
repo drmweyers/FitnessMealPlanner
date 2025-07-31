@@ -50,8 +50,12 @@ import { inArray } from "drizzle-orm";
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  createGoogleUser(user: { email: string; googleId: string; name: string; profilePicture?: string; role: 'admin' | 'trainer' | 'customer' }): Promise<User>;
+  linkGoogleAccount(userId: string, googleId: string): Promise<void>;
   updateUserPassword(userId: string, password: string): Promise<void>;
   updateUserEmail(userId: string, email: string): Promise<void>;
   getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]>;
@@ -127,14 +131,40 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
     return user;
   }
 
   async createUser(userData: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
+  }
+
+  async createGoogleUser(userData: { email: string; googleId: string; name: string; profilePicture?: string; role: 'admin' | 'trainer' | 'customer' }): Promise<User> {
+    const [user] = await db.insert(users).values({
+      email: userData.email,
+      googleId: userData.googleId,
+      name: userData.name,
+      profilePicture: userData.profilePicture,
+      role: userData.role,
+      password: null, // No password for Google OAuth users
+    }).returning();
+    return user;
+  }
+
+  async linkGoogleAccount(userId: string, googleId: string): Promise<void> {
+    await db.update(users).set({ googleId }).where(eq(users.id, userId));
   }
 
   async updateUserPassword(userId: string, password: string): Promise<void> {
@@ -615,7 +645,7 @@ export class DatabaseStorage implements IStorage {
         customerMap.set(customer.customerId, {
           id: customer.customerId,
           email: customer.customerEmail,
-          firstAssignedAt: customer.assignedAt.toISOString(),
+          firstAssignedAt: customer.assignedAt?.toISOString() || new Date().toISOString(),
         });
       } else {
         const existing = customerMap.get(customer.customerId);

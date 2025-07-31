@@ -8,6 +8,13 @@
       "when": 1750628137159,
       "tag": "0000_left_crusher_hogan",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1753909244633,
+      "tag": "0001_tricky_king_cobra",
+      "breakpoints": true
     }
   ]
 }

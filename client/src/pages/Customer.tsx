@@ -123,7 +123,15 @@ const Customer = () => {
       };
     }
     
-    if (!mealPlans || mealPlans.length === 0) return null;
+    if (!mealPlans || mealPlans.length === 0) {
+      return {
+        totalPlans: 0,
+        activePlans: 0,
+        avgCalories: 0,
+        totalDays: 0,
+        primaryGoal: ''
+      };
+    }
     
     const totalPlans = mealPlans.length;
     const activePlans = mealPlans.filter((plan: EnhancedMealPlan) => plan.isActive).length;
