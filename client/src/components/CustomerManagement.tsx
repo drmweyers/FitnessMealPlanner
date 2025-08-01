@@ -15,6 +15,7 @@ import {
 import { useToast } from '../hooks/use-toast';
 import { apiRequest } from '../lib/queryClient';
 import { SimplePDFExportButton } from './PDFExportButton';
+import CustomerDetailView from './CustomerDetailView';
 import { 
   Users, 
   Plus, 
@@ -304,7 +305,7 @@ function CustomerMealPlans({ customerId, customerEmail }: { customerId: string; 
 
 export default function CustomerManagement() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedCustomer, setExpandedCustomer] = useState<string | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const { data: customersData, isLoading, error } = useQuery<{ customers: Customer[]; total: number }>({
     queryKey: ['trainerCustomers'],
@@ -318,6 +319,16 @@ export default function CustomerManagement() {
   const filteredCustomers = customers.filter(customer => 
     customer.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // If a customer is selected, show the detail view
+  if (selectedCustomer) {
+    return (
+      <CustomerDetailView 
+        customer={selectedCustomer} 
+        onBack={() => setSelectedCustomer(null)} 
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -390,9 +401,7 @@ export default function CustomerManagement() {
             <Card key={customer.id} className="overflow-hidden">
               <CardHeader 
                 className="cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => setExpandedCustomer(
-                  expandedCustomer === customer.id ? null : customer.id
-                )}
+                onClick={() => setSelectedCustomer(customer)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -417,15 +426,6 @@ export default function CustomerManagement() {
                   </div>
                 </div>
               </CardHeader>
-              
-              {expandedCustomer === customer.id && (
-                <CardContent className="border-t bg-gray-50">
-                  <CustomerMealPlans 
-                    customerId={customer.id}
-                    customerEmail={customer.email}
-                  />
-                </CardContent>
-              )}
             </Card>
           ))}
         </div>

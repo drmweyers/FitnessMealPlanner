@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { storage } from '../storage';
-import { eq, sql, and } from 'drizzle-orm';
-import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
+import { eq, sql, and, desc } from 'drizzle-orm';
+import { personalizedRecipes, personalizedMealPlans, users, progressMeasurements, customerGoals, type MealPlan } from '@shared/schema';
 import { db } from '../db';
 import { z } from 'zod';
 
@@ -140,6 +140,94 @@ trainerRouter.get('/customers/:customerId/meal-plans', requireAuth, requireRole(
     res.status(500).json({ 
       status: 'error',
       message: 'Failed to fetch customer meal plans',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get customer measurements (for trainer view)
+trainerRouter.get('/customers/:customerId/measurements', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { customerId } = req.params;
+    
+    // Verify the customer is assigned to this trainer
+    const customerAssignments = await db.select()
+      .from(personalizedMealPlans)
+      .where(
+        and(
+          eq(personalizedMealPlans.trainerId, trainerId),
+          eq(personalizedMealPlans.customerId, customerId)
+        )
+      )
+      .limit(1);
+    
+    if (customerAssignments.length === 0) {
+      return res.status(403).json({ 
+        status: 'error',
+        message: 'Not authorized to view this customer\'s data',
+        code: 'FORBIDDEN'
+      });
+    }
+    
+    const measurements = await db.select()
+      .from(progressMeasurements)
+      .where(eq(progressMeasurements.customerId, customerId))
+      .orderBy(desc(progressMeasurements.measurementDate));
+    
+    res.json({
+      status: 'success',
+      data: measurements,
+    });
+  } catch (error) {
+    console.error('Failed to fetch customer measurements:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to fetch customer measurements',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get customer goals (for trainer view)
+trainerRouter.get('/customers/:customerId/goals', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { customerId } = req.params;
+    
+    // Verify the customer is assigned to this trainer
+    const customerAssignments = await db.select()
+      .from(personalizedMealPlans)
+      .where(
+        and(
+          eq(personalizedMealPlans.trainerId, trainerId),
+          eq(personalizedMealPlans.customerId, customerId)
+        )
+      )
+      .limit(1);
+    
+    if (customerAssignments.length === 0) {
+      return res.status(403).json({ 
+        status: 'error',
+        message: 'Not authorized to view this customer\'s data',
+        code: 'FORBIDDEN'
+      });
+    }
+    
+    const goals = await db.select()
+      .from(customerGoals)
+      .where(eq(customerGoals.customerId, customerId))
+      .orderBy(desc(customerGoals.createdAt));
+    
+    res.json({
+      status: 'success',
+      data: goals,
+    });
+  } catch (error) {
+    console.error('Failed to fetch customer goals:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: 'Failed to fetch customer goals',
       code: 'SERVER_ERROR'
     });
   }

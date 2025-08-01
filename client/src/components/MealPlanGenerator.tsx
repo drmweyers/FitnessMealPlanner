@@ -106,7 +106,28 @@ interface MealPlanResult {
   timestamp?: string;
 }
 
-export default function MealPlanGenerator() {
+interface CustomerContext {
+  customerId: string;
+  customerEmail: string;
+  healthMetrics?: {
+    weight: string;
+    bodyFat: string;
+    waist: string;
+    lastUpdated: string;
+  };
+  goals?: Array<{
+    goalName: string;
+    progressPercentage: number;
+    status: string;
+  }>;
+}
+
+interface MealPlanGeneratorProps {
+  onMealPlanGenerated?: (mealPlan: any) => void;
+  customerContext?: CustomerContext;
+}
+
+export default function MealPlanGenerator({ onMealPlanGenerated, customerContext }: MealPlanGeneratorProps = {}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -182,6 +203,43 @@ export default function MealPlanGenerator() {
       clientName: "",
     },
   });
+
+  // Load customer context when available
+  useEffect(() => {
+    // Check for customer context from props or sessionStorage
+    const contextFromStorage = sessionStorage.getItem('customerContext');
+    const context = customerContext || (contextFromStorage ? JSON.parse(contextFromStorage) : null);
+    
+    if (context) {
+      // Pre-populate form with customer information
+      form.setValue('clientName', context.customerEmail);
+      
+      // Set a default plan name based on customer
+      if (!form.getValues('planName')) {
+        form.setValue('planName', `Personalized Plan for ${context.customerEmail.split('@')[0]}`);
+      }
+      
+      // Add customer context to description
+      if (context.healthMetrics || context.goals) {
+        let description = 'Customer Profile:\n';
+        
+        if (context.healthMetrics) {
+          description += `• Weight: ${context.healthMetrics.weight}\n`;
+          description += `• Body Fat: ${context.healthMetrics.bodyFat}\n`;
+          description += `• Waist: ${context.healthMetrics.waist}\n`;
+        }
+        
+        if (context.goals && context.goals.length > 0) {
+          description += '\nActive Goals:\n';
+          context.goals.forEach(goal => {
+            description += `• ${goal.goalName} (${goal.progressPercentage}% complete)\n`;
+          });
+        }
+        
+        form.setValue('description', description);
+      }
+    }
+  }, [customerContext, form]);
 
   const parseNaturalLanguage = useMutation({
     mutationFn: async (
@@ -278,6 +336,11 @@ export default function MealPlanGenerator() {
     },
     onSuccess: (data) => {
       setGeneratedPlan(data);
+      
+      // Call the callback if provided (for CustomerDetailView integration)
+      if (onMealPlanGenerated && data.mealPlan) {
+        onMealPlanGenerated(data.mealPlan);
+      }
       toast({
         title: "Meal Plan Generated!",
         description: "Your personalized meal plan is ready.",
