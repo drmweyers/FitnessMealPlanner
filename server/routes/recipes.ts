@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { storage } from '../storage';
-import { requireAuth } from '../authRoutes'; 
+import { requireAuth } from '../middleware/auth'; 
 
 export const recipeRouter = Router();
 

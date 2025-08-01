@@ -6,7 +6,7 @@
  */
 
 import { Router } from 'express';
-import { requireAuth } from '../authRoutes';
+import { requireAuth } from '../middleware/auth';
 import { exportPdfController, exportMealPlanPdfController } from '../controllers/exportPdfController';
 
 const pdfRouter = Router();

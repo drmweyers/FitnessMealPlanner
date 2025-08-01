@@ -21,6 +21,12 @@
     "test:email": "vitest run test/unit/emailService.test.ts test/email-service.test.ts",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:gui",
     "test:baseline": "TEST_MODE=baseline npm run test:gui",
+    "test:playwright": "playwright test",
+    "test:playwright:headed": "playwright test --headed",
+    "test:business-logic": "playwright test test/e2e/business-logic-visual.spec.ts --headed",
+    "test:business-logic:debug": "playwright test test/e2e/business-logic-visual.spec.ts --headed --debug",
+    "test:business-logic:robust": "playwright test test/e2e/business-logic-robust.spec.ts --headed",
+    "test:business-logic:simple": "playwright test test/e2e/business-logic-simple-visual.spec.ts --headed",
     "check": "tsc",
     "db:generate": "drizzle-kit generate",
     "migrate": "tsx scripts/runMigration.ts",
@@ -140,6 +146,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.2",
     "@replit/vite-plugin-cartographer": "^0.2.7",
     "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
     "@tailwindcss/typography": "^0.5.15",

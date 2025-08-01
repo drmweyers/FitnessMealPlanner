@@ -4,7 +4,7 @@ import { fromZodError } from 'zod-validation-error';
 import crypto from 'crypto';
 import { storage } from './storage';
 import { emailService } from './services/emailService';
-import { requireAuth, requireRole } from './authRoutes';
+import { requireAuth, requireRole } from './middleware/auth';
 import { hashPassword } from './auth';
 import { createInvitationSchema, acceptInvitationSchema } from '../shared/schema';
 

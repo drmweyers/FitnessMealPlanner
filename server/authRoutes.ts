@@ -6,6 +6,7 @@ import { hashPassword, comparePasswords, generateTokens, verifyToken } from './a
 import { users } from '../shared/schema';
 import crypto from 'crypto';
 import passport from './passport-config';
+import { requireAuth, requireAdmin, requireRole } from './middleware/auth';
 
 const authRouter = Router();
 
@@ -286,49 +287,10 @@ interface AuthRequest extends Request {
   };
 }
 
-export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ 
-      status: 'error',
-      message: 'Unauthorized',
-      code: 'UNAUTHORIZED'
-    });
-  }
+// Authentication middleware is imported from ./middleware/auth.ts
+// It includes automatic token refresh functionality
 
-  const token = authHeader.split(' ')[1];
-  const decoded = verifyToken(token);
-
-  if (!decoded) {
-    return res.status(401).json({ 
-      status: 'error',
-      message: 'Invalid or expired token',
-      code: 'INVALID_TOKEN'
-    });
-  }
-
-  req.user = decoded;
-  next();
-}
-
-export function requireRole(role: 'admin' | 'trainer' | 'customer') {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user?.role !== role) {
-      return res.status(403).json({ 
-        status: 'error',
-        message: 'Insufficient permissions',
-        code: 'FORBIDDEN'
-      });
-    }
-    next();
-  };
-}
-
-export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
-    requireAuth(req, res, () => {
-        requireRole('admin')(req, res, next);
-    });
-}
+// Role-based middleware is imported from ./middleware/auth.ts
 
 authRouter.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
   try {

@@ -14,7 +14,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import authRouter, { requireAuth, requireRole } from "./authRoutes";
+import authRouter from "./authRoutes";
+import { requireAuth, requireRole } from "./middleware/auth";
 import passwordRouter from "./passwordRoutes";
 import recipeRouter from "./recipeRoutes";
 import invitationRouter from "./invitationRoutes";
