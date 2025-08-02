@@ -16,6 +16,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import FallbackUI from "./components/FallbackUI";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { OAuthCallback } from "./components/OAuthCallback";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 
@@ -76,12 +77,11 @@ export default function Router() {
         }} />
         
         {/* Admin Routes */}
-        <Route path="/admin" component={() => {
-          if (user.role !== 'admin') {
-            return <Redirect to="/" />;
-          }
-          return <Admin />;
-        }} />
+        <Route path="/admin" component={() => (
+          <ProtectedRoute requiredRole="admin">
+            <Admin />
+          </ProtectedRoute>
+        )} />
         
         {/* Customer Routes */}
         <Route path="/customer" component={() => {

@@ -24,6 +24,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
 import passport from './passport-config';
+import { requireAuth, requireAdmin, requireTrainerOrAdmin, requireRole } from './middleware/auth';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -115,15 +116,18 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes - These must be defined BEFORE ViteExpress
+// Public routes (no authentication required)
 app.use('/api/auth', authRouter);
-app.use('/api/invitations', invitationRouter);
-app.use('/api/recipes', recipeRouter);
-app.use('/api/admin', adminRouter);
-app.use('/api/trainer', trainerRouter);
-app.use('/api/customer', customerRouter);
-app.use('/api/meal-plan', mealPlanRouter);
-app.use('/api/pdf', pdfRouter);
-app.use('/api/progress', progressRouter);
+
+// Protected routes with authentication middleware
+app.use('/api/invitations', requireAuth, invitationRouter);
+app.use('/api/recipes', requireAuth, recipeRouter);
+app.use('/api/admin', requireAdmin, adminRouter);
+app.use('/api/trainer', requireTrainerOrAdmin, trainerRouter);
+app.use('/api/customer', requireRole('customer'), customerRouter);
+app.use('/api/meal-plan', requireAuth, mealPlanRouter);
+app.use('/api/pdf', requireAuth, pdfRouter);
+app.use('/api/progress', requireAuth, progressRouter);
 
 // Serve static files from the React app
 if (process.env.NODE_ENV === 'production') {
