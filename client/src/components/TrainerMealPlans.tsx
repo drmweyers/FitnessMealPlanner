@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
+import { Checkbox } from './ui/checkbox';
+import { ScrollArea } from './ui/scroll-area';
+import { Label } from './ui/label';
 import { apiRequest } from '../lib/queryClient';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,7 +25,13 @@ import {
   DialogDescription,
 } from './ui/dialog';
 import MealPlanModal from './MealPlanModal';
-import type { TrainerMealPlanWithAssignments, CustomerMealPlan } from '@shared/schema';
+import type { TrainerMealPlanWithAssignments, CustomerMealPlan, User } from '@shared/schema';
+
+interface Customer extends User {
+  id: string;
+  email: string;
+  role: 'customer';
+}
 
 export default function TrainerMealPlans() {
   const { user } = useAuth();
@@ -31,12 +40,24 @@ export default function TrainerMealPlans() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<CustomerMealPlan | null>(null);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
+  const [planToAssign, setPlanToAssign] = useState<TrainerMealPlanWithAssignments | null>(null);
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
 
   const { data: mealPlans, isLoading } = useQuery({
     queryKey: ['/api/trainer/meal-plans'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/trainer/meal-plans');
       return response.json();
+    },
+  });
+
+  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
+    queryKey: ['/api/trainer/customers'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/trainer/customers');
+      if (!response.ok) throw new Error('Failed to fetch customers');
+      const data = await response.json();
+      return data.customers || [];
     },
   });
 
@@ -57,6 +78,33 @@ export default function TrainerMealPlans() {
     onError: (error: Error) => {
       toast({
         title: 'Delete Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const assignMealPlan = useMutation({
+    mutationFn: async ({ planId, customerId }: { planId: string; customerId: string }) => {
+      const response = await apiRequest('POST', `/api/trainer/meal-plans/${planId}/assign`, {
+        customerId,
+      });
+      if (!response.ok) throw new Error('Failed to assign meal plan');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Meal Plan Assigned',
+        description: 'The meal plan has been successfully assigned to the customer.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/trainer/meal-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/trainer/customers'] });
+      setPlanToAssign(null);
+      setSelectedCustomers([]);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Assignment Failed',
         description: error.message,
         variant: 'destructive',
       });
@@ -93,6 +141,34 @@ export default function TrainerMealPlans() {
       assignedAt: plan.createdAt,
     };
     setSelectedPlan(customerPlan);
+  };
+
+  const handleAssignToPlan = (plan: TrainerMealPlanWithAssignments) => {
+    setPlanToAssign(plan);
+    setSelectedCustomers([]);
+  };
+
+  const handleCustomerToggle = (customerId: string) => {
+    setSelectedCustomers(prev =>
+      prev.includes(customerId)
+        ? prev.filter(id => id !== customerId)
+        : [...prev, customerId]
+    );
+  };
+
+  const handleAssignSelected = () => {
+    if (!planToAssign || selectedCustomers.length === 0) {
+      toast({
+        title: 'No Customer Selected',
+        description: 'Please select at least one customer to assign the meal plan.',
+        variant: 'default',
+      });
+      return;
+    }
+
+    // For now, assign to first selected customer (API only supports one at a time)
+    const customerId = selectedCustomers[0];
+    assignMealPlan.mutate({ planId: planToAssign.id, customerId });
   };
 
   if (isLoading) {
@@ -155,7 +231,7 @@ export default function TrainerMealPlans() {
                           View Details
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={() => window.location.href = `/trainer/meal-plans/${plan.id}/assign`}
+                          onClick={() => handleAssignToPlan(plan)}
                           className="text-blue-600"
                         >
                           <UserPlus className="mr-2 h-4 w-4" />
@@ -259,6 +335,87 @@ export default function TrainerMealPlans() {
           onClose={() => setSelectedPlan(null)}
         />
       )}
+
+      {/* Assignment Modal */}
+      <Dialog open={!!planToAssign} onOpenChange={() => setPlanToAssign(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign Meal Plan to Customer</DialogTitle>
+            <DialogDescription>
+              Select a customer to assign "{(planToAssign?.mealPlanData as any)?.planName || 'this meal plan'}" to.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Customer List */}
+            <ScrollArea className="h-[300px] border rounded-lg p-4">
+              {isLoadingCustomers ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-slate-600">Loading customers...</span>
+                </div>
+              ) : customers.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No customers found</p>
+                  <p className="text-sm mt-1">Customers will appear here once they accept invitations.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {customers.map((customer: Customer) => (
+                    <div
+                      key={customer.id}
+                      className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors"
+                      onClick={() => handleCustomerToggle(customer.id)}
+                    >
+                      <Checkbox
+                        checked={selectedCustomers.includes(customer.id)}
+                        onChange={() => handleCustomerToggle(customer.id)}
+                        className="h-5 w-5"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <Users className="h-4 w-4 text-slate-400" />
+                          <span className="font-medium text-slate-900">
+                            {customer.email}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-500 mt-1">
+                          Customer ID: {customer.id.slice(0, 8)}...
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => setPlanToAssign(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAssignSelected}
+                disabled={assignMealPlan.isPending || selectedCustomers.length === 0}
+                className="min-w-[120px]"
+              >
+                {assignMealPlan.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Assigning...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Assign ({selectedCustomers.length})
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
