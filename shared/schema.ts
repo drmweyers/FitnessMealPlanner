@@ -347,6 +347,10 @@ export const mealPlanGenerationSchema = z.object({
   // Optional client information
   clientName: z.string().optional(), // For personal trainers/nutritionists
 
+  // NEW FEATURES
+  maxIngredients: z.number().min(5).max(50).optional(), // Limit ingredient variety across the entire plan
+  generateMealPrep: z.boolean().default(true), // Whether to generate meal prep instructions
+
   // Recipe filtering constraints (inherited from recipeFilterSchema)
   mealType: z.string().optional(),
   dietaryTag: z.string().optional(),
@@ -387,6 +391,34 @@ export const mealPlanSchema = z.object({
   mealsPerDay: z.number(),
   generatedBy: z.string(), // User ID who generated the plan
   createdAt: z.date(),
+
+  // NEW FEATURE: Start of week meal prep instructions
+  startOfWeekMealPrep: z.object({
+    totalPrepTime: z.number(), // Estimated total prep time in minutes
+    shoppingList: z.array(
+      z.object({
+        ingredient: z.string(),
+        totalAmount: z.string(),
+        unit: z.string(),
+        usedInRecipes: z.array(z.string()), // Recipe names that use this ingredient
+      })
+    ),
+    prepInstructions: z.array(
+      z.object({
+        step: z.number(),
+        instruction: z.string(),
+        estimatedTime: z.number(), // Time in minutes
+        ingredients: z.array(z.string()), // Ingredients involved in this step
+      })
+    ),
+    storageInstructions: z.array(
+      z.object({
+        ingredient: z.string(),
+        method: z.string(), // How to store (refrigerate, freeze, pantry, etc.)
+        duration: z.string(), // How long it will last
+      })
+    ),
+  }).optional(),
 
   // Meal schedule with assigned recipes
   meals: z.array(
