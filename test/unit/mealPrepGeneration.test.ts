@@ -9,6 +9,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MealPlanGeneratorService } from '../../server/services/mealPlanGenerator';
 import type { MealPlan, MealPlanGeneration } from '@shared/schema';
 
+// Mock the storage module at the top level
+vi.mock('../../server/storage', () => ({
+  storage: {
+    searchRecipes: vi.fn()
+  }
+}));
+
 describe('Meal Prep Generation Feature', () => {
   let mealPlanService: MealPlanGeneratorService;
   let mockMealPlan: MealPlan;
@@ -336,34 +343,33 @@ describe('Meal Prep Generation Feature', () => {
   });
 
   describe('Integration with generateMealPlan', () => {
-    beforeEach(() => {
-      // Mock the storage.searchRecipes method
-      vi.spyOn(require('../../server/storage'), 'storage', 'get').mockReturnValue({
-        searchRecipes: vi.fn().mockResolvedValue({
-          recipes: [
-            {
-              id: '1',
-              name: 'Test Recipe',
-              description: 'Test',
-              caloriesKcal: 500,
-              proteinGrams: '30',
-              carbsGrams: '40',
-              fatGrams: '15',
-              prepTimeMinutes: 20,
-              cookTimeMinutes: 25,
-              servings: 2,
-              mealTypes: ['lunch'],
-              ingredientsJson: [
-                { name: 'Chicken Breast', amount: '200', unit: 'g' },
-                { name: 'Broccoli', amount: '150', unit: 'g' }
-              ],
-              isApproved: true,
-              creationTimestamp: new Date(),
-              lastUpdatedTimestamp: new Date()
-            }
-          ],
-          total: 1
-        })
+    beforeEach(async () => {
+      // Import the mocked storage and set up the mock return value
+      const { storage } = await import('../../server/storage');
+      vi.mocked(storage.searchRecipes).mockResolvedValue({
+        recipes: [
+          {
+            id: '1',
+            name: 'Test Recipe',
+            description: 'Test',
+            caloriesKcal: 500,
+            proteinGrams: '30',
+            carbsGrams: '40',
+            fatGrams: '15',
+            prepTimeMinutes: 20,
+            cookTimeMinutes: 25,
+            servings: 2,
+            mealTypes: ['lunch'],
+            ingredientsJson: [
+              { name: 'Chicken Breast', amount: '200', unit: 'g' },
+              { name: 'Broccoli', amount: '150', unit: 'g' }
+            ],
+            isApproved: true,
+            creationTimestamp: new Date(),
+            lastUpdatedTimestamp: new Date()
+          }
+        ],
+        total: 1
       });
     });
 

@@ -9,6 +9,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MealPlanGeneratorService } from '../../server/services/mealPlanGenerator';
 import type { MealPlanGeneration, Recipe } from '@shared/schema';
 
+// Mock the storage module at the top level
+vi.mock('../../server/storage', () => ({
+  storage: {
+    searchRecipes: vi.fn()
+  }
+}));
+
 describe('Ingredient Limitation Feature', () => {
   let mealPlanService: MealPlanGeneratorService;
   let mockRecipes: Recipe[];
@@ -226,13 +233,12 @@ describe('Ingredient Limitation Feature', () => {
   });
 
   describe('generateMealPlan with maxIngredients', () => {
-    beforeEach(() => {
-      // Mock the storage.searchRecipes method
-      vi.spyOn(require('../../server/storage'), 'storage', 'get').mockReturnValue({
-        searchRecipes: vi.fn().mockResolvedValue({
-          recipes: mockRecipes,
-          total: mockRecipes.length
-        })
+    beforeEach(async () => {
+      // Import the mocked storage and set up the mock return value
+      const { storage } = await import('../../server/storage');
+      vi.mocked(storage.searchRecipes).mockResolvedValue({
+        recipes: mockRecipes,
+        total: mockRecipes.length
       });
     });
 

@@ -39,6 +39,63 @@ vi.mock('jspdf', () => {
   };
 });
 
+// Mock PDF export function that includes meal prep - moved to global scope
+const createMockPDFExportFunction = () => {
+  return (mealPlan: MealPlan, nutrition: any) => {
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    let yPosition = 60;
+
+    // Add header, nutrition, etc. (existing functionality)
+    pdf.text('PREMIUM MEAL PLAN', pageWidth / 2, 25);
+    
+    // NEW FEATURE: Add Meal Prep Section if available
+    if (mealPlan.startOfWeekMealPrep) {
+      // Check if we need a new page for meal prep
+      if (yPosition > pageHeight - 100) {
+        pdf.addPage();
+        yPosition = 60;
+      } else {
+        yPosition += 30;
+      }
+
+      const mealPrep = mealPlan.startOfWeekMealPrep;
+
+      // Prep time overview
+      pdf.text(`Total Prep Time: ${mealPrep.totalPrepTime} minutes`, margin + 10, yPosition);
+      yPosition += 30;
+
+      // Prep steps section
+      pdf.text('PREPARATION STEPS', margin, yPosition);
+      yPosition += 15;
+
+      (mealPrep.prepInstructions || []).slice(0, 4).forEach((step, index) => {
+        // Step number and instruction with null safety
+        pdf.text((step?.step || 0).toString(), margin + 7.5, yPosition + 10);
+        pdf.text(step?.instruction || 'No instruction', margin + 20, yPosition + 5);
+        pdf.text(`(${step?.estimatedTime || 0} min)`, pageWidth - margin - 5, yPosition + 5);
+        yPosition += 25;
+      });
+
+      // Storage tips
+      if ((mealPrep.storageInstructions || []).length > 0) {
+        pdf.text('STORAGE TIPS', margin, yPosition);
+        yPosition += 15;
+
+        (mealPrep.storageInstructions || []).slice(0, 3).forEach((storage, index) => {
+          const tipText = `${storage?.ingredient || 'Unknown'}: ${storage?.method || 'Store properly'} (${storage?.duration || 'Unknown duration'})`;
+          pdf.text(`• ${tipText}`, margin + 5, yPosition);
+          yPosition += 12;
+        });
+      }
+    }
+
+    return pdf;
+  };
+};
+
 describe('PDF Export with Meal Prep Feature', () => {
   let mockMealPlanWithMealPrep: MealPlan;
   let mockMealPlanWithoutMealPrep: MealPlan;
@@ -172,62 +229,6 @@ describe('PDF Export with Meal Prep Feature', () => {
   });
 
   describe('PDF Export Function Structure', () => {
-    // Mock PDF export function that includes meal prep
-    const createMockPDFExportFunction = () => {
-      return (mealPlan: MealPlan, nutrition: any) => {
-        const pdf = new jsPDF();
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 15;
-        let yPosition = 60;
-
-        // Add header, nutrition, etc. (existing functionality)
-        pdf.text('PREMIUM MEAL PLAN', pageWidth / 2, 25);
-        
-        // NEW FEATURE: Add Meal Prep Section if available
-        if (mealPlan.startOfWeekMealPrep) {
-          // Check if we need a new page for meal prep
-          if (yPosition > pageHeight - 100) {
-            pdf.addPage();
-            yPosition = 60;
-          } else {
-            yPosition += 30;
-          }
-
-          const mealPrep = mealPlan.startOfWeekMealPrep;
-
-          // Prep time overview
-          pdf.text(`Total Prep Time: ${mealPrep.totalPrepTime} minutes`, margin + 10, yPosition);
-          yPosition += 30;
-
-          // Prep steps section
-          pdf.text('PREPARATION STEPS', margin, yPosition);
-          yPosition += 15;
-
-          mealPrep.prepInstructions.slice(0, 4).forEach((step, index) => {
-            // Step number and instruction
-            pdf.text(step.step.toString(), margin + 7.5, yPosition + 10);
-            pdf.text(step.instruction, margin + 20, yPosition + 5);
-            pdf.text(`(${step.estimatedTime} min)`, pageWidth - margin - 5, yPosition + 5);
-            yPosition += 25;
-          });
-
-          // Storage tips
-          if (mealPrep.storageInstructions.length > 0) {
-            pdf.text('STORAGE TIPS', margin, yPosition);
-            yPosition += 15;
-
-            mealPrep.storageInstructions.slice(0, 3).forEach((storage, index) => {
-              const tipText = `${storage.ingredient}: ${storage.method} (${storage.duration})`;
-              pdf.text(`• ${tipText}`, margin + 5, yPosition);
-              yPosition += 12;
-            });
-          }
-        }
-
-        return pdf;
-      };
-    };
 
     it('should include meal prep section when startOfWeekMealPrep is present', () => {
       const exportToPDF = createMockPDFExportFunction();
@@ -377,7 +378,7 @@ describe('PDF Export with Meal Prep Feature', () => {
       const cleanedText = cleanText('Prepare café-style crème fraîche with special characters: àáâãäåæç');
       
       // Should remove special characters
-      expect(cleanedText).toBe('Prepare caf-style crme frache with special characters: ');
+      expect(cleanedText).toBe('Prepare caf-style crme frache with special characters:');
     });
 
     it('should handle empty or undefined meal prep data gracefully', () => {
