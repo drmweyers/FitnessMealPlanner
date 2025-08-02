@@ -1,8 +1,15 @@
 # 📋 **FitnessMealPlanner: Complete Role-Based Business Logic Specification**
 
-**Version:** 1.0  
-**Last Updated:** August 1, 2025  
+**Version:** 1.1  
+**Last Updated:** August 2, 2025  
 **Document Purpose:** Comprehensive specification of all business logic and role interactions
+
+### **Version 1.1 Changes:**
+- ✅ Added detailed Meal Plan Assignment Feature documentation
+- ✅ Added API endpoints for trainer meal plan assignment
+- ✅ Added detailed assignment workflow process
+- ✅ Added assignment validation rules and security requirements
+- ✅ Updated testing requirements to include assignment modal testing
 
 ## 🏗️ **System Architecture Overview**
 
@@ -93,9 +100,20 @@ The system operates on a **three-tier role hierarchy** with strict data isolatio
 
 #### **Content Assignment System**
 - ✅ **Recipe Assignment**: Assign approved recipes to specific customers
-- ✅ **Meal Plan Assignment**: Assign meal plans to customers
+- ✅ **Meal Plan Assignment**: Assign meal plans to customers via modal interface
 - ✅ **Personalized Recommendations**: Tailor content to customer needs
 - ✅ **Assignment Tracking**: Monitor what content is assigned to whom
+
+#### **Meal Plan Assignment Feature (Detailed)**
+- ✅ **Modal-Based Assignment**: Click "Assign to Customer" opens assignment modal
+- ✅ **Customer Selection Interface**: Checkbox-based customer selection
+- ✅ **Real-Time Customer List**: Fetches trainer's customers via `/api/trainer/customers`
+- ✅ **Assignment API Integration**: Uses `POST /api/trainer/meal-plans/:planId/assign`
+- ✅ **Success/Error Feedback**: Toast notifications for assignment status
+- ✅ **Assignment Validation**: Prevents assignment without customer selection
+- ✅ **Assignment Tracking**: Updates meal plan assignment counts
+- ✅ **Multiple Assignment Support**: Can assign same plan to multiple customers
+- ✅ **Assignment History**: Tracks which customers have which plans assigned
 
 #### **Recipe Access & Management**
 - ✅ **Approved Recipe Library**: Access all admin-approved recipes
@@ -204,8 +222,21 @@ Trainer → Send Invitation → Customer Email → Registration → Auto-Link �
 
 ### **2. Meal Plan Assignment Flow**
 ```
-Trainer → Generate/Select Plan → Assign to Customer → Customer Notification → Customer Access
+Trainer → Generate/Save Plan → Saved Plans Tab → Click "Assign to Customer" → 
+Assignment Modal Opens → Select Customer(s) → Click "Assign" → 
+API Call (/api/trainer/meal-plans/:planId/assign) → Success Notification → 
+Customer Access Granted
 ```
+
+#### **Detailed Assignment Process:**
+1. **Plan Selection**: Trainer navigates to Saved Plans in meal plan library
+2. **Assignment Trigger**: Click three-dot menu → "Assign to Customer"
+3. **Modal Interface**: Assignment modal displays with customer list
+4. **Customer Selection**: Checkbox interface for selecting customers
+5. **Validation**: System prevents assignment without customer selection
+6. **API Processing**: Assignment data sent to backend for processing
+7. **Confirmation**: Success/error feedback via toast notifications
+8. **State Update**: UI refreshes to show updated assignment counts
 
 ### **3. Recipe Approval Flow**
 ```
@@ -239,6 +270,41 @@ Customer → Record Progress → Data Storage → Trainer Dashboard → Progress
 
 ---
 
+## 🔌 **API Endpoints - Meal Plan Assignment**
+
+### **Trainer Assignment Endpoints**
+```
+GET /api/trainer/customers
+- Purpose: Fetch all customers assigned to the authenticated trainer
+- Response: { customers: Customer[], total: number }
+- Security: Requires trainer authentication
+
+POST /api/trainer/meal-plans/:planId/assign
+- Purpose: Assign a saved meal plan to a specific customer
+- Body: { customerId: string, notes?: string }
+- Response: { assignment: Assignment, message: string }
+- Security: Requires trainer authentication and plan ownership
+
+DELETE /api/trainer/meal-plans/:planId/assign/:customerId
+- Purpose: Remove meal plan assignment from customer
+- Response: { message: string }
+- Security: Requires trainer authentication and plan ownership
+
+GET /api/trainer/meal-plans
+- Purpose: Fetch all saved meal plans for the trainer
+- Response: { mealPlans: TrainerMealPlan[], total: number }
+- Security: Requires trainer authentication
+```
+
+### **Assignment Validation Rules**
+- ✅ **Plan Ownership**: Trainer must own the meal plan being assigned
+- ✅ **Customer Validation**: Customer must exist and be accessible to trainer
+- ✅ **Duplicate Prevention**: System allows multiple assignments of same plan
+- ✅ **Assignment Tracking**: Each assignment creates audit trail
+- ✅ **Cascade Operations**: Plan deletion removes all assignments
+
+---
+
 ## 📊 **Business Rules Summary**
 
 1. **Content Approval Gate**: Only approved recipes visible to trainers/customers
@@ -262,6 +328,8 @@ Customer → Record Progress → Data Storage → Trainer Dashboard → Progress
 6. **Invitation System**: Customer invitation and registration process
 7. **Assignment System**: Meal plan and recipe assignment workflows
 8. **Progress Tracking**: Customer progress data privacy and functionality
+9. **Meal Plan Assignment Modal**: Assignment interface and customer selection
+10. **Assignment API Integration**: Backend assignment processing and validation
 
 ### **Test Data Requirements**
 - One admin account with full permissions
