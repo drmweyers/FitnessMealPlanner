@@ -1,27 +1,27 @@
 # 📧 Email System Configuration Notes
 
-## Current Status: ✅ IMPLEMENTED BUT NEEDS DOMAIN SETUP
+## Current Status: ✅ IMPLEMENTED BUT NEEDS DOMAIN VERIFICATION
 
 ### What's Working:
 - ✅ Email service fully implemented with Resend integration
 - ✅ Professional HTML and plain text email templates
 - ✅ Complete unit test suite (49 tests passing)
 - ✅ Error handling and edge cases covered
-- ✅ API key configured: `re_BwMktDkm_L7QQMZRhrMmBVj64bn2yehhp`
+- ✅ API key updated and working: `re_AFyMaUkC_GYyDjVvEiAbZFXm2J5yMJLki`
+- ✅ Account email changed to: `evofitmeals@bcinnovationlabs.com`
 
 ### Current Configuration:
 ```
-RESEND_API_KEY=re_BwMktDkm_L7QQMZRhrMmBVj64bn2yehhp
-FROM_EMAIL=FitnessMealPlanner <onboarding@resend.dev>
+RESEND_API_KEY=re_AFyMaUkC_GYyDjVvEiAbZFXm2J5yMJLki
+FROM_EMAIL=EvoFitMeals <onboarding@resend.dev>
 ```
 
 ### Issue to Resolve Later:
-**Resend Email Verification Restriction**
-- Currently can only send emails to: `dr.m.weyers@bcinnovationlabs.com`
-- To send to other addresses (like `dr.m.weyers@gmail.com`), need to:
-  1. Change registered email in Resend account
-  2. Verify a custom domain at https://resend.com/domains
-  3. Update FROM_EMAIL to use verified domain
+**Domain Verification Required**
+- Cannot send emails to @bcinnovationlabs.com addresses without domain verification
+- Current error: "The bcinnovationlabs.com domain is not verified"
+- Need to add and verify bcinnovationlabs.com domain in Resend dashboard
+- After verification, can update FROM_EMAIL to: `EvoFitMeals <evofitmeals@bcinnovationlabs.com>`
 
 ### Testing Status:
 - ✅ System sends emails successfully to verified address

@@ -51,7 +51,9 @@
       "Bash(RESEND_API_KEY=re_BwMktDkm_L7QQMZRhrMmBVj64bn2yehhp FROM_EMAIL=\"FitnessMealPlanner <onboarding@resend.dev>\" NODE_ENV=development npx tsx test-email-directly.js)",
       "Bash(npx vitest run:*)",
       "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5432/fitmeal_test npm run db:push)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }
