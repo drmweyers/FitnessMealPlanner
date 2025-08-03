@@ -69,6 +69,7 @@ trainerRouter.get('/profile/stats', requireAuth, requireRole('trainer'), async (
 trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req, res) => {
   try {
     const trainerId = req.user!.id;
+    const { recipeId } = req.query;
     
     // Get unique customers who have meal plans or recipes assigned by this trainer
     const customersWithMealPlans = await db.select({
@@ -89,6 +90,22 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
     .innerJoin(users, eq(users.id, personalizedRecipes.customerId))
     .where(eq(personalizedRecipes.trainerId, trainerId));
     
+    // If recipeId is provided, get customers who have this specific recipe assigned
+    let customersWithThisRecipe = new Set();
+    if (recipeId) {
+      const recipeAssignments = await db.select({
+        customerId: personalizedRecipes.customerId,
+      })
+      .from(personalizedRecipes)
+      .where(
+        and(
+          eq(personalizedRecipes.trainerId, trainerId),
+          eq(personalizedRecipes.recipeId, recipeId as string)
+        )
+      );
+      customersWithThisRecipe = new Set(recipeAssignments.map(a => a.customerId));
+    }
+    
     // Combine and deduplicate customers
     const customerMap = new Map();
     
@@ -97,7 +114,9 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
         customerMap.set(customer.customerId, {
           id: customer.customerId,
           email: customer.customerEmail,
+          role: 'customer',
           firstAssignedAt: customer.assignedAt,
+          hasRecipe: recipeId ? customersWithThisRecipe.has(customer.customerId) : false,
         });
       } else {
         const existing = customerMap.get(customer.customerId);
