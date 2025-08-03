@@ -110,7 +110,8 @@ authRouter.post('/register', async (req: Request, res: Response) => {
         user: {
           id: newUser.id,
           email: newUser.email,
-          role: newUser.role
+          role: newUser.role,
+          profilePicture: newUser.profilePicture
         }
       }
     });
@@ -208,7 +209,8 @@ authRouter.post('/login', async (req: Request, res: Response) => {
         user: {
           id: user.id,
           email: user.email,
-          role: user.role
+          role: user.role,
+          profilePicture: user.profilePicture
         }
       }
     });
@@ -308,7 +310,8 @@ authRouter.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
         user: {
           id: user.id,
           email: user.email,
-          role: user.role
+          role: user.role,
+          profilePicture: user.profilePicture
         }
       }
     });

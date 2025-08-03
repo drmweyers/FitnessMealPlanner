@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { ProfileAvatar } from './ProfileImageUpload';
 import { 
   Home, 
   User, 
@@ -37,14 +37,6 @@ const Layout = ({ children }: LayoutProps) => {
     setLocation('/login');
   };
 
-  const getInitials = (email: string) => {
-    return email
-      .split('@')[0]
-      .split('.')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
-  };
 
   const navigation = [
     // Customer navigation
@@ -119,11 +111,12 @@ const Layout = ({ children }: LayoutProps) => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2">
-                    <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs sm:text-sm">
-                        {user?.email ? getInitials(user.email) : '??'}
-                      </AvatarFallback>
-                    </Avatar>
+                    <ProfileAvatar 
+                      imageUrl={user?.profilePicture} 
+                      userEmail={user?.email || ''} 
+                      size="sm"
+                      className="h-6 w-6 sm:h-8 sm:w-8"
+                    />
                     <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 hidden sm:block" />
                   </Button>
                 </DropdownMenuTrigger>

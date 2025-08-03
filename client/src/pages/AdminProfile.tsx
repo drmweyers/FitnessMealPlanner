@@ -9,6 +9,7 @@ import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { apiRequest } from '../lib/queryClient';
 import PDFExportButton from '../components/PDFExportButton';
+import ProfileImageUpload from '../components/ProfileImageUpload';
 import { 
   User, 
   Shield, 
@@ -41,6 +42,7 @@ interface UserProfile {
   role: string;
   createdAt: string;
   lastLoginAt?: string;
+  profilePicture?: string | null;
 }
 
 export default function AdminProfile() {
@@ -233,6 +235,41 @@ export default function AdminProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Profile Information */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Profile Image Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span>Profile Image</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center space-x-6 p-4 sm:p-6">
+              <ProfileImageUpload
+                currentImageUrl={profile?.profilePicture}
+                userEmail={user?.email || ''}
+                size="xl"
+                onImageUpdate={(newImageUrl) => {
+                  // Update profile data optimistically
+                  if (profile) {
+                    queryClient.setQueryData(['adminProfile', 'details'], {
+                      ...profile,
+                      profilePicture: newImageUrl
+                    });
+                  }
+                }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-slate-600 mb-2">
+                  Upload a professional profile image that will be displayed in your header and profile.
+                </p>
+                <p className="text-xs text-slate-500">
+                  Recommended: Square image, at least 200x200px. Max file size: 5MB.
+                  Supported formats: JPEG, PNG, WebP.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Account Details Card */}
           <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 pb-4">

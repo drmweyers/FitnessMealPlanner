@@ -5,6 +5,7 @@ export interface User {
   email: string;
   role: UserRole;
   name?: string;
+  profilePicture?: string | null;
 }
 
 export interface LoginCredentials {

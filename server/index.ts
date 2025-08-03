@@ -20,6 +20,7 @@ import trainerRouter from './routes/trainerRoutes';
 import customerRouter from './routes/customerRoutes';
 import pdfRouter from './routes/pdf';
 import progressRouter from './routes/progressRoutes';
+import profileRouter from './routes/profileRoutes';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
@@ -128,6 +129,10 @@ app.use('/api/customer', requireRole('customer'), customerRouter);
 app.use('/api/meal-plan', requireAuth, mealPlanRouter);
 app.use('/api/pdf', requireAuth, pdfRouter);
 app.use('/api/progress', requireAuth, progressRouter);
+app.use('/api/profile', requireAuth, profileRouter);
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Serve static files from the React app
 if (process.env.NODE_ENV === 'production') {

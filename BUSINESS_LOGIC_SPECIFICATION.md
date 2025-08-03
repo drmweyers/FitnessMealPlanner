@@ -1,8 +1,16 @@
 # 📋 **FitnessMealPlanner: Complete Role-Based Business Logic Specification**
 
-**Version:** 1.1  
-**Last Updated:** August 2, 2025  
+**Version:** 1.2  
+**Last Updated:** August 3, 2025  
 **Document Purpose:** Comprehensive specification of all business logic and role interactions
+
+### **Version 1.2 Changes:**
+- ✅ Added comprehensive Profile Image Upload Feature documentation
+- ✅ Added profile image management capabilities for all user roles
+- ✅ Added AWS S3 and local storage integration specifications
+- ✅ Added profile image validation rules and security requirements
+- ✅ Added profile avatar display system across all interfaces
+- ✅ Updated authentication endpoints to include profile image data
 
 ### **Version 1.1 Changes:**
 - ✅ Added detailed Meal Plan Assignment Feature documentation
@@ -26,6 +34,11 @@ The system operates on a **three-tier role hierarchy** with strict data isolatio
 - ✅ **Profile Updates**: Modify own profile information
 - ✅ **Account Settings**: Change password, email preferences
 - ✅ **Dashboard Access**: System-wide analytics and statistics
+- ✅ **Profile Image Management**: Upload, update, and delete profile picture
+  - Supports JPEG, PNG, and WebP formats (up to 5MB)
+  - Automatic image processing (resize to 200x200px, optimize quality)
+  - AWS S3 storage in production, local storage in development
+  - Displays in header navigation and profile pages
 
 ### **📊 System Administration Capabilities**
 
@@ -74,6 +87,11 @@ The system operates on a **three-tier role hierarchy** with strict data isolatio
 - ✅ **Contact Information**: Phone, email, business details
 - ✅ **Statistics Dashboard**: Personal metrics and client overview
 - ✅ **Meal Plan Library**: Save and organize custom meal plans
+- ✅ **Profile Image Management**: Upload, update, and delete professional profile picture
+  - Professional headshot display in client-facing interfaces
+  - Same technical specifications as admin (JPEG/PNG/WebP, 5MB limit)
+  - Enhanced professional presentation in trainer directory
+  - Avatar displays with user initials fallback
 
 ### **👥 Customer Management Capabilities**
 
@@ -151,6 +169,11 @@ The system operates on a **three-tier role hierarchy** with strict data isolatio
 - ✅ **Dietary Preferences**: Allergies, dietary restrictions, goals
 - ✅ **Account Settings**: Password, notification preferences
 - ✅ **Privacy Controls**: Manage data sharing preferences
+- ✅ **Profile Image Management**: Upload, update, and delete personal profile picture
+  - Personal avatar display in customer interfaces
+  - Same technical specifications as other roles (JPEG/PNG/WebP, 5MB limit)
+  - Enhanced personalization of fitness journey
+  - Integrates with progress tracking and trainer interactions
 
 ### **📈 Progress Tracking Capabilities**
 
@@ -213,6 +236,99 @@ The system operates on a **three-tier role hierarchy** with strict data isolatio
 
 ---
 
+## 🖼️ **Profile Image Upload System - Universal Feature**
+
+### **📁 Technical Architecture**
+
+#### **Storage Systems**
+- ✅ **AWS S3 Integration**: Production environment with secure cloud storage
+  - Bucket: `fitnessmealplanner-uploads` (configurable via environment)
+  - Region: `us-east-1` (configurable via AWS_REGION)
+  - Access Control: Public-read for profile images
+  - Cache Control: 1-year cache for optimized performance
+- ✅ **Local Storage Fallback**: Development environment support
+  - Path: `/uploads/profile-images/`
+  - Automatic directory creation and management
+  - File naming: `userId-uniqueId.jpg` format
+
+#### **Image Processing Pipeline**
+- ✅ **Sharp.js Integration**: High-performance image processing
+  - Automatic resize to 200x200 pixels (square format)
+  - Crop mode: Cover with center positioning
+  - Format standardization: All images converted to JPEG
+  - Quality optimization: 85% JPEG quality for size/quality balance
+- ✅ **File Validation System**:
+  - Supported formats: JPEG, PNG, WebP
+  - Maximum file size: 5MB
+  - MIME type validation with case-insensitive support
+  - Comprehensive error handling and user feedback
+
+#### **Security & Validation**
+- ✅ **Authentication Required**: All profile image operations require valid JWT
+- ✅ **File Type Validation**: Strict MIME type checking prevents malicious uploads
+- ✅ **Size Limitations**: 5MB limit prevents system abuse and storage bloat
+- ✅ **Unique File Naming**: Prevents conflicts and ensures data integrity
+- ✅ **Automatic Cleanup**: Old profile images deleted when new ones uploaded
+
+### **🎨 User Interface Components**
+
+#### **ProfileImageUpload Component**
+- ✅ **Interactive Upload Interface**:
+  - Drag-and-drop file selection
+  - Click-to-upload functionality
+  - Real-time preview of selected images
+  - Loading states with progress indicators
+- ✅ **Avatar Display System**:
+  - Multiple size variants: sm (48px), md (64px), lg (96px), xl (128px)
+  - Automatic user initials generation from email addresses
+  - Graceful fallback when no image is available
+  - Consistent styling across all application interfaces
+- ✅ **User Experience Features**:
+  - Hover effects and visual feedback
+  - Toast notifications for success/error states
+  - Optimistic UI updates for immediate feedback
+  - Accessible design with proper ARIA labels
+
+#### **ProfileAvatar Component**
+- ✅ **Display-Only Avatar**: Lightweight component for header and listing views
+- ✅ **Responsive Design**: Adapts to different screen sizes and contexts
+- ✅ **Integration Points**: Used in header navigation, profile pages, user listings
+
+### **🔗 System Integration**
+
+#### **Authentication Integration**
+- ✅ **JWT Token Updates**: Profile image URLs included in authentication responses
+- ✅ **Session Persistence**: Profile images persist across user sessions
+- ✅ **Auto-Refresh**: Authentication context automatically updates with new images
+
+#### **Database Integration**
+- ✅ **User Schema Extension**: `profilePicture` field added to users table
+- ✅ **Nullable Design**: Profile images are optional, not required
+- ✅ **Migration Support**: Backward-compatible database schema updates
+
+#### **API Integration**
+- ✅ **React Query Integration**: Optimistic updates and cache invalidation
+- ✅ **FormData Support**: Proper multipart/form-data handling in API client
+- ✅ **Error Handling**: Comprehensive error responses and user feedback
+
+### **📱 Cross-Platform Display**
+
+#### **Header Navigation**
+- ✅ **Universal Display**: Profile images appear in header across all roles
+- ✅ **Consistent Sizing**: Small avatar format (sm) for header integration
+- ✅ **Fallback Handling**: User initials display when no image available
+
+#### **Profile Pages**
+- ✅ **Large Format Display**: Extra-large avatars (xl) for profile pages
+- ✅ **Upload Interface**: Full upload/delete functionality on profile pages
+- ✅ **Role-Specific Styling**: Appropriate presentation for each user role
+
+#### **User Listings & Cards**
+- ✅ **Medium Format**: Balanced size for user directory and listing views
+- ✅ **Performance Optimized**: Efficient loading and caching strategies
+
+---
+
 ## 🔄 **Inter-Role Workflow Processes**
 
 ### **1. Customer Onboarding Flow**
@@ -248,6 +364,23 @@ Admin → Generate/Import Recipe → Review → Approve → Trainer Access → C
 Customer → Record Progress → Data Storage → Trainer Dashboard → Progress Analysis
 ```
 
+### **5. Profile Image Upload Flow**
+```
+User → Select Image → Client Validation → Upload API → Image Processing → 
+S3/Local Storage → Database Update → UI Refresh → Header Avatar Update
+```
+
+#### **Detailed Profile Image Process:**
+1. **Image Selection**: User clicks upload button or drags file to upload area
+2. **Client Validation**: JavaScript validates file type (JPEG/PNG/WebP) and size (≤5MB)
+3. **Upload Initiation**: FormData sent to `/api/profile/upload-image` endpoint
+4. **Server Processing**: Multer receives file, Sharp processes and resizes
+5. **Storage Decision**: Production uses S3, development uses local storage
+6. **Database Update**: User's profilePicture field updated with new URL
+7. **Response Handling**: Success response triggers UI updates
+8. **Cache Invalidation**: React Query invalidates user and profile caches
+9. **UI Refresh**: Avatar updates in header, profile page, and all user displays
+
 ---
 
 ## 🔒 **Security & Permission Boundaries**
@@ -270,7 +403,42 @@ Customer → Record Progress → Data Storage → Trainer Dashboard → Progress
 
 ---
 
-## 🔌 **API Endpoints - Meal Plan Assignment**
+## 🔌 **API Endpoints**
+
+### **Profile Image Management Endpoints**
+```
+POST /api/profile/upload-image
+- Purpose: Upload and process a new profile image for authenticated user
+- Content-Type: multipart/form-data
+- Body: FormData with 'profileImage' file field
+- Response: { status: 'success', data: { profileImageUrl: string, user: User } }
+- Processing: Validates file type/size, resizes to 200x200px, stores in S3/local
+- Security: Requires authentication (any role)
+- Validation: JPEG/PNG/WebP, max 5MB, automatic format conversion to JPEG
+
+DELETE /api/profile/delete-image
+- Purpose: Remove current profile image for authenticated user
+- Response: { status: 'success', data: { user: User } }
+- Processing: Deletes file from S3/local storage, sets profilePicture to null
+- Security: Requires authentication (any role)
+- Cleanup: Automatically removes old image files
+
+GET /api/profile
+- Purpose: Fetch complete profile data including profile image URL
+- Response: { status: 'success', data: User }
+- Includes: profilePicture field with full image URL or null
+- Security: Requires authentication (any role)
+```
+
+### **Updated Authentication Endpoints**
+```
+POST /api/auth/login
+POST /api/auth/register
+GET /api/auth/me
+- Enhanced Response: All authentication endpoints now include profilePicture field
+- Format: { user: { id, email, role, profilePicture: string | null } }
+- Integration: Profile images automatically available in auth context
+```
 
 ### **Trainer Assignment Endpoints**
 ```
@@ -314,6 +482,11 @@ GET /api/trainer/meal-plans
 5. **Library System**: Trainers can save and reuse meal plan templates
 6. **Progress Privacy**: Customer progress data is private by default
 7. **Role Hierarchy**: Admin > Trainer > Customer in system permissions
+8. **Profile Image Security**: All image uploads require authentication and validation
+9. **Universal Avatar System**: All user roles have access to profile image functionality
+10. **Image Processing Standard**: All uploaded images standardized to 200x200 JPEG format
+11. **Storage Environment Logic**: S3 for production, local storage for development
+12. **File Cleanup Protocol**: Old profile images automatically deleted when new ones uploaded
 
 ---
 
@@ -330,13 +503,23 @@ GET /api/trainer/meal-plans
 8. **Progress Tracking**: Customer progress data privacy and functionality
 9. **Meal Plan Assignment Modal**: Assignment interface and customer selection
 10. **Assignment API Integration**: Backend assignment processing and validation
+11. **Profile Image Upload System**: Complete image upload and management workflow
+12. **Image Validation**: File type, size, and security validation testing
+13. **Image Processing**: Sharp.js resize and format conversion functionality
+14. **Storage Integration**: Both S3 and local storage systems
+15. **Avatar Display**: Profile images display correctly across all interfaces
+16. **Authentication Integration**: Profile images included in auth responses
 
 ### **Test Data Requirements**
-- One admin account with full permissions
-- One trainer account with assigned customers
-- One customer account with assigned content
+- One admin account with full permissions and profile image
+- One trainer account with assigned customers and professional headshot
+- One customer account with assigned content and personal avatar
 - Approved and unapproved recipes for testing content gates
 - Progress tracking data for privacy testing
+- Test image files (JPEG, PNG, WebP) for upload testing
+- Invalid file types (PDF, TXT) for validation testing
+- Large files (>5MB) for size limit testing
+- Profile image test scenarios for all user roles
 
 ---
 

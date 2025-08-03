@@ -74,11 +74,24 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  customHeaders?: HeadersInit,
 ): Promise<Response> {
   const makeRequest = async (token?: string) => {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
+    const headers: HeadersInit = {};
+
+    // Don't set Content-Type for FormData - let browser set it with boundary
+    if (!(data instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    // Apply custom headers
+    if (customHeaders) {
+      Object.assign(headers, customHeaders);
+      // Remove Content-Type if it's multipart/form-data to let browser handle it
+      if (customHeaders['Content-Type'] === 'multipart/form-data') {
+        delete headers['Content-Type'];
+      }
+    }
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -88,7 +101,7 @@ export async function apiRequest(
       method,
       headers,
       credentials: 'include', // Important for cookies
-      body: data ? JSON.stringify(data) : undefined,
+      body: data ? (data instanceof FormData ? data : JSON.stringify(data)) : undefined,
     });
   };
 
