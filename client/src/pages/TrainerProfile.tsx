@@ -97,7 +97,7 @@ export default function TrainerProfile() {
   const { data: profile, isLoading: profileLoading } = useQuery<TrainerProfile>({
     queryKey: ['trainerProfile', 'details'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/auth/profile');
+      const res = await apiRequest('GET', '/api/profile');
       return res.json();
     },
     enabled: !!user
@@ -169,7 +169,7 @@ export default function TrainerProfile() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest('PUT', '/api/auth/profile', data);
+      const res = await apiRequest('PUT', '/api/profile', data);
       return res.json();
     },
     onSuccess: () => {

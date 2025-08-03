@@ -20,6 +20,7 @@ interface AuthResponse {
       id: string;
       email: string;
       role: UserRole;
+      profilePicture?: string | null;
     };
   };
   message?: string;

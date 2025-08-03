@@ -71,7 +71,7 @@ export default function AdminProfile() {
   const { data: profile, isLoading: profileLoading } = useQuery<UserProfile>({
     queryKey: ['adminProfile', 'details'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/auth/profile');
+      const res = await apiRequest('GET', '/api/profile');
       return res.json();
     },
     enabled: !!user
@@ -127,7 +127,7 @@ export default function AdminProfile() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { email?: string; currentPassword?: string; newPassword?: string }) => {
-      const res = await apiRequest('PUT', '/api/auth/profile', data);
+      const res = await apiRequest('PUT', '/api/profile', data);
       return res.json();
     },
     onSuccess: () => {
