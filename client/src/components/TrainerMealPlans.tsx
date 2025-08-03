@@ -99,8 +99,8 @@ export default function TrainerMealPlans() {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/trainer/meal-plans'] });
       queryClient.invalidateQueries({ queryKey: ['/api/trainer/customers'] });
-      setPlanToAssign(null);
-      setSelectedCustomers([]);
+      // Close the modal and reset state
+      handleCloseAssignmentModal();
     },
     onError: (error: Error) => {
       toast({
@@ -145,6 +145,11 @@ export default function TrainerMealPlans() {
 
   const handleAssignToPlan = (plan: TrainerMealPlanWithAssignments) => {
     setPlanToAssign(plan);
+    setSelectedCustomers([]);
+  };
+
+  const handleCloseAssignmentModal = () => {
+    setPlanToAssign(null);
     setSelectedCustomers([]);
   };
 
@@ -337,7 +342,7 @@ export default function TrainerMealPlans() {
       )}
 
       {/* Assignment Modal */}
-      <Dialog open={!!planToAssign} onOpenChange={() => setPlanToAssign(null)}>
+      <Dialog open={!!planToAssign} onOpenChange={(open) => !open && handleCloseAssignmentModal()}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Assign Meal Plan to Customer</DialogTitle>
@@ -392,7 +397,7 @@ export default function TrainerMealPlans() {
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button variant="outline" onClick={() => setPlanToAssign(null)}>
+              <Button variant="outline" onClick={handleCloseAssignmentModal}>
                 Cancel
               </Button>
               <Button
