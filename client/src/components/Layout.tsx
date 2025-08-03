@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 import { 
   Home, 
   User, 
-  Settings, 
   LogOut, 
   Menu,
   ChevronDown,
@@ -63,7 +62,7 @@ const Layout = ({ children }: LayoutProps) => {
     
     // Admin navigation
     ...(user?.role === 'admin' 
-      ? [{ name: 'Admin', href: '/admin', icon: Settings }] 
+      ? [{ name: 'Admin', href: '/admin', icon: User }] 
       : []),
   ];
 
@@ -139,10 +138,6 @@ const Layout = ({ children }: LayoutProps) => {
                   <DropdownMenuItem onClick={() => setLocation('/profile')}>
                     <User className="w-4 h-4 mr-2" />
                     Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLocation('/settings')}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
