@@ -1,0 +1,57 @@
+# Digital Ocean App Platform Configuration
+name: fitnessmealplanner-prod
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: drmweyers/FitnessMealPlanner
+    branch: qa-ready
+    deploy_on_push: true
+  run_command: npm start
+  build_command: npm ci && npm run build
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: professional-xs
+  http_port: 8080
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: PORT
+    value: "8080"
+  - key: DATABASE_URL
+    value: ${DATABASE_URL}
+  - key: OPENAI_API_KEY
+    value: ${OPENAI_API_KEY}
+  - key: JWT_SECRET
+    value: ${JWT_SECRET}
+  - key: JWT_REFRESH_SECRET
+    value: ${JWT_REFRESH_SECRET}
+  - key: SESSION_SECRET
+    value: ${SESSION_SECRET}
+  - key: COOKIE_SECRET
+    value: ${COOKIE_SECRET}
+  - key: RESEND_API_KEY
+    value: ${RESEND_API_KEY}
+  - key: FROM_EMAIL
+    value: ${FROM_EMAIL}
+  - key: AWS_ACCESS_KEY_ID
+    value: ${AWS_ACCESS_KEY_ID}
+  - key: AWS_SECRET_ACCESS_KEY
+    value: ${AWS_SECRET_ACCESS_KEY}
+  - key: AWS_REGION
+    value: ${AWS_REGION}
+  - key: AWS_S3_BUCKET
+    value: ${AWS_S3_BUCKET}
+  - key: FRONTEND_URL
+    value: ${_self.URL}
+  health_check:
+    http_path: /api/health
+  routes:
+  - path: /
+    preserve_path_prefix: true
+
+databases:
+- name: fitmeal-db
+  engine: PG
+  version: "14"
+  size: db-s-1vcpu-1gb
