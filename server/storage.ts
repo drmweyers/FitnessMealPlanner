@@ -176,33 +176,70 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]> {
-    const customers = await db.select().from(users).where(eq(users.role, 'customer'));
+    // Optimized version: Use single query with LEFT JOINs to avoid N+1 pattern
+    const query = db
+      .select({
+        id: users.id,
+        email: users.email,
+        password: users.password,
+        role: users.role,
+        googleId: users.googleId,
+        name: users.name,
+        profilePicture: users.profilePicture,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        hasRecipe: sql<boolean>`CASE WHEN ${personalizedRecipes.customerId} IS NOT NULL THEN true ELSE false END`,
+        hasMealPlan: sql<boolean>`CASE WHEN ${personalizedMealPlans.customerId} IS NOT NULL THEN true ELSE false END`
+      })
+      .from(users)
+      .leftJoin(
+        personalizedRecipes, 
+        and(
+          eq(users.id, personalizedRecipes.customerId),
+          recipeId ? eq(personalizedRecipes.recipeId, recipeId) : sql`true`
+        )
+      )
+      .leftJoin(
+        personalizedMealPlans, 
+        eq(users.id, personalizedMealPlans.customerId)
+      )
+      .where(eq(users.role, 'customer'))
+      .groupBy(
+        users.id, users.email, users.password, users.role, 
+        users.googleId, users.name, users.profilePicture, 
+        users.createdAt, users.updatedAt,
+        personalizedRecipes.customerId, personalizedMealPlans.customerId
+      );
     
-    let recipeAssignments: Set<string> = new Set();
-    let mealPlanAssignments: Set<string> = new Set();
+    const results = await query;
     
-    if (recipeId) {
-      const assignments = await db
-        .select()
-        .from(personalizedRecipes)
-        .where(eq(personalizedRecipes.recipeId, recipeId));
-      
-      recipeAssignments = new Set(assignments.map(a => a.customerId));
-    }
+    // Deduplicate customers (since JOINs might create multiple rows per customer)
+    const customerMap = new Map();
+    results.forEach(result => {
+      const customerId = result.id;
+      if (!customerMap.has(customerId)) {
+        customerMap.set(customerId, {
+          id: result.id,
+          email: result.email,
+          password: result.password,
+          role: result.role,
+          googleId: result.googleId,
+          name: result.name,
+          profilePicture: result.profilePicture,
+          createdAt: result.createdAt,
+          updatedAt: result.updatedAt,
+          hasRecipe: result.hasRecipe,
+          hasMealPlan: result.hasMealPlan
+        });
+      } else {
+        // Merge boolean flags (OR operation)
+        const existing = customerMap.get(customerId);
+        existing.hasRecipe = existing.hasRecipe || result.hasRecipe;
+        existing.hasMealPlan = existing.hasMealPlan || result.hasMealPlan;
+      }
+    });
     
-    // Check for existing meal plan assignments for each customer
-    // This shows which customers already have ANY meal plan assigned to them
-    const existingMealPlanAssignments = await db
-      .select({ customerId: personalizedMealPlans.customerId })
-      .from(personalizedMealPlans);
-    
-    mealPlanAssignments = new Set(existingMealPlanAssignments.map(a => a.customerId));
-    
-    return customers.map(customer => ({
-      ...customer,
-      hasRecipe: recipeId ? recipeAssignments.has(customer.id) : false,
-      hasMealPlan: mealPlanAssignments.has(customer.id)
-    }));
+    return Array.from(customerMap.values());
   }
 
   // Password Reset
@@ -383,21 +420,24 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (filters.search) {
-      const searchTerm = `%${filters.search.toLowerCase()}%`;
+      // Use full-text search for better performance with large datasets
+      const searchQuery = filters.search.trim().replace(/\s+/g, ' & ');
       conditions.push(
         sql`(
-          LOWER(${recipes.name}) LIKE ${searchTerm} OR 
-          LOWER(${recipes.description}) LIKE ${searchTerm} OR
-          LOWER(${recipes.ingredientsJson}::text) LIKE ${searchTerm}
+          to_tsvector('english', coalesce(${recipes.name}, '') || ' ' || coalesce(${recipes.description}, '')) @@ plainto_tsquery('english', ${filters.search})
+          OR LOWER(${recipes.name}) ILIKE ${'%' + filters.search.toLowerCase() + '%'}
+          OR LOWER(${recipes.ingredientsJson}::text) ILIKE ${'%' + filters.search.toLowerCase() + '%'}
         )`
       );
     }
 
     if (filters.mealType) {
+      // Use GIN index for JSONB array containment
       conditions.push(sql`${recipes.mealTypes} @> ${JSON.stringify([filters.mealType])}`);
     }
 
     if (filters.dietaryTag) {
+      // Use GIN index for JSONB array containment
       conditions.push(sql`${recipes.dietaryTags} @> ${JSON.stringify([filters.dietaryTag])}`);
     }
 
@@ -450,11 +490,21 @@ export class DatabaseStorage implements IStorage {
     const limit = filters.limit || 12;
     const offset = (page - 1) * limit;
 
+    // Optimize ordering based on search vs browsing
+    let orderBy;
+    if (filters.search) {
+      // For search queries, use relevance-based ordering
+      orderBy = sql`ts_rank(to_tsvector('english', coalesce(${recipes.name}, '') || ' ' || coalesce(${recipes.description}, '')), plainto_tsquery('english', ${filters.search})) DESC, ${recipes.creationTimestamp} DESC`;
+    } else {
+      // For browsing, use creation timestamp
+      orderBy = desc(recipes.creationTimestamp);
+    }
+    
     const recipeResults = await db
       .select()
       .from(recipes)
       .where(whereClause)
-      .orderBy(desc(recipes.creationTimestamp))
+      .orderBy(orderBy)
       .limit(limit)
       .offset(offset);
 
@@ -618,44 +668,40 @@ export class DatabaseStorage implements IStorage {
 
   // Customer management functions
   async getTrainerCustomers(trainerId: string): Promise<{id: string; email: string; firstAssignedAt: string}[]> {
-    // Get unique customers who have meal plans assigned by this trainer
-    const customersWithMealPlans = await db.select({
-      customerId: personalizedMealPlans.customerId,
-      customerEmail: users.email,
-      assignedAt: personalizedMealPlans.assignedAt,
-    })
-    .from(personalizedMealPlans)
-    .innerJoin(users, eq(users.id, personalizedMealPlans.customerId))
-    .where(eq(personalizedMealPlans.trainerId, trainerId));
+    // Optimized version: Single query with UNION to get all customers at once
+    const customersQuery = sql`
+      SELECT DISTINCT
+        u.id,
+        u.email,
+        MIN(earliest_assignment) as first_assigned_at
+      FROM users u
+      INNER JOIN (
+        SELECT 
+          customer_id,
+          assigned_at as earliest_assignment
+        FROM personalized_meal_plans 
+        WHERE trainer_id = ${trainerId}
+        
+        UNION ALL
+        
+        SELECT 
+          customer_id,
+          assigned_at as earliest_assignment
+        FROM personalized_recipes 
+        WHERE trainer_id = ${trainerId}
+      ) assignments ON u.id = assignments.customer_id
+      WHERE u.role = 'customer'
+      GROUP BY u.id, u.email
+      ORDER BY first_assigned_at DESC
+    `;
     
-    const customersWithRecipes = await db.select({
-      customerId: personalizedRecipes.customerId,
-      customerEmail: users.email,
-      assignedAt: personalizedRecipes.assignedAt,
-    })
-    .from(personalizedRecipes)
-    .innerJoin(users, eq(users.id, personalizedRecipes.customerId))
-    .where(eq(personalizedRecipes.trainerId, trainerId));
+    const results = await db.execute(customersQuery);
     
-    // Combine and deduplicate customers
-    const customerMap = new Map();
-    
-    [...customersWithMealPlans, ...customersWithRecipes].forEach(customer => {
-      if (!customerMap.has(customer.customerId)) {
-        customerMap.set(customer.customerId, {
-          id: customer.customerId,
-          email: customer.customerEmail,
-          firstAssignedAt: customer.assignedAt?.toISOString() || new Date().toISOString(),
-        });
-      } else {
-        const existing = customerMap.get(customer.customerId);
-        if (customer.assignedAt && existing.firstAssignedAt && customer.assignedAt < new Date(existing.firstAssignedAt)) {
-          existing.firstAssignedAt = customer.assignedAt.toISOString();
-        }
-      }
-    });
-    
-    return Array.from(customerMap.values());
+    return results.rows.map((row: any) => ({
+      id: row.id,
+      email: row.email,
+      firstAssignedAt: row.first_assigned_at?.toISOString() || new Date().toISOString(),
+    }));
   }
 
   async getCustomerMealPlans(trainerId: string, customerId: string): Promise<any[]> {

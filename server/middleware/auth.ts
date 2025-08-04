@@ -3,6 +3,55 @@ import { storage } from '../storage';
 import { verifyToken, generateTokens } from '../auth';
 import jwt from 'jsonwebtoken';
 
+// Simple in-memory cache for user sessions to reduce database calls
+// In production, consider using Redis or another distributed cache
+interface UserCacheEntry {
+  user: { id: string; role: 'admin' | 'trainer' | 'customer' };
+  timestamp: number;
+}
+
+const userCache = new Map<string, UserCacheEntry>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const MAX_CACHE_SIZE = 1000; // Prevent memory leaks
+
+// Cleanup expired cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of userCache.entries()) {
+    if (now - entry.timestamp > CACHE_TTL) {
+      userCache.delete(key);
+    }
+  }
+}, 60000); // Cleanup every minute
+
+// Helper function to get user from cache or database
+async function getCachedUser(userId: string): Promise<{ id: string; role: 'admin' | 'trainer' | 'customer' } | null> {
+  const cached = userCache.get(userId);
+  const now = Date.now();
+  
+  if (cached && (now - cached.timestamp) < CACHE_TTL) {
+    return cached.user;
+  }
+  
+  // Fetch from database
+  const user = await storage.getUser(userId);
+  if (!user) {
+    return null;
+  }
+  
+  // Cache the result
+  if (userCache.size >= MAX_CACHE_SIZE) {
+    // Remove oldest entry to prevent memory overflow
+    const firstKey = userCache.keys().next().value;
+    userCache.delete(firstKey);
+  }
+  
+  const userInfo = { id: user.id, role: user.role };
+  userCache.set(userId, { user: userInfo, timestamp: now });
+  
+  return userInfo;
+}
+
 /**
  * Authentication Middleware Module
  * 
@@ -108,7 +157,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     try {
       // Try to verify the access token
       const decoded = await verifyToken(token);
-      const user = await storage.getUser(decoded.id);
+      const user = await getCachedUser(decoded.id);
       
       if (!user) {
         return res.status(401).json({ 
@@ -117,10 +166,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
         });
       }
 
-      req.user = {
-        id: user.id,
-        role: user.role,
-      };
+      req.user = user;
 
       next();
     } catch (e) {
@@ -153,8 +199,17 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
             });
           }
 
-          const user = await storage.getUser(refreshDecoded.id);
+          const user = await getCachedUser(refreshDecoded.id);
           if (!user) {
+            return res.status(401).json({ 
+              error: 'Invalid user session',
+              code: 'INVALID_SESSION'
+            });
+          }
+          
+          // Get full user object for token generation
+          const fullUser = await storage.getUser(refreshDecoded.id);
+          if (!fullUser) {
             return res.status(401).json({ 
               error: 'Invalid user session',
               code: 'INVALID_SESSION'
@@ -162,7 +217,10 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
           }
 
           // Generate new token pair
-          const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+          const { accessToken, refreshToken: newRefreshToken } = generateTokens(fullUser);
+          
+          // Update cache with fresh data
+          userCache.set(user.id, { user, timestamp: Date.now() });
 
           // Store new refresh token
           const refreshTokenExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
@@ -190,10 +248,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
           res.setHeader('X-Access-Token', accessToken);
           res.setHeader('X-Refresh-Token', newRefreshToken);
 
-          req.user = {
-            id: user.id,
-            role: user.role,
-          };
+          req.user = user;
 
           req.tokens = {
             accessToken,

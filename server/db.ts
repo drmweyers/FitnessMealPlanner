@@ -54,11 +54,15 @@ const getSslConfig = () => {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: getSslConfig(),
-  max: 3,
-  min: 1,
-  idleTimeoutMillis: 60000,
-  connectionTimeoutMillis: 15000,
-  allowExitOnIdle: true,
+  // Optimized connection pool settings for better performance
+  max: 20, // Increased from 3 for higher concurrent load
+  min: 2,  // Keep minimum connections ready
+  idleTimeoutMillis: 30000, // Reduced idle timeout to free connections faster
+  connectionTimeoutMillis: 10000, // Reduced connection timeout for faster failure detection
+  allowExitOnIdle: false, // Keep pool alive for production
+  // Performance optimization settings
+  acquireTimeoutMillis: 5000, // Max time to wait for a connection
+  maxUses: 7500, // Recycle connections after 7500 uses to prevent memory leaks
 });
 
 // Add error handling for the pool

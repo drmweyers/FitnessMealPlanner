@@ -16,6 +16,9 @@ profileRouter.post('/upload-image', requireAuth, upload.single('profileImage'), 
     const userId = req.user!.id;
     const file = req.file;
 
+    // Set timeout for file uploads
+    req.setTimeout(30000); // 30 seconds
+
     if (!file) {
       return res.status(400).json({
         status: 'error',
@@ -24,7 +27,7 @@ profileRouter.post('/upload-image', requireAuth, upload.single('profileImage'), 
       });
     }
 
-    // Validate file
+    // Validate file with enhanced checks
     const validation = validateImageFile(file);
     if (!validation.valid) {
       return res.status(400).json({
@@ -34,9 +37,21 @@ profileRouter.post('/upload-image', requireAuth, upload.single('profileImage'), 
       });
     }
 
-    // Get current user to check for existing profile image
+    // Check file size limit (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'File size too large. Maximum 5MB allowed.',
+        code: 'FILE_TOO_LARGE'
+      });
+    }
+
+    // Get current user to check for existing profile image (optimized query)
     const [currentUser] = await db
-      .select()
+      .select({
+        id: users.id,
+        profilePicture: users.profilePicture
+      })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
@@ -49,46 +64,62 @@ profileRouter.post('/upload-image', requireAuth, upload.single('profileImage'), 
       });
     }
 
-    // Delete old profile image if it exists
+    // Delete old profile image if it exists (async to not block upload)
     if (currentUser.profilePicture) {
-      try {
-        await deleteProfileImage(currentUser.profilePicture);
-      } catch (error) {
+      // Don't await - delete in background
+      deleteProfileImage(currentUser.profilePicture).catch(error => {
         console.warn('Failed to delete old profile image:', error);
+      });
+    }
+
+    // Upload new image with retry logic
+    let imageUrl: string;
+    let uploadAttempts = 0;
+    const maxAttempts = 3;
+    
+    while (uploadAttempts < maxAttempts) {
+      try {
+        // Use local storage in development, S3 in production
+        if (process.env.NODE_ENV === 'development' || !process.env.AWS_ACCESS_KEY_ID) {
+          imageUrl = await uploadProfileImageLocal(file, userId);
+        } else {
+          imageUrl = await uploadProfileImage(file, userId);
+        }
+        break;
+      } catch (uploadError) {
+        uploadAttempts++;
+        if (uploadAttempts >= maxAttempts) {
+          throw uploadError;
+        }
+        // Wait 1 second before retry
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
-    // Upload new image
-    let imageUrl: string;
-    
-    // Use local storage in development, S3 in production
-    if (process.env.NODE_ENV === 'development' || !process.env.AWS_ACCESS_KEY_ID) {
-      imageUrl = await uploadProfileImageLocal(file, userId);
-    } else {
-      imageUrl = await uploadProfileImage(file, userId);
-    }
-
-    // Update user profile with new image URL
+    // Update user profile with optimized query
     const [updatedUser] = await db
       .update(users)
       .set({ 
-        profilePicture: imageUrl,
+        profilePicture: imageUrl!,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId))
-      .returning();
+      .returning({
+        id: users.id,
+        email: users.email,
+        role: users.role,
+        profilePicture: users.profilePicture
+      });
 
+    // Set cache-busting headers for the response
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    
     res.json({
       status: 'success',
       message: 'Profile image uploaded successfully',
       data: {
-        profileImageUrl: imageUrl,
-        user: {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          role: updatedUser.role,
-          profilePicture: updatedUser.profilePicture
-        }
+        profileImageUrl: imageUrl!,
+        user: updatedUser
       }
     });
 

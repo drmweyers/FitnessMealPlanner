@@ -22,29 +22,62 @@ const registerSchema = z.object({
   role: z.enum(['admin', 'trainer', 'customer']),
 });
 
-// Rate limiting for failed attempts (implement proper rate limiting middleware in production)
-const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
-
-function checkLoginAttempts(email: string): boolean {
-  const attempts = loginAttempts.get(email);
-  if (!attempts) return true;
+// Optimized rate limiting with LRU cache and periodic cleanup
+class LoginAttemptTracker {
+  private attempts = new Map<string, { count: number; lastAttempt: number }>();
+  private readonly MAX_LOGIN_ATTEMPTS = 5;
+  private readonly LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+  private readonly MAX_TRACKED_IPS = 10000; // Prevent memory overflow
   
-  if (Date.now() - attempts.lastAttempt > LOCKOUT_TIME) {
-    loginAttempts.delete(email);
-    return true;
+  constructor() {
+    // Cleanup expired entries every 5 minutes
+    setInterval(() => this.cleanup(), 5 * 60 * 1000);
   }
   
-  return attempts.count < MAX_LOGIN_ATTEMPTS;
+  private cleanup(): void {
+    const now = Date.now();
+    for (const [email, data] of this.attempts.entries()) {
+      if (now - data.lastAttempt > this.LOCKOUT_TIME) {
+        this.attempts.delete(email);
+      }
+    }
+  }
+  
+  checkAttempts(email: string): boolean {
+    const attempts = this.attempts.get(email);
+    if (!attempts) return true;
+    
+    if (Date.now() - attempts.lastAttempt > this.LOCKOUT_TIME) {
+      this.attempts.delete(email);
+      return true;
+    }
+    
+    return attempts.count < this.MAX_LOGIN_ATTEMPTS;
+  }
+  
+  recordAttempt(email: string): void {
+    const now = Date.now();
+    const existing = this.attempts.get(email);
+    
+    if (existing) {
+      existing.count++;
+      existing.lastAttempt = now;
+    } else {
+      // Prevent memory overflow by removing oldest entry
+      if (this.attempts.size >= this.MAX_TRACKED_IPS) {
+        const firstKey = this.attempts.keys().next().value;
+        this.attempts.delete(firstKey);
+      }
+      this.attempts.set(email, { count: 1, lastAttempt: now });
+    }
+  }
+  
+  clearAttempts(email: string): void {
+    this.attempts.delete(email);
+  }
 }
 
-function recordLoginAttempt(email: string) {
-  const attempts = loginAttempts.get(email) || { count: 0, lastAttempt: Date.now() };
-  attempts.count++;
-  attempts.lastAttempt = Date.now();
-  loginAttempts.set(email, attempts);
-}
+const loginAttemptTracker = new LoginAttemptTracker();
 
 authRouter.post('/register', async (req: Request, res: Response) => {
   try {
@@ -142,7 +175,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     const { email, password } = loginSchema.parse(req.body);
 
     // Check login attempts
-    if (!checkLoginAttempts(email)) {
+    if (!loginAttemptTracker.checkAttempts(email)) {
       return res.status(429).json({ 
         status: 'error',
         message: 'Too many failed attempts. Please try again later.',
@@ -152,7 +185,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
 
     const user = await storage.getUserByEmail(email);
     if (!user) {
-      recordLoginAttempt(email);
+      loginAttemptTracker.recordAttempt(email);
       return res.status(401).json({ 
         status: 'error',
         message: 'Invalid credentials',
@@ -169,7 +202,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     }
     const isPasswordValid = await comparePasswords(password, user.password);
     if (!isPasswordValid) {
-      recordLoginAttempt(email);
+      loginAttemptTracker.recordAttempt(email);
       return res.status(401).json({ 
         status: 'error',
         message: 'Invalid credentials',
@@ -178,7 +211,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     }
 
     // Reset login attempts on successful login
-    loginAttempts.delete(email);
+    loginAttemptTracker.clearAttempts(email);
 
     const { accessToken, refreshToken } = generateTokens(user);
 

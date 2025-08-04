@@ -8,6 +8,8 @@
 
 import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
@@ -43,9 +45,58 @@ const corsOptions = {
   exposedHeaders: ['X-Access-Token', 'X-Refresh-Token'],
 };
 
+// Performance optimizations
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  },
+  threshold: 1024, // Only compress responses larger than 1KB
+  level: 6, // Good balance between compression speed and ratio
+}));
+
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Set request size limit
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser(process.env.COOKIE_SECRET || 'your-secret-key'));
+
+// Rate limiting configuration
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per windowMs
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+    code: 'RATE_LIMIT_EXCEEDED'
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limiting for health checks
+    return req.path === '/health' || req.path === '/api/health';
+  }
+});
+
+// Stricter rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 auth requests per windowMs
+  message: {
+    error: 'Too many authentication attempts from this IP, please try again later.',
+    code: 'AUTH_RATE_LIMIT_EXCEEDED'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply general rate limiting to all requests
+app.use(generalLimiter);
+
+// Apply stricter rate limiting to auth routes
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/refresh_token', authLimiter);
 
 // Session configuration for OAuth
 app.use(session({
@@ -63,20 +114,51 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Security headers
+// Security and performance headers
 app.use((req, res, next) => {
+  // Security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
+  
+  // Performance headers
+  res.setHeader('X-Powered-By', ''); // Remove X-Powered-By header for security
+  
+  // Cache control for API responses
+  if (req.path.startsWith('/api/')) {
+    // Most API responses shouldn't be cached
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  
+  // Cache static assets
+  if (req.path.startsWith('/uploads/') || req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
+  }
+  
   next();
 });
 
-// Health check endpoint
+// Enhanced health check endpoint with performance metrics
 app.get('/health', (req, res) => {
-  res.status(200).send('OK');
+  const healthcheck = {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: {
+      used: Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100,
+      total: Math.round((process.memoryUsage().heapTotal / 1024 / 1024) * 100) / 100,
+      external: Math.round((process.memoryUsage().external / 1024 / 1024) * 100) / 100
+    },
+    pid: process.pid
+  };
+  
+  res.setHeader('Cache-Control', 'no-cache');
+  res.status(200).json(healthcheck);
 });
 
 // Global error handler
@@ -142,8 +224,18 @@ app.use('/api/pdf', requireAuth, pdfRouter);
 app.use('/api/progress', requireAuth, progressRouter);
 app.use('/api/profile', requireAuth, profileRouter);
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+// Serve uploaded files with optimized cache headers
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads'), {
+  maxAge: '1d', // Cache uploaded files for 1 day
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, path) => {
+    // Set specific cache headers for images
+    if (path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
+    }
+  }
+}));
 
 // Serve static files from the React app
 if (process.env.NODE_ENV === 'production') {

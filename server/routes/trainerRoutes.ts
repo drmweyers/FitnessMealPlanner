@@ -8,49 +8,41 @@ import { z } from 'zod';
 
 const trainerRouter = Router();
 
-// Trainer profile statistics endpoint
+// Optimized trainer profile statistics endpoint with single query
 trainerRouter.get('/profile/stats', requireAuth, requireRole('trainer'), async (req, res) => {
   try {
     const trainerId = req.user!.id;
     
-    // Get count of clients (customers with assigned meal plans/recipes from this trainer)
-    const [clientsWithMealPlans] = await db.select({
-      count: sql<number>`count(distinct ${personalizedMealPlans.customerId})::int`,
-    })
-    .from(personalizedMealPlans)
-    .where(eq(personalizedMealPlans.trainerId, trainerId));
-
-    const [clientsWithRecipes] = await db.select({
-      count: sql<number>`count(distinct ${personalizedRecipes.customerId})::int`,
-    })
-    .from(personalizedRecipes)
-    .where(eq(personalizedRecipes.trainerId, trainerId));
-
-    // Get total meal plans created by this trainer
-    const [mealPlansCreated] = await db.select({
-      count: sql<number>`count(*)::int`,
-    })
-    .from(personalizedMealPlans)
-    .where(eq(personalizedMealPlans.trainerId, trainerId));
-
-    // Get total recipes assigned by this trainer
-    const [recipesAssigned] = await db.select({
-      count: sql<number>`count(*)::int`,
-    })
-    .from(personalizedRecipes)
-    .where(eq(personalizedRecipes.trainerId, trainerId));
-
-    // Calculate unique clients (union of clients with meal plans and recipes)
-    const uniqueClients = Math.max(
-      clientsWithMealPlans?.count || 0,
-      clientsWithRecipes?.count || 0
-    );
-
+    // Set cache headers for stats (cache for 5 minutes)
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    
+    // Single optimized query to get all stats at once
+    const [statsResult] = await db.execute(sql`
+      WITH trainer_stats AS (
+        SELECT 
+          COUNT(DISTINCT mp.customer_id) as meal_plan_clients,
+          COUNT(DISTINCT pr.customer_id) as recipe_clients,
+          COUNT(mp.id) as total_meal_plans,
+          COUNT(pr.id) as total_recipes
+        FROM (
+          SELECT ${trainerId}::uuid as trainer_id
+        ) t
+        LEFT JOIN personalized_meal_plans mp ON mp.trainer_id = t.trainer_id
+        LEFT JOIN personalized_recipes pr ON pr.trainer_id = t.trainer_id
+      )
+      SELECT 
+        GREATEST(meal_plan_clients, recipe_clients) as total_clients,
+        total_meal_plans as total_meal_plans_created,
+        total_recipes as total_recipes_assigned,
+        total_meal_plans as active_meal_plans
+      FROM trainer_stats
+    `);
+    
     const stats = {
-      totalClients: uniqueClients,
-      totalMealPlansCreated: mealPlansCreated?.count || 0,
-      totalRecipesAssigned: recipesAssigned?.count || 0,
-      activeMealPlans: mealPlansCreated?.count || 0, // Simplified for now
+      totalClients: statsResult.rows[0]?.total_clients || 0,
+      totalMealPlansCreated: statsResult.rows[0]?.total_meal_plans_created || 0,
+      totalRecipesAssigned: statsResult.rows[0]?.total_recipes_assigned || 0,
+      activeMealPlans: statsResult.rows[0]?.active_meal_plans || 0,
       clientSatisfactionRate: 95, // Mock data - would be calculated from client feedback
     };
 
@@ -65,33 +57,19 @@ trainerRouter.get('/profile/stats', requireAuth, requireRole('trainer'), async (
   }
 });
 
-// Get all customers assigned to this trainer
+// Optimized trainer customers endpoint
 trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req, res) => {
   try {
     const trainerId = req.user!.id;
     const { recipeId } = req.query;
     
-    // Get unique customers who have meal plans or recipes assigned by this trainer
-    const customersWithMealPlans = await db.select({
-      customerId: personalizedMealPlans.customerId,
-      customerEmail: users.email,
-      assignedAt: personalizedMealPlans.assignedAt,
-    })
-    .from(personalizedMealPlans)
-    .innerJoin(users, eq(users.id, personalizedMealPlans.customerId))
-    .where(eq(personalizedMealPlans.trainerId, trainerId));
+    // Cache customer list for 2 minutes
+    res.setHeader('Cache-Control', 'private, max-age=120');
     
-    const customersWithRecipes = await db.select({
-      customerId: personalizedRecipes.customerId,
-      customerEmail: users.email,
-      assignedAt: personalizedRecipes.assignedAt,
-    })
-    .from(personalizedRecipes)
-    .innerJoin(users, eq(users.id, personalizedRecipes.customerId))
-    .where(eq(personalizedRecipes.trainerId, trainerId));
+    // Use the optimized storage method
+    const customers = await storage.getTrainerCustomers(trainerId);
     
-    // If recipeId is provided, get customers who have this specific recipe assigned
-    let customersWithThisRecipe = new Set();
+    // If recipeId is provided, add recipe assignment info
     if (recipeId) {
       const recipeAssignments = await db.select({
         customerId: personalizedRecipes.customerId,
@@ -103,31 +81,26 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
           eq(personalizedRecipes.recipeId, recipeId as string)
         )
       );
-      customersWithThisRecipe = new Set(recipeAssignments.map(a => a.customerId));
+      
+      const recipeCustomerIds = new Set(recipeAssignments.map(a => a.customerId));
+      
+      // Add hasRecipe flag to each customer
+      customers.forEach(customer => {
+        (customer as any).hasRecipe = recipeCustomerIds.has(customer.id);
+        (customer as any).role = 'customer'; // Add role for compatibility
+      });
     }
     
-    // Combine and deduplicate customers
-    const customerMap = new Map();
+    // Return minimal data to reduce payload size
+    const minimalCustomers = customers.map(customer => ({
+      id: customer.id,
+      email: customer.email,
+      role: 'customer',
+      firstAssignedAt: customer.firstAssignedAt,
+      hasRecipe: recipeId ? (customer as any).hasRecipe : false,
+    }));
     
-    [...customersWithMealPlans, ...customersWithRecipes].forEach(customer => {
-      if (!customerMap.has(customer.customerId)) {
-        customerMap.set(customer.customerId, {
-          id: customer.customerId,
-          email: customer.customerEmail,
-          role: 'customer',
-          firstAssignedAt: customer.assignedAt,
-          hasRecipe: recipeId ? customersWithThisRecipe.has(customer.customerId) : false,
-        });
-      } else {
-        const existing = customerMap.get(customer.customerId);
-        if (customer.assignedAt && existing.firstAssignedAt && customer.assignedAt < existing.firstAssignedAt) {
-          existing.firstAssignedAt = customer.assignedAt;
-        }
-      }
-    });
-    
-    const customers = Array.from(customerMap.values());
-    res.json({ customers, total: customers.length });
+    res.json({ customers: minimalCustomers, total: minimalCustomers.length });
   } catch (error) {
     console.error('Failed to fetch trainer customers:', error);
     res.status(500).json({ 
@@ -345,14 +318,34 @@ trainerRouter.delete('/assigned-meal-plans/:planId', requireAuth, requireRole('t
 
 // === Trainer Meal Plan Management Routes ===
 
-// Get all saved meal plans for the trainer
+// Optimized trainer meal plans endpoint with reduced payload
 trainerRouter.get('/meal-plans', requireAuth, requireRole('trainer'), async (req, res) => {
   try {
     const trainerId = req.user!.id;
+    const { summary } = req.query; // Optional query param for summary view
+    
+    // Cache meal plans list for 1 minute
+    res.setHeader('Cache-Control', 'private, max-age=60');
+    
     const mealPlans = await storage.getTrainerMealPlans(trainerId);
     
+    // If requesting summary, return minimal data
+    let responseData;
+    if (summary === 'true') {
+      responseData = mealPlans.map(plan => ({
+        id: plan.id,
+        planName: plan.mealPlanData?.planName || 'Unnamed Plan',
+        isTemplate: plan.isTemplate,
+        assignmentCount: plan.assignmentCount || 0,
+        createdAt: plan.createdAt,
+        tags: plan.tags
+      }));
+    } else {
+      responseData = mealPlans;
+    }
+    
     res.json({ 
-      mealPlans,
+      mealPlans: responseData,
       total: mealPlans.length 
     });
   } catch (error) {
