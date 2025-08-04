@@ -1,0 +1,125 @@
+name: Build and Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: registry.digitalocean.com
+  IMAGE_NAME: bci/fitnessmealplanner
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+    - name: Log in to DigitalOcean Container Registry
+      run: doctl registry login --expiry-seconds 600
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=prod,enable=${{ github.ref == 'refs/heads/main' }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+    - name: Trigger deployment
+      run: |
+        doctl apps create-deployment ${{ secrets.DO_APP_ID }}
+        
+    - name: Wait for deployment
+      run: |
+        echo "Deployment triggered. Waiting for completion..."
+        sleep 30
+        
+        # Get the latest deployment
+        DEPLOYMENT_ID=$(doctl apps list-deployments ${{ secrets.DO_APP_ID }} --format ID --no-header | head -1)
+        
+        # Wait for deployment to complete (max 10 minutes)
+        for i in {1..60}; do
+          STATUS=$(doctl apps get-deployment ${{ secrets.DO_APP_ID }} $DEPLOYMENT_ID --format Phase --no-header)
+          echo "Deployment status: $STATUS"
+          
+          if [[ "$STATUS" == "ACTIVE" ]]; then
+            echo "✅ Deployment completed successfully!"
+            exit 0
+          elif [[ "$STATUS" == "ERROR" ]] || [[ "$STATUS" == "CANCELED" ]]; then
+            echo "❌ Deployment failed with status: $STATUS"
+            exit 1
+          fi
+          
+          sleep 10
+        done
+        
+        echo "⏱️ Deployment timed out"
+        exit 1
+
+  notify:
+    needs: [build-and-push, deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Notify deployment status
+      run: |
+        if [ "${{ needs.deploy.result }}" == "success" ]; then
+          echo "✅ Deployment to production successful!"
+          echo "🌐 Application is live at: https://evofitmeals.com"
+        elif [ "${{ needs.build-and-push.result }}" == "failure" ]; then
+          echo "❌ Docker build failed"
+        elif [ "${{ needs.deploy.result }}" == "failure" ]; then
+          echo "❌ Deployment failed"
+        else
+          echo "ℹ️ Build completed but no deployment triggered (not main branch)"
+        fi
