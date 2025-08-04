@@ -1,68 +1,260 @@
+# Optimized Docker Compose for FitnessMealPlanner
+# Features: Resource limits, health checks, monitoring, Nginx reverse proxy
+
+version: '3.8'
+
 services:
+  # ====================================
+  # PostgreSQL Database
+  # ====================================
   postgres:
     image: postgres:16-alpine
+    container_name: fitmeal-postgres
     environment:
-      - POSTGRES_DB=fitmeal
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_DB: fitmeal
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fitmeal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    restart: unless-stopped
     profiles:
       - dev
       - prod
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d fitmeal"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
+  # ====================================
+  # Redis Cache (Production)
+  # ====================================
+  redis:
+    image: redis:7-alpine
+    container_name: fitmeal-redis
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+    restart: unless-stopped
+    profiles:
+      - prod
+
+  # ====================================
+  # Application - Production
+  # ====================================
   app:
     build:
       context: .
       dockerfile: Dockerfile
-      target: prod
-    container_name: fitnessmealplanner-prod
+      target: production
+    container_name: fitmeal-app-prod
     ports:
       - "5001:5001"
     env_file:
       - .env
     environment:
-      - NODE_ENV=production
-      - PORT=5001
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/fitmeal
+      NODE_ENV: production
+      PORT: 5001
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/fitmeal
+      REDIS_URL: redis://redis:6379
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - app_uploads:/app/public/uploads
+      - app_logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     profiles:
       - prod
 
+  # ====================================
+  # Application - Development
+  # ====================================
   app-dev:
     build:
       context: .
       dockerfile: Dockerfile
-      target: dev
-    container_name: fitnessmealplanner-dev
+      target: development
+    container_name: fitmeal-app-dev
     ports:
       - "4000:4000"
-      - "24678:24678"
+      - "24678:24678"  # Vite HMR
     env_file:
       - .env
     environment:
-      - NODE_ENV=development
-      - PORT=4000
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/fitmeal
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/fitmeal
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - .:/app
+      - .:/app:cached
       - /app/node_modules
+      - app_uploads_dev:/app/public/uploads
     command: sh -c "npm run db:push && npm run dev"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
     profiles:
       - dev
 
+  # ====================================
+  # Nginx Reverse Proxy (Production)
+  # ====================================
+  nginx:
+    image: nginx:alpine
+    container_name: fitmeal-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - app_uploads:/var/www/uploads:ro
+      - nginx_cache:/var/cache/nginx
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - prod
+
+  # ====================================
+  # Monitoring - Prometheus (Production)
+  # ====================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fitmeal-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # ====================================
+  # Monitoring - Grafana (Production)
+  # ====================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fitmeal-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_uploads:
+    driver: local
+  app_uploads_dev:
+    driver: local
+  app_logs:
+    driver: local
+  nginx_cache:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

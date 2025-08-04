@@ -143,8 +143,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Enhanced health check endpoint with performance metrics
-app.get('/health', (req, res) => {
+// Enhanced health check endpoint with comprehensive monitoring
+app.get('/health', async (req, res) => {
   const healthcheck = {
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -152,13 +152,70 @@ app.get('/health', (req, res) => {
     memory: {
       used: Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100,
       total: Math.round((process.memoryUsage().heapTotal / 1024 / 1024) * 100) / 100,
-      external: Math.round((process.memoryUsage().external / 1024 / 1024) * 100) / 100
+      external: Math.round((process.memoryUsage().external / 1024 / 1024) * 100) / 100,
+      rss: Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100
     },
-    pid: process.pid
+    pid: process.pid,
+    nodeVersion: process.version,
+    environment: process.env.NODE_ENV || 'development',
+    database: 'checking...',
+    version: process.env.APP_VERSION || '1.0.0'
   };
   
+  // Database connectivity check
+  try {
+    const { db } = await import('./db/db.js');
+    const { recipes } = await import('./db/schema.js');
+    await db.select().from(recipes).limit(1);
+    healthcheck.database = 'connected';
+  } catch (error) {
+    healthcheck.status = 'DEGRADED';
+    healthcheck.database = `error: ${error instanceof Error ? error.message : 'unknown'}`;
+  }
+  
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
+  const statusCode = healthcheck.status === 'OK' ? 200 : 503;
+  res.status(statusCode).json(healthcheck);
+});
+
+// Metrics endpoint for Prometheus monitoring
+app.get('/api/metrics', (req, res) => {
+  const memory = process.memoryUsage();
+  const cpuUsage = process.cpuUsage();
+  
+  const metrics = [
+    `# HELP nodejs_memory_heap_used_bytes Process heap memory currently in use`,
+    `# TYPE nodejs_memory_heap_used_bytes gauge`,
+    `nodejs_memory_heap_used_bytes ${memory.heapUsed}`,
+    ``,
+    `# HELP nodejs_memory_heap_total_bytes Total heap memory available`,
+    `# TYPE nodejs_memory_heap_total_bytes gauge`,
+    `nodejs_memory_heap_total_bytes ${memory.heapTotal}`,
+    ``,
+    `# HELP nodejs_memory_rss_bytes Resident set size memory`,
+    `# TYPE nodejs_memory_rss_bytes gauge`,
+    `nodejs_memory_rss_bytes ${memory.rss}`,
+    ``,
+    `# HELP nodejs_process_uptime_seconds Process uptime in seconds`,
+    `# TYPE nodejs_process_uptime_seconds gauge`,
+    `nodejs_process_uptime_seconds ${process.uptime()}`,
+    ``,
+    `# HELP nodejs_cpu_user_seconds_total User CPU time spent in seconds`,
+    `# TYPE nodejs_cpu_user_seconds_total counter`,
+    `nodejs_cpu_user_seconds_total ${cpuUsage.user / 1000000}`,
+    ``,
+    `# HELP nodejs_cpu_system_seconds_total System CPU time spent in seconds`,
+    `# TYPE nodejs_cpu_system_seconds_total counter`,
+    `nodejs_cpu_system_seconds_total ${cpuUsage.system / 1000000}`,
+    ``
+  ].join('\n');
+  
+  res.setHeader('Content-Type', 'text/plain');
   res.setHeader('Cache-Control', 'no-cache');
-  res.status(200).json(healthcheck);
+  res.send(metrics);
 });
 
 // Global error handler

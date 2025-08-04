@@ -54,7 +54,8 @@
       "Bash(mkdir:*)",
       "Bash(npx playwright test:*)",
       "Bash(mv:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(chmod:*)"
     ],
     "deny": []
   }
