@@ -6,6 +6,7 @@ import { useToast } from '../hooks/use-toast';
 import { apiRequest } from '../lib/queryClient';
 import { Camera, Upload, Trash2, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProfileImageUploadProps {
   currentImageUrl?: string | null;
@@ -37,9 +38,17 @@ export default function ProfileImageUpload({
   onImageUpdate
 }: ProfileImageUploadProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isHovering, setIsHovering] = useState(false);
+
+  // Debug logging to track prop changes (development only)
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('ProfileImageUpload: currentImageUrl prop changed:', currentImageUrl);
+    }
+  }, [currentImageUrl]);
 
   // Get user initials for fallback
   const getInitials = (email: string) => {
@@ -67,17 +76,70 @@ export default function ProfileImageUpload({
       return response.json();
     },
     onSuccess: (data) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('ProfileImageUpload: Upload success response:', data);
+      }
+      
       toast({
         title: 'Profile Image Updated',
         description: 'Your profile image has been successfully updated.',
       });
       
-      // Update the image URL in parent component
-      onImageUpdate?.(data.data.profileImageUrl);
+      const newImageUrl = data.data.profileImageUrl;
+      const updatedUserFromServer = data.data.user;
       
-      // Invalidate queries to refresh user data
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('ProfileImageUpload: New image URL:', newImageUrl);
+        console.log('ProfileImageUpload: Updated user from server:', updatedUserFromServer);
+      }
+      
+      // Update the image URL in parent component
+      onImageUpdate?.(newImageUrl);
+      
+      // Update the AuthContext user data with the full user data from server
+      queryClient.setQueryData(['/api/auth/me'], updatedUserFromServer);
+      
+      // Update specific profile query caches with the new image URL
+      // For trainer profile, we need to update the specific query key used
+      const trainerProfileData = queryClient.getQueryData(['trainerProfile', 'details']) as any;
+      if (trainerProfileData) {
+        queryClient.setQueryData(['trainerProfile', 'details'], {
+          ...trainerProfileData,
+          profilePicture: newImageUrl
+        });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('ProfileImageUpload: Updated trainer profile cache with new image');
+        }
+      } else {
+        // If no cached data exists, invalidate the query to force a refetch
+        queryClient.invalidateQueries({ queryKey: ['trainerProfile', 'details'] });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('ProfileImageUpload: No cached trainer profile data, invalidating query');
+        }
+      }
+      
+      // Update other profile queries if they exist
+      const profileData = queryClient.getQueryData(['profile']);
+      if (profileData) {
+        queryClient.setQueryData(['profile'], {
+          ...profileData,
+          profilePicture: newImageUrl
+        });
+      }
+      
+      // Don't invalidate immediately - let the cache updates propagate first
+      // Invalidate after a short delay to ensure any background fetches get fresh data
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+        queryClient.invalidateQueries({ queryKey: ['adminProfile'] });
+        queryClient.invalidateQueries({ queryKey: ['customerProfile'] });
+        // Don't invalidate trainerProfile as we've already updated it directly
+      }, 100);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('ProfileImageUpload: All updates completed');
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -109,9 +171,49 @@ export default function ProfileImageUpload({
       // Update the image URL in parent component
       onImageUpdate?.(null);
       
-      // Invalidate queries to refresh user data
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      // Update the AuthContext user data to remove profile picture
+      if (user) {
+        const updatedUser = { ...user, profilePicture: null };
+        queryClient.setQueryData(['/api/auth/me'], updatedUser);
+      }
+      
+      // Update specific profile query caches to remove the image
+      // For trainer profile, we need to update the specific query key used
+      const trainerProfileData = queryClient.getQueryData(['trainerProfile', 'details']) as any;
+      if (trainerProfileData) {
+        queryClient.setQueryData(['trainerProfile', 'details'], {
+          ...trainerProfileData,
+          profilePicture: null
+        });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('ProfileImageUpload: Updated trainer profile cache to remove image');
+        }
+      } else {
+        // If no cached data exists, invalidate the query to force a refetch
+        queryClient.invalidateQueries({ queryKey: ['trainerProfile', 'details'] });
+        if (process.env.NODE_ENV === 'development') {
+          console.log('ProfileImageUpload: No cached trainer profile data, invalidating query');
+        }
+      }
+      
+      // Update other profile queries if they exist
+      const profileData = queryClient.getQueryData(['profile']);
+      if (profileData) {
+        queryClient.setQueryData(['profile'], {
+          ...profileData,
+          profilePicture: null
+        });
+      }
+      
+      // Don't invalidate immediately - let the cache updates propagate first
+      // Invalidate after a short delay to ensure any background fetches get fresh data
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['user'] });
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+        queryClient.invalidateQueries({ queryKey: ['adminProfile'] });
+        queryClient.invalidateQueries({ queryKey: ['customerProfile'] });
+        // Don't invalidate trainerProfile as we've already updated it directly
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -165,6 +267,7 @@ export default function ProfileImageUpload({
 
   return (
     <div className={cn('relative group', className)}>
+      
       <div
         className={cn(
           'relative overflow-hidden rounded-full border-2 border-gray-200 bg-gray-50 transition-all duration-200',
