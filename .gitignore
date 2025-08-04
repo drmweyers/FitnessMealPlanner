@@ -35,3 +35,6 @@ check-*.js
 *-workflow.cjs
 browser-*.js
 puppeteer-*.cjs
+
+# Profile image uploads (local development)
+public/uploads/profile-images/
