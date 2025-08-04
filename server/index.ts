@@ -116,6 +116,17 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Debug endpoint to test profile routes
+app.get('/api/debug/routes', (req, res) => {
+  const routes = app._router.stack
+    .filter((r: any) => r.route)
+    .map((r: any) => ({
+      path: r.route.path,
+      methods: Object.keys(r.route.methods)
+    }));
+  res.json({ routes });
+});
+
 // API Routes - These must be defined BEFORE ViteExpress
 // Public routes (no authentication required)
 app.use('/api/auth', authRouter);

@@ -186,11 +186,32 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      // Optimize cache times for better performance
+      staleTime: 1000 * 60 * 5, // 5 minutes - data considered fresh
+      cacheTime: 1000 * 60 * 30, // 30 minutes - data kept in cache
+      retry: (failureCount, error) => {
+        // Don't retry on 4xx errors (client errors)
+        if (error instanceof Error && error.message.includes('4')) {
+          return false;
+        }
+        // Retry up to 2 times for server errors
+        return failureCount < 2;
+      },
+      // Enable background refetching for better UX
+      refetchOnMount: true,
+      refetchOnReconnect: true,
+      // Prefetch optimization
+      notifyOnChangeProps: 'tracked', // Only notify on tracked properties
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error) => {
+        // Don't retry mutations on client errors
+        if (error instanceof Error && error.message.includes('4')) {
+          return false;
+        }
+        // Retry once for server errors
+        return failureCount < 1;
+      },
     },
   },
 });

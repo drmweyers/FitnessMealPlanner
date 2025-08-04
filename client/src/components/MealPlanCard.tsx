@@ -1,3 +1,4 @@
+import React, { memo, useMemo, useCallback } from 'react';
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import type { CustomerMealPlan } from "@shared/schema";
@@ -9,7 +10,7 @@ interface MealPlanCardProps {
   onClick?: () => void;
 }
 
-export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
+function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
   const {
     isValid,
     validMeals,
@@ -20,6 +21,28 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
     mealTypes,
     hasMeals
   } = useSafeMealPlan(mealPlan);
+
+  // Memoize expensive calculations
+  const mealsPerDay = useMemo(() => Math.round(validMeals.length / days), [validMeals.length, days]);
+  const totalMeals = useMemo(() => validMeals.length, [validMeals.length]);
+  const assignedDate = useMemo(() => {
+    if (mealPlan.assignedAt) {
+      return new Date(mealPlan.assignedAt).toLocaleDateString();
+    }
+    return null;
+  }, [mealPlan.assignedAt]);
+
+  // Memoize display meal types to avoid recalculating slice operations
+  const displayMealTypes = useMemo(() => {
+    const visibleTypes = mealTypes.slice(0, 3);
+    const extraCount = mealTypes.length - 3;
+    return { visibleTypes, extraCount };
+  }, [mealTypes]);
+
+  // Memoize click handler to prevent recreation on every render
+  const handleClick = useCallback(() => {
+    onClick?.();
+  }, [onClick]);
   
   // Early return with error display if invalid meal plan
   if (!isValid) {
@@ -51,7 +74,7 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
           </div>
         </div>
 
-        <CardContent className="p-2 xs:p-3 sm:p-4" onClick={onClick}>
+        <CardContent className="p-2 xs:p-3 sm:p-4" onClick={handleClick}>
           <div className="space-y-1 xs:space-y-2 sm:space-y-3">
             {/* Plan Name */}
             <h3 className="font-semibold text-slate-900 line-clamp-2 leading-tight text-xs xs:text-sm sm:text-base">
@@ -69,14 +92,14 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
             {/* Meal Types */}
             {mealTypes.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {mealTypes.slice(0, 3).map((type: string) => (
+                {displayMealTypes.visibleTypes.map((type: string) => (
                   <Badge key={type} variant="secondary" className="text-xs px-2 py-1">
                     {type}
                   </Badge>
                 ))}
-                {mealTypes.length > 3 && (
+                {displayMealTypes.extraCount > 0 && (
                   <Badge variant="outline" className="text-xs px-2 py-1">
-                    +{mealTypes.length - 3}
+                    +{displayMealTypes.extraCount}
                   </Badge>
                 )}
               </div>
@@ -111,11 +134,11 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
             <div className="flex items-center justify-between text-xs text-slate-500 pt-1 xs:pt-2 border-t border-slate-100">
               <div className="flex items-center gap-1">
                 <Utensils className="h-3 w-3" />
-                <span>{Math.round(validMeals.length / days)} meals/day</span>
+                <span>{mealsPerDay} meals/day</span>
               </div>
               <div className="flex items-center gap-1">
                 <Users className="h-3 w-3" />
-                <span>{validMeals.length} total meals</span>
+                <span>{totalMeals} total meals</span>
               </div>
             </div>
 
@@ -130,10 +153,10 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
                 </div>
               )}
               
-              {mealPlan.assignedAt && (
+              {assignedDate && (
                 <div className="flex items-center gap-1 text-xs text-slate-500">
                   <Calendar className="h-3 w-3" />
-                  <span>Assigned {new Date(mealPlan.assignedAt).toLocaleDateString()}</span>
+                  <span>Assigned {assignedDate}</span>
                 </div>
               )}
 
@@ -163,3 +186,14 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
     );
   }
 }
+
+// Memoize the component to prevent unnecessary re-renders when props haven't changed
+export default memo(MealPlanCard, (prevProps, nextProps) => {
+  // Custom comparison to avoid re-rendering if meal plan data is essentially the same
+  return (
+    prevProps.mealPlan?.id === nextProps.mealPlan?.id &&
+    prevProps.mealPlan?.isActive === nextProps.mealPlan?.isActive &&
+    prevProps.mealPlan?.assignedAt === nextProps.mealPlan?.assignedAt &&
+    prevProps.onClick === nextProps.onClick
+  );
+});

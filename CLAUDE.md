@@ -77,6 +77,19 @@
 - ✅ PDF export (both client-side and server-side)
 - ✅ Responsive design for all pages
 - ✅ Customer invitation system
+- ✅ Profile image upload system for all roles
+- ✅ Comprehensive unit test suite (48 passing tests)
+
+### Profile Image Upload Implementation
+- **Components**: `ProfileImageUpload.tsx` (upload) and `ProfileAvatar.tsx` (display-only)
+- **Storage**: AWS S3 for production, local filesystem for development
+- **Processing**: Sharp.js for image resize (200x200px) and JPEG conversion
+- **API Endpoints**:
+  - POST `/api/profile/upload-image` (upload new image)
+  - DELETE `/api/profile/delete-image` (remove image)
+  - GET `/api/profile` (get profile with image)
+- **Features**: Drag-drop upload, validation (file type/size), optimistic updates
+- **Integration**: Profile pages and header component
 
 ### PDF Export Implementation
 - **Client-side**: Using jsPDF in `client/src/utils/pdfExport.ts`
@@ -106,7 +119,69 @@
 - Implement proper authentication checks
 - Sanitize data before PDF generation
 
+## Sub-Agent Configuration
+
+### Core Project Guidelines for Sub-Agents
+- **Always read planning.md at the start of every new conversation**
+- **Check tasks.md before starting work and mark completed tasks immediately**  
+- **Add any new discovered tasks to tasks.md**
+- **Make every task and code change as simple as possible, impacting minimal code**
+- **Provide high-level explanations of changes made at every step**
+- **Add a review section to project_plan.md with summary of changes and relevant information**
+
+### Recommended Sub-Agents for FitnessMealPlanner
+Create these agents in `.claude/agents/` directory:
+
+1. **Frontend UI Developer** (`frontend-ui-developer.md`)
+   - **Description**: "Use this agent when implementing React components, TypeScript interfaces, or ShadCN UI integrations. Expert in responsive design and React Query state management."
+   - **Tools**: Read, Write, Edit, MultiEdit, Bash (for npm commands)
+   - **Specialization**: Client-side development, component architecture
+
+2. **Backend API Developer** (`backend-api-developer.md`)
+   - **Description**: "Use this agent when creating Express routes, database operations with Drizzle ORM, or authentication middleware. Expert in Node.js and PostgreSQL."
+   - **Tools**: Read, Write, Edit, MultiEdit, Bash (for database operations)
+   - **Specialization**: Server-side development, API design, database schema
+
+3. **DevOps Docker Specialist** (`devops-docker-specialist.md`)
+   - **Description**: "Use this agent for Docker configuration, environment setup, deployment issues, or container orchestration. MUST BE USED for Docker-related tasks."
+   - **Tools**: Read, Edit, Bash (Docker commands)
+   - **Specialization**: Development environment, containerization
+
+4. **QA Testing Engineer** (`qa-testing-engineer.md`)
+   - **Description**: "Use this agent for writing unit tests, integration tests, or debugging test failures. Expert in Vitest and React Testing Library."
+   - **Tools**: Read, Write, Edit, Bash (test commands)
+   - **Specialization**: Testing, quality assurance
+
+5. **Code Quality Auditor** (`code-quality-auditor.md`)
+   - **Description**: "Use PROACTIVELY after significant code changes for thorough code review focusing on security, performance, and maintainability."
+   - **Tools**: Read, Grep, Glob
+   - **Specialization**: Code review, security analysis, best practices
+
+### Multi-Agent Workflow Patterns
+- **Feature Development**: Frontend UI Developer + Backend API Developer working in parallel
+- **Testing Cycle**: QA Testing Engineer after each feature completion
+- **Deployment**: DevOps Docker Specialist for environment-related tasks
+- **Quality Gates**: Code Quality Auditor reviews before major commits
+
+### MCP Server Configuration (.mcp.json)
+Recommended MCP servers for this project:
+- **GitHub MCP**: For Git operations, PR management, and code reviews
+- **Postgres MCP**: Direct database operations and schema management
+- **Puppeteer MCP**: UI testing and screenshot comparisons for responsive design
+- **Test Sprite MCP**: Automated testing and failure diagnosis
+
+### Cost Optimization for FitnessMealPlanner
+- Use `/clear` after completing major features (profile upload, PDF export, etc.)
+- Prefer Sonnet for routine development tasks
+- Use Opus for complex architecture decisions
+- Leverage parallel sub-agent execution to reduce overall development time
+
 ## Session Progress Tracking
-- Last update: PDF export system implementation completed
-- Current focus: Testing and bug fixes
-- Next priorities: Performance optimization, additional features
+- **Last Major Update**: Profile image upload system implementation completed
+- **Current Status**: All core features implemented and tested (48 passing tests)
+- **Recent Achievements**: 
+  - ✅ Profile image upload with AWS S3 integration
+  - ✅ Comprehensive unit test suite
+  - ✅ Business logic documentation updated to v1.2
+  - ✅ All changes pushed to qa-ready branch
+- **Next Priorities**: Performance optimization, additional features, production deployment preparation

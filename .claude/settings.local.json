@@ -53,7 +53,8 @@
       "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5432/fitmeal_test npm run db:push)",
       "Bash(mkdir:*)",
       "Bash(npx playwright test:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }

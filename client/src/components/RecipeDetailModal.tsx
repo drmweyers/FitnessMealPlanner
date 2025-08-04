@@ -1,27 +1,58 @@
-import React from "react";
+import React, { memo, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { apiRequest } from "../lib/queryClient";
 import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";
+import { useAuth } from "../contexts/AuthContext";
 import type { Recipe } from "@shared/schema";
 
 interface RecipeDetailModalProps {
-  recipeId: string | null;
+  recipeId?: string | null;
+  recipe?: Recipe | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeDetailModalProps) {
-  const { data: recipe, isLoading } = useQuery<Recipe>({
-    queryKey: [`/api/admin/recipes/${recipeId}`],
+function RecipeDetailModal({ recipeId, recipe: passedRecipe, isOpen, onClose }: RecipeDetailModalProps) {
+  const { user } = useAuth();
+  
+  // Memoize the endpoint calculation to prevent unnecessary re-calculations
+  const recipeEndpoint = useMemo(() => {
+    if (!recipeId) return null;
+    if (user?.role === 'admin') {
+      return `/api/admin/recipes/${recipeId}`;
+    }
+    return `/api/recipes/${recipeId}`;
+  }, [recipeId, user?.role]);
+
+  const { data: fetchedRecipe, isLoading } = useQuery<Recipe>({
+    queryKey: [`recipe-detail-${recipeId}-${user?.role}`],
     queryFn: async () => {
-      if (!recipeId) return null;
-      const res = await apiRequest('GET', `/api/admin/recipes/${recipeId}`);
+      if (!recipeEndpoint) return null;
+      const res = await apiRequest('GET', recipeEndpoint);
       return res.json();
     },
-    enabled: !!recipeId && isOpen,
+    enabled: !!recipeId && !passedRecipe && isOpen && !!recipeEndpoint,
   });
+
+  // Use passed recipe if available, otherwise use fetched recipe
+  const recipe = passedRecipe || fetchedRecipe;
+
+  // Memoize formatted dates to avoid recreation on every render
+  const formattedDates = useMemo(() => {
+    if (!recipe) return { created: '', lastUpdated: '' };
+    return {
+      created: recipe.creationTimestamp ? new Date(recipe.creationTimestamp).toLocaleDateString() : '',
+      lastUpdated: recipe.lastUpdatedTimestamp ? new Date(recipe.lastUpdatedTimestamp).toLocaleDateString() : ''
+    };
+  }, [recipe?.creationTimestamp, recipe?.lastUpdatedTimestamp]);
+
+  // Memoize total cooking time calculation
+  const totalCookTime = useMemo(() => {
+    if (!recipe) return 0;
+    return recipe.prepTimeMinutes + (recipe.cookTimeMinutes || 0);
+  }, [recipe?.prepTimeMinutes, recipe?.cookTimeMinutes]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -30,7 +61,7 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
           <DialogTitle>Recipe Details</DialogTitle>
         </DialogHeader>
 
-        {isLoading ? (
+        {isLoading && !passedRecipe ? (
           <div className="space-y-4">
             <Skeleton className="h-8 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
@@ -152,9 +183,9 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
 
             {/* Metadata */}
             <div className="text-sm text-slate-500 space-y-1">
-                <p>Created: {recipe.creationTimestamp ? new Date(recipe.creationTimestamp).toLocaleDateString() : ''}</p>
-              {recipe.lastUpdatedTimestamp && (
-                <p>Last Updated: {recipe.lastUpdatedTimestamp ? new Date(recipe.lastUpdatedTimestamp).toLocaleDateString() : ''}</p>
+                <p>Created: {formattedDates.created}</p>
+              {formattedDates.lastUpdated && (
+                <p>Last Updated: {formattedDates.lastUpdated}</p>
               )}
             </div>
           </div>
@@ -166,4 +197,14 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
       </DialogContent>
     </Dialog>
   );
-} 
+}
+
+// Memoize the component to prevent unnecessary re-renders
+export default memo(RecipeDetailModal, (prevProps, nextProps) => {
+  return (
+    prevProps.recipeId === nextProps.recipeId &&
+    prevProps.recipe?.id === nextProps.recipe?.id &&
+    prevProps.isOpen === nextProps.isOpen &&
+    prevProps.onClose === nextProps.onClose
+  );
+}); 

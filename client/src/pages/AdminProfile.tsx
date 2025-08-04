@@ -72,7 +72,8 @@ export default function AdminProfile() {
     queryKey: ['adminProfile', 'details'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/profile');
-      return res.json();
+      const response = await res.json();
+      return response.data; // Extract the data from the API response
     },
     enabled: !!user
   });

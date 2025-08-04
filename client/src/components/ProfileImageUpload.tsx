@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, memo, useMemo, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -30,7 +30,7 @@ const iconSizes = {
   xl: 'w-6 h-6'
 };
 
-export default function ProfileImageUpload({
+function ProfileImageUpload({
   currentImageUrl,
   userEmail,
   size = 'lg',
@@ -42,6 +42,19 @@ export default function ProfileImageUpload({
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isHovering, setIsHovering] = useState(false);
+
+  // Memoize size classes to prevent recalculation
+  const sizeClass = useMemo(() => sizeClasses[size], [size]);
+  const iconSize = useMemo(() => iconSizes[size], [size]);
+
+  // Memoize user initials calculation
+  const userInitials = useMemo(() => {
+    return userEmail?.charAt(0).toUpperCase() || 'U';
+  }, [userEmail]);
+
+  // Memoize hover handlers
+  const handleMouseEnter = useCallback(() => setIsHovering(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovering(false), []);
 
   // Debug logging to track prop changes (development only)
   React.useEffect(() => {
@@ -271,34 +284,34 @@ export default function ProfileImageUpload({
       <div
         className={cn(
           'relative overflow-hidden rounded-full border-2 border-gray-200 bg-gray-50 transition-all duration-200',
-          sizeClasses[size],
+          sizeClass,
           isHovering && !isLoading && 'border-primary/50 shadow-md'
         )}
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        <Avatar className={cn('w-full h-full', sizeClasses[size])}>
+        <Avatar className={cn('w-full h-full', sizeClass)}>
           <AvatarImage 
             src={currentImageUrl || undefined} 
             alt="Profile"
             className="object-cover"
           />
           <AvatarFallback className="bg-primary/10 text-primary font-medium">
-            {getInitials(userEmail)}
+            {userInitials}
           </AvatarFallback>
         </Avatar>
 
         {/* Loading overlay */}
         {isLoading && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <Loader2 className={cn('text-white animate-spin', iconSizes[size])} />
+            <Loader2 className={cn('text-white animate-spin', iconSize)} />
           </div>
         )}
 
         {/* Hover overlay */}
         {isHovering && !isLoading && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <Camera className={cn('text-white', iconSizes[size])} />
+            <Camera className={cn('text-white', iconSize)} />
           </div>
         )}
       </div>
@@ -343,6 +356,17 @@ export default function ProfileImageUpload({
   );
 }
 
+// Memoize the component to prevent unnecessary re-renders
+export default memo(ProfileImageUpload, (prevProps, nextProps) => {
+  return (
+    prevProps.currentImageUrl === nextProps.currentImageUrl &&
+    prevProps.userEmail === nextProps.userEmail &&
+    prevProps.size === nextProps.size &&
+    prevProps.className === nextProps.className &&
+    prevProps.onImageUpdate === nextProps.onImageUpdate
+  );
+});
+
 // Simplified version for display-only use (like in header)
 interface ProfileAvatarProps {
   imageUrl?: string | null;
@@ -351,26 +375,35 @@ interface ProfileAvatarProps {
   className?: string;
 }
 
-export function ProfileAvatar({ imageUrl, userEmail, size = 'md', className }: ProfileAvatarProps) {
-  const getInitials = (email: string) => {
-    return email
+export const ProfileAvatar = memo(function ProfileAvatar({ imageUrl, userEmail, size = 'md', className }: ProfileAvatarProps) {
+  const initials = useMemo(() => {
+    return userEmail
       .split('@')[0]
       .split('.')
       .map(part => part[0])
       .join('')
       .toUpperCase();
-  };
+  }, [userEmail]);
+
+  const sizeClass = useMemo(() => sizeClasses[size], [size]);
 
   return (
-    <Avatar className={cn(sizeClasses[size], className)}>
+    <Avatar className={cn(sizeClass, className)}>
       <AvatarImage 
         src={imageUrl || undefined} 
         alt="Profile"
         className="object-cover"
       />
       <AvatarFallback className="bg-primary/10 text-primary font-medium">
-        {getInitials(userEmail)}
+        {initials}
       </AvatarFallback>
     </Avatar>
   );
-}
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.imageUrl === nextProps.imageUrl &&
+    prevProps.userEmail === nextProps.userEmail &&
+    prevProps.size === nextProps.size &&
+    prevProps.className === nextProps.className
+  );
+});

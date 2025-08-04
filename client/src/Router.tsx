@@ -1,24 +1,26 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Route, Switch, Redirect } from "wouter";
 import { useAuth } from "./contexts/AuthContext";
 import { useOAuthToken } from "./hooks/useOAuthToken";
-import Landing from "./pages/Landing";
-import Trainer from "./pages/Trainer";
-import Admin from "./pages/Admin";
-import Customer from "./pages/Customer";
-import AdminProfile from "./pages/AdminProfile";
-import TrainerProfile from "./pages/TrainerProfile";
-import CustomerProfile from "./pages/CustomerProfile";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import NotFound from "./pages/NotFound";
 import FallbackUI from "./components/FallbackUI";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { OAuthCallback } from "./components/OAuthCallback";
-import OAuthCallbackPage from "./pages/OAuthCallbackPage";
+
+// Lazy load heavy page components to reduce initial bundle size
+const Landing = React.lazy(() => import("./pages/Landing"));
+const Trainer = React.lazy(() => import("./pages/Trainer"));
+const Admin = React.lazy(() => import("./pages/Admin"));
+const Customer = React.lazy(() => import("./pages/Customer"));
+const AdminProfile = React.lazy(() => import("./pages/AdminProfile"));
+const TrainerProfile = React.lazy(() => import("./pages/TrainerProfile"));
+const CustomerProfile = React.lazy(() => import("./pages/CustomerProfile"));
+const LoginPage = React.lazy(() => import("./pages/LoginPage"));
+const RegisterPage = React.lazy(() => import("./pages/RegisterPage"));
+const ForgotPasswordPage = React.lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = React.lazy(() => import("./pages/ResetPasswordPage"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+const OAuthCallbackPage = React.lazy(() => import("./pages/OAuthCallbackPage"));
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -32,7 +34,11 @@ export default function Router() {
   
   // If we have a token in the URL, show the OAuth callback page
   if (hasToken) {
-    return <OAuthCallbackPage />;
+    return (
+      <Suspense fallback={<FallbackUI />}>
+        <OAuthCallbackPage />
+      </Suspense>
+    );
   }
 
   if (isLoading) {
@@ -45,24 +51,27 @@ export default function Router() {
 
   if (!user) {
     return (
-      <Switch>
-        <Route path="/login" component={LoginPage} />
-        <Route path="/register" component={RegisterPage} />
-        <Route path="/forgot-password" component={ForgotPasswordPage} />
-        <Route path="/reset-password" component={ResetPasswordPage} />
-        <Route path="/">
-          <Redirect to="/login" />
-        </Route>
-        <Route path="*">
-          <Redirect to="/login" />
-        </Route>
-      </Switch>
+      <Suspense fallback={<FallbackUI />}>
+        <Switch>
+          <Route path="/login" component={LoginPage} />
+          <Route path="/register" component={RegisterPage} />
+          <Route path="/forgot-password" component={ForgotPasswordPage} />
+          <Route path="/reset-password" component={ResetPasswordPage} />
+          <Route path="/">
+            <Redirect to="/login" />
+          </Route>
+          <Route path="*">
+            <Redirect to="/login" />
+          </Route>
+        </Switch>
+      </Suspense>
     );
   }
 
   return (
     <Layout>
-      <Switch>
+      <Suspense fallback={<FallbackUI />}>
+        <Switch>
         <Route path="/" component={() => {
           switch (user.role) {
             case 'customer':
@@ -163,8 +172,9 @@ export default function Router() {
         }} />
         
         
-        <Route path="*" component={NotFound} />
-      </Switch>
+          <Route path="*" component={NotFound} />
+        </Switch>
+      </Suspense>
     </Layout>
   );
 } 

@@ -1,10 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import type { CustomerMealPlan } from "@shared/schema";
+import type { CustomerMealPlan, Recipe } from "@shared/schema";
 import { Calendar, Users, Utensils, Clock, Zap, Target, Activity } from "lucide-react";
-import { useState } from "react";
+import { useState, memo, useMemo, useCallback } from "react";
 import RecipeDetailModal from "./RecipeDetailModal";
+import MealTableRow from "./MealTableRow";
 import { useSafeMealPlan } from '../hooks/useSafeMealPlan';
 
 interface MealPlanModalProps {
@@ -12,8 +13,8 @@ interface MealPlanModalProps {
   onClose: () => void;
 }
 
-export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps) {
-  const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
+function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps) {
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   const {
     isValid,
@@ -26,6 +27,18 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
     nutrition,
     getMealsForDay
   } = useSafeMealPlan(mealPlan);
+
+  // Memoize callback functions to prevent child re-renders
+  const handleRecipeClick = useCallback((recipe: Recipe) => {
+    setSelectedRecipe(recipe);
+  }, []);
+
+  const handleCloseRecipeModal = useCallback(() => {
+    setSelectedRecipe(null);
+  }, []);
+
+  // Memoize expensive calculations
+  const mealsPerDay = useMemo(() => Math.round(validMeals.length / days), [validMeals.length, days]);
 
   if (!isValid) {
     return (
@@ -75,9 +88,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
     }
   };
 
-  const handleRecipeClick = (recipeId: string) => {
-    setSelectedRecipeId(recipeId);
-  };
+  // handleRecipeClick now defined above with useCallback
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -133,7 +144,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
               </div>
               <div className="flex items-center gap-1">
                 <Utensils className="h-4 w-4 text-purple-500" />
-                <span>{Math.round(validMeals.length / days)} meals/day</span>
+                <span>{mealsPerDay} meals/day</span>
               </div>
               {clientName && (
                 <div className="flex items-center gap-1">
@@ -182,65 +193,17 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                           </tr>
                         </thead>
                         <tbody>
-                          {dayMeals.map((meal, mealIndex) => {
-                            const recipe = meal.recipe;
-                            return (
-                              <tr
-                                key={mealIndex}
-                                className="border-b hover:bg-gray-50 transition-colors cursor-pointer"
-                                onClick={() => handleRecipeClick(recipe.id)}
-                              >
-                                <td className="py-4 px-4">
-                                  <div className="flex items-center space-x-3">
-                                    <img
-                                      src={
-                                        recipe.imageUrl ||
-                                        "/api/placeholder/60/60"
-                                      }
-                                      alt={recipe.name}
-                                      className="w-12 h-12 rounded-lg object-cover"
-                                      onError={(e) => {
-                                        const img = e.target as HTMLImageElement;
-                                        img.src = `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=60&h=60&fit=crop`;
-                                      }}
-                                    />
-                                    <div>
-                                      <div className="font-medium text-gray-900">
-                                        {recipe.name}
-                                      </div>
-                                      <div className="text-sm text-gray-500 line-clamp-1">
-                                        {recipe.description ||
-                                          "Delicious and nutritious meal"}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="py-4 px-4">
-                                  <span
-                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMealTypeColor(meal.mealType)}`}
-                                  >
-                                    {getMealTypeIcon(meal.mealType)} {formatMealType(meal.mealType)}
-                                  </span>
-                                </td>
-                                <td className="py-4 px-4">
-                                  <div className="text-sm text-gray-900">
-                                    {recipe.caloriesKcal} cal
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    {Number(recipe.proteinGrams).toFixed(0)}g protein
-                                  </div>
-                                </td>
-                                <td className="py-4 px-4">
-                                  <div className="text-sm text-gray-900">
-                                    {recipe.prepTimeMinutes + (recipe.cookTimeMinutes || 0)} min
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    prep + cook
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
+                          {dayMeals.map((meal, mealIndex) => (
+                            <MealTableRow
+                              key={`${meal.recipe.id}-${mealIndex}`}
+                              recipe={meal.recipe}
+                              mealType={meal.mealType}
+                              onRecipeClick={handleRecipeClick}
+                              formatMealType={formatMealType}
+                              getMealTypeColor={getMealTypeColor}
+                              getMealTypeIcon={getMealTypeIcon}
+                            />
+                          ))}
                         </tbody>
                       </table>
                     </div>
@@ -264,11 +227,20 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
 
         {/* Recipe Detail Modal */}
         <RecipeDetailModal
-          recipeId={selectedRecipeId}
-          isOpen={!!selectedRecipeId}
-          onClose={() => setSelectedRecipeId(null)}
+          recipe={selectedRecipe}
+          isOpen={!!selectedRecipe}
+          onClose={handleCloseRecipeModal}
         />
       </DialogContent>
     </Dialog>
   );
-} 
+}
+
+// Memoize the component to prevent unnecessary re-renders
+export default memo(MealPlanModal, (prevProps, nextProps) => {
+  // Only re-render if the meal plan ID changes or modal state changes
+  return (
+    prevProps.mealPlan?.id === nextProps.mealPlan?.id &&
+    prevProps.onClose === nextProps.onClose
+  );
+}); 

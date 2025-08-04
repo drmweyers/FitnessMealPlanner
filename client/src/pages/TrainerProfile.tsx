@@ -11,7 +11,6 @@ import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { apiRequest } from '../lib/queryClient';
 import PDFExportButton from '../components/PDFExportButton';
-import ProfileImageUpload from '../components/ProfileImageUpload';
 import { 
   User, 
   Dumbbell, 
@@ -97,11 +96,36 @@ export default function TrainerProfile() {
   const { data: profile, isLoading: profileLoading } = useQuery<TrainerProfile>({
     queryKey: ['trainerProfile', 'details'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/profile');
-      return res.json();
+      // First get extended profile data from auth endpoint
+      const authRes = await apiRequest('GET', '/api/auth/profile');
+      const authProfile = await authRes.json();
+      
+      // Then get the actual profile with profilePicture from profile endpoint
+      const profileRes = await apiRequest('GET', '/api/profile');
+      const profileData = await profileRes.json();
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('TrainerProfile: Auth profile data:', authProfile);
+        console.log('TrainerProfile: Profile data with picture:', profileData);
+      }
+      
+      // Merge both responses, with profile data taking precedence for profilePicture
+      const mergedData = {
+        ...authProfile,
+        profilePicture: profileData.data?.profilePicture || profileData.profilePicture || null
+      };
+      
+      return mergedData;
     },
     enabled: !!user
   });
+
+  // Debug log when profile changes (development only)
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('TrainerProfile: Profile data changed:', profile);
+    }
+  }, [profile]);
 
   // Update form when profile data is loaded
   React.useEffect(() => {
@@ -375,42 +399,7 @@ export default function TrainerProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Profile Information */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Profile Image Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
-                <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span>Profile Image</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center space-x-6 p-4 sm:p-6">
-              <ProfileImageUpload
-                currentImageUrl={profile?.profilePicture}
-                userEmail={user?.email || ''}
-                size="xl"
-                onImageUpdate={(newImageUrl) => {
-                  // Update profile data optimistically
-                  if (profile) {
-                    queryClient.setQueryData(['trainerProfile', 'details'], {
-                      ...profile,
-                      profilePicture: newImageUrl
-                    });
-                  }
-                }}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-slate-600 mb-2">
-                  Upload a professional profile image that will be displayed in your header and profile.
-                </p>
-                <p className="text-xs text-slate-500">
-                  Recommended: Square image, at least 200x200px. Max file size: 5MB.
-                  Supported formats: JPEG, PNG, WebP.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Account Details Card */}
+          
           <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 pb-4">
               <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">

@@ -329,6 +329,13 @@ authRouter.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
 authRouter.get('/profile', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const user = await storage.getUser(req.user!.id);
+    console.log('Profile endpoint - user from storage:', JSON.stringify({
+      id: user?.id,
+      email: user?.email,
+      profilePicture: user?.profilePicture,
+      hasProfilePicture: !!user?.profilePicture
+    }, null, 2));
+    
     if (!user) {
       return res.status(404).json({ 
         status: 'error',
@@ -337,13 +344,13 @@ authRouter.get('/profile', requireAuth, async (req: AuthRequest, res: Response) 
       });
     }
 
-    // Return mock extended profile data for now
-    // In a real implementation, this would come from an extended user profile table
+    // Return actual user data with mock extended profile data
     const profileData = {
       id: user.id,
       email: user.email,
       role: user.role,
-      createdAt: user.createdAt || new Date().toISOString(),
+      profilePicture: user.profilePicture || null,
+      createdAt: user.createdAt?.toISOString() || new Date().toISOString(),
       lastLoginAt: new Date().toISOString(),
       
       // Mock additional profile fields based on role
@@ -366,6 +373,7 @@ authRouter.get('/profile', requireAuth, async (req: AuthRequest, res: Response) 
       })
     };
 
+    console.log('Profile endpoint - returning profileData:', JSON.stringify(profileData, null, 2));
     res.json(profileData);
   } catch (error) {
     console.error('Get profile error:', error);
