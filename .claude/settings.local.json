@@ -55,7 +55,8 @@
       "Bash(npx playwright test:*)",
       "Bash(mv:*)",
       "Bash(git checkout:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(./scripts/performance-test.sh:*)"
     ],
     "deny": []
   }
