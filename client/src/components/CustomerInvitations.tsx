@@ -68,23 +68,33 @@ export default function CustomerInvitations() {
       return response.json();
     },
     onSuccess: (data) => {
+      // Handle both success and warning responses
+      const isEmailSent = data.data.invitation.emailSent;
+      
       toast({
-        title: "Invitation Sent",
-        description: `Invitation sent to ${customerEmail} successfully.`,
+        title: isEmailSent ? "Invitation Sent" : "Invitation Created",
+        description: isEmailSent 
+          ? `Invitation sent to ${customerEmail} successfully.`
+          : `Invitation created for ${customerEmail}, but email delivery failed. You can copy the invitation link below.`,
+        variant: isEmailSent ? "default" : "destructive",
+        duration: isEmailSent ? 5000 : 10000,
       });
+      
       setCustomerEmail("");
       setMessage("");
       setShowForm(false);
       queryClient.invalidateQueries({ queryKey: ['/api/invitations'] });
       
-      // In development, show the invitation link
-      if (process.env.NODE_ENV === 'development' && data.data.invitation.invitationLink) {
-        console.log('Invitation Link:', data.data.invitation.invitationLink);
-        toast({
-          title: "Development Mode",
-          description: `Invitation link: ${data.data.invitation.invitationLink}`,
-          duration: 10000,
-        });
+      // In development or when email fails, show the invitation link
+      if (process.env.NODE_ENV === 'development' || !isEmailSent) {
+        if (data.data.invitation.invitationLink) {
+          console.log('Invitation Link:', data.data.invitation.invitationLink);
+          toast({
+            title: "Manual Invitation Link",
+            description: `Please share this link manually: ${data.data.invitation.invitationLink}`,
+            duration: 15000,
+          });
+        }
       }
     },
     onError: (error: Error) => {

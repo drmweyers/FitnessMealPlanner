@@ -40,7 +40,7 @@ export class EmailService {
       });
 
       const { data: emailData, error } = await resend.emails.send({
-        from: process.env.FROM_EMAIL || 'EvoFitMeals <noreply@evofitmeals.com>',
+        from: process.env.FROM_EMAIL || 'EvoFitMeals <onboarding@resend.dev>',
         to: [data.customerEmail],
         subject: `You're invited to join ${data.trainerName}'s meal planning program`,
         html: this.createInvitationEmailTemplate(data, expirationDate),
@@ -246,7 +246,7 @@ If you didn't expect this invitation, you can safely ignore this email.
       }
 
       const { data, error } = await resend.emails.send({
-        from: process.env.FROM_EMAIL || 'EvoFitMeals <noreply@evofitmeals.com>',
+        from: process.env.FROM_EMAIL || 'EvoFitMeals <onboarding@resend.dev>',
         to: [to],
         subject: 'EvoFitMeals Email Test',
         html: `
