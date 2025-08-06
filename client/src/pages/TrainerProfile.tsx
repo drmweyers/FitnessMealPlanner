@@ -11,7 +11,6 @@ import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { apiRequest } from '../lib/queryClient';
 import PDFExportButton from '../components/PDFExportButton';
-import ProfileImageUpload from '../components/ProfileImageUpload';
 import { 
   User, 
   Dumbbell, 
@@ -307,6 +306,8 @@ export default function TrainerProfile() {
 
   const handleSendInvitation = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted, customerEmail:', customerEmail, 'message:', invitationMessage);
+    
     if (!customerEmail.trim()) {
       toast({
         title: "Error",
@@ -316,6 +317,11 @@ export default function TrainerProfile() {
       return;
     }
 
+    console.log('Sending invitation with data:', {
+      customerEmail: customerEmail.trim(),
+      message: invitationMessage.trim() || undefined,
+    });
+    
     sendInvitationMutation.mutate({
       customerEmail: customerEmail.trim(),
       message: invitationMessage.trim() || undefined,
@@ -363,52 +369,13 @@ export default function TrainerProfile() {
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 truncate">Trainer Profile</h1>
-            <p className="text-sm sm:text-base text-slate-600">Professional fitness trainer dashboard and settings</p>
           </div>
         </div>
-        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200 text-xs sm:text-sm">
-          <Dumbbell className="w-3 h-3 mr-1" />
-          Personal Trainer
-        </Badge>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Profile Information */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Profile Image Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
-                <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span>Profile Image</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center space-x-6 p-4 sm:p-6">
-              <ProfileImageUpload
-                currentImageUrl={profile?.profilePicture}
-                userEmail={user?.email || ''}
-                size="xl"
-                onImageUpdate={(newImageUrl) => {
-                  // Update profile data optimistically
-                  if (profile) {
-                    queryClient.setQueryData(['trainerProfile', 'details'], {
-                      ...profile,
-                      profilePicture: newImageUrl
-                    });
-                  }
-                }}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-slate-600 mb-2">
-                  Upload a professional profile image that will be displayed in your header and profile.
-                </p>
-                <p className="text-xs text-slate-500">
-                  Recommended: Square image, at least 200x200px. Max file size: 5MB.
-                  Supported formats: JPEG, PNG, WebP.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Account Details Card */}
           <Card>
@@ -748,7 +715,10 @@ export default function TrainerProfile() {
               <Button
                 variant="outline"
                 className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
-                onClick={() => setShowInvitationForm(!showInvitationForm)}
+                onClick={() => {
+                  console.log('Send invitation button clicked, current state:', showInvitationForm);
+                  setShowInvitationForm(!showInvitationForm);
+                }}
               >
                 <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">Send Customer Invitation</span>
@@ -834,6 +804,7 @@ export default function TrainerProfile() {
 
       {/* Invitation Form Modal */}
       {showInvitationForm && (
+        console.log('Rendering invitation form modal'),
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-md">
             <CardHeader>
