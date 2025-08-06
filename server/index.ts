@@ -120,8 +120,8 @@ app.get('/api/health', (req, res) => {
 // Public routes (no authentication required)
 app.use('/api/auth', authRouter);
 
-// Protected routes with authentication middleware
-app.use('/api/invitations', requireAuth, invitationRouter);
+// Invitations routes (mixed auth requirements - handled internally)
+app.use('/api/invitations', invitationRouter);
 app.use('/api/recipes', requireAuth, recipeRouter);
 app.use('/api/admin', requireAdmin, adminRouter);
 app.use('/api/trainer', requireTrainerOrAdmin, trainerRouter);
