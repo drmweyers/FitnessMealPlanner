@@ -20,12 +20,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRole, 
   allowedRoles 
 }) => {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [, navigate] = useLocation();
 
   useEffect(() => {
     // Don't redirect while still loading
-    if (loading) return;
+    if (isLoading) return;
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
@@ -43,10 +43,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       navigate('/login');
       return;
     }
-  }, [isAuthenticated, user, loading, navigate, requiredRole, allowedRoles]);
+  }, [isAuthenticated, user, isLoading, navigate, requiredRole, allowedRoles]);
 
   // Show loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
