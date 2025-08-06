@@ -38,3 +38,4 @@ puppeteer-*.cjs
 
 # Profile image uploads (local development)
 public/uploads/profile-images/
+fitnessmealplanner-prod.tar

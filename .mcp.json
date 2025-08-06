@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["@upstash/context7-mcp"]
+    },
+    "digitalocean": {
+      "command": "npx",
+      "args": ["@digitalocean/mcp"],
+      "env": {
+        "DIGITALOCEAN_TOKEN": "${DIGITALOCEAN_TOKEN}"
+      }
+    }
+  }
+}

@@ -103,7 +103,14 @@ invitationRouter.post('/send', requireAuth, requireRole('trainer'), async (req: 
     });
 
     // Send email notification
-    const invitationLink = `${process.env.FRONTEND_URL || 'http://localhost:4000'}/register?invitation=${token}`;
+    // Determine the correct base URL based on environment
+    let baseUrl = 'http://localhost:4000';
+    if (process.env.NODE_ENV === 'production') {
+      baseUrl = 'https://evofitmeals.com';
+    } else if (process.env.FRONTEND_URL) {
+      baseUrl = process.env.FRONTEND_URL;
+    }
+    const invitationLink = `${baseUrl}/register?invitation=${token}`;
     
     // Get trainer info for the email
     const trainer = await storage.getUser(trainerId);
