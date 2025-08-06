@@ -62,7 +62,7 @@ RUN npm ci --only=production && \
 
 # Copy built application
 COPY --from=builder /app/dist/index.js ./dist/index.js
-COPY --from=builder /app/client/dist ./client/dist
+COPY --from=builder /app/dist/public ./client/dist
 COPY --from=builder /app/shared ./shared
 
 # CRITICAL: Copy drizzle.config.ts with verification
