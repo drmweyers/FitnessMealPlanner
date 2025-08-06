@@ -29,6 +29,15 @@ export interface LongevityMealPlanParams {
   medicalConditions?: string[];
   currentMedications?: string[];
   clientName?: string;
+  // Ailments-specific parameters
+  selectedAilments?: string[];
+  nutritionalFocus?: {
+    beneficialFoods: string[];
+    avoidFoods: string[];
+    keyNutrients: string[];
+    mealPlanFocus: string[];
+  };
+  priorityLevel?: 'low' | 'medium' | 'high';
 }
 
 export interface ParasiticCleanseParams {
@@ -95,6 +104,13 @@ export class LongevityMealPlanService {
       ? `Adapt recipes to these cultural preferences: ${params.culturalPreferences.join(', ')}`
       : 'Use globally accessible ingredients';
 
+    // Check if this is an ailments-based meal plan
+    const isAilmentsBased = params.selectedAilments && params.selectedAilments.length > 0;
+    
+    if (isAilmentsBased) {
+      return this.createAilmentsBasedPrompt(params);
+    }
+
     return `You are an expert in longevity nutrition and anti-aging dietary protocols.
     
     Generate recipes that support longevity and healthy aging for a ${params.currentAge}-year-old individual.
@@ -132,6 +148,63 @@ export class LongevityMealPlanService {
     
     MEAL TIMING NOTES: Include optimal consumption times for circadian rhythm support.
     Each recipe should include brief longevity benefits explanation.`;
+  }
+
+  /**
+   * Create specialized AI prompt for ailments-based recipes
+   */
+  private createAilmentsBasedPrompt(params: LongevityMealPlanParams): string {
+    const culturalAdaptation = params.culturalPreferences?.length 
+      ? `Adapt recipes to these cultural preferences: ${params.culturalPreferences.join(', ')}`
+      : 'Use globally accessible ingredients';
+
+    const ailmentsContext = params.selectedAilments?.join(', ') || '';
+    const beneficialFoods = params.nutritionalFocus?.beneficialFoods?.join(', ') || '';
+    const avoidFoods = params.nutritionalFocus?.avoidFoods?.join(', ') || '';
+    const keyNutrients = params.nutritionalFocus?.keyNutrients?.join(', ') || '';
+    const mealPlanFocus = params.nutritionalFocus?.mealPlanFocus?.join(', ') || '';
+
+    return `You are an expert in therapeutic nutrition and functional medicine nutrition.
+    
+    Generate recipes specifically designed to support individuals dealing with these health conditions: ${ailmentsContext}
+    
+    TARGETED HEALTH APPROACH:
+    • Priority Level: ${params.priorityLevel || 'medium'} - adjust intensity of therapeutic ingredients accordingly
+    • Focus on nutritional therapy and food as medicine principles
+    • Create recipes that address root causes and support healing
+    • Include anti-inflammatory, nutrient-dense, easily digestible options
+    
+    BENEFICIAL FOODS TO EMPHASIZE:
+    ${beneficialFoods ? `• ${beneficialFoods}` : '• Focus on whole, unprocessed foods'}
+    
+    FOODS TO MINIMIZE OR AVOID:
+    ${avoidFoods ? `• ${avoidFoods}` : '• Processed foods, refined sugars, trans fats'}
+    
+    KEY NUTRIENTS TO PRIORITIZE:
+    ${keyNutrients ? `• ${keyNutrients}` : '• Antioxidants, anti-inflammatory compounds, essential fatty acids'}
+    
+    MEAL PLAN FOCUS AREAS:
+    ${mealPlanFocus ? `• ${mealPlanFocus}` : '• Healing and nourishing foods'}
+    
+    RECIPE REQUIREMENTS:
+    • Easy to digest and gentle on the system
+    • Rich in healing compounds and nutrients
+    • Anti-inflammatory ingredients where appropriate
+    • Suitable for sensitive digestive systems if applicable
+    • Nutrient-dense to support recovery and wellness
+    • Include preparation tips for optimal nutrient absorption
+    
+    TARGET CALORIES: ~${Math.round(params.dailyCalorieTarget / 3)} per meal (assuming 3 meals/day)
+    
+    ${culturalAdaptation}
+    
+    THERAPEUTIC NOTES: 
+    • Include brief explanation of how each recipe supports the targeted health conditions
+    • Mention specific nutrients or compounds that provide therapeutic benefits
+    • Suggest optimal timing for consumption if relevant
+    • Include any preparation tips to maximize nutrient bioavailability
+    
+    Each recipe should be a step toward improved health and wellness for the specified conditions.`;
   }
 
   /**

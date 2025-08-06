@@ -47,6 +47,7 @@ import ParasiteCleanseProtocol from './ParasiteCleanseProtocol';
 import MedicalDisclaimerModal from './MedicalDisclaimerModal';
 import ProtocolDashboard from './ProtocolDashboard';
 import SpecializedIngredientSelector from './SpecializedIngredientSelector';
+import ClientAilmentsSelector from './ClientAilmentsSelector';
 
 import type {
   LongevityModeConfig,
@@ -56,7 +57,10 @@ import type {
   SpecializedProtocolConfig,
   SymptomLog,
   ProgressMeasurement,
+  ClientAilmentsConfig,
 } from '../types/specializedProtocols';
+
+import { getAilmentNutritionalFocus } from '../data/clientAilments';
 
 interface SpecializedProtocolsPanelProps {
   onConfigChange: (config: SpecializedProtocolConfig) => void;
@@ -118,6 +122,13 @@ const DEFAULT_PROGRESS: ProtocolProgress = {
   notes: [],
 };
 
+const DEFAULT_CLIENT_AILMENTS_CONFIG: ClientAilmentsConfig = {
+  selectedAilments: [],
+  nutritionalFocus: null,
+  includeInMealPlanning: false,
+  priorityLevel: 'medium',
+};
+
 const SpecializedProtocolsPanel: React.FC<SpecializedProtocolsPanelProps> = ({
   onConfigChange,
   initialConfig,
@@ -141,6 +152,10 @@ const SpecializedProtocolsPanel: React.FC<SpecializedProtocolsPanelProps> = ({
     initialConfig?.progress || DEFAULT_PROGRESS
   );
 
+  const [clientAilmentsConfig, setClientAilmentsConfig] = useState<ClientAilmentsConfig>(
+    initialConfig?.clientAilments || DEFAULT_CLIENT_AILMENTS_CONFIG
+  );
+
   // Modal states
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
   const [disclaimerProtocolType, setDisclaimerProtocolType] = useState<'longevity' | 'parasite-cleanse'>('longevity');
@@ -153,6 +168,7 @@ const SpecializedProtocolsPanel: React.FC<SpecializedProtocolsPanelProps> = ({
   // Generation states
   const [isGeneratingLongevity, setIsGeneratingLongevity] = useState(false);
   const [isGeneratingParasite, setIsGeneratingParasite] = useState(false);
+  const [isGeneratingAilments, setIsGeneratingAilments] = useState(false);
   const [generatedMealPlan, setGeneratedMealPlan] = useState<any>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
@@ -161,22 +177,28 @@ const SpecializedProtocolsPanel: React.FC<SpecializedProtocolsPanelProps> = ({
     const fullConfig: SpecializedProtocolConfig = {
       longevity: longevityConfig,
       parasiteCleanse: parasiteConfig,
+      clientAilments: clientAilmentsConfig,
       medical: medicalDisclaimer,
       progress: progress,
     };
     onConfigChange(fullConfig);
-  }, [longevityConfig, parasiteConfig, medicalDisclaimer, progress, onConfigChange]);
+  }, [longevityConfig, parasiteConfig, clientAilmentsConfig, medicalDisclaimer, progress, onConfigChange]);
 
   // Helper functions
   const getActiveProtocols = (): string[] => {
     const protocols = [];
     if (longevityConfig.isEnabled) protocols.push('Longevity Mode');
     if (parasiteConfig.isEnabled) protocols.push('Parasite Cleanse');
+    if (clientAilmentsConfig.includeInMealPlanning && clientAilmentsConfig.selectedAilments.length > 0) {
+      protocols.push(`Health Issues (${clientAilmentsConfig.selectedAilments.length})`);
+    }
     return protocols;
   };
 
   const hasActiveProtocols = (): boolean => {
-    return longevityConfig.isEnabled || parasiteConfig.isEnabled;
+    return longevityConfig.isEnabled || 
+           parasiteConfig.isEnabled || 
+           (clientAilmentsConfig.includeInMealPlanning && clientAilmentsConfig.selectedAilments.length > 0);
   };
 
   const requiresMedicalConsent = (): boolean => {
@@ -249,6 +271,31 @@ const SpecializedProtocolsPanel: React.FC<SpecializedProtocolsPanelProps> = ({
 
   const handleUpdateProgress = (progressUpdate: Partial<ProtocolProgress>) => {
     setProgress(prev => ({ ...prev, ...progressUpdate }));
+  };
+
+  const handleAilmentsSelectionChange = (ailmentIds: string[]) => {
+    const nutritionalFocus = ailmentIds.length > 0 ? getAilmentNutritionalFocus(ailmentIds) : null;
+    
+    setClientAilmentsConfig(prev => ({
+      ...prev,
+      selectedAilments: ailmentIds,
+      nutritionalFocus,
+      includeInMealPlanning: ailmentIds.length > 0
+    }));
+  };
+
+  const handleAilmentsPriorityChange = (priorityLevel: 'low' | 'medium' | 'high') => {
+    setClientAilmentsConfig(prev => ({
+      ...prev,
+      priorityLevel
+    }));
+  };
+
+  const toggleAilmentsInMealPlanning = (include: boolean) => {
+    setClientAilmentsConfig(prev => ({
+      ...prev,
+      includeInMealPlanning: include
+    }));
   };
 
   // Generate meal plan functions
@@ -368,6 +415,54 @@ const SpecializedProtocolsPanel: React.FC<SpecializedProtocolsPanelProps> = ({
     }
   };
 
+  const handleGenerateAilmentsBasedPlan = async () => {
+    if (!clientAilmentsConfig.includeInMealPlanning || clientAilmentsConfig.selectedAilments.length === 0) {
+      setGenerationError('Please select health issues and enable meal planning integration first.');
+      return;
+    }
+
+    setIsGeneratingAilments(true);
+    setGenerationError(null);
+    
+    try {
+      // Prepare request data based on current ailments configuration
+      const requestData = {
+        planName: `Health-Targeted Plan - ${new Date().toLocaleDateString()}`,
+        duration: 30, // Default 30 days
+        selectedAilments: clientAilmentsConfig.selectedAilments,
+        nutritionalFocus: clientAilmentsConfig.nutritionalFocus,
+        priorityLevel: clientAilmentsConfig.priorityLevel,
+        dailyCalorieTarget: 2000, // Could be made configurable
+        clientName: 'Current User'
+      };
+
+      const response = await fetch('/api/specialized/ailments-based/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate health-targeted meal plan');
+      }
+
+      const result = await response.json();
+      setGeneratedMealPlan({
+        type: 'ailments-based',
+        data: result
+      });
+      setActiveTab('dashboard'); // Switch to dashboard to show results
+    } catch (error) {
+      console.error('Error generating ailments-based plan:', error);
+      setGenerationError(error instanceof Error ? error.message : 'Unknown error occurred');
+    } finally {
+      setIsGeneratingAilments(false);
+    }
+  };
+
   // Render protocol status summary
   const renderProtocolSummary = () => {
     if (!hasActiveProtocols()) {
@@ -412,6 +507,23 @@ const SpecializedProtocolsPanel: React.FC<SpecializedProtocolsPanelProps> = ({
             </div>
             <Badge variant="secondary" className="bg-orange-100 text-orange-800">
               {parasiteConfig.currentPhase}
+            </Badge>
+          </div>
+        )}
+
+        {clientAilmentsConfig.includeInMealPlanning && clientAilmentsConfig.selectedAilments.length > 0 && (
+          <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-purple-600" />
+              <div>
+                <span className="font-medium text-purple-900">Health Issues Targeting Active</span>
+                <div className="text-xs text-purple-700">
+                  {clientAilmentsConfig.selectedAilments.length} conditions • {clientAilmentsConfig.priorityLevel} priority
+                </div>
+              </div>
+            </div>
+            <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+              {clientAilmentsConfig.nutritionalFocus?.mealPlanFocus.length || 0} focus areas
             </Badge>
           </div>
         )}
@@ -473,17 +585,21 @@ const SpecializedProtocolsPanel: React.FC<SpecializedProtocolsPanelProps> = ({
               <Separator />
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="protocols">
                     <Settings className="w-4 h-4 mr-1" />
                     Protocols
+                  </TabsTrigger>
+                  <TabsTrigger value="ailments">
+                    <Activity className="w-4 h-4 mr-1" />
+                    Health Issues
                   </TabsTrigger>
                   <TabsTrigger value="ingredients">
                     <Leaf className="w-4 h-4 mr-1" />
                     Ingredients
                   </TabsTrigger>
                   <TabsTrigger value="dashboard">
-                    <Activity className="w-4 h-4 mr-1" />
+                    <CheckCircle className="w-4 h-4 mr-1" />
                     Dashboard
                   </TabsTrigger>
                   <TabsTrigger value="info">
@@ -563,6 +679,82 @@ const SpecializedProtocolsPanel: React.FC<SpecializedProtocolsPanelProps> = ({
                       </Button>
                     </div>
                   )}
+                </TabsContent>
+
+                {/* Client Ailments Tab */}
+                <TabsContent value="ailments" className="space-y-6 mt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold">Client Health Issues</h3>
+                        <p className="text-sm text-gray-600">
+                          Select health conditions for targeted nutritional support in meal planning
+                        </p>
+                      </div>
+                      {clientAilmentsConfig.selectedAilments.length > 0 && (
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
+                            <label className="text-sm font-medium">Priority:</label>
+                            <select
+                              value={clientAilmentsConfig.priorityLevel}
+                              onChange={(e) => handleAilmentsPriorityChange(e.target.value as 'low' | 'medium' | 'high')}
+                              className="text-sm border border-gray-300 rounded px-2 py-1"
+                              disabled={disabled}
+                            >
+                              <option value="low">Low</option>
+                              <option value="medium">Medium</option>
+                              <option value="high">High</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="include-ailments"
+                              checked={clientAilmentsConfig.includeInMealPlanning}
+                              onChange={(e) => toggleAilmentsInMealPlanning(e.target.checked)}
+                              disabled={disabled}
+                            />
+                            <label htmlFor="include-ailments" className="text-sm font-medium">
+                              Include in Meal Planning
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <ClientAilmentsSelector
+                      selectedAilments={clientAilmentsConfig.selectedAilments}
+                      onSelectionChange={handleAilmentsSelectionChange}
+                      maxSelections={15}
+                      disabled={disabled}
+                      showNutritionalSummary={true}
+                      showCategoryCount={true}
+                    />
+
+                    {/* Ailments Generate Button */}
+                    {clientAilmentsConfig.includeInMealPlanning && clientAilmentsConfig.selectedAilments.length > 0 && (
+                      <div className="flex justify-center py-4">
+                        <Button
+                          onClick={() => handleGenerateAilmentsBasedPlan()}
+                          disabled={disabled || isGeneratingAilments}
+                          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg flex items-center gap-2"
+                          size="lg"
+                        >
+                          {isGeneratingAilments ? (
+                            <>
+                              <RefreshCw className="w-5 h-5 animate-spin" />
+                              Generating Health-Focused Plan...
+                            </>
+                          ) : (
+                            <>
+                              <Activity className="w-5 h-5" />
+                              Generate Health-Targeted Meal Plan
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
 
                 {/* Ingredients Tab */}

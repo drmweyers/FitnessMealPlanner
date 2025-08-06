@@ -278,13 +278,49 @@ export interface ProtocolMeal {
   antioxidantScore: number; // 1-10
 }
 
+// ===== CLIENT AILMENTS TYPES =====
+
+export type AilmentCategory = 
+  | 'digestive'
+  | 'energy_metabolism'
+  | 'inflammatory'
+  | 'mental_health'
+  | 'hormonal'
+  | 'cardiovascular'
+  | 'detox_cleansing'
+  | 'immune_system'
+  | 'skin_beauty';
+
+export interface ClientAilmentsConfig {
+  selectedAilments: string[];
+  nutritionalFocus: {
+    beneficialFoods: string[];
+    avoidFoods: string[];
+    keyNutrients: string[];
+    mealPlanFocus: string[];
+  } | null;
+  includeInMealPlanning: boolean;
+  priorityLevel: 'low' | 'medium' | 'high';
+}
+
+export interface ClientAilmentsSelectorProps {
+  selectedAilments: string[];
+  onSelectionChange: (ailmentIds: string[]) => void;
+  maxSelections?: number;
+  disabled?: boolean;
+  showNutritionalSummary?: boolean;
+  showCategoryCount?: boolean;
+  className?: string;
+}
+
 // ===== EXPORT ALL TYPES =====
 
-export type ProtocolType = 'longevity' | 'parasite-cleanse' | 'combined';
+export type ProtocolType = 'longevity' | 'parasite-cleanse' | 'combined' | 'ailments-based';
 
 export type SpecializedProtocolConfig = {
   longevity: LongevityModeConfig;
   parasiteCleanse: ParasiteCleanseConfig;
+  clientAilments: ClientAilmentsConfig;
   medical: MedicalDisclaimer;
   progress: ProtocolProgress;
 };

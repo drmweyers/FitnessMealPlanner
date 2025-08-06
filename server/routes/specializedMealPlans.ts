@@ -53,6 +53,21 @@ const parasitieCleansePlanSchema = z.object({
   clientName: z.string().optional()
 });
 
+const ailmentsBasedPlanSchema = z.object({
+  planName: z.string().min(1, "Plan name is required"),
+  duration: z.number().min(7).max(90).default(30),
+  selectedAilments: z.array(z.string()).min(1, "At least one ailment must be selected"),
+  nutritionalFocus: z.object({
+    beneficialFoods: z.array(z.string()),
+    avoidFoods: z.array(z.string()),
+    keyNutrients: z.array(z.string()),
+    mealPlanFocus: z.array(z.string())
+  }).optional(),
+  priorityLevel: z.enum(['low', 'medium', 'high']).default('medium'),
+  dailyCalorieTarget: z.number().min(1200).max(3500).default(2000),
+  clientName: z.string().optional()
+});
+
 // LONGEVITY MEAL PLAN ENDPOINTS
 
 /**
@@ -277,6 +292,108 @@ specializedMealPlanRouter.post('/parasite-cleanse/log-symptoms', requireAuth, as
     res.status(500).json({ error: 'Failed to log symptoms' });
   }
 });
+
+// AILMENTS-BASED MEAL PLAN ENDPOINTS
+
+/**
+ * POST /api/specialized/ailments-based/generate
+ * Generate a meal plan targeted at specific health ailments
+ */
+specializedMealPlanRouter.post('/ailments-based/generate', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Validate request body
+    const validatedData = ailmentsBasedPlanSchema.parse(req.body);
+    
+    // Generate ailments-targeted meal plan using existing longevity service with modifications
+    const longevityService = new LongevityMealPlanService();
+    
+    // Create modified parameters that incorporate ailments focus
+    const longevityParams = {
+      planName: validatedData.planName,
+      duration: validatedData.duration,
+      fastingProtocol: 'none', // No fasting for health issue targeting
+      experienceLevel: 'beginner',
+      primaryGoals: ['inflammation_reduction', 'metabolic_health', 'cellular_health'], // Health-focused goals
+      culturalPreferences: [],
+      currentAge: 35, // Could be made configurable
+      dailyCalorieTarget: validatedData.dailyCalorieTarget,
+      clientName: validatedData.clientName,
+      // Add ailments-specific data
+      selectedAilments: validatedData.selectedAilments,
+      nutritionalFocus: validatedData.nutritionalFocus,
+      priorityLevel: validatedData.priorityLevel
+    };
+    
+    // Generate the meal plan with health focus
+    const mealPlan = await longevityService.generateLongevityPlan(longevityParams, userId);
+    
+    // Calculate nutrition with health focus
+    const nutrition = longevityService.calculateLongevityNutrition(mealPlan);
+    
+    // Generate health-specific recommendations
+    const healthRecommendations = generateHealthRecommendations(validatedData);
+
+    res.json({
+      mealPlan,
+      nutrition,
+      healthRecommendations,
+      ailmentsTargeted: validatedData.selectedAilments,
+      nutritionalFocus: validatedData.nutritionalFocus,
+      safetyDisclaimer: {
+        title: "Health-Targeted Meal Plan Disclaimer",
+        content: "This meal plan is designed to provide nutritional support for the selected health conditions. It is not intended to diagnose, treat, cure, or prevent any disease. Always consult with healthcare professionals for medical advice and treatment. Individual results may vary.",
+        acknowledgmentRequired: true
+      },
+      success: true,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error generating ailments-based meal plan:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    res.status(500).json({ 
+      error: 'Failed to generate health-targeted meal plan', 
+      details: errorMessage 
+    });
+  }
+});
+
+/**
+ * Generate health-specific recommendations based on selected ailments
+ */
+function generateHealthRecommendations(data: any) {
+  const { selectedAilments, nutritionalFocus, priorityLevel } = data;
+  
+  return {
+    dietaryGuidelines: {
+      emphasize: nutritionalFocus?.beneficialFoods?.slice(0, 10) || [],
+      minimize: nutritionalFocus?.avoidFoods?.slice(0, 10) || [],
+      keyNutrients: nutritionalFocus?.keyNutrients?.slice(0, 8) || []
+    },
+    mealTiming: {
+      frequency: priorityLevel === 'high' ? '5-6 small meals' : '3 meals + 1-2 snacks',
+      hydration: 'Aim for 8-10 glasses of water daily',
+      supplements: 'Consider targeted supplements based on nutritional gaps'
+    },
+    lifestyleFactors: [
+      'Regular physical activity appropriate for your conditions',
+      'Stress management techniques',
+      'Adequate sleep (7-9 hours)',
+      'Regular monitoring of symptoms and progress'
+    ],
+    progressTracking: [
+      'Keep a food and symptom diary',
+      'Monitor energy levels daily',
+      'Track sleep quality',
+      'Note any improvements in targeted health areas'
+    ]
+  };
+}
 
 // SHARED ENDPOINTS
 
