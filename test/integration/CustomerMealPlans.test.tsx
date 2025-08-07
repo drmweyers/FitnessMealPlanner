@@ -34,6 +34,7 @@ vi.mock('../../client/src/components/ui/dialog', () => ({
   DialogContent: ({ children }: any) => <div>{children}</div>,
   DialogHeader: ({ children }: any) => <div>{children}</div>,
   DialogTitle: ({ children }: any) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: any) => <p>{children}</p>,
 }));
 
 vi.mock('../../client/src/components/RecipeDetailModal', () => ({
