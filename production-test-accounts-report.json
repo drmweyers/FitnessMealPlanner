@@ -1,0 +1,61 @@
+{
+  "timestamp": "2025-08-07T03:04:46.149Z",
+  "productionUrl": "https://evofitmeals.com",
+  "results": {
+    "created": [
+      {
+        "success": true,
+        "account": {
+          "email": "trainer.test@evofitmeals.com",
+          "password": "TestTrainer123!",
+          "role": "trainer",
+          "name": "Test Trainer Account"
+        },
+        "response": {
+          "status": "success",
+          "data": {
+            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI2NTg5YmE5LWVlYTYtNGRiMy1hYzMwLTc3NTIwNmU0YzljYiIsImVtYWlsIjoidHJhaW5lci50ZXN0QGV2b2ZpdG1lYWxzLmNvbSIsInJvbGUiOiJ0cmFpbmVyIiwiaWF0IjoxNzU0NTM1ODc2LCJleHAiOjE3NTQ1MzY3NzYsImF1ZCI6IkZpdG5lc3NNZWFsUGxhbm5lci1DbGllbnQiLCJpc3MiOiJGaXRuZXNzTWVhbFBsYW5uZXIifQ.E0YZZlagRhkxlWhCpJ6LYxnZaAuGGHSirdEu7UiYv2Q",
+            "user": {
+              "id": "26589ba9-eea6-4db3-ac30-775206e4c9cb",
+              "email": "trainer.test@evofitmeals.com",
+              "role": "trainer",
+              "profilePicture": null
+            }
+          }
+        }
+      },
+      {
+        "success": true,
+        "account": {
+          "email": "customer.test@evofitmeals.com",
+          "password": "TestCustomer123!",
+          "role": "customer",
+          "name": "Test Customer Account"
+        },
+        "response": {
+          "status": "success",
+          "data": {
+            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjAyNjdkMDY2LTZmNzYtNDJjMS04MTg5LTViOWNkNmY3MDgwOSIsImVtYWlsIjoiY3VzdG9tZXIudGVzdEBldm9maXRtZWFscy5jb20iLCJyb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NTQ1MzU4NzksImV4cCI6MTc1NDUzNjc3OSwiYXVkIjoiRml0bmVzc01lYWxQbGFubmVyLUNsaWVudCIsImlzcyI6IkZpdG5lc3NNZWFsUGxhbm5lciJ9.F4nOrDi7YHRS7_8AMhQULo74L9FQtyqKtxCmZHGw-nw",
+            "user": {
+              "id": "0267d066-6f76-42c1-8189-5b9cd6f70809",
+              "email": "customer.test@evofitmeals.com",
+              "role": "customer",
+              "profilePicture": null
+            }
+          }
+        }
+      }
+    ],
+    "existing": [],
+    "failed": [],
+    "verified": []
+  },
+  "summary": {
+    "totalAccounts": 2,
+    "created": 2,
+    "existing": 0,
+    "failed": 0,
+    "verified": 0,
+    "overallSuccess": true
+  }
+}
