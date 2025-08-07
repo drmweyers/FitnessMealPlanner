@@ -15,6 +15,7 @@ import RecipeAssignment from "../components/RecipeAssignment";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import CustomerManagement from "../components/CustomerManagement";
 import TrainerMealPlans from "../components/TrainerMealPlans";
+import TrainerHealthProtocols from "../components/TrainerHealthProtocols";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Trainer() {
@@ -33,6 +34,7 @@ export default function Trainer() {
     if (location === '/meal-plan-generator') return 'meal-plan';
     if (location === '/trainer/customers') return 'customers';
     if (location === '/trainer/meal-plans') return 'saved-plans';
+    if (location === '/trainer/health-protocols') return 'health-protocols';
     return 'recipes';
   };
 
@@ -46,6 +48,9 @@ export default function Trainer() {
         break;
       case 'saved-plans':
         navigate('/trainer/meal-plans');
+        break;
+      case 'health-protocols':
+        navigate('/trainer/health-protocols');
         break;
       default:
         navigate('/trainer');
@@ -83,7 +88,7 @@ export default function Trainer() {
       </div>
 
       <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 sm:mb-8 h-auto p-1 gap-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6 sm:mb-8 h-auto p-1 gap-1">
           <TabsTrigger 
             value="recipes" 
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
@@ -115,6 +120,14 @@ export default function Trainer() {
             <i className="fas fa-users text-sm sm:text-base"></i>
             <span className="hidden lg:inline">Customers</span>
             <span className="lg:hidden">Customers</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="health-protocols"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+          >
+            <i className="fas fa-dna text-sm sm:text-base"></i>
+            <span className="hidden lg:inline">Health Protocols</span>
+            <span className="lg:hidden">Protocols</span>
           </TabsTrigger>
         </TabsList>
 
@@ -257,6 +270,21 @@ export default function Trainer() {
 
         <TabsContent value="saved-plans">
           <TrainerMealPlans />
+        </TabsContent>
+
+        <TabsContent value="health-protocols">
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                <i className="fas fa-dna text-white text-2xl"></i>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Specialized Health Protocols</h2>
+                <p className="text-slate-600">Create longevity and detox protocols for your clients</p>
+              </div>
+            </div>
+            <TrainerHealthProtocols />
+          </div>
         </TabsContent>
       </Tabs>
 

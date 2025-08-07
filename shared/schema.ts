@@ -711,3 +711,89 @@ export const uploadProgressPhotoSchema = z.object({
 export type CreateMeasurement = z.infer<typeof createMeasurementSchema>;
 export type CreateGoal = z.infer<typeof createGoalSchema>;
 export type UploadProgressPhoto = z.infer<typeof uploadProgressPhotoSchema>;
+
+/**
+ * Trainer Health Protocols Table
+ * 
+ * Stores specialized health protocols created by trainers.
+ * These include longevity and parasite cleanse protocols.
+ */
+export const trainerHealthProtocols = pgTable("trainer_health_protocols", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  trainerId: uuid("trainer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 50 }).notNull(), // 'longevity' or 'parasite_cleanse'
+  duration: integer("duration").notNull(), // Duration in days
+  intensity: varchar("intensity", { length: 20 }).notNull(), // 'gentle', 'moderate', 'intensive'
+  config: jsonb("config").notNull(), // Protocol configuration (LongevityModeConfig or ParasiteCleanseConfig)
+  isTemplate: boolean("is_template").default(false), // Can be used as template
+  tags: jsonb("tags").$type<string[]>().default([]), // For categorization
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  trainerIdIdx: index("trainer_health_protocols_trainer_id_idx").on(table.trainerId),
+  typeIdx: index("trainer_health_protocols_type_idx").on(table.type),
+}));
+
+/**
+ * Protocol Assignments Table
+ * 
+ * Tracks which health protocols have been assigned to which customers.
+ * Allows tracking progress and status of protocol implementations.
+ */
+export const protocolAssignments = pgTable("protocol_assignments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  protocolId: uuid("protocol_id")
+    .references(() => trainerHealthProtocols.id, { onDelete: "cascade" })
+    .notNull(),
+  customerId: uuid("customer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  trainerId: uuid("trainer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  status: varchar("status", { length: 20 }).default("active"), // 'active', 'completed', 'paused', 'cancelled'
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"), // Calculated based on protocol duration
+  completedDate: timestamp("completed_date"),
+  notes: text("notes"), // Assignment-specific notes
+  progressData: jsonb("progress_data").default({}), // Track progress metrics
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  protocolIdx: index("protocol_assignments_protocol_id_idx").on(table.protocolId),
+  customerIdx: index("protocol_assignments_customer_id_idx").on(table.customerId),
+  trainerIdx: index("protocol_assignments_trainer_id_idx").on(table.trainerId),
+  statusIdx: index("protocol_assignments_status_idx").on(table.status),
+}));
+
+// Type exports for health protocols
+export type InsertTrainerHealthProtocol = typeof trainerHealthProtocols.$inferInsert;
+export type TrainerHealthProtocol = typeof trainerHealthProtocols.$inferSelect;
+
+export type InsertProtocolAssignment = typeof protocolAssignments.$inferInsert;
+export type ProtocolAssignment = typeof protocolAssignments.$inferSelect;
+
+// Health Protocol validation schemas
+export const createHealthProtocolSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().optional(),
+  type: z.enum(['longevity', 'parasite_cleanse']),
+  duration: z.number().min(1).max(365), // 1 day to 1 year
+  intensity: z.enum(['gentle', 'moderate', 'intensive']),
+  config: z.record(z.any()), // Protocol-specific configuration
+  tags: z.array(z.string()).optional(),
+});
+
+export const assignProtocolSchema = z.object({
+  protocolId: z.string().uuid(),
+  clientIds: z.array(z.string().uuid()),
+  notes: z.string().optional(),
+  startDate: z.string().datetime().optional(),
+});
+
+export type CreateHealthProtocol = z.infer<typeof createHealthProtocolSchema>;
+export type AssignProtocol = z.infer<typeof assignProtocolSchema>;

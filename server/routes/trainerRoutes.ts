@@ -1,8 +1,21 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { storage } from '../storage';
-import { eq, sql, and, desc } from 'drizzle-orm';
-import { personalizedRecipes, personalizedMealPlans, users, progressMeasurements, customerGoals, type MealPlan } from '@shared/schema';
+import { eq, sql, and, desc, inArray } from 'drizzle-orm';
+import { 
+  personalizedRecipes, 
+  personalizedMealPlans, 
+  users, 
+  progressMeasurements, 
+  customerGoals, 
+  trainerHealthProtocols,
+  protocolAssignments,
+  createHealthProtocolSchema,
+  assignProtocolSchema,
+  type MealPlan,
+  type TrainerHealthProtocol,
+  type ProtocolAssignment 
+} from '@shared/schema';
 import { db } from '../db';
 import { z } from 'zod';
 
@@ -618,6 +631,164 @@ trainerRouter.delete('/meal-plans/:planId/assign/:customerId', requireAuth, requ
     res.status(500).json({ 
       status: 'error',
       message: 'Failed to unassign meal plan',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// === Health Protocol Management Routes ===
+
+// Get all health protocols created by this trainer
+trainerRouter.get('/health-protocols', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    
+    const protocols = await db.select()
+      .from(trainerHealthProtocols)
+      .where(eq(trainerHealthProtocols.trainerId, trainerId))
+      .orderBy(desc(trainerHealthProtocols.createdAt));
+
+    // Get assignment counts for each protocol
+    const protocolsWithAssignments = await Promise.all(
+      protocols.map(async (protocol) => {
+        const assignments = await db.select()
+          .from(protocolAssignments)
+          .where(eq(protocolAssignments.protocolId, protocol.id));
+        
+        return {
+          ...protocol,
+          assignedClients: assignments.map(assignment => ({
+            id: assignment.customerId,
+            assignedAt: assignment.assignedAt,
+            status: assignment.status,
+          })),
+        };
+      })
+    );
+
+    res.json(protocolsWithAssignments);
+  } catch (error) {
+    console.error('Failed to fetch trainer health protocols:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch health protocols',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Create a new health protocol
+trainerRouter.post('/health-protocols', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const protocolData = createHealthProtocolSchema.parse(req.body);
+
+    const [newProtocol] = await db.insert(trainerHealthProtocols)
+      .values({
+        trainerId,
+        name: protocolData.name,
+        description: protocolData.description,
+        type: protocolData.type,
+        duration: protocolData.duration,
+        intensity: protocolData.intensity,
+        config: protocolData.config,
+        tags: protocolData.tags || [],
+      })
+      .returning();
+
+    res.status(201).json({
+      protocol: newProtocol,
+      message: 'Health protocol created successfully'
+    });
+  } catch (error) {
+    console.error('Failed to create health protocol:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid request data',
+        details: error.errors
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to create health protocol',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Assign protocol to clients
+trainerRouter.post('/health-protocols/assign', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const assignmentData = assignProtocolSchema.parse(req.body);
+
+    // Verify the protocol belongs to this trainer
+    const protocol = await db.select()
+      .from(trainerHealthProtocols)
+      .where(
+        and(
+          eq(trainerHealthProtocols.id, assignmentData.protocolId),
+          eq(trainerHealthProtocols.trainerId, trainerId)
+        )
+      )
+      .limit(1);
+
+    if (protocol.length === 0) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Protocol not found or not authorized',
+        code: 'NOT_FOUND'
+      });
+    }
+
+    // Verify all clients exist and are customers
+    const clients = await db.select()
+      .from(users)
+      .where(
+        and(
+          inArray(users.id, assignmentData.clientIds),
+          eq(users.role, 'customer')
+        )
+      );
+
+    if (clients.length !== assignmentData.clientIds.length) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'One or more clients not found',
+        code: 'INVALID_CLIENTS'
+      });
+    }
+
+    // Create assignments for each client
+    const assignments = assignmentData.clientIds.map(clientId => ({
+      protocolId: assignmentData.protocolId,
+      customerId: clientId,
+      trainerId,
+      startDate: assignmentData.startDate ? new Date(assignmentData.startDate) : new Date(),
+      notes: assignmentData.notes || null,
+    }));
+
+    const createdAssignments = await db.insert(protocolAssignments)
+      .values(assignments)
+      .returning();
+
+    res.status(201).json({
+      assignments: createdAssignments,
+      message: `Protocol assigned to ${assignments.length} client(s) successfully`
+    });
+  } catch (error) {
+    console.error('Failed to assign protocol:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid request data',
+        details: error.errors
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to assign protocol',
       code: 'SERVER_ERROR'
     });
   }
