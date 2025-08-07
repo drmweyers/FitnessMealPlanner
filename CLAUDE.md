@@ -162,3 +162,12 @@ When user requests deployment to production:
 - Last update: Manual deployment process documented and tested
 - Current focus: Streamlined deployment workflow for proxy-restricted environments
 - Next priorities: Performance optimization, additional features
+
+## Best Practices & Advanced Strategies
+- **Medina Strategy Reference**: See `Claude_Strategy.md` for comprehensive Claude Code best practices
+- **Key Techniques for This Project**:
+  - Use Serena MCP for semantic code search in this large codebase
+  - Implement PRP framework for new feature development
+  - Leverage sub-agents for specialized tasks (UI, backend, testing)
+  - Use parallel development with git worktrees for A/B testing features
+  - Apply token optimization strategies to reduce costs

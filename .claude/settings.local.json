@@ -53,7 +53,17 @@
       "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5432/fitmeal_test npm run db:push)",
       "Bash(mkdir:*)",
       "Bash(npx playwright test:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npm run generate:test-data)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npm run enhance:test-data)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npm run update:test-accounts)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal psql -c \"SELECT email, username, role FROM users WHERE email LIKE ''%test%'';\")",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal tsx scripts/check-accounts.js)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npx tsx scripts/check-accounts.js)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npx tsx scripts/enhance-customer-profile.js)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal psql -c \"SELECT email, username, role, firstName, lastName FROM users WHERE email LIKE ''%test%'';\")",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npx tsx scripts/verify-accounts.js)",
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npx tsx scripts/fix-customer-data.js)"
     ],
     "deny": []
   }
