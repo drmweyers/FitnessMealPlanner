@@ -14,7 +14,7 @@
  * - Comprehensive nutrition tracking and analysis
  */
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -233,7 +233,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         
         if (context.goals && context.goals.length > 0) {
           description += '\nActive Goals:\n';
-          context.goals.forEach(goal => {
+          context.goals.forEach((goal: any) => {
             description += `• ${goal.goalName} (${goal.progressPercentage}% complete)\n`;
           });
         }
@@ -271,6 +271,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         days: Number(result.days) || 7,
         mealsPerDay: Number(result.mealsPerDay) || 3,
         clientName: result.clientName || "",
+        generateMealPrep: false,
         // Initialize optional filter fields
         mealType: undefined,
         dietaryTag: undefined,
@@ -911,7 +912,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
 
       mealPrep.prepInstructions.slice(0, 4).forEach((step, index) => {
         if (yPosition > pageHeight - 30) {
-          addFooter(pdf.internal.getNumberOfPages());
+          addFooter(pdf.internal.pages.length);
           pdf.addPage();
           addHeader("MEAL PREP GUIDE", "Continued");
           yPosition = 60;
@@ -954,7 +955,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         // Show top storage tips
         mealPrep.storageInstructions.slice(0, 3).forEach((storage, index) => {
           if (yPosition > pageHeight - 20) {
-            addFooter(pdf.internal.getNumberOfPages());
+            addFooter(pdf.internal.pages.length);
             pdf.addPage();
             addHeader("MEAL PREP GUIDE", "Storage Continued");
             yPosition = 60;
@@ -969,8 +970,8 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         });
       }
 
-      if (!pdf.internal.getNumberOfPages() || yPosition < pageHeight - 50) {
-        addFooter(pdf.internal.getNumberOfPages());
+      if (!pdf.internal.pages.length || yPosition < pageHeight - 50) {
+        addFooter(pdf.internal.pages.length);
       }
     } else {
       addFooter(2);

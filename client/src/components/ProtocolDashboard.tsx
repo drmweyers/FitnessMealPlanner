@@ -410,7 +410,7 @@ const ProtocolDashboard: React.FC<ProtocolDashboardProps> = ({
                               <FormItem>
                                 <FormLabel>Symptoms</FormLabel>
                                 <div className="grid grid-cols-2 gap-2">
-                                  {COMMON_SYMPTOMS[symptomForm.watch('protocolType')]?.map((symptom) => (
+                                  {(COMMON_SYMPTOMS[symptomForm.watch('protocolType') as keyof typeof COMMON_SYMPTOMS] || []).map((symptom) => (
                                     <FormField
                                       key={symptom}
                                       control={symptomForm.control}
@@ -420,11 +420,11 @@ const ProtocolDashboard: React.FC<ProtocolDashboardProps> = ({
                                           <FormControl>
                                             <input
                                               type="checkbox"
-                                              checked={field.value?.includes(symptom)}
+                                              checked={(field.value as string[])?.includes(symptom)}
                                               onChange={(e) => {
                                                 const updatedSymptoms = e.target.checked
-                                                  ? [...(field.value || []), symptom]
-                                                  : (field.value || []).filter(s => s !== symptom);
+                                                  ? [...((field.value as string[]) || []), symptom]
+                                                  : ((field.value as string[]) || []).filter(s => s !== symptom);
                                                 field.onChange(updatedSymptoms);
                                               }}
                                               className="rounded border-gray-300"

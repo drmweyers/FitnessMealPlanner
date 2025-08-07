@@ -120,7 +120,7 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
 
   // Get customer health metrics summary
   const getHealthMetrics = () => {
-    if (!latestMeasurement) return null;
+    if (!latestMeasurement) return undefined;
     
     return {
       weight: latestMeasurement.weightLbs ? `${latestMeasurement.weightLbs} lbs` : 

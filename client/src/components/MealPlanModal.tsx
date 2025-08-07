@@ -1,9 +1,9 @@
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import type { CustomerMealPlan } from "@shared/schema";
 import { Calendar, Users, Utensils, Clock, Zap, Target, Activity } from "lucide-react";
-import { useState } from "react";
 import RecipeDetailModal from "./RecipeDetailModal";
 import { useSafeMealPlan } from '../hooks/useSafeMealPlan';
 

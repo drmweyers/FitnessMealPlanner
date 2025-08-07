@@ -88,7 +88,7 @@ export async function apiRequest(
     if (customHeaders) {
       Object.assign(headers, customHeaders);
       // Remove Content-Type if it's multipart/form-data to let browser handle it
-      if (customHeaders['Content-Type'] === 'multipart/form-data') {
+      if ((customHeaders as any)['Content-Type'] === 'multipart/form-data') {
         delete headers['Content-Type'];
       }
     }

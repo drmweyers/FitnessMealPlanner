@@ -366,7 +366,7 @@ const SpecializedIngredientSelector: React.FC<SpecializedIngredientSelectorProps
 
   const IngredientCard: React.FC<{ ingredient: SpecializedIngredient }> = ({ ingredient }) => {
     const isSelected = selectedIngredients.includes(ingredient.id);
-    const isMaxReached = maxSelections && selectedIngredients.length >= maxSelections && !isSelected;
+    const isMaxReached = Boolean(maxSelections && selectedIngredients.length >= maxSelections && !isSelected);
     
     return (
       <Card 
