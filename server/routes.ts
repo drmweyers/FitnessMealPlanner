@@ -145,6 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mealsPerDay: Number(mealsPerDay),
         clientName: req.body.clientName || "",
         description: req.body.description || "",
+        generateMealPrep: req.body.generateMealPrep || false,
         // Optional filters
         mealType: req.body.mealType || undefined,
         dietaryTag: req.body.dietaryTag || undefined,

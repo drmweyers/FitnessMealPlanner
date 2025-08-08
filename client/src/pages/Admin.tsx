@@ -15,6 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import RecipeGenerationModal from "../components/RecipeGenerationModal";
 import CacheDebugger from "../components/CacheDebugger";
+import SpecializedProtocolsPanel from "../components/SpecializedProtocolsPanel";
+import TestSpecializedPanel from "../components/TestSpecializedPanel";
+import MinimalSpecializedPanel from "../components/MinimalSpecializedPanel";
 
 export default function Admin() {
   const { toast } = useToast();
@@ -317,7 +320,7 @@ export default function Admin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6 sm:mb-8">
-        <TabsList className="grid w-full grid-cols-3 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-4 h-auto p-1">
           <TabsTrigger value="recipes" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
             <i className="fas fa-book-open text-sm sm:text-base"></i>
             <span className="hidden sm:inline">Browse Recipes</span>
@@ -327,6 +330,11 @@ export default function Admin() {
             <i className="fas fa-utensils text-sm sm:text-base"></i>
             <span className="hidden sm:inline">Meal Plan Generator</span>
             <span className="sm:hidden">Plans</span>
+          </TabsTrigger>
+          <TabsTrigger value="specialized" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+            <i className="fas fa-dna text-sm sm:text-base"></i>
+            <span className="hidden sm:inline">Health Protocols</span>
+            <span className="sm:hidden">Health</span>
           </TabsTrigger>
           <TabsTrigger value="admin" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
             <i className="fas fa-cog text-sm sm:text-base"></i>
@@ -402,6 +410,42 @@ export default function Admin() {
 
         <TabsContent value="meal-plan">
           <MealPlanGenerator />
+        </TabsContent>
+
+        <TabsContent value="specialized">
+          <div className="space-y-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                <i className="fas fa-dna text-white text-2xl"></i>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Specialized Health Protocols</h2>
+                <p className="text-slate-600">Advanced meal planning for longevity and detoxification</p>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <i className="fas fa-exclamation-triangle text-amber-600 text-lg mt-1"></i>
+                <div>
+                  <h3 className="font-semibold text-amber-800">Medical Disclaimer</h3>
+                  <p className="text-amber-700 text-sm">
+                    These specialized protocols are for educational purposes only and require medical consultation. 
+                    Always consult healthcare providers before starting any health protocol.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <SpecializedProtocolsPanel 
+              onConfigChange={(config) => {
+                console.log('Protocol config updated:', config);
+              }}
+              showDashboard={true}
+            />
+            {/* <MinimalSpecializedPanel />
+            <TestSpecializedPanel /> */}
+          </div>
         </TabsContent>
 
         <TabsContent value="admin">

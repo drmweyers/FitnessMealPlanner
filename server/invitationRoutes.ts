@@ -153,11 +153,14 @@ invitationRouter.post('/send', requireAuth, requireRole('trainer'), async (req: 
       console.warn(`Failed to send invitation email to ${customerEmail}: ${emailResult.error}`);
     }
 
-    res.status(201).json({
-      status: 'success',
+    // Return appropriate status based on email success
+    const statusCode = emailResult.success ? 201 : 207; // 207 = Multi-Status (partial success)
+    
+    res.status(statusCode).json({
+      status: emailResult.success ? 'success' : 'warning',
       message: emailResult.success 
         ? 'Invitation created and email sent successfully'
-        : 'Invitation created but email could not be sent',
+        : `Invitation created but email could not be sent: ${emailResult.error || 'Email service unavailable'}`,
       data: responseData
     });
 

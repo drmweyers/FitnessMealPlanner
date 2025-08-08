@@ -1,24 +1,12 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithUser, mockUsers, mockApiRequest } from '../test-utils';
 import TrainerProfile from '../../client/src/pages/TrainerProfile';
 
-// Mock the auth context
-const mockUser = {
-  id: 'trainer-1',
-  email: 'trainer@example.com',
-  role: 'trainer' as const,
-  profilePicture: null,
-};
-
-const mockLogout = vi.fn();
-
-vi.mock('../../client/src/contexts/AuthContext', () => ({
-  useAuth: () => ({
-    user: mockUser,
-    logout: mockLogout,
-  }),
+// Mock API request
+vi.mock('../../client/src/lib/queryClient', () => ({
+  apiRequest: mockApiRequest,
 }));
 
 // Mock the toast hook
@@ -69,23 +57,70 @@ vi.mock('../../client/src/components/ProfileImageUpload', () => ({
   ProfileAvatar: () => <div data-testid="profile-avatar" />,
 }));
 
-const createTestQueryClient = () => new QueryClient({
-  defaultOptions: {
-    queries: { 
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
-    mutations: { retry: false },
-  },
-});
+const renderTrainerProfile = () => {
+  // Mock API responses that TrainerProfile component needs
+  mockApiRequest.mockImplementation((method: string, url: string) => {
+    if (url === '/api/trainer/profile/stats') {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          totalClients: 5,
+          totalMealPlansCreated: 15,
+          totalRecipesAssigned: 45,
+          activeMealPlans: 8,
+          clientSatisfactionRate: 92,
+        }),
+      });
+    }
+    
+    if (url === '/api/profile') {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          id: 'trainer-1',
+          email: 'trainer@example.com',
+          role: 'trainer',
+          createdAt: '2024-01-01',
+          specializations: ['weight-loss', 'strength-training'],
+          bio: 'Professional fitness trainer',
+        }),
+      });
+    }
+    
+    if (url === '/api/trainer/customers') {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          customers: [
+            { id: '1', name: 'John Doe', email: 'john@example.com' },
+            { id: '2', name: 'Jane Smith', email: 'jane@example.com' }
+          ]
+        }),
+      });
+    }
+    
+    // Default empty response for other API calls
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
+  });
 
-const renderWithProviders = (component: React.ReactElement) => {
-  const queryClient = createTestQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
-  );
+  // Mock fetch for invitations endpoint
+  global.fetch = vi.fn().mockImplementation((url) => {
+    if (url === '/api/invitations') {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+    }
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
+  });
+  
+  return renderWithUser(<TrainerProfile />, mockUsers.trainer);
 };
 
 describe('TrainerProfile Component - Text Removal Tests', () => {
@@ -93,8 +128,11 @@ describe('TrainerProfile Component - Text Removal Tests', () => {
     vi.clearAllMocks();
   });
 
-  it('should display only the "Trainer Profile" title without subtitle', () => {
-    renderWithProviders(<TrainerProfile />);
+  it('should display only the "Trainer Profile" title without subtitle', async () => {
+    renderTrainerProfile();
+    
+    // Wait for loading to complete
+    await screen.findByText(/total clients/i, {}, { timeout: 3000 });
     
     // Should show the main title
     expect(screen.getByRole('heading', { name: /trainer profile/i })).toBeInTheDocument();
@@ -104,14 +142,14 @@ describe('TrainerProfile Component - Text Removal Tests', () => {
   });
 
   it('should not display the "Personal Trainer" badge', () => {
-    renderWithProviders(<TrainerProfile />);
+    renderTrainerProfile();
     
     // Should NOT show the removed badge text
     expect(screen.queryByText(/personal trainer/i)).not.toBeInTheDocument();
   });
 
   it('should not display any Profile Image upload section text', () => {
-    renderWithProviders(<TrainerProfile />);
+    renderTrainerProfile();
     
     // Should NOT show profile image related text
     expect(screen.queryByText(/profile image/i)).not.toBeInTheDocument();
@@ -122,14 +160,14 @@ describe('TrainerProfile Component - Text Removal Tests', () => {
   });
 
   it('should not import or render ProfileImageUpload component', () => {
-    renderWithProviders(<TrainerProfile />);
+    renderTrainerProfile();
     
     // Should NOT show the ProfileImageUpload component
     expect(screen.queryByTestId('profile-image-upload')).not.toBeInTheDocument();
   });
 
   it('should still show essential trainer profile content', () => {
-    renderWithProviders(<TrainerProfile />);
+    renderTrainerProfile();
     
     // Should still show important sections
     expect(screen.getByText(/account details/i)).toBeInTheDocument();
@@ -138,7 +176,7 @@ describe('TrainerProfile Component - Text Removal Tests', () => {
   });
 
   it('should maintain correct header structure without removed elements', () => {
-    renderWithProviders(<TrainerProfile />);
+    renderTrainerProfile();
     
     // Check that header exists with dumbbell icon but without subtitle
     expect(screen.getByTestId('dumbbell-icon')).toBeInTheDocument();
@@ -152,7 +190,7 @@ describe('TrainerProfile Component - Text Removal Tests', () => {
 
 describe('TrainerProfile Component - Content Verification', () => {
   it('should show trainer-specific statistics', () => {
-    renderWithProviders(<TrainerProfile />);
+    renderTrainerProfile();
     
     // Should show trainer-related statistics sections
     expect(screen.getByText(/total clients/i)).toBeInTheDocument();
@@ -162,7 +200,7 @@ describe('TrainerProfile Component - Content Verification', () => {
   });
 
   it('should show quick action buttons', () => {
-    renderWithProviders(<TrainerProfile />);
+    renderTrainerProfile();
     
     // Should show trainer action buttons
     expect(screen.getByText(/browse recipes/i)).toBeInTheDocument();
@@ -173,7 +211,7 @@ describe('TrainerProfile Component - Content Verification', () => {
   });
 
   it('should show PDF export functionality', () => {
-    renderWithProviders(<TrainerProfile />);
+    renderTrainerProfile();
     
     // Should show PDF export section
     expect(screen.getByText(/recipe card export/i)).toBeInTheDocument();

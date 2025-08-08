@@ -21,6 +21,7 @@ import customerRouter from './routes/customerRoutes';
 import pdfRouter from './routes/pdf';
 import progressRouter from './routes/progressRoutes';
 import profileRouter from './routes/profileRoutes';
+import { specializedMealPlanRouter } from './routes/specializedMealPlans';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
@@ -120,13 +121,14 @@ app.get('/api/health', (req, res) => {
 // Public routes (no authentication required)
 app.use('/api/auth', authRouter);
 
-// Protected routes with authentication middleware
-app.use('/api/invitations', requireAuth, invitationRouter);
+// Invitations routes (mixed auth requirements - handled internally)
+app.use('/api/invitations', invitationRouter);
 app.use('/api/recipes', requireAuth, recipeRouter);
 app.use('/api/admin', requireAdmin, adminRouter);
 app.use('/api/trainer', requireTrainerOrAdmin, trainerRouter);
 app.use('/api/customer', requireRole('customer'), customerRouter);
 app.use('/api/meal-plan', requireAuth, mealPlanRouter);
+app.use('/api/specialized', requireAuth, specializedMealPlanRouter);
 app.use('/api/pdf', requireAuth, pdfRouter);
 app.use('/api/progress', requireAuth, progressRouter);
 app.use('/api/profile', requireAuth, profileRouter);

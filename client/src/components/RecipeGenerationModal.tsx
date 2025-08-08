@@ -6,7 +6,7 @@
  * instead of random recipe generation.
  */
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "../hooks/use-toast";
@@ -138,20 +138,25 @@ export default function RecipeGenerationModal({
       queryClient.invalidateQueries({ queryKey: ["/api/admin/recipes"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
+      console.error("Recipe generation error:", error);
+      
+      if (isUnauthorizedError(error) || error.message.includes("401") || error.message.includes("jwt expired") || error.message.includes("Authentication required")) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Session Expired",
+          description: "Your session has expired. Please log in again to continue.",
           variant: "destructive",
         });
+        // Clear expired tokens
+        localStorage.removeItem('token');
+        // Redirect to login
         setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
+          window.location.href = "/login";
+        }, 1000);
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to start recipe generation",
+        title: "Recipe Generation Failed",
+        description: error.message || "Failed to start recipe generation. Please try again.",
         variant: "destructive",
       });
     },
@@ -159,6 +164,8 @@ export default function RecipeGenerationModal({
 
   // Handle context-based generation
   const handleContextGeneration = () => {
+    if (!checkAuthentication()) return;
+    
     const context: RecipeGenerationContext = {
       count: recipeCount,
       naturalLanguagePrompt: naturalLanguageInput.trim() || undefined,
@@ -188,8 +195,26 @@ export default function RecipeGenerationModal({
     generateRecipesFromContext.mutate(context);
   };
 
+  // Check if user has valid authentication
+  const checkAuthentication = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to generate recipes.",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1000);
+      return false;
+    }
+    return true;
+  };
+
   // Handle quick generation with basic count
   const handleQuickGeneration = () => {
+    if (!checkAuthentication()) return;
     generateRecipesFromContext.mutate({ count: recipeCount });
   };
 
