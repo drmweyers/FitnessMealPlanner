@@ -239,12 +239,13 @@ export default function TrainerHealthProtocols() {
             </CardContent>
           </Card>
 
-          {/* Specialized Protocols Panel with Save Callback */}
+          {/* Specialized Protocols Panel */}
           <div className="relative">
             <SpecializedProtocolsPanel 
-              onSaveProtocol={handleSaveProtocol}
-              showSaveButton={true}
-              trainerMode={true}
+              onConfigChange={(config) => {
+                console.log('Protocol config updated:', config);
+              }}
+              showDashboard={true}
             />
           </div>
         </TabsContent>
