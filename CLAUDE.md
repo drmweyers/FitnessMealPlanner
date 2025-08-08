@@ -5,6 +5,18 @@
 **Description:** A comprehensive meal planning application for fitness professionals and their clients  
 **Tech Stack:** React, TypeScript, Node.js, Express, PostgreSQL, Drizzle ORM, Vite, Docker
 
+## 🌟 CRITICAL: PRIMARY DEVELOPMENT BRANCH
+**Always work from the `qa-ready` branch - it is the most up-to-date branch with all features.**
+
+### Branch Hierarchy:
+1. **qa-ready** - 🥇 PRIMARY DEVELOPMENT/TESTING BRANCH (use this!)
+   - Contains: Health Protocol feature (fully working)
+   - Contains: All latest QA updates and bug fixes
+   - Status: Most current and complete codebase
+
+2. **qa-ready-clean** - 🥈 Secondary (behind qa-ready)
+3. **main** - 🥉 Production (significantly behind, merge qa-ready when ready for prod)
+
 ## CRITICAL: Development Environment Setup
 
 ### ALWAYS Start Development with Docker
@@ -50,10 +62,30 @@
 ## Development Workflow
 
 ### Before Starting Any Development Task
-1. **ALWAYS** start Docker development environment first
-2. Check git status: `git status`
-3. Pull latest changes: `git pull origin main`
-4. Create feature branch: `git checkout -b feature/<description>`
+1. **ALWAYS** ensure you're on qa-ready branch: `git checkout qa-ready`
+2. **ALWAYS** start Docker development environment first
+3. Check git status: `git status`
+4. Pull latest changes: `git pull origin qa-ready`
+5. Create feature branch: `git checkout -b feature/<description>` (from qa-ready)
+
+### Branch Management Commands
+```bash
+# Always start from qa-ready
+git checkout qa-ready
+git pull origin qa-ready
+
+# For feature work
+git checkout -b feature/your-feature-name
+# ... do work ...
+git add .
+git commit -m "your changes"
+git push origin feature/your-feature-name
+
+# Merge back to qa-ready when ready
+git checkout qa-ready
+git merge feature/your-feature-name
+git push origin qa-ready
+```
 
 ### During Development
 1. Use TodoWrite tool to track all tasks
@@ -69,7 +101,7 @@
 
 ## Current Features Status
 
-### Completed Features
+### Completed Features (qa-ready branch)
 - ✅ User authentication (Admin, Trainer, Customer roles)
 - ✅ Recipe management system
 - ✅ Meal plan generation
@@ -77,6 +109,17 @@
 - ✅ PDF export (both client-side and server-side)
 - ✅ Responsive design for all pages
 - ✅ Customer invitation system
+- ✅ **Health Protocol feature** (Longevity & Parasite Cleanse protocols for trainers)
+- ✅ Profile image upload system for all user roles
+- ✅ Customer progress tracking (measurements, photos, goals)
+- ✅ Trainer-customer meal plan assignment workflow
+
+### Health Protocol Feature (New!)
+- **Access**: Available at `/trainer/health-protocols` for trainers
+- **Features**: Create longevity and parasite cleanse protocols
+- **Components**: `TrainerHealthProtocols.tsx`, `SpecializedProtocolsPanel.tsx`
+- **Database**: `trainerHealthProtocols` and `protocolAssignments` tables
+- **Status**: ✅ Fully functional in qa-ready branch
 
 ### PDF Export Implementation
 - **Client-side**: Using jsPDF in `client/src/utils/pdfExport.ts`
