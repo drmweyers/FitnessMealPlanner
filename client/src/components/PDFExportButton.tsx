@@ -5,7 +5,7 @@
  * Includes options for customizing the export format and handles loading states.
  */
 
-import React, { useState } from 'react';
+import { memo, useState, useCallback, useMemo } from 'react';
 import { Button } from './ui/button';
 import { 
   Dialog, 
@@ -41,7 +41,7 @@ interface PDFExportButtonProps {
   children?: React.ReactNode;
 }
 
-export default function PDFExportButton({
+function PDFExportButton({
   mealPlan,
   mealPlans,
   customerName,
@@ -58,10 +58,25 @@ export default function PDFExportButton({
   const [cardSize, setCardSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [includeNutrition, setIncludeNutrition] = useState(true);
 
-  const isMultiple = mealPlans && mealPlans.length > 0;
-  const isSingle = mealPlan && !isMultiple;
+  // Memoized computed values
+  const { isMultiple, isSingle, exportSummary } = useMemo(() => {
+    const isMultiple = mealPlans && mealPlans.length > 0;
+    const isSingle = mealPlan && !isMultiple;
+    
+    let exportSummary = { plans: 0, recipes: 0 };
+    if (isSingle && mealPlan?.meals) {
+      exportSummary = { plans: 1, recipes: mealPlan.meals.length };
+    } else if (isMultiple && mealPlans) {
+      exportSummary = {
+        plans: mealPlans.length,
+        recipes: mealPlans.reduce((sum, plan) => sum + (plan.meals?.length || 0), 0)
+      };
+    }
+    
+    return { isMultiple, isSingle, exportSummary };
+  }, [mealPlan, mealPlans]);
 
-  const handleQuickExport = async () => {
+  const handleQuickExport = useCallback(async () => {
     if (!isSingle && !isMultiple) {
       toast({
         title: 'No Data',
@@ -106,9 +121,9 @@ export default function PDFExportButton({
     } finally {
       setIsExporting(false);
     }
-  };
+  }, [isSingle, isMultiple, mealPlan, mealPlans, customerName, toast]);
 
-  const handleCustomExport = async () => {
+  const handleCustomExport = useCallback(async () => {
     if (!isSingle && !isMultiple) return;
 
     setIsExporting(true);
@@ -143,7 +158,7 @@ export default function PDFExportButton({
     } finally {
       setIsExporting(false);
     }
-  };
+  }, [isSingle, isMultiple, mealPlan, mealPlans, customerName, cardSize, includeNutrition, toast, setShowOptions]);
 
   if (!isSingle && !isMultiple) {
     return null;
@@ -207,8 +222,8 @@ export default function PDFExportButton({
                 )}
                 {isMultiple && (
                   <>
-                    <p>Plans: {mealPlans!.length} meal plans</p>
-                    <p>Total Recipes: {mealPlans!.reduce((sum, plan) => sum + (plan.meals?.length || 0), 0)} recipe cards</p>
+                    <p>Plans: {exportSummary.plans} meal plans</p>
+                    <p>Total Recipes: {exportSummary.recipes} recipe cards</p>
                     {customerName && <p>Customer: {customerName}</p>}
                   </>
                 )}
@@ -291,10 +306,13 @@ export default function PDFExportButton({
   );
 }
 
+// Export memoized component
+export default memo(PDFExportButton);
+
 /**
  * Simplified export button for inline use
  */
-export function SimplePDFExportButton({
+const SimplePDFExportButton = memo(function SimplePDFExportButton({
   mealPlan,
   className = '',
   size = 'sm'
@@ -306,7 +324,7 @@ export function SimplePDFExportButton({
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = async () => {
+  const handleExport = useCallback(async () => {
     setIsExporting(true);
     
     try {
@@ -329,7 +347,7 @@ export function SimplePDFExportButton({
     } finally {
       setIsExporting(false);
     }
-  };
+  }, [mealPlan, toast]);
 
   return (
     <Button
@@ -346,4 +364,6 @@ export function SimplePDFExportButton({
       )}
     </Button>
   );
-}
+});
+
+export { SimplePDFExportButton };

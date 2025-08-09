@@ -123,13 +123,6 @@ export interface IStorage {
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
   
-  // Specialized Protocol Methods
-  getLongevityProtocolTemplates(): Promise<any[]>;
-  getAntiParasiticIngredients(): Promise<any[]>;
-  getUserHealthPreferences(userId: string): Promise<any>;
-  updateUserHealthPreferences(userId: string, preferences: any): Promise<void>;
-  getActiveProtocols(userId: string): Promise<any[]>;
-  logProtocolSymptoms(userId: string, logData: any): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -696,84 +689,6 @@ export class DatabaseStorage implements IStorage {
   // Transaction support
   async transaction<T>(action: (trx: any) => Promise<T>): Promise<T> {
     return db.transaction(action);
-  }
-  
-  // Specialized Protocol Methods Implementation
-  async getLongevityProtocolTemplates(): Promise<any[]> {
-    // Mock data for longevity protocol templates
-    return [
-      {
-        id: 'longevity-beginner',
-        name: 'Beginner Longevity Protocol',
-        fastingType: '16:8',
-        duration: 30,
-        antioxidantFocus: ['berries', 'leafyGreens']
-      },
-      {
-        id: 'longevity-advanced',
-        name: 'Advanced Longevity Protocol', 
-        fastingType: '20:4',
-        duration: 60,
-        antioxidantFocus: ['all']
-      }
-    ];
-  }
-
-  async getAntiParasiticIngredients(): Promise<any[]> {
-    // Mock data for anti-parasitic ingredients
-    return [
-      {
-        id: 'garlic',
-        name: 'Garlic',
-        category: 'antiParasitic',
-        properties: ['antimicrobial', 'immune-supporting']
-      },
-      {
-        id: 'ginger',
-        name: 'Ginger',
-        category: 'antiParasitic',
-        properties: ['digestive', 'anti-inflammatory']
-      },
-      {
-        id: 'turmeric',
-        name: 'Turmeric',
-        category: 'antiParasitic',
-        properties: ['anti-inflammatory', 'liver-supporting']
-      },
-      {
-        id: 'pumpkin-seeds',
-        name: 'Pumpkin Seeds',
-        category: 'antiParasitic',
-        properties: ['zinc-rich', 'traditionally-used']
-      }
-    ];
-  }
-
-  async getUserHealthPreferences(userId: string): Promise<any> {
-    // Mock implementation - in a real app, this would fetch from database
-    return {
-      longevityGoals: [],
-      fastingProtocol: '16:8',
-      cleanseExperience: 'beginner',
-      culturalPreferences: [],
-      medicalConditions: [],
-      pregnancyBreastfeeding: false
-    };
-  }
-
-  async updateUserHealthPreferences(userId: string, preferences: any): Promise<void> {
-    // Mock implementation - in a real app, this would update database
-    console.log(`Updating health preferences for user ${userId}:`, preferences);
-  }
-
-  async getActiveProtocols(userId: string): Promise<any[]> {
-    // Mock implementation - in a real app, this would fetch active protocols from database
-    return [];
-  }
-
-  async logProtocolSymptoms(userId: string, logData: any): Promise<void> {
-    // Mock implementation - in a real app, this would log symptoms to database
-    console.log(`Logging symptoms for user ${userId}:`, logData);
   }
 }
 

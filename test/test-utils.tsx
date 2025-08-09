@@ -281,6 +281,63 @@ export const testData = {
     role: 'trainer' as const,
     profilePicture: null,
   },
+  mealPlan: {
+    id: 'test-meal-plan-1',
+    name: 'Test Meal Plan',
+    days: 7,
+    mealsPerDay: 3,
+    targetCalories: 2000,
+    targetProtein: 150,
+    targetCarbs: 200,
+    targetFat: 67,
+    meals: [],
+    createdBy: 'test-trainer-1',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  mealPlanGeneration: {
+    days: 7,
+    mealsPerDay: 3,
+    targetCalories: 2000,
+    targetProtein: 150,
+    targetCarbs: 200,
+    targetFat: 67,
+    dietaryTags: ['vegetarian'],
+    mealTypes: ['breakfast', 'lunch', 'dinner'],
+    activityLevel: 'moderately_active',
+    fitnessGoal: 'weight_loss',
+  },
+};
+
+// Enhanced recipe factory
+export const createMockRecipe = (overrides?: any) => ({
+  ...testData.recipe,
+  ...overrides,
+});
+
+// Enhanced meal plan factory  
+export const createMockMealPlan = (overrides?: any) => ({
+  ...testData.mealPlan,
+  ...overrides,
+});
+
+// Generate test recipes with variety
+export const generateMockRecipes = (count: number) => {
+  const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+  const dietaryTags = ['vegetarian', 'vegan', 'keto', 'paleo', 'gluten-free'];
+  const cuisines = ['American', 'Italian', 'Asian', 'Mediterranean'];
+
+  return Array.from({ length: count }, (_, i) => createMockRecipe({
+    id: `recipe-${i + 1}`,
+    name: `Test Recipe ${i + 1}`,
+    mealTypes: [mealTypes[i % mealTypes.length]],
+    dietaryTags: [dietaryTags[i % dietaryTags.length]],
+    cuisineType: cuisines[i % cuisines.length],
+    caloriesKcal: 200 + (i * 50),
+    proteinGrams: (10 + (i * 2)).toString(),
+    prepTimeMinutes: 10 + (i * 5),
+    cookTimeMinutes: 15 + (i * 5),
+  }));
 };
 
 // Cleanup helper

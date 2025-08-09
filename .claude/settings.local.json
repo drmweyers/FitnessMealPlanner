@@ -63,7 +63,11 @@
       "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npx tsx scripts/enhance-customer-profile.js)",
       "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal psql -c \"SELECT email, username, role, firstName, lastName FROM users WHERE email LIKE ''%test%'';\")",
       "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npx tsx scripts/verify-accounts.js)",
-      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npx tsx scripts/fix-customer-data.js)"
+      "Bash(DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal npx tsx scripts/fix-customer-data.js)",
+      "Bash(npx webpack-bundle-analyzer:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(move performance-test.js performance-test.cjs)"
     ],
     "deny": []
   }

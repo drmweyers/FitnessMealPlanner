@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import type { CustomerMealPlan } from "@shared/schema";
@@ -10,7 +10,7 @@ interface MealPlanCardProps {
   onClick?: () => void;
 }
 
-export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
+function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
   const {
     isValid,
     validMeals,
@@ -21,6 +21,26 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
     mealTypes,
     hasMeals
   } = useSafeMealPlan(mealPlan);
+  
+  // Memoized date formatting
+  const formattedAssignedDate = useMemo(() => {
+    return mealPlan.assignedAt ? new Date(mealPlan.assignedAt).toLocaleDateString() : null;
+  }, [mealPlan.assignedAt]);
+
+  // Memoized calculations
+  const mealStats = useMemo(() => {
+    return {
+      mealsPerDay: Math.round(validMeals.length / days),
+      totalMeals: validMeals.length,
+      displayedMealTypes: mealTypes.slice(0, 3),
+      extraMealTypesCount: Math.max(0, mealTypes.length - 3)
+    };
+  }, [validMeals.length, days, mealTypes]);
+
+  // Optimized click handler
+  const handleClick = useCallback(() => {
+    onClick?.();
+  }, [onClick]);
   
   // Early return with error display if invalid meal plan
   if (!isValid) {
@@ -52,7 +72,7 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
           </div>
         </div>
 
-        <CardContent className="p-2 xs:p-3 sm:p-4" onClick={onClick}>
+        <CardContent className="p-2 xs:p-3 sm:p-4" onClick={handleClick}>
           <div className="space-y-1 xs:space-y-2 sm:space-y-3">
             {/* Plan Name */}
             <h3 className="font-semibold text-slate-900 line-clamp-2 leading-tight text-xs xs:text-sm sm:text-base">
@@ -70,14 +90,14 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
             {/* Meal Types */}
             {mealTypes.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {mealTypes.slice(0, 3).map((type: string) => (
+                {mealStats.displayedMealTypes.map((type: string) => (
                   <Badge key={type} variant="secondary" className="text-xs px-2 py-1">
                     {type}
                   </Badge>
                 ))}
-                {mealTypes.length > 3 && (
+                {mealStats.extraMealTypesCount > 0 && (
                   <Badge variant="outline" className="text-xs px-2 py-1">
-                    +{mealTypes.length - 3}
+                    +{mealStats.extraMealTypesCount}
                   </Badge>
                 )}
               </div>
@@ -112,11 +132,11 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
             <div className="flex items-center justify-between text-xs text-slate-500 pt-1 xs:pt-2 border-t border-slate-100">
               <div className="flex items-center gap-1">
                 <Utensils className="h-3 w-3" />
-                <span>{Math.round(validMeals.length / days)} meals/day</span>
+                <span>{mealStats.mealsPerDay} meals/day</span>
               </div>
               <div className="flex items-center gap-1">
                 <Users className="h-3 w-3" />
-                <span>{validMeals.length} total meals</span>
+                <span>{mealStats.totalMeals} total meals</span>
               </div>
             </div>
 
@@ -131,10 +151,10 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
                 </div>
               )}
               
-              {mealPlan.assignedAt && (
+              {formattedAssignedDate && (
                 <div className="flex items-center gap-1 text-xs text-slate-500">
                   <Calendar className="h-3 w-3" />
-                  <span>Assigned {new Date(mealPlan.assignedAt).toLocaleDateString()}</span>
+                  <span>Assigned {formattedAssignedDate}</span>
                 </div>
               )}
 
@@ -164,3 +184,6 @@ export default function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
     );
   }
 }
+
+// Export memoized component
+export default memo(MealPlanCard);

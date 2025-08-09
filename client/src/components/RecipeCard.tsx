@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import { Card, CardContent } from "./ui/card";
 import type { Recipe } from "@shared/schema";
 
@@ -7,35 +7,55 @@ interface RecipeCardProps {
   onClick: () => void;
 }
 
-export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
+// Memoized color mapping functions outside component to avoid recreation
+const MEAL_TYPE_COLORS = {
+  breakfast: "bg-orange-100 text-orange-700",
+  lunch: "bg-yellow-100 text-yellow-700", 
+  dinner: "bg-primary/10 text-primary",
+  snack: "bg-pink-100 text-pink-700",
+} as const;
+
+const DIETARY_TAG_COLORS = {
+  vegetarian: "bg-green-100 text-green-700",
+  vegan: "bg-blue-100 text-blue-700",
+  keto: "bg-green-100 text-green-700",
+  paleo: "bg-orange-100 text-orange-700",
+  "gluten-free": "bg-purple-100 text-purple-700",
+  "low-carb": "bg-red-100 text-red-700",
+  "high-protein": "bg-purple-100 text-purple-700",
+} as const;
+
+const getMealTypeColor = (mealType: string) => {
+  return MEAL_TYPE_COLORS[mealType as keyof typeof MEAL_TYPE_COLORS] || "bg-slate-100 text-slate-700";
+};
+
+const getDietaryTagColor = (tag: string) => {
+  return DIETARY_TAG_COLORS[tag as keyof typeof DIETARY_TAG_COLORS] || "bg-slate-100 text-slate-700";
+};
+
+function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
-  
-  const getMealTypeColor = (mealType: string) => {
-    const colors = {
-      breakfast: "bg-orange-100 text-orange-700",
-      lunch: "bg-yellow-100 text-yellow-700", 
-      dinner: "bg-primary/10 text-primary",
-      snack: "bg-pink-100 text-pink-700",
-    };
-    return colors[mealType as keyof typeof colors] || "bg-slate-100 text-slate-700";
-  };
 
-  const getDietaryTagColor = (tag: string) => {
-    const colors = {
-      vegetarian: "bg-green-100 text-green-700",
-      vegan: "bg-blue-100 text-blue-700",
-      keto: "bg-green-100 text-green-700",
-      paleo: "bg-orange-100 text-orange-700",
-      "gluten-free": "bg-purple-100 text-purple-700",
-      "low-carb": "bg-red-100 text-red-700",
-      "high-protein": "bg-purple-100 text-purple-700",
-    };
-    return colors[tag as keyof typeof colors] || "bg-slate-100 text-slate-700";
-  };
+  // Memoized callbacks to prevent unnecessary re-renders
+  const handleImageLoad = useCallback(() => {
+    setImageLoading(false);
+  }, []);
 
-  const primaryMealType = recipe.mealTypes?.[0] || 'dinner';
-  const primaryDietaryTag = recipe.dietaryTags?.[0];
+  const handleImageError = useCallback(() => {
+    setImageError(true);
+    setImageLoading(false);
+  }, []);
+
+  // Memoized computed values
+  const { primaryMealType, primaryDietaryTag, totalTime, formattedProtein, formattedCarbs, formattedFat } = useMemo(() => ({
+    primaryMealType: recipe.mealTypes?.[0] || 'dinner',
+    primaryDietaryTag: recipe.dietaryTags?.[0],
+    totalTime: recipe.prepTimeMinutes + recipe.cookTimeMinutes,
+    formattedProtein: Number(recipe.proteinGrams).toFixed(0),
+    formattedCarbs: Number(recipe.carbsGrams).toFixed(0),
+    formattedFat: Number(recipe.fatGrams).toFixed(0),
+  }), [recipe.mealTypes, recipe.dietaryTags, recipe.prepTimeMinutes, recipe.cookTimeMinutes, recipe.proteinGrams, recipe.carbsGrams, recipe.fatGrams]);
 
   return (
     <Card 
@@ -55,11 +75,8 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
             src={recipe.imageUrl ?? '/api/placeholder/400/250'} 
             alt={recipe.name}
             className="w-full h-36 sm:h-40 lg:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-            onLoad={() => setImageLoading(false)}
-            onError={() => {
-              setImageError(true);
-              setImageLoading(false);
-            }}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
             style={{ display: imageLoading ? 'none' : 'block' }}
           />
         ) : (
@@ -94,7 +111,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
         <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4">
           <div className="flex items-center space-x-1">
             <i className="fas fa-clock text-slate-400 text-xs"></i>
-            <span className="truncate">{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span>
+            <span className="truncate">{totalTime} min</span>
           </div>
           <div className="flex items-center space-x-1">
             <i className="fas fa-fire text-slate-400 text-xs"></i>
@@ -118,7 +135,7 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
             </div>
             <div className="text-center bg-red-50 rounded-lg p-2 sm:p-3">
               <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">
-                {Number(recipe.proteinGrams).toFixed(0)}g
+                {formattedProtein}g
               </div>
               <div className="text-xs text-slate-500">Protein</div>
             </div>
@@ -128,13 +145,13 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
           <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
             <div className="text-center bg-blue-50 rounded-lg p-2 sm:p-3">
               <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">
-                {Number(recipe.carbsGrams).toFixed(0)}g
+                {formattedCarbs}g
               </div>
               <div className="text-xs text-slate-500">Carbs</div>
             </div>
             <div className="text-center bg-green-50 rounded-lg p-2 sm:p-3">
               <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
-                {Number(recipe.fatGrams).toFixed(0)}g
+                {formattedFat}g
               </div>
               <div className="text-xs text-slate-500">Fat</div>
             </div>
@@ -144,3 +161,6 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
     </Card>
   );
 }
+
+// Export memoized component with shallow comparison
+export default memo(RecipeCard);

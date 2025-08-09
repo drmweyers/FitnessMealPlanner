@@ -21,7 +21,6 @@ import customerRouter from './routes/customerRoutes';
 import pdfRouter from './routes/pdf';
 import progressRouter from './routes/progressRoutes';
 import profileRouter from './routes/profileRoutes';
-import { specializedMealPlanRouter } from './routes/specializedMealPlans';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
@@ -45,7 +44,15 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+
+app.use(express.json({ 
+  limit: '500kb' // Standard payload limit
+}));
+app.use(express.urlencoded({ 
+  limit: '1mb', 
+  extended: true 
+}));
+
 app.use(cookieParser(process.env.COOKIE_SECRET || 'your-secret-key'));
 
 // Session configuration for OAuth
@@ -83,6 +90,17 @@ app.get('/health', (req, res) => {
 // Global error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Error:', err);
+
+  // Handle payload too large errors
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      status: 'error',
+      code: 'PAYLOAD_TOO_LARGE',
+      message: 'Request data is too large. Please reduce the size of your request.',
+      limit: err.limit,
+      received: err.length
+    });
+  }
 
   // Handle JWT and auth errors
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
@@ -128,7 +146,6 @@ app.use('/api/admin', requireAdmin, adminRouter);
 app.use('/api/trainer', requireTrainerOrAdmin, trainerRouter);
 app.use('/api/customer', requireRole('customer'), customerRouter);
 app.use('/api/meal-plan', requireAuth, mealPlanRouter);
-app.use('/api/specialized', requireAuth, specializedMealPlanRouter);
 app.use('/api/pdf', requireAuth, pdfRouter);
 app.use('/api/progress', requireAuth, progressRouter);
 app.use('/api/profile', requireAuth, profileRouter);

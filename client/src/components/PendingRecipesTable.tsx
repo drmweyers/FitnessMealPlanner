@@ -20,6 +20,13 @@ export default function PendingRecipesTable() {
 
   const { data: pendingData, isLoading, refetch } = useQuery({
     queryKey: ['/api/admin/recipes', filters],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/recipes', {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch recipes');
+      return response.json();
+    },
     enabled: true,
     staleTime: 0, // Always consider data stale
     refetchOnMount: true,

@@ -113,12 +113,6 @@ export default function Router() {
           return <Trainer />;
         }} />
         
-        <Route path="/trainer/health-protocols" component={() => {
-          if (user.role !== 'trainer') {
-            return <Redirect to="/" />;
-          }
-          return <Trainer />;
-        }} />
         
         <Route path="/meal-plan-generator" component={() => {
           if (user.role !== 'trainer' && user.role !== 'admin') {
