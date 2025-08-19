@@ -1,11 +1,17 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  plugins: [react()],
+  esbuild: {
+    jsx: 'automatic',
+  },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./test/setup.ts'],
+    css: true,
     include: ['test/unit/**/*.test.{ts,tsx}', 'test/integration/**/*.test.{ts,tsx}'],
     exclude: ['node_modules', 'dist', '.git', 'test/e2e/**'],
     typecheck: {

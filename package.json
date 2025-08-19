@@ -94,6 +94,7 @@
     "@types/multer": "^2.0.0",
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/sharp": "^0.31.1",
+    "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -143,7 +144,7 @@
     "vite-express": "^0.17.0",
     "vitest": "^3.2.4",
     "wouter": "^3.3.5",
-    "ws": "^8.18.0",
+    "ws": "^8.18.3",
     "zod": "^3.24.2",
     "zod-validation-error": "^3.4.0"
   },

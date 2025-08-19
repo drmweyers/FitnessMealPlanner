@@ -10,6 +10,7 @@ import { useAuth } from "../contexts/AuthContext";
 import SearchFilters from "../components/SearchFilters";
 import RecipeCard from "../components/RecipeCard";
 import RecipeModal from "../components/RecipeModal";
+import RecipeGenerationModal from "../components/RecipeGenerationModal";
 import PendingRecipesTable from "../components/PendingRecipesTable";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import type { Recipe, RecipeFilter } from "@shared/schema";
@@ -272,6 +273,14 @@ export default function Admin() {
         <RecipeModal
           recipe={selectedRecipe}
           onClose={() => setSelectedRecipe(null)}
+        />
+      )}
+
+      {/* Recipe Generation Modal */}
+      {showRecipeGenerationModal && (
+        <RecipeGenerationModal
+          isOpen={showRecipeGenerationModal}
+          onClose={() => setShowRecipeGenerationModal(false)}
         />
       )}
 

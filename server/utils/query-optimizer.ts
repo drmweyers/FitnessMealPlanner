@@ -127,7 +127,8 @@ export class QueryOptimizer {
     const now = Date.now();
     let cleared = 0;
     
-    for (const [key, cached] of this.cache.entries()) {
+    const entries = Array.from(this.cache.entries());
+    for (const [key, cached] of entries) {
       if (now > cached.expires) {
         this.cache.delete(key);
         cleared++;
