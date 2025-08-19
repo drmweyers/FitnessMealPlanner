@@ -10,7 +10,7 @@ const runComprehensiveTest = async () => {
   const testResults = {
     applicationLoading: false,
     authentication: false,
-    healthProtocolsAccess: false,
+    healthProtocolsRemoval: false,
     componentRendering: false,
     apiEndpoints: false,
     javascriptErrors: [],
@@ -79,31 +79,27 @@ const runComprehensiveTest = async () => {
       }
     }
     
-    console.log('🔍 Test 3: Health Protocols Access');
+    console.log('🔍 Test 3: Health Protocols Removal Verification');
     
-    // Look for Health Protocols tab
-    const healthProtocolsTab = await page.waitForSelector('text="Health Protocols"', { timeout: 5000 }).catch(() => null);
+    // Verify Health Protocols tab has been removed
+    const healthProtocolsTab = await page.waitForSelector('text="Health Protocols"', { timeout: 2000 }).catch(() => null);
     
-    if (healthProtocolsTab) {
-      console.log('✅ Health Protocols tab found');
-      await healthProtocolsTab.click();
-      await page.waitForTimeout(2000);
-      
-      // Take screenshot after clicking
-      await page.screenshot({ path: 'test/screenshots/health-protocols-active.png', fullPage: true });
-      testResults.screenshots.push('health-protocols-active.png');
-      
-      testResults.healthProtocolsAccess = true;
+    if (!healthProtocolsTab) {
+      console.log('✅ Health Protocols tab successfully removed');
+      testResults.healthProtocolsRemoval = true; // True means successfully removed
+    } else {
+      console.log('❌ Health Protocols tab still exists - should be removed');
+      testResults.healthProtocolsRemoval = false;
     }
     
     console.log('🔍 Test 4: Component Rendering Verification');
     
     // Check for various component indicators
     const componentSelectors = [
-      'text="🧬 Health Protocols"',
-      'text="Longevity (Anti-Aging)"',
-      'text="Parasite Cleanse"',
-      'text="Specialized Health Protocols"',
+      'text="Recipes"',
+      'text="Generate Plans"',
+      'text="Saved Plans"',
+      'text="Customers"',
       '[data-testid]', // Any data-testid attributes
       '.lucide', // Lucide icons
       'svg' // Any SVG icons
@@ -165,7 +161,7 @@ runComprehensiveTest().then(results => {
   console.log('\n📊 TEST RESULTS SUMMARY:');
   console.log(`✅ Application Loading: ${results.applicationLoading ? 'PASSED' : 'FAILED'}`);
   console.log(`✅ Authentication Flow: ${results.authentication ? 'PASSED' : 'FAILED'}`);
-  console.log(`✅ Health Protocols Access: ${results.healthProtocolsAccess ? 'PASSED' : 'FAILED'}`);
+  console.log(`✅ Health Protocols Removal: ${results.healthProtocolsRemoval ? 'PASSED' : 'FAILED'}`);
   console.log(`✅ Component Rendering: ${results.componentRendering ? 'PASSED' : 'FAILED'}`);
   console.log(`✅ API Endpoints: ${results.apiEndpoints ? 'PASSED' : 'FAILED'}`);
   
@@ -192,7 +188,7 @@ runComprehensiveTest().then(results => {
   const passedTests = [
     results.applicationLoading,
     results.authentication,
-    results.healthProtocolsAccess,
+    results.healthProtocolsRemoval,
     results.componentRendering,
     results.apiEndpoints
   ].filter(Boolean).length;
@@ -206,7 +202,7 @@ runComprehensiveTest().then(results => {
     console.log('🎉 VERIFICATION COMPLETE: Application is functioning correctly!');
     console.log('✅ All critical functionality verified');
     console.log('✅ No blocking JavaScript errors detected');
-    console.log('✅ User workflow (Admin → Health Protocols) working');
+    console.log('✅ Health Protocol feature successfully removed from interface');
     process.exit(0);
   } else if (successRate >= 60) {
     console.log('⚠️  VERIFICATION PARTIAL: Most functionality working with minor issues');

@@ -67,8 +67,19 @@
       "Bash(npx webpack-bundle-analyzer:*)",
       "Bash(npm ls:*)",
       "Bash(npm uninstall:*)",
-      "Bash(move performance-test.js performance-test.cjs)"
+      "Bash(move performance-test.js performance-test.cjs)",
+      "WebFetch(domain:localhost)",
+      "Bash(npx ts-node:*)",
+      "Bash(npx playwright:*)",
+      "Bash(npx vitest:*)",
+      "Bash(doctl:*)"
     ],
     "deny": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "github",
+    "context7",
+    "digitalocean"
+  ],
+  "enableAllProjectMcpServers": true
 }

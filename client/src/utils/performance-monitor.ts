@@ -5,6 +5,8 @@
  * including component render tracking, API call timing, and bundle loading metrics.
  */
 
+import React from 'react';
+
 interface PerformanceMetric {
   name: string;
   value: number;

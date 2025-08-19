@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 
-test.describe('Health Protocol Integration Validation', () => {
+test.describe('Health Protocol Removal Validation', () => {
   let page: Page;
   
   test.beforeAll(async ({ browser }) => {
@@ -27,8 +27,8 @@ test.describe('Health Protocol Integration Validation', () => {
     await page?.close();
   });
 
-  test('Complete Health Protocol Flow Validation', async () => {
-    console.log('🚀 Starting comprehensive health protocol validation...');
+  test('Verify Health Protocol Feature Removal', async () => {
+    console.log('🚀 Starting health protocol removal validation...');
     
     // Step 1: Navigate to application
     console.log('📍 Step 1: Navigating to application...');

@@ -37,12 +37,12 @@ test('Console Error Debug', async ({ page }) => {
   consoleMessages.length = 0;
   pageErrors.length = 0;
   
-  // Navigate to health protocols URL directly
+  // Navigate to health protocols URL directly (should redirect or show 404/error)
   await page.goto(`${baseURL}/trainer/health-protocols`);
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(3000); // Wait for any async errors
   
-  console.log('=== HEALTH PROTOCOLS PAGE ===');
+  console.log('=== HEALTH PROTOCOLS PAGE (SHOULD BE REMOVED) ===');
   console.log('Console messages:', consoleMessages);
   console.log('Page errors:', pageErrors);
   
@@ -50,10 +50,10 @@ test('Console Error Debug', async ({ page }) => {
   const bodyText = await page.locator('body').textContent();
   console.log('Page content (first 500 chars):', bodyText?.substring(0, 500));
   
-  // Check if specific elements exist
+  // Check if specific elements exist (these should be FALSE after removal)
   const hasHealthProtocolHeader = bodyText?.includes('Specialized Health Protocols');
   const hasCreateProtocols = bodyText?.includes('Create Protocols');
   
-  console.log('Has Health Protocol header:', hasHealthProtocolHeader);
-  console.log('Has Create Protocols text:', hasCreateProtocols);
+  console.log('Has Health Protocol header:', hasHealthProtocolHeader, '(should be FALSE)');
+  console.log('Has Create Protocols text:', hasCreateProtocols, '(should be FALSE)');
 });
