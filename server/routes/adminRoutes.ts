@@ -74,6 +74,75 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
   }
 });
 
+// Admin recipe generation with custom parameters (matches frontend expectations)
+adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
+  try {
+    const { 
+      count, 
+      mealType,
+      dietaryTag,
+      maxPrepTime,
+      maxCalories,
+      minCalories,
+      minProtein,
+      maxProtein,
+      minCarbs,
+      maxCarbs,
+      minFat,
+      maxFat,
+      focusIngredient,
+      difficulty
+    } = req.body;
+    
+    // Validate required count parameter
+    if (!count || count < 1 || count > 50) {
+      return res.status(400).json({ 
+        message: "Count is required and must be between 1 and 50" 
+      });
+    }
+    
+    // Map frontend parameters to backend format
+    const generationOptions = {
+      count,
+      mealTypes: mealType ? [mealType] : undefined,
+      dietaryRestrictions: dietaryTag ? [dietaryTag] : undefined,
+      targetCalories: maxCalories || minCalories ? (maxCalories + minCalories) / 2 : undefined,
+      mainIngredient: focusIngredient,
+      maxPrepTime,
+      maxCalories,
+      minProtein,
+      maxProtein,
+      minCarbs,
+      maxCarbs,
+      minFat,
+      maxFat,
+      difficulty
+    };
+    
+    console.log('Custom recipe generation started with options:', generationOptions);
+    
+    // Start background generation
+    recipeGenerator.generateAndStoreRecipes(generationOptions);
+    
+    // Return immediate response with generation status
+    res.status(202).json({ 
+      message: `Recipe generation started`,
+      count: count,
+      started: true,
+      success: 0,
+      failed: 0,
+      errors: [],
+      metrics: {
+        totalDuration: 0,
+        averageTimePerRecipe: 0
+      }
+    });
+  } catch (error) {
+    console.error("Error starting recipe generation:", error);
+    res.status(500).json({ message: "Failed to start recipe generation" });
+  }
+});
+
 // Routes accessible by both trainers and admins
 adminRouter.get('/customers', requireTrainerOrAdmin, async (req, res) => {
   try {
