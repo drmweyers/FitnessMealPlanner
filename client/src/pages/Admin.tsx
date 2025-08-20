@@ -5,6 +5,15 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious,
+  PaginationEllipsis 
+} from "../components/ui/pagination";
 import { useToast } from "../hooks/use-toast";
 import { useAuth } from "../contexts/AuthContext";
 import SearchFilters from "../components/SearchFilters";
@@ -66,9 +75,19 @@ export default function Admin() {
 
   const displayRecipes = (recipesData as any)?.recipes || [];
   const total = (recipesData as any)?.total || 0;
+  
+  // Calculate pagination values
+  const currentPage = filters.page;
+  const totalPages = Math.ceil(total / filters.limit);
+  const hasNextPage = currentPage < totalPages;
+  const hasPrevPage = currentPage > 1;
 
   const handleFilterChange = (newFilters: Partial<RecipeFilter>) => {
     setFilters({ ...filters, ...newFilters });
+  };
+
+  const handlePageChange = (page: number) => {
+    setFilters({ ...filters, page });
   };
 
   const handleViewPendingClick = () => {
@@ -209,6 +228,106 @@ export default function Admin() {
                       onClick={() => setSelectedRecipe(recipe)}
                     />
                   ))}
+                </div>
+              )}
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+                  <div className="text-sm text-slate-600">
+                    Showing {displayRecipes.length} of {total} recipes (Page {currentPage} of {totalPages})
+                  </div>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => hasPrevPage && handlePageChange(currentPage - 1)}
+                          className={hasPrevPage ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
+                        />
+                      </PaginationItem>
+                      
+                      {/* Generate page numbers */}
+                      {(() => {
+                        const pages = [];
+                        const showPages = 5; // Show 5 page numbers max
+                        let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+                        let endPage = Math.min(totalPages, startPage + showPages - 1);
+                        
+                        // Adjust start if we're near the end
+                        if (endPage - startPage + 1 < showPages) {
+                          startPage = Math.max(1, endPage - showPages + 1);
+                        }
+                        
+                        // Add first page and ellipsis if needed
+                        if (startPage > 1) {
+                          pages.push(
+                            <PaginationItem key={1}>
+                              <PaginationLink 
+                                onClick={() => handlePageChange(1)}
+                                isActive={currentPage === 1}
+                                className="cursor-pointer"
+                              >
+                                1
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                          if (startPage > 2) {
+                            pages.push(
+                              <PaginationItem key="ellipsis-start">
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+                        }
+                        
+                        // Add page numbers
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(
+                            <PaginationItem key={i}>
+                              <PaginationLink 
+                                onClick={() => handlePageChange(i)}
+                                isActive={currentPage === i}
+                                className="cursor-pointer"
+                              >
+                                {i}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        }
+                        
+                        // Add ellipsis and last page if needed
+                        if (endPage < totalPages) {
+                          if (endPage < totalPages - 1) {
+                            pages.push(
+                              <PaginationItem key="ellipsis-end">
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+                          pages.push(
+                            <PaginationItem key={totalPages}>
+                              <PaginationLink 
+                                onClick={() => handlePageChange(totalPages)}
+                                isActive={currentPage === totalPages}
+                                className="cursor-pointer"
+                              >
+                                {totalPages}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        }
+                        
+                        return pages;
+                      })()}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => hasNextPage && handlePageChange(currentPage + 1)}
+                          className={hasNextPage ? "cursor-pointer" : "cursor-not-allowed opacity-50"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               )}
             </div>
