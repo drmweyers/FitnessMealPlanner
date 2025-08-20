@@ -1,10 +1,14 @@
 import { memo, useState, useCallback, useMemo } from "react";
 import { Card, CardContent } from "./ui/card";
+import { Checkbox } from "./ui/checkbox";
 import type { Recipe } from "@shared/schema";
 
 interface RecipeCardProps {
   recipe: Recipe;
   onClick: () => void;
+  showCheckbox?: boolean;
+  isSelected?: boolean;
+  onSelectionChange?: (recipeId: string, selected: boolean) => void;
 }
 
 // Memoized color mapping functions outside component to avoid recreation
@@ -33,7 +37,7 @@ const getDietaryTagColor = (tag: string) => {
   return DIETARY_TAG_COLORS[tag as keyof typeof DIETARY_TAG_COLORS] || "bg-slate-100 text-slate-700";
 };
 
-function RecipeCard({ recipe, onClick }: RecipeCardProps) {
+function RecipeCard({ recipe, onClick, showCheckbox = false, isSelected = false, onSelectionChange }: RecipeCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
@@ -47,6 +51,23 @@ function RecipeCard({ recipe, onClick }: RecipeCardProps) {
     setImageLoading(false);
   }, []);
 
+  const handleCheckboxChange = useCallback((checked: boolean) => {
+    if (onSelectionChange) {
+      onSelectionChange(recipe.id, checked);
+    }
+  }, [recipe.id, onSelectionChange]);
+
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
+    // Don't trigger card click if checkbox was clicked
+    if (showCheckbox && e.target !== e.currentTarget) {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-checkbox]')) {
+        return;
+      }
+    }
+    onClick();
+  }, [onClick, showCheckbox]);
+
   // Memoized computed values
   const { primaryMealType, primaryDietaryTag, totalTime, formattedProtein, formattedCarbs, formattedFat } = useMemo(() => ({
     primaryMealType: recipe.mealTypes?.[0] || 'dinner',
@@ -59,10 +80,21 @@ function RecipeCard({ recipe, onClick }: RecipeCardProps) {
 
   return (
     <Card 
-      className="overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group h-full border-0 shadow-sm"
-      onClick={onClick}
+      className={`overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group h-full border-0 shadow-sm relative ${
+        isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
+      }`}
+      onClick={handleCardClick}
     >
       <div className="relative w-full h-36 sm:h-40 lg:h-48 bg-gray-100 overflow-hidden">
+        {showCheckbox && (
+          <div className="absolute top-2 left-2 z-10" data-checkbox>
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={handleCheckboxChange}
+              className="bg-white/90 backdrop-blur-sm border-gray-300"
+            />
+          </div>
+        )}
         {imageLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
             <div className="animate-pulse text-gray-400">
