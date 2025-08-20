@@ -15,13 +15,7 @@ vi.mock('../../client/src/hooks/use-toast', () => ({
   useToast: () => ({ toast: mockToast }),
 }));
 
-// Mock Lucide React icons
-vi.mock('lucide-react', () => ({
-  Camera: () => <div data-testid="camera-icon" />,
-  Upload: () => <div data-testid="upload-icon" />,
-  Trash2: () => <div data-testid="trash-icon" />,
-  Loader2: () => <div data-testid="loader-icon" />,
-}));
+// Lucide React icons are mocked globally in setup.ts
 
 describe('ProfileImageUpload Component', () => {
   const mockOnImageUpdate = vi.fn();

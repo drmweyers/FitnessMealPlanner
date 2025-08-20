@@ -19,21 +19,7 @@ vi.mock('../../client/src/hooks/use-toast', () => ({
   useToast: () => ({ toast: mockToast }),
 }));
 
-// Mock Lucide React icons
-vi.mock('lucide-react', () => ({
-  Camera: () => <div data-testid="camera-icon" />,
-  Upload: () => <div data-testid="upload-icon" />,
-  Trash2: () => <div data-testid="trash-icon" />,
-  Loader2: () => <div data-testid="loader-icon" />,
-  ChevronDown: () => <div data-testid="chevron-down" />,
-  Bell: () => <div data-testid="bell-icon" />,
-  Menu: () => <div data-testid="menu-icon" />,
-  X: () => <div data-testid="x-icon" />,
-  Home: () => <div data-testid="home-icon" />,
-  User: () => <div data-testid="user-icon" />,
-  LogOut: () => <div data-testid="logout-icon" />,
-  Utensils: () => <div data-testid="utensils-icon" />,
-}));
+// Lucide React icons are mocked globally in setup.ts
 
 // Mock wouter
 const mockSetLocation = vi.fn();

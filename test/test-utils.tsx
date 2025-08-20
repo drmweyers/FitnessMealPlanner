@@ -315,11 +315,46 @@ export const createMockRecipe = (overrides?: any) => ({
   ...overrides,
 });
 
-// Enhanced meal plan factory  
-export const createMockMealPlan = (overrides?: any) => ({
-  ...testData.mealPlan,
-  ...overrides,
-});
+// Enhanced meal plan factory for CustomerMealPlan structure
+export const createMockMealPlan = (overrides?: any) => {
+  const baseMealPlan = {
+    ...testData.mealPlan,
+    ...overrides,
+  };
+
+  // Create proper CustomerMealPlan structure with nested mealPlanData
+  return {
+    // PersonalizedMealPlan fields (database record)
+    id: baseMealPlan.id || 'test-meal-plan-1',
+    customerId: 'customer-1',
+    trainerId: 'trainer-1',
+    assignedAt: baseMealPlan.assignedAt || new Date().toISOString(),
+    
+    // Nested meal plan data (the actual MealPlan structure)
+    mealPlanData: {
+      planName: baseMealPlan.name || baseMealPlan.planName || 'Test Meal Plan',
+      days: baseMealPlan.days || 7,
+      mealsPerDay: baseMealPlan.mealsPerDay || 3,
+      dailyCalorieTarget: baseMealPlan.targetCalories || baseMealPlan.dailyCalorieTarget || 2000,
+      fitnessGoal: baseMealPlan.fitnessGoal || 'weight_loss',
+      clientName: baseMealPlan.clientName,
+      meals: baseMealPlan.meals || [],
+      ...baseMealPlan.mealPlanData,
+    },
+    
+    // Flattened access properties (CustomerMealPlan extends PersonalizedMealPlan)
+    planName: baseMealPlan.name || baseMealPlan.planName || 'Test Meal Plan',
+    fitnessGoal: baseMealPlan.fitnessGoal || 'weight_loss',
+    dailyCalorieTarget: baseMealPlan.targetCalories || baseMealPlan.dailyCalorieTarget || 2000,
+    totalDays: baseMealPlan.days || 7,
+    mealsPerDay: baseMealPlan.mealsPerDay || 3,
+    isActive: baseMealPlan.isActive !== undefined ? baseMealPlan.isActive : true,
+    description: baseMealPlan.description,
+    
+    // Apply any direct overrides
+    ...overrides,
+  };
+};
 
 // Generate test recipes with variety
 export const generateMockRecipes = (count: number) => {

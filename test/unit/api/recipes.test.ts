@@ -16,14 +16,7 @@ import express from 'express';
 import { recipeRouter } from '../../../server/routes/recipes';
 import * as storage from '../../../server/storage';
 
-// Mock the storage module
-vi.mock('../../../server/storage', () => ({
-  storage: {
-    searchRecipes: vi.fn(),
-    getPersonalizedRecipes: vi.fn(),
-    getRecipe: vi.fn(),
-  },
-}));
+// Storage is mocked globally in setup.ts
 
 // Mock the auth middleware
 vi.mock('../../../server/middleware/auth', () => ({
@@ -66,7 +59,7 @@ describe('Recipes API Routes', () => {
         description: 'Delicious grilled chicken',
         caloriesKcal: 300,
         isApproved: true,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       },
       {
         id: 'recipe-2', 
@@ -74,7 +67,7 @@ describe('Recipes API Routes', () => {
         description: 'Fresh vegetable salad',
         caloriesKcal: 150,
         isApproved: true,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       },
     ];
 
@@ -348,10 +341,16 @@ describe('Recipes API Routes', () => {
 
   describe('Query Parameter Validation', () => {
     it('accepts valid page numbers', async () => {
-      vi.mocked(storage.storage.searchRecipes).mockResolvedValueOnce({
-        recipes: [],
-        total: 0,
-      });
+      // Mock for both requests
+      vi.mocked(storage.storage.searchRecipes)
+        .mockResolvedValueOnce({
+          recipes: [],
+          total: 0,
+        })
+        .mockResolvedValueOnce({
+          recipes: [],
+          total: 0,
+        });
 
       await request(app)
         .get('/api/recipes')
@@ -365,10 +364,16 @@ describe('Recipes API Routes', () => {
     });
 
     it('accepts valid limit values', async () => {
-      vi.mocked(storage.storage.searchRecipes).mockResolvedValueOnce({
-        recipes: [],
-        total: 0,
-      });
+      // Mock for both requests
+      vi.mocked(storage.storage.searchRecipes)
+        .mockResolvedValueOnce({
+          recipes: [],
+          total: 0,
+        })
+        .mockResolvedValueOnce({
+          recipes: [],
+          total: 0,
+        });
 
       await request(app)
         .get('/api/recipes')

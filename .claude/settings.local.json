@@ -72,14 +72,20 @@
       "Bash(npx ts-node:*)",
       "Bash(npx playwright:*)",
       "Bash(npx vitest:*)",
-      "Bash(doctl:*)"
+      "Bash(doctl:*)",
+      "Bash(move:*)",
+      "Bash(cp:*)",
+      "Bash(dir \"C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\dist\\public\\assets\\*.js\" /O:-S)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "C:\\c\\Users\\drmwe\\claude-workspace"
+    ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "github",
     "context7",
     "digitalocean"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

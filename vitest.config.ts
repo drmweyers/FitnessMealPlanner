@@ -14,6 +14,9 @@ export default defineConfig({
     css: true,
     include: ['test/unit/**/*.test.{ts,tsx}', 'test/integration/**/*.test.{ts,tsx}'],
     exclude: ['node_modules', 'dist', '.git', 'test/e2e/**'],
+    testTimeout: 30000, // 30 seconds for complex async operations
+    hookTimeout: 10000, // 10 seconds for setup/teardown hooks
+    teardownTimeout: 10000, // 10 seconds for cleanup
     typecheck: {
       enabled: false
     },

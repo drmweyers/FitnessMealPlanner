@@ -1,518 +1,440 @@
-# FitMeal Pro Deployment Guide
+# FitnessMealPlanner Deployment Guide
 
-## Overview
+This guide provides comprehensive instructions for deploying the FitnessMealPlanner application from the qa-ready branch to production.
 
-This guide covers deployment strategies for FitMeal Pro, from development environment setup to production deployment on Replit and other platforms.
+## Table of Contents
+- [Pre-Deployment Checklist](#pre-deployment-checklist)
+- [Environment Requirements](#environment-requirements)
+- [Docker Deployment](#docker-deployment)
+- [Manual Deployment Process](#manual-deployment-process)
+- [Database Migration](#database-migration)
+- [Post-Deployment Verification](#post-deployment-verification)
+- [Rollback Procedures](#rollback-procedures)
+- [Troubleshooting](#troubleshooting)
 
-## Prerequisites
+## Pre-Deployment Checklist
 
-### System Requirements
-- Node.js 20+ with npm
-- PostgreSQL 14+ database
-- OpenAI API key with GPT-4o access
-- Replit account for authentication
-
-### Environment Variables
-
-#### Required Variables
+### ✅ Code Quality Verification
 ```bash
-# Database Configuration
-DATABASE_URL=postgresql://username:password@host:port/database
+# 1. Ensure you're on the qa-ready branch
+git checkout qa-ready
+git pull origin qa-ready
 
-# OpenAI Integration
-OPENAI_API_KEY=sk-proj-...
+# 2. Run full test suite
+npm run test:all
 
-# Replit Authentication
-REPLIT_DB_URL=https://...
-REPLIT_ENVIRONMENT=production
+# 3. Run type checking
+npm run check
 
+# 4. Build production version
+npm run build
+
+# 5. Verify Docker build
+docker build --target prod -t fitnessmealplanner:test .
+```
+
+### ✅ Security Checks
+- [ ] No sensitive data in frontend code
+- [ ] Environment variables properly configured
+- [ ] API keys not exposed in client-side code
+- [ ] HTTPS enforced in production
+- [ ] CORS properly configured
+
+### ✅ Database Preparation
+- [ ] Database backup completed
+- [ ] Migration scripts ready (if any)
+- [ ] Connection string updated for production
+- [ ] SSL mode configured appropriately
+
+### ✅ Infrastructure Readiness
+- [ ] Production server accessible
+- [ ] Docker registry available
+- [ ] Load balancer configured (if applicable)
+- [ ] SSL certificates valid
+- [ ] DNS settings correct
+
+## Environment Requirements
+
+### Required Environment Variables
+
+Create a `.env` file in the production environment with these variables:
+
+```bash
 # Application Configuration
 NODE_ENV=production
 PORT=5001
+
+# Database Configuration
+DATABASE_URL=postgresql://username:password@host:port/database
+DB_SSL_MODE=require
+
+# Authentication
+JWT_SECRET=your-super-secure-jwt-secret-key
+JWT_REFRESH_SECRET=your-super-secure-refresh-secret-key
+SESSION_SECRET=your-super-secure-session-secret
+
+# OpenAI Integration (if using AI features)
+OPENAI_API_KEY=your-openai-api-key
+
+# AWS S3 Configuration (for image uploads)
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_REGION=your-aws-region
+AWS_S3_BUCKET=your-s3-bucket-name
+
+# Email Service (optional)
+RESEND_API_KEY=your-resend-api-key
+FROM_EMAIL=noreply@yourdomain.com
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=https://yourdomain.com/auth/google/callback
+
+# Application URLs
+CLIENT_URL=https://yourdomain.com
+SERVER_URL=https://yourdomain.com
 ```
 
-#### Optional Variables
+### Docker Environment Variables
 ```bash
-# Session Configuration
-SESSION_SECRET=your-random-secret-key
-
-# Redis Cache (if using)
-REDIS_URL=redis://...
-
-# Error Tracking
-SENTRY_DSN=https://...
+# Docker-specific settings
+POSTGRES_DB=fitmeal
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your-secure-db-password
 ```
 
-## Local Development
+## Docker Deployment
 
-### Initial Setup
+### Method 1: Automated Deployment (Recommended)
+
+#### For DigitalOcean Container Registry:
 ```bash
-# Clone repository
-git clone https://github.com/your-username/fitmeal-pro.git
-cd fitmeal-pro
+# 1. Build and tag the production image
+docker build --target prod -t fitnessmealplanner:prod .
+docker tag fitnessmealplanner:prod registry.digitalocean.com/bci/fitnessmealplanner:prod
+
+# 2. Push to registry (if network allows)
+docker push registry.digitalocean.com/bci/fitnessmealplanner:prod
+
+# 3. Trigger deployment via DigitalOcean dashboard
+# Navigate to: https://cloud.digitalocean.com/apps
+# Find app: fitnessmealplanner-prod
+# Click "Deploy" or "Force Rebuild and Deploy"
+```
+
+### Method 2: Manual Deployment (Network Issues Fallback)
+
+If Docker push fails due to network/proxy issues:
+
+#### Step 1: Build Image Locally
+```bash
+docker build --target prod -t fitnessmealplanner:prod .
+```
+
+#### Step 2: Manual Registry Upload
+1. **Navigate to DigitalOcean Dashboard**:
+   - URL: https://cloud.digitalocean.com/apps
+   - App ID: `600abc04-b784-426c-8799-0c09f8b9a958`
+   - App Name: `fitnessmealplanner-prod`
+
+2. **Trigger Manual Deployment**:
+   - Click on the app name
+   - Look for "Deploy" button (blue, top-right)
+   - Or use "Actions" → "Force Rebuild and Deploy"
+   - Confirm deployment when prompted
+
+3. **Monitor Deployment**:
+   - Watch progress (typically 3-5 minutes)
+   - Check logs for any errors
+   - Verify successful completion
+
+### Method 3: Local Docker Compose (Development/Testing)
+
+```bash
+# Start production stack locally
+docker-compose --profile prod up -d
+
+# Verify containers are running
+docker ps
+
+# Check logs
+docker logs fitnessmealplanner-prod -f
+
+# Access application
+# Frontend: http://localhost:5001
+# Database: localhost:5433
+```
+
+## Manual Deployment Process
+
+### Step 1: Prepare Production Server
+```bash
+# SSH into production server
+ssh user@your-production-server
+
+# Navigate to application directory
+cd /path/to/your/app
+
+# Backup current version
+cp -r . ../backup-$(date +%Y%m%d-%H%M%S)
+```
+
+### Step 2: Deploy Code
+```bash
+# Pull latest changes
+git fetch origin
+git checkout qa-ready
+git pull origin qa-ready
 
 # Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your configuration
-
-# Initialize database
-npm run db:push
-
-# Start development server
-npm run dev
-```
-
-### Development Server
-The development server runs on `http://localhost:5001` with:
-- Hot module replacement for React
-- Automatic server restart on changes
-- API proxy for seamless frontend-backend integration
-- Real-time error reporting
-
-### Database Management
-```bash
-# Push schema changes to database
-npm run db:push
-
-# Generate database migration
-npm run db:generate
-
-# View database with Drizzle Studio
-npm run db:studio
-```
-
-## Production Deployment
-
-### Replit Deployment (Recommended)
-
-#### Step 1: Prepare Repository
-```bash
-# Ensure all changes are committed
-git add .
-git commit -m "Prepare for deployment"
-git push origin main
-```
-
-#### Step 2: Configure Replit Project
-1. Import repository into Replit
-2. Configure environment variables in Secrets
-3. Set up PostgreSQL database connection
-4. Configure custom domain (if needed)
-
-#### Step 3: Deploy
-```bash
-# Replit automatically detects and builds the project
-# The deployment process includes:
-# 1. npm install
-# 2. npm run build
-# 3. npm run start
-```
-
-#### Step 4: Verify Deployment
-- Check application logs for errors
-- Test API endpoints
-- Verify database connectivity
-- Confirm authentication flow
-
-### Alternative Deployment Platforms
-
-#### Vercel Deployment
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy to Vercel
-vercel
-
-# Set environment variables
-vercel env add DATABASE_URL
-vercel env add OPENAI_API_KEY
-```
-
-#### Railway Deployment
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login and deploy
-railway login
-railway init
-railway up
-```
-
-#### Docker Deployment
-```dockerfile
-# Dockerfile
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy application code
-COPY . .
+npm ci --only=production
 
 # Build application
-RUN npm run build
-
-# Expose port
-EXPOSE 5001
-
-# Start application
-CMD ["npm", "run", "start"]
+npm run build
 ```
+
+### Step 3: Database Setup
+```bash
+# Run database migrations (if any)
+npm run migrate
+
+# Verify database connection
+npm run setup:check
+```
+
+### Step 4: Start Services
+```bash
+# Stop existing services
+pm2 stop fitnessmealplanner
+# OR
+sudo systemctl stop fitnessmealplanner
+
+# Start new version
+pm2 start ecosystem.config.js
+# OR
+sudo systemctl start fitnessmealplanner
+
+# Enable auto-start
+pm2 save
+# OR
+sudo systemctl enable fitnessmealplanner
+```
+
+## Database Migration
+
+### Current Release (v1.1.0)
+**No database migrations required** - all changes are backwards compatible.
+
+### Future Migrations
+If database changes are needed:
 
 ```bash
-# Build and run Docker container
-docker build -t fitmeal-pro .
-docker run -p 5001:5001 --env-file .env fitmeal-pro
+# 1. Backup database
+pg_dump $DATABASE_URL > backup-$(date +%Y%m%d-%H%M%S).sql
+
+# 2. Run migration
+npm run migrate
+
+# 3. Verify migration
+npm run setup:check
 ```
 
-## Database Setup
-
-### PostgreSQL Configuration
-
-#### Production Database Setup
-```sql
--- Create database
-CREATE DATABASE fitmeal_pro;
-
--- Create user
-CREATE USER fitmeal_user WITH ENCRYPTED PASSWORD 'secure_password';
-
--- Grant permissions
-GRANT ALL PRIVILEGES ON DATABASE fitmeal_pro TO fitmeal_user;
-GRANT ALL ON SCHEMA public TO fitmeal_user;
-```
-
-#### Connection String Format
+### Migration Rollback
 ```bash
-DATABASE_URL=postgresql://fitmeal_user:secure_password@localhost:5432/fitmeal_pro
+# If migration fails, restore from backup
+psql $DATABASE_URL < backup-YYYYMMDD-HHMMSS.sql
 ```
 
-#### Database Optimization
-```sql
--- Indexes for performance
-CREATE INDEX idx_recipes_meal_types ON recipes USING GIN (meal_types);
-CREATE INDEX idx_recipes_dietary_tags ON recipes USING GIN (dietary_tags);
-CREATE INDEX idx_recipes_approved ON recipes (is_approved);
-CREATE INDEX idx_recipes_calories ON recipes (calories_kcal);
-
--- Connection pooling settings
-ALTER SYSTEM SET max_connections = 100;
-ALTER SYSTEM SET shared_buffers = '256MB';
-ALTER SYSTEM SET effective_cache_size = '1GB';
-```
-
-### Recipe Data Seeding
-
-#### Initial Recipe Generation
-```bash
-# Generate initial recipe set
-node scripts/generateRecipes.js 100
-
-# Add test recipes for development
-node scripts/addTestRecipes.js
-```
-
-#### Recipe Approval Process
-```bash
-# Approve all generated recipes (admin only)
-curl -X PATCH https://your-domain.com/api/recipes/bulk-approve \
-  -H "Authorization: Bearer admin-token"
-```
-
-## SSL/TLS Configuration
-
-### Replit Automatic HTTPS
-- Replit provides automatic HTTPS for all deployments
-- Custom domains receive free SSL certificates
-- No additional configuration required
-
-### Manual SSL Setup
-```nginx
-# Nginx configuration for SSL
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com;
-
-    ssl_certificate /path/to/certificate.crt;
-    ssl_certificate_key /path/to/private.key;
-
-    location / {
-        proxy_pass http://localhost:5001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-## Performance Optimization
-
-### Application Optimization
-
-#### Build Optimization
-```json
-// package.json build configuration
-{
-  "scripts": {
-    "build": "vite build --mode production",
-    "build:analyze": "vite build --mode production --analyze"
-  }
-}
-```
-
-#### Caching Strategy
-```typescript
-// React Query configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,  // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      retry: 3,
-    },
-  },
-});
-```
-
-### Database Performance
-
-#### Connection Pooling
-```typescript
-// Database connection configuration
-import { Pool } from 'pg';
-
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
-```
-
-#### Query Optimization
-```sql
--- Analyze query performance
-EXPLAIN ANALYZE SELECT * FROM recipes
-WHERE meal_types @> '["breakfast"]'
-AND is_approved = true;
-
--- Optimize JSONB queries
-CREATE INDEX CONCURRENTLY idx_recipes_meal_types_gin
-ON recipes USING GIN (meal_types);
-```
-
-## Monitoring and Logging
-
-### Application Logging
-```typescript
-// Structured logging
-import winston from 'winston';
-
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' }),
-  ],
-});
-```
+## Post-Deployment Verification
 
 ### Health Checks
-```typescript
-// Health check endpoint
-app.get('/health', async (req, res) => {
-  const health = {
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    database: 'checking...',
-    openai: 'checking...',
-  };
-
-  try {
-    // Check database connection
-    await db.select().from(recipes).limit(1);
-    health.database = 'connected';
-  } catch (error) {
-    health.database = 'error';
-    health.status = 'error';
-  }
-
-  res.json(health);
-});
-```
-
-### Performance Monitoring
-```typescript
-// Response time monitoring
-app.use((req, res, next) => {
-  const start = Date.now();
-
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    console.log(`${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
-  });
-
-  next();
-});
-```
-
-## Security Configuration
-
-### Environment Security
 ```bash
-# Secure environment variables
-export NODE_ENV=production
-export SESSION_SECRET=$(openssl rand -base64 32)
-export DATABASE_SSL=require
+# 1. Verify application is responding
+curl -f https://yourdomain.com/health || echo "Health check failed"
+
+# 2. Check database connectivity
+curl -f https://yourdomain.com/api/health || echo "API health check failed"
+
+# 3. Test authentication
+curl -f https://yourdomain.com/api/auth/status || echo "Auth check failed"
 ```
 
-### Application Security Headers
-```typescript
-// Security middleware
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-}));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-});
-
-app.use('/api/', limiter);
-```
-
-## Backup and Recovery
-
-### Database Backup
+### Functional Testing
 ```bash
-# Automated daily backup
-#!/bin/bash
-DATE=$(date +%Y-%m-%d)
-pg_dump $DATABASE_URL > backups/fitmeal-pro-$DATE.sql
-aws s3 cp backups/fitmeal-pro-$DATE.sql s3://backups/
+# Run automated E2E tests against production
+npm run test:playwright -- --config=playwright.production.config.ts
+
+# Test critical user flows
+npm run test:business-logic
 ```
 
-### Application Backup
+### Performance Verification
+- [ ] Page load times < 3 seconds
+- [ ] API response times < 500ms
+- [ ] No console errors in browser
+- [ ] Memory usage within normal ranges
+- [ ] CPU usage stable
+
+### Feature-Specific Checks
+- [ ] Recipe generation progress tracking works
+- [ ] Bulk operations function correctly
+- [ ] Pagination loads properly
+- [ ] View toggles work (card/table)
+- [ ] PDF export generates successfully
+- [ ] Image uploads work (if S3 configured)
+
+## Rollback Procedures
+
+### Quick Rollback (Critical Issues)
 ```bash
-# Code repository backup
-git remote add backup https://backup-repo-url.git
-git push backup main
+# 1. Identify last known good commit
+git log --oneline -10
 
-# Environment configuration backup
-cp .env .env.backup.$(date +%Y-%m-%d)
+# 2. Revert to previous version
+git reset --hard <previous-commit-hash>
+
+# 3. Rebuild and restart
+npm run build
+pm2 restart fitnessmealplanner
 ```
+
+### Docker Rollback
+```bash
+# 1. List recent image tags
+docker images fitnessmealplanner
+
+# 2. Run previous version
+docker stop fitnessmealplanner-prod
+docker run -d --name fitnessmealplanner-prod-rollback \
+  -p 5001:5001 \
+  --env-file .env \
+  fitnessmealplanner:<previous-tag>
+```
+
+### Database Rollback
+```bash
+# Only if database changes were made
+psql $DATABASE_URL < backup-before-deployment.sql
+```
+
+### Emergency Rollback Checklist
+- [ ] Stop current application
+- [ ] Restore previous code version
+- [ ] Restore database (if needed)
+- [ ] Restart services
+- [ ] Verify functionality
+- [ ] Update DNS/load balancer (if needed)
+- [ ] Notify stakeholders
 
 ## Troubleshooting
 
-### Common Deployment Issues
+### Common Issues
 
-#### Database Connection Errors
+#### Issue: Docker build fails
 ```bash
-# Check database connectivity
+# Check Docker daemon
+docker info
+
+# Clear build cache
+docker builder prune
+
+# Rebuild with verbose output
+docker build --no-cache --progress=plain -t fitnessmealplanner:prod .
+```
+
+#### Issue: Database connection fails
+```bash
+# Test database connectivity
 psql $DATABASE_URL -c "SELECT version();"
 
-# Verify connection string format
-echo $DATABASE_URL | grep -E "^postgresql://"
+# Check SSL requirements
+psql "$DATABASE_URL?sslmode=require" -c "SELECT version();"
 ```
 
-#### OpenAI API Issues
+#### Issue: npm install fails
 ```bash
-# Test API key
-curl https://api.openai.com/v1/models \
-  -H "Authorization: Bearer $OPENAI_API_KEY"
+# Clear npm cache
+npm cache clean --force
 
-# Check quota and billing
-curl https://api.openai.com/v1/usage \
-  -H "Authorization: Bearer $OPENAI_API_KEY"
-```
-
-#### Build Failures
-```bash
-# Clear cache and rebuild
+# Remove node_modules and package-lock.json
 rm -rf node_modules package-lock.json
+
+# Reinstall
 npm install
-npm run build
-
-# Check for TypeScript errors
-npx tsc --noEmit
 ```
 
-### Log Analysis
+#### Issue: Port already in use
 ```bash
-# Monitor application logs
-tail -f logs/combined.log | grep ERROR
+# Find process using port
+lsof -i :5001
 
-# Database performance logs
-grep "slow query" /var/log/postgresql/postgresql.log
+# Kill process
+kill -9 <PID>
 
-# System resource usage
+# Or use different port
+PORT=5002 npm start
+```
+
+#### Issue: Permission denied
+```bash
+# Fix file permissions
+chmod -R 755 .
+chown -R $USER:$USER .
+
+# For Docker
+sudo usermod -aG docker $USER
+```
+
+### Performance Issues
+```bash
+# Check memory usage
+free -h
+df -h
+
+# Check application logs
+tail -f logs/application.log
+
+# Monitor in real-time
 htop
-iostat -x 1
 ```
 
-## Scaling Considerations
+### Logging and Monitoring
+```bash
+# Application logs
+tail -f logs/app.log
 
-### Horizontal Scaling
-- Load balancer configuration
-- Session store externalization
-- Database read replicas
-- CDN for static assets
+# Error logs
+tail -f logs/error.log
 
-### Vertical Scaling
-- Memory optimization
-- CPU utilization monitoring
-- Database connection pooling
-- Caching strategies
+# Database logs (if accessible)
+tail -f /var/log/postgresql/postgresql.log
 
-### Auto-scaling Configuration
-```yaml
-# Kubernetes auto-scaling
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: fitmeal-pro-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: fitmeal-pro
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
+# System logs
+journalctl -u fitnessmealplanner -f
 ```
 
-This deployment guide covers all aspects of deploying FitMeal Pro from development to production. Follow the appropriate sections based on your deployment target and requirements.
+## Recovery Time Objectives
+
+- **Rollback Time**: < 10 minutes for critical issues
+- **Full Deployment**: < 30 minutes including verification
+- **Database Restoration**: < 15 minutes for schema issues
+- **Service Recovery**: < 5 minutes for application restarts
+
+## Emergency Contacts
+
+- **Development Team**: [Contact Information]
+- **Infrastructure Team**: [Contact Information]
+- **Database Administrator**: [Contact Information]
+- **On-call Engineer**: [Contact Information]
+
+## Production URLs
+
+- **Application**: https://evofitmeals.com
+- **Admin Panel**: https://evofitmeals.com/admin
+- **API Health**: https://evofitmeals.com/api/health
+- **DigitalOcean App**: https://cloud.digitalocean.com/apps (App ID: 600abc04-b784-426c-8799-0c09f8b9a958)
+
+---
+
+**Note**: This deployment guide is version-controlled and should be updated with each release. Always refer to the latest version in the qa-ready branch before deployment.

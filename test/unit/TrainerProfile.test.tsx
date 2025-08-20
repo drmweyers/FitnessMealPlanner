@@ -17,27 +17,7 @@ vi.mock('../../client/src/hooks/use-toast', () => ({
 }));
 
 // Mock all Lucide React icons
-vi.mock('lucide-react', () => ({
-  User: () => <div data-testid="user-icon" />,
-  Dumbbell: () => <div data-testid="dumbbell-icon" />,
-  Users: () => <div data-testid="users-icon" />,
-  ChefHat: () => <div data-testid="chef-hat-icon" />,
-  Target: () => <div data-testid="target-icon" />,
-  TrendingUp: () => <div data-testid="trending-up-icon" />,
-  Calendar: () => <div data-testid="calendar-icon" />,
-  Edit2: () => <div data-testid="edit-icon" />,
-  Save: () => <div data-testid="save-icon" />,
-  X: () => <div data-testid="x-icon" />,
-  Award: () => <div data-testid="award-icon" />,
-  Clock: () => <div data-testid="clock-icon" />,
-  Heart: () => <div data-testid="heart-icon" />,
-  Mail: () => <div data-testid="mail-icon" />,
-  Plus: () => <div data-testid="plus-icon" />,
-  Copy: () => <div data-testid="copy-icon" />,
-  FileText: () => <div data-testid="file-text-icon" />,
-  Download: () => <div data-testid="download-icon" />,
-  ChevronDown: () => <div data-testid="chevron-down-icon" />,
-}));
+// Lucide React icons are mocked globally in setup.ts
 
 // Mock API request utility
 vi.mock('../../client/src/lib/queryClient', () => ({

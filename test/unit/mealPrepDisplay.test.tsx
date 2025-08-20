@@ -18,10 +18,7 @@ vi.mock('../../../client/src/components/ui/card', () => ({
   CardTitle: ({ children, ...props }) => <div data-testid="card-title" {...props}>{children}</div>,
 }));
 
-vi.mock('lucide-react', () => ({
-  ChefHat: () => <div data-testid="chef-hat-icon" />,
-  Clock: () => <div data-testid="clock-icon" />,
-}));
+// Lucide React icons are mocked globally in setup.ts
 
 // Create a test component that renders meal prep instructions
 const MealPrepDisplay = ({ mealPrep }) => {
