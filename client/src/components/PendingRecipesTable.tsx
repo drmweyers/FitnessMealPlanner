@@ -53,7 +53,7 @@ export default function PendingRecipesTable() {
       });
       // Force refetch with cache bypass
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
       // Trigger immediate refetch of pending recipes
       refetch();
@@ -100,7 +100,7 @@ export default function PendingRecipesTable() {
       });
       // Force refetch with cache bypass
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
       // Trigger immediate refetch of pending recipes
       refetch();
@@ -136,7 +136,7 @@ export default function PendingRecipesTable() {
       });
       // Force refetch with cache bypass
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
       // Trigger immediate refetch of pending recipes
       refetch();
@@ -208,7 +208,7 @@ export default function PendingRecipesTable() {
                   // Force complete cache refresh
                   queryClient.removeQueries({ queryKey: ['/api/admin/recipes'] });
                   queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-                  queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+                  queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
                   queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
                   refetch(); // Force immediate refetch
                   queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });

@@ -517,7 +517,7 @@ describe('PendingRecipesTable', () => {
 
       await waitFor(() => {
         expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['/api/admin/recipes'] });
-        expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['/api/admin/stats'] });
+        expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ["admin-stats"] });
         expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['/api/recipes'] });
         // Should trigger immediate refetch of pending recipes
         expect(global.fetch).toHaveBeenCalledWith(
@@ -584,7 +584,7 @@ describe('PendingRecipesTable', () => {
 
       await waitFor(() => {
         expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['/api/admin/recipes'] });
-        expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['/api/admin/stats'] });
+        expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ["admin-stats"] });
         expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['/api/recipes'] });
       });
     });
