@@ -18,6 +18,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import RecipeGenerationProgress from "./RecipeGenerationProgress";
 
 interface RecipeGenerationModalProps {
   isOpen: boolean;
@@ -51,8 +52,7 @@ export default function RecipeGenerationModal({
   const [recipeCount, setRecipeCount] = useState(10);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [initialRecipeCount, setInitialRecipeCount] = useState<number | null>(null);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fitnessGoal: "all",
     dailyCalorieTarget: 2000,
@@ -69,53 +69,41 @@ export default function RecipeGenerationModal({
     maxFat: undefined as number | undefined,
   });
 
-  // Query to get current recipe stats
-  const { data: stats } = useQuery({
-    queryKey: ['adminStats'],
-    queryFn: async () => {
-      const res = await apiRequest('GET', '/api/admin/stats');
-      return res.json();
-    },
-    enabled: isOpen,
-    refetchInterval: isGenerating ? 5000 : false, // Poll every 5 seconds while generating
-  });
+  // Handle generation completion
+  const handleGenerationComplete = (results: any) => {
+    setIsGenerating(false);
+    setCurrentJobId(null);
+    
+    toast({
+      title: "Recipe Generation Completed!",
+      description: `Successfully generated ${results.success} recipes${results.failed > 0 ? ` (${results.failed} failed)` : ''}. Refreshing page to show new recipes.`,
+    });
+    
+    // Invalidate queries to refresh data
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/recipes"] });
+    
+    // Close modal and refresh after a short delay
+    setTimeout(() => {
+      onClose();
+    }, 1500);
+    
+    setTimeout(() => {
+      window.location.reload();
+    }, 3000);
+  };
 
-  // Check for completion when stats change
-  useEffect(() => {
-    if (isGenerating && stats && initialRecipeCount !== null) {
-      const currentTotal = stats.total;
-      const expectedTotal = initialRecipeCount + recipeCount;
-      
-      if (currentTotal >= expectedTotal) {
-        // Generation completed
-        setIsGenerating(false);
-        setInitialRecipeCount(null);
-        
-        toast({
-          title: "Recipe Generation Completed!",
-          description: `Successfully generated ${recipeCount} new recipes. The page will refresh to show them.`,
-        });
-        
-        // Close modal and refresh page
-        setTimeout(() => {
-          onClose();
-        }, 1000);
-        
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
-      }
-    }
-  }, [stats, isGenerating, initialRecipeCount, recipeCount, toast, onClose]);
-
-  // Clean up polling on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, []);
+  // Handle generation error
+  const handleGenerationError = (error: string) => {
+    setIsGenerating(false);
+    setCurrentJobId(null);
+    
+    toast({
+      title: "Recipe Generation Failed",
+      description: error,
+      variant: "destructive",
+    });
+  };
 
   // Extract meal plan context for recipe generation
   const generateRecipesFromContext = useMutation({
@@ -124,18 +112,14 @@ export default function RecipeGenerationModal({
       return response.json();
     },
     onSuccess: (data) => {
-      // Store initial count and start monitoring
-      setInitialRecipeCount(stats?.total || 0);
+      // Start progress tracking
       setIsGenerating(true);
+      setCurrentJobId(data.jobId);
       
       toast({
         title: "Recipe Generation Started",
         description: data.message,
       });
-      
-      // Refresh recipe lists
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/recipes"] });
     },
     onError: (error) => {
       console.error("Recipe generation error:", error);
@@ -306,7 +290,7 @@ export default function RecipeGenerationModal({
                 <p className="text-gray-600 flex-1">Generate random recipes without specific criteria</p>
                 <Button
                   onClick={handleQuickGeneration}
-                  disabled={generateRecipesFromContext.isPending}
+                  disabled={generateRecipesFromContext.isPending || isGenerating}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   {generateRecipesFromContext.isPending ? (
@@ -544,7 +528,7 @@ export default function RecipeGenerationModal({
               <div className="flex gap-3 pt-4">
                 <Button
                   onClick={handleContextGeneration}
-                  disabled={generateRecipesFromContext.isPending}
+                  disabled={generateRecipesFromContext.isPending || isGenerating}
                   className="flex-1 bg-primary hover:bg-primary/90"
                   size="lg"
                 >
@@ -563,6 +547,16 @@ export default function RecipeGenerationModal({
               </div>
             </CardContent>
           </Card>
+
+          {/* Progress Tracking */}
+          {isGenerating && currentJobId && (
+            <RecipeGenerationProgress
+              jobId={currentJobId}
+              totalRecipes={recipeCount}
+              onComplete={handleGenerationComplete}
+              onError={handleGenerationError}
+            />
+          )}
         </div>
       </div>
     </div>

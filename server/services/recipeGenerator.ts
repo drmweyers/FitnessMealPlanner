@@ -5,6 +5,7 @@ import { OpenAIRateLimiter } from "./utils/RateLimiter";
 import { RecipeCache } from "./utils/RecipeCache";
 import { RecipeGenerationMetrics } from "./utils/Metrics";
 import { uploadImageToS3 } from "./utils/S3Uploader";
+import { progressTracker } from "./progressTracker";
 
 interface GenerationOptions {
   count: number;
@@ -22,6 +23,7 @@ interface GenerationOptions {
   maxCarbs?: number;
   minFat?: number;
   maxFat?: number;
+  jobId?: string; // Optional job ID for progress tracking
 }
 
 interface GenerationResult {
@@ -41,7 +43,14 @@ export class RecipeGeneratorService {
 
   async generateAndStoreRecipes(options: GenerationOptions): Promise<GenerationResult> {
     const startTime = Date.now();
+    const jobId = options.jobId;
+    
     try {
+      // Update progress to generating step
+      if (jobId) {
+        progressTracker.updateProgress(jobId, { currentStep: 'generating' });
+      }
+
       const generatedRecipes = await this.rateLimiter.execute(() =>
         generateRecipeBatch(options.count, {
           mealTypes: options.mealTypes,
@@ -62,28 +71,52 @@ export class RecipeGeneratorService {
       );
       
       if (!generatedRecipes || generatedRecipes.length === 0) {
+        if (jobId) {
+          progressTracker.markJobFailed(jobId, "No recipes were generated in the batch.");
+        }
         throw new Error("No recipes were generated in the batch.");
       }
 
-      const results = await Promise.allSettled(
-        generatedRecipes.map(recipe => this.processSingleRecipe(recipe))
-      );
+      // Update progress to validation/processing step
+      if (jobId) {
+        progressTracker.updateProgress(jobId, { currentStep: 'validating' });
+      }
+
+      // Process recipes one by one with progress tracking
+      const finalResult: GenerationResult = { success: 0, failed: 0, errors: [] };
       
-      const finalResult = results.reduce<GenerationResult>(
-        (acc, result) => {
-          if (result.status === 'fulfilled' && result.value.success) {
-            acc.success++;
-          } else {
-            acc.failed++;
-            const reason = result.status === 'rejected' 
-              ? result.reason 
-              : (result.value as { error: string }).error;
-            acc.errors.push(String(reason));
+      for (let i = 0; i < generatedRecipes.length; i++) {
+        const recipe = generatedRecipes[i];
+        
+        try {
+          // Update step progress
+          if (jobId) {
+            progressTracker.recordStepProgress(jobId, i + 1, 'Processing Recipe', i + 1, generatedRecipes.length);
           }
-          return acc;
-        },
-        { success: 0, failed: 0, errors: [] }
-      );
+          
+          const result = await this.processSingleRecipe(recipe, jobId);
+          
+          if (result.success) {
+            finalResult.success++;
+            if (jobId) {
+              progressTracker.recordSuccess(jobId, recipe.name);
+            }
+          } else {
+            finalResult.failed++;
+            finalResult.errors.push(result.error || 'Unknown processing error');
+            if (jobId) {
+              progressTracker.recordFailure(jobId, result.error || 'Unknown processing error', recipe.name);
+            }
+          }
+        } catch (error) {
+          finalResult.failed++;
+          const errorMsg = `Failed to process recipe "${recipe.name}": ${error}`;
+          finalResult.errors.push(errorMsg);
+          if (jobId) {
+            progressTracker.recordFailure(jobId, errorMsg, recipe.name);
+          }
+        }
+      }
 
       const totalDuration = Date.now() - startTime;
       finalResult.metrics = {
@@ -92,11 +125,21 @@ export class RecipeGeneratorService {
       };
       this.metrics.recordGeneration(totalDuration, finalResult.success === options.count);
 
+      // Mark job as complete
+      if (jobId) {
+        progressTracker.updateProgress(jobId, { currentStep: 'complete' });
+      }
+
       return finalResult;
 
     } catch (error) {
       const errorMsg = `Recipe generation service failed: ${error}`;
       console.error(errorMsg);
+      
+      if (jobId) {
+        progressTracker.markJobFailed(jobId, errorMsg);
+      }
+      
       this.metrics.recordGeneration(
         Date.now() - startTime,
         false,
@@ -106,15 +149,30 @@ export class RecipeGeneratorService {
     }
   }
 
-  private async processSingleRecipe(recipe: GeneratedRecipe): Promise<{ success: boolean; error?: string }> {
+  private async processSingleRecipe(recipe: GeneratedRecipe, jobId?: string): Promise<{ success: boolean; error?: string }> {
+    // Validation step
+    if (jobId) {
+      progressTracker.updateProgress(jobId, { currentStep: 'validating' });
+    }
+    
     const validation = await this.validateRecipe(recipe);
     if (!validation.success) {
       return { success: false, error: validation.error };
     }
 
+    // Image generation step
+    if (jobId) {
+      progressTracker.updateProgress(jobId, { currentStep: 'images' });
+    }
+    
     const imageUrl = await this.getOrGenerateImage(recipe);
     if (!imageUrl) {
       return { success: false, error: `Image generation failed for recipe: ${recipe.name}` };
+    }
+    
+    // Storage step
+    if (jobId) {
+      progressTracker.updateProgress(jobId, { currentStep: 'storing' });
     }
     
     return this.storeRecipe({ ...recipe, imageUrl });

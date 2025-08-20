@@ -3,6 +3,7 @@ import { requireAdmin, requireTrainerOrAdmin, requireAuth } from '../middleware/
 import { storage } from '../storage';
 import { z } from 'zod';
 import { recipeGenerator } from '../services/recipeGenerator';
+import { progressTracker } from '../services/progressTracker';
 import { eq, sql } from 'drizzle-orm';
 import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
 import { db } from '../db';
@@ -37,6 +38,17 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
       });
     }
     
+    // Create a progress tracking job
+    const jobId = progressTracker.createJob({ 
+      totalRecipes: count,
+      metadata: { 
+        naturalLanguagePrompt,
+        fitnessGoal,
+        mealTypes,
+        dietaryRestrictions 
+      }
+    });
+    
     // Prepare generation options with context
     const generationOptions = {
       count,
@@ -53,7 +65,8 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
       minCarbs,
       maxCarbs,
       minFat,
-      maxFat
+      maxFat,
+      jobId // Pass jobId to track progress
     };
     
     console.log('Recipe generation started with context:', generationOptions);
@@ -66,7 +79,8 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
       : '';
     
     res.status(202).json({ 
-      message: `Recipe generation started for ${count} recipes${contextMessage}.` 
+      message: `Recipe generation started for ${count} recipes${contextMessage}.`,
+      jobId
     });
   } catch (error) {
     console.error("Error starting recipe generation:", error);
@@ -101,6 +115,17 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
       });
     }
     
+    // Create a progress tracking job
+    const jobId = progressTracker.createJob({ 
+      totalRecipes: count,
+      metadata: { 
+        mealType,
+        dietaryTag,
+        focusIngredient,
+        difficulty 
+      }
+    });
+    
     // Map frontend parameters to backend format
     const generationOptions = {
       count,
@@ -116,7 +141,8 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
       maxCarbs,
       minFat,
       maxFat,
-      difficulty
+      difficulty,
+      jobId // Pass jobId to track progress
     };
     
     console.log('Custom recipe generation started with options:', generationOptions);
@@ -135,7 +161,8 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
       metrics: {
         totalDuration: 0,
         averageTimePerRecipe: 0
-      }
+      },
+      jobId
     });
   } catch (error) {
     console.error("Error starting recipe generation:", error);
@@ -312,6 +339,39 @@ adminRouter.get('/stats', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch admin stats:', error);
     res.status(500).json({ error: 'Could not fetch stats' });
+  }
+});
+
+// Progress tracking endpoint
+adminRouter.get('/generation-progress/:jobId', requireAdmin, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    
+    if (!jobId) {
+      return res.status(400).json({ error: 'Job ID is required' });
+    }
+    
+    const progress = progressTracker.getProgress(jobId);
+    
+    if (!progress) {
+      return res.status(404).json({ error: 'Job not found or has expired' });
+    }
+    
+    res.json(progress);
+  } catch (error) {
+    console.error('Failed to fetch generation progress:', error);
+    res.status(500).json({ error: 'Failed to fetch generation progress' });
+  }
+});
+
+// Get all active jobs
+adminRouter.get('/generation-jobs', requireAdmin, async (req, res) => {
+  try {
+    const jobs = progressTracker.getAllJobs();
+    res.json(jobs);
+  } catch (error) {
+    console.error('Failed to fetch active generation jobs:', error);
+    res.status(500).json({ error: 'Failed to fetch active jobs' });
   }
 });
 
