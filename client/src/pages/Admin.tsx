@@ -26,6 +26,7 @@ import RecipeGenerationModal from "../components/RecipeGenerationModal";
 import PendingRecipesTable from "../components/PendingRecipesTable";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import BulkDeleteToolbar from "../components/BulkDeleteToolbar";
+import ExportJSONModal from "../components/ExportJSONModal";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Admin() {
@@ -48,6 +49,7 @@ export default function Admin() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [showRecipeGenerationModal, setShowRecipeGenerationModal] = useState(false);
   const [showPendingModal, setShowPendingModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   
   // Bulk selection state
   const [selectedRecipeIds, setSelectedRecipeIds] = useState<Set<string>>(new Set());
@@ -565,6 +567,28 @@ export default function Admin() {
                 </Button>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
+                    <i className="fas fa-download text-green-600 text-lg sm:text-xl"></i>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Export JSON</h3>
+                </div>
+                <p className="text-sm sm:text-base text-slate-600 mb-4">Export data as JSON files for backup or analysis</p>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                  onClick={() => setShowExportModal(true)}
+                >
+                  <span className="flex items-center justify-center">
+                    <i className="fas fa-database mr-2"></i>
+                    Export Data
+                  </span>
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
@@ -611,6 +635,12 @@ export default function Admin() {
           </div>
         </div>
       )}
+
+      {/* Export JSON Modal */}
+      <ExportJSONModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+      />
     </div>
   );
 }

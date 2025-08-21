@@ -568,4 +568,66 @@ adminRouter.get('/profile/stats', requireAuth, requireAdmin, async (req, res) =>
   }
 });
 
+// Export data as JSON
+adminRouter.get('/export', requireAdmin, async (req, res) => {
+  try {
+    const { type } = req.query;
+    
+    if (!type || !['recipes', 'users', 'mealPlans', 'all'].includes(type as string)) {
+      return res.status(400).json({ error: 'Invalid export type. Must be: recipes, users, mealPlans, or all' });
+    }
+    
+    const exportData: any = {};
+    
+    // Export recipes
+    if (type === 'recipes' || type === 'all') {
+      const { recipes } = await storage.searchRecipes({
+        page: 1,
+        limit: 100000, // Get all recipes
+      });
+      exportData.recipes = recipes;
+      exportData.recipesCount = recipes.length;
+    }
+    
+    // Export users
+    if (type === 'users' || type === 'all') {
+      const allUsers = await db.select({
+        id: users.id,
+        email: users.email,
+        username: users.username,
+        role: users.role,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        phoneNumber: users.phoneNumber,
+        profileImageUrl: users.profileImageUrl,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      }).from(users);
+      
+      exportData.users = allUsers;
+      exportData.usersCount = allUsers.length;
+    }
+    
+    // Export meal plans
+    if (type === 'mealPlans' || type === 'all') {
+      const allMealPlans = await db.select().from(personalizedMealPlans);
+      exportData.mealPlans = allMealPlans;
+      exportData.mealPlansCount = allMealPlans.length;
+    }
+    
+    // Add metadata
+    exportData.exportDate = new Date().toISOString();
+    exportData.exportType = type;
+    exportData.version = '1.0';
+    
+    res.json(exportData);
+  } catch (error) {
+    console.error('Export error:', error);
+    res.status(500).json({ 
+      error: 'Failed to export data',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default adminRouter; 
