@@ -7,7 +7,7 @@ test.describe('Export JSON Feature - With Authentication', () => {
     
     // Fill login form
     await page.fill('input[type="email"]', 'admin@fitmeal.pro');
-    await page.fill('input[type="password"]', 'admin123!');
+    await page.fill('input[type="password"]', 'Admin123!@#');
     
     // Click login button
     await page.click('button:has-text("Sign In")');
@@ -111,7 +111,7 @@ test.describe('Export JSON Feature - With Authentication', () => {
     // Login
     await page.goto('http://localhost:4000');
     await page.fill('input[type="email"]', 'admin@fitmeal.pro');
-    await page.fill('input[type="password"]', 'admin123!');
+    await page.fill('input[type="password"]', 'Admin123!@#');
     await page.click('button:has-text("Sign In")');
     await page.waitForURL('**/admin', { timeout: 10000 });
     
@@ -157,7 +157,7 @@ test.describe('Export JSON Feature - With Authentication', () => {
     // Login
     await page.goto('http://localhost:4000');
     await page.fill('input[type="email"]', 'admin@fitmeal.pro');
-    await page.fill('input[type="password"]', 'admin123!');
+    await page.fill('input[type="password"]', 'Admin123!@#');
     await page.click('button:has-text("Sign In")');
     await page.waitForURL('**/admin', { timeout: 10000 });
     

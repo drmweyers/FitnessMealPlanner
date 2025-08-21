@@ -37,6 +37,8 @@
     "test:auth": "vitest run test/unit/auth/**/*.test.ts --reporter=verbose",
     "test:workflows": "vitest run test/integration/**/*.test.ts --reporter=verbose",
     "test:coverage:full": "vitest run --coverage --reporter=verbose --coverage.reporter=text --coverage.reporter=html --coverage.reporter=json",
+    "test:trainer-customer": "tsx test/unit/runTrainerCustomerTests.ts",
+    "test:trainer-customer:quick": "vitest run test/unit/trainerCustomerRelationships.test.ts test/unit/customerInvitationSystem.test.ts --reporter=basic",
     "qa:api": "node test-api-comprehensive.js",
     "qa:database": "node test-database-integrity.js",
     "qa:e2e": "playwright test test/e2e/qa-comprehensive-e2e.spec.ts",

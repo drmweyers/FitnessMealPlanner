@@ -75,11 +75,18 @@
       "Bash(doctl:*)",
       "Bash(move:*)",
       "Bash(cp:*)",
-      "Bash(dir \"C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\dist\\public\\assets\\*.js\" /O:-S)"
+      "Bash(dir \"C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\dist\\public\\assets\\*.js\" /O:-S)",
+      "WebFetch(domain:evofitmeals.com)",
+      "Bash(git checkout:*)",
+      "Bash(vitest run:*)",
+      "Bash(touch:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "additionalDirectories": [
-      "C:\\c\\Users\\drmwe\\claude-workspace"
+      "C:\\c\\Users\\drmwe\\claude-workspace",
+      "C:\\",
+      "C:\\c\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test"
     ]
   },
   "enableAllProjectMcpServers": true,

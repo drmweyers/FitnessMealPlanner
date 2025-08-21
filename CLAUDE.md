@@ -92,6 +92,42 @@ git merge feature/your-feature-name
 git push origin main
 ```
 
+### Branch Synchronization Process (CTO Guidance)
+**CRITICAL: After adding features to main, synchronize with qa-ready**
+
+```bash
+# Step 1: Ensure you're on main with latest changes
+git checkout main
+git pull origin main
+
+# Step 2: Switch to qa-ready branch  
+git checkout qa-ready
+git status  # Must be clean
+
+# Step 3: Merge main into qa-ready to sync branches
+git merge main --no-edit
+# This brings latest production code to qa-ready (like Export JSON feature)
+
+# Step 4: Push synchronized qa-ready branch
+git push origin qa-ready
+
+# Step 5: Return to main branch
+git checkout main
+```
+
+**CTO Instructions - When to guide User through this process:**
+- ✅ After new features are committed to main
+- ✅ Before starting development on qa-ready  
+- ✅ After production hotfixes
+- ✅ When user asks "is qa-ready merged with main?"
+- ✅ Weekly as part of regular maintenance
+
+**Why branch sync is important:**
+- qa-ready serves as staging/development branch
+- main remains production-ready branch  
+- Both branches need latest features for consistent development
+- Prevents conflicts when deploying from qa-ready
+
 ### During Development
 1. Use TodoWrite tool to track all tasks
 2. Test changes in the Docker environment

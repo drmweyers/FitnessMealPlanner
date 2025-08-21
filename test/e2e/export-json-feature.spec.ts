@@ -8,7 +8,7 @@ test.describe('Export JSON Feature', () => {
     // Login as admin
     await page.click('text=Login');
     await page.fill('[data-testid="email-input"]', 'admin@fitmeal.pro');
-    await page.fill('[data-testid="password-input"]', 'admin123!');
+    await page.fill('[data-testid="password-input"]', 'Admin123!@#');
     await page.click('[data-testid="login-button"]');
     
     // Wait for navigation to complete
@@ -246,7 +246,7 @@ test.describe('Export JSON Feature', () => {
     // Login as customer
     await page.click('text=Login');
     await page.fill('[data-testid="email-input"]', 'customer.test@evofitmeals.com');
-    await page.fill('[data-testid="password-input"]', 'Customer123!');
+    await page.fill('[data-testid="password-input"]', 'TestCustomer123!');
     await page.click('[data-testid="login-button"]');
     
     // Try to navigate to admin page
