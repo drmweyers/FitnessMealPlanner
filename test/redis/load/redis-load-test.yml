@@ -1,0 +1,255 @@
+config:
+  target: 'http://localhost:4000'
+  phases:
+    # Warmup phase - light load to populate cache
+    - duration: 60
+      arrivalRate: 5
+      name: "Cache Warmup Phase"
+    # Ramp up phase - gradually increase load
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 25
+      name: "Ramp Up Phase"
+    # Peak load phase - test cache under heavy load
+    - duration: 300
+      arrivalRate: 50
+      name: "Peak Load Phase"
+    # Sustained load - test cache consistency
+    - duration: 240
+      arrivalRate: 100
+      name: "Sustained High Load"
+    # Spike test - sudden load increase
+    - duration: 60
+      arrivalRate: 200
+      name: "Spike Test"
+    # Cool down phase
+    - duration: 60
+      arrivalRate: 10
+      name: "Cool Down Phase"
+  
+  # Global configuration
+  http:
+    timeout: 10
+  
+  # Define variables for test data
+  variables:
+    searchTerms:
+      - "chicken"
+      - "beef"
+      - "vegetarian"
+      - "pasta"
+      - "salad"
+      - "soup"
+      - "dessert"
+      - "breakfast"
+    
+    targetCalories:
+      - 1200
+      - 1500
+      - 1800
+      - 2000
+      - 2200
+      - 2500
+  
+  # Custom metrics to track
+  metrics:
+    - cache_hits
+    - cache_misses
+    - response_time_p95
+    - error_rate
+
+  plugins:
+    # Custom metrics plugin
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+    
+    # Request timing
+    hdrhistogram: {}
+
+scenarios:
+  # Recipe search workflow (40% of traffic)
+  - name: "Recipe Search and Retrieval"
+    weight: 40
+    flow:
+      # Login to get auth token
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test-trainer@example.com"
+            password: "testpassword123"
+          capture:
+            - json: "$.data.accessToken"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+
+      # Search for recipes (cache-heavy operation)
+      - get:
+          url: "/api/recipes"
+          qs:
+            search: "{{ $randomString(searchTerms) }}"
+            page: "{{ $randomInt(1, 5) }}"
+            limit: "{{ $randomInt(10, 20) }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+            - contentType: json
+          capture:
+            - json: "$.recipes[0].id"
+              as: "firstRecipeId"
+          ifTrue:
+            - get:
+                url: "/api/recipes/{{ firstRecipeId }}"
+                headers:
+                  Authorization: "Bearer {{ authToken }}"
+                expect:
+                  - statusCode: 200
+
+      # Get popular recipes (should be well-cached)
+      - get:
+          url: "/api/recipes/popular"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # Meal plan generation (30% of traffic)
+  - name: "Meal Plan Generation"
+    weight: 30
+    flow:
+      # Login
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test-trainer@example.com"
+            password: "testpassword123"
+          capture:
+            - json: "$.data.accessToken"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+
+      # Generate meal plan (recipe-intensive operation)
+      - post:
+          url: "/api/meal-plans/generate"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            name: "Load Test Meal Plan {{ $randomString() }}"
+            targetCalories: "{{ $randomString(targetCalories) }}"
+            mealsPerDay: "{{ $randomInt(3, 5) }}"
+            durationDays: "{{ $randomInt(3, 7) }}"
+            dietaryPreferences: []
+            startDate: "{{ $timestamp() }}"
+          expect:
+            - statusCode: 200
+          capture:
+            - json: "$.mealPlan.id"
+              as: "mealPlanId"
+
+      # Fetch generated meal plan details
+      - get:
+          url: "/api/meal-plans/{{ mealPlanId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # User dashboard (20% of traffic)
+  - name: "Trainer Dashboard"
+    weight: 20
+    flow:
+      # Login
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test-trainer@example.com"
+            password: "testpassword123"
+          capture:
+            - json: "$.data.accessToken"
+              as: "authToken"
+
+      # Dashboard data (multiple cached endpoints)
+      - get:
+          url: "/api/trainer/dashboard"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # Trainer's meal plans
+      - get:
+          url: "/api/trainer/meal-plans"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # Trainer's customers
+      - get:
+          url: "/api/trainer/customers"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # Recent activity
+      - get:
+          url: "/api/trainer/activity"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+  # Customer interactions (10% of traffic)
+  - name: "Customer Meal Plan Access"
+    weight: 10
+    flow:
+      # Login as customer
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test-customer@example.com"
+            password: "testpassword123"
+          capture:
+            - json: "$.data.accessToken"
+              as: "authToken"
+
+      # View assigned meal plans
+      - get:
+          url: "/api/customer/meal-plans"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+          capture:
+            - json: "$.mealPlans[0].id"
+              as: "assignedMealPlanId"
+          ifTrue:
+            # View specific meal plan details
+            - get:
+                url: "/api/meal-plans/{{ assignedMealPlanId }}"
+                headers:
+                  Authorization: "Bearer {{ authToken }}"
+                expect:
+                  - statusCode: 200
+
+            # Generate PDF (cache-intensive operation)
+            - post:
+                url: "/api/pdf/export/meal-plan/{{ assignedMealPlanId }}"
+                headers:
+                  Authorization: "Bearer {{ authToken }}"
+                expect:
+                  - statusCode: 200
+
+      # Check progress
+      - get:
+          url: "/api/customer/progress"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+# Custom functions for data generation
+processor: "./test/redis/load/load-test-processor.js"

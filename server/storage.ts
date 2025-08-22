@@ -20,6 +20,12 @@ import {
   customerInvitations,
   trainerMealPlans,
   mealPlanAssignments,
+  recipeFavorites,
+  recipeCollections,
+  collectionRecipes,
+  recipeInteractions,
+  recipeRecommendations,
+  userActivitySessions,
   type User,
   type InsertUser,
   type Recipe,
@@ -33,6 +39,12 @@ import {
   type InsertTrainerMealPlan,
   type TrainerMealPlanWithAssignments,
   type MealPlanAssignment,
+  type RecipeFavorite,
+  type RecipeCollection,
+  type CollectionRecipe,
+  type RecipeInteraction,
+  type RecipeRecommendation,
+  type UserActivitySession,
   passwordResetTokens,
   refreshTokens,
 } from "@shared/schema";
@@ -119,6 +131,29 @@ export interface IStorage {
   getTrainerCustomers(trainerId: string): Promise<{id: string; email: string; firstAssignedAt: string}[]>;
   getCustomerMealPlans(trainerId: string, customerId: string): Promise<any[]>;
   removeMealPlanAssignment(trainerId: string, assignmentId: string): Promise<boolean>;
+  
+  // Recipe Favorites
+  addRecipeToFavorites(userId: string, recipeId: string, notes?: string): Promise<any>;
+  removeRecipeFromFavorites(userId: string, recipeId: string): Promise<boolean>;
+  getUserFavorites(userId: string, options: { page?: number; limit?: number; search?: string }): Promise<{ favorites: any[]; total: number }>;
+  isRecipeFavorited(userId: string, recipeId: string): Promise<boolean>;
+  
+  // Recipe Collections
+  createRecipeCollection(userId: string, collectionData: any): Promise<any>;
+  getUserCollections(userId: string, options: { page?: number; limit?: number }): Promise<{ collections: any[]; total: number }>;
+  getCollectionWithRecipes(userId: string, collectionId: string): Promise<any>;
+  addRecipeToCollection(userId: string, collectionId: string, recipeId: string, notes?: string): Promise<void>;
+  removeRecipeFromCollection(userId: string, collectionId: string, recipeId: string): Promise<boolean>;
+  updateRecipeCollection(userId: string, collectionId: string, updates: any): Promise<any>;
+  deleteRecipeCollection(userId: string, collectionId: string): Promise<boolean>;
+  
+  // Recipe Interactions & Analytics
+  trackRecipeInteraction(userId: string, recipeId: string, interactionType: string, interactionValue?: number, sessionId?: string, metadata?: any): Promise<void>;
+  rateRecipe(userId: string, recipeId: string, rating: number): Promise<void>;
+  getPopularRecipes(timeframe: string, limit: number): Promise<any[]>;
+  getTrendingRecipes(limit: number, category?: string): Promise<any[]>;
+  getRecipeRecommendations(userId: string, type: string, limit: number): Promise<any[]>;
+  getUserActivitySummary(userId: string, days: number): Promise<any>;
   
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
@@ -684,6 +719,355 @@ export class DatabaseStorage implements IStorage {
       console.error('Error removing meal plan assignment:', error);
       return false;
     }
+  }
+
+  // Recipe Favorites
+  async addRecipeToFavorites(userId: string, recipeId: string, notes?: string): Promise<RecipeFavorite> {
+    try {
+      const [favorite] = await db.insert(recipeFavorites).values({
+        userId,
+        recipeId,
+        notes,
+      }).returning();
+      return favorite;
+    } catch (error: any) {
+      if (error.code === '23505') { // Unique constraint violation
+        throw new Error('Recipe is already in favorites');
+      }
+      throw error;
+    }
+  }
+
+  async removeRecipeFromFavorites(userId: string, recipeId: string): Promise<boolean> {
+    const result = await db
+      .delete(recipeFavorites)
+      .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)));
+    return result.rowCount > 0;
+  }
+
+  async getUserFavorites(userId: string, options: { page?: number; limit?: number; search?: string }) {
+    const { page = 1, limit = 20, search } = options;
+    const offset = (page - 1) * limit;
+
+    // Build the query with recipe details
+    let query = db
+      .select({
+        favorite: recipeFavorites,
+        recipe: recipes,
+      })
+      .from(recipeFavorites)
+      .innerJoin(recipes, eq(recipeFavorites.recipeId, recipes.id))
+      .where(eq(recipeFavorites.userId, userId));
+
+    if (search) {
+      query = query.where(like(recipes.name, `%${search}%`));
+    }
+
+    const favorites = await query
+      .orderBy(desc(recipeFavorites.favoriteDate))
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count
+    const totalQuery = db
+      .select({ count: sql<number>`count(*)` })
+      .from(recipeFavorites)
+      .innerJoin(recipes, eq(recipeFavorites.recipeId, recipes.id))
+      .where(eq(recipeFavorites.userId, userId));
+
+    if (search) {
+      totalQuery.where(like(recipes.name, `%${search}%`));
+    }
+
+    const [{ count: total }] = await totalQuery;
+
+    return {
+      favorites: favorites.map(f => ({
+        ...f.recipe,
+        favoriteDate: f.favorite.favoriteDate,
+        notes: f.favorite.notes,
+      })),
+      total,
+    };
+  }
+
+  async isRecipeFavorited(userId: string, recipeId: string): Promise<boolean> {
+    const [result] = await db
+      .select({ id: recipeFavorites.id })
+      .from(recipeFavorites)
+      .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)))
+      .limit(1);
+    return !!result;
+  }
+
+  // Recipe Collections
+  async createRecipeCollection(userId: string, collectionData: any): Promise<RecipeCollection> {
+    const [collection] = await db.insert(recipeCollections).values({
+      userId,
+      ...collectionData,
+    }).returning();
+    return collection;
+  }
+
+  async getUserCollections(userId: string, options: { page?: number; limit?: number }) {
+    const { page = 1, limit = 20 } = options;
+    const offset = (page - 1) * limit;
+
+    // Get collections with recipe counts
+    const collections = await db
+      .select({
+        collection: recipeCollections,
+        recipeCount: sql<number>`count(${collectionRecipes.id})`,
+      })
+      .from(recipeCollections)
+      .leftJoin(collectionRecipes, eq(recipeCollections.id, collectionRecipes.collectionId))
+      .where(eq(recipeCollections.userId, userId))
+      .groupBy(recipeCollections.id)
+      .orderBy(desc(recipeCollections.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count
+    const [{ count: total }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(recipeCollections)
+      .where(eq(recipeCollections.userId, userId));
+
+    return {
+      collections: collections.map(c => ({
+        ...c.collection,
+        recipeCount: Number(c.recipeCount),
+      })),
+      total,
+    };
+  }
+
+  async getCollectionWithRecipes(userId: string, collectionId: string) {
+    // Get collection details
+    const [collection] = await db
+      .select()
+      .from(recipeCollections)
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+
+    if (!collection) {
+      return null;
+    }
+
+    // Get recipes in this collection
+    const recipes = await db
+      .select({
+        recipe: recipes,
+        collectionRecipe: collectionRecipes,
+      })
+      .from(collectionRecipes)
+      .innerJoin(recipes, eq(collectionRecipes.recipeId, recipes.id))
+      .where(eq(collectionRecipes.collectionId, collectionId))
+      .orderBy(collectionRecipes.orderIndex, collectionRecipes.addedDate);
+
+    return {
+      ...collection,
+      recipes: recipes.map(r => ({
+        ...r.recipe,
+        addedDate: r.collectionRecipe.addedDate,
+        notes: r.collectionRecipe.notes,
+        orderIndex: r.collectionRecipe.orderIndex,
+      })),
+    };
+  }
+
+  async addRecipeToCollection(userId: string, collectionId: string, recipeId: string, notes?: string): Promise<void> {
+    // Verify collection belongs to user
+    const [collection] = await db
+      .select({ id: recipeCollections.id })
+      .from(recipeCollections)
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+
+    if (!collection) {
+      throw new Error('Collection not found');
+    }
+
+    try {
+      await db.insert(collectionRecipes).values({
+        collectionId,
+        recipeId,
+        notes,
+      });
+    } catch (error: any) {
+      if (error.code === '23505') { // Unique constraint violation
+        throw new Error('Recipe is already in this collection');
+      }
+      throw error;
+    }
+  }
+
+  async removeRecipeFromCollection(userId: string, collectionId: string, recipeId: string): Promise<boolean> {
+    // Verify collection belongs to user
+    const [collection] = await db
+      .select({ id: recipeCollections.id })
+      .from(recipeCollections)
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+
+    if (!collection) {
+      return false;
+    }
+
+    const result = await db
+      .delete(collectionRecipes)
+      .where(and(eq(collectionRecipes.collectionId, collectionId), eq(collectionRecipes.recipeId, recipeId)));
+
+    return result.rowCount > 0;
+  }
+
+  async updateRecipeCollection(userId: string, collectionId: string, updates: any) {
+    const [collection] = await db
+      .update(recipeCollections)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)))
+      .returning();
+
+    return collection;
+  }
+
+  async deleteRecipeCollection(userId: string, collectionId: string): Promise<boolean> {
+    const result = await db
+      .delete(recipeCollections)
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+
+    return result.rowCount > 0;
+  }
+
+  // Recipe Interactions & Analytics
+  async trackRecipeInteraction(
+    userId: string,
+    recipeId: string,
+    interactionType: string,
+    interactionValue?: number,
+    sessionId?: string,
+    metadata?: any
+  ): Promise<void> {
+    await db.insert(recipeInteractions).values({
+      userId,
+      recipeId,
+      interactionType,
+      interactionValue,
+      sessionId,
+      metadata: metadata || {},
+    });
+  }
+
+  async rateRecipe(userId: string, recipeId: string, rating: number): Promise<void> {
+    await this.trackRecipeInteraction(userId, recipeId, 'rate', rating);
+  }
+
+  async getPopularRecipes(timeframe: string, limit: number) {
+    let dateFilter;
+    const now = new Date();
+
+    switch (timeframe) {
+      case 'day':
+        dateFilter = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case 'week':
+        dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'month':
+        dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        dateFilter = new Date(0); // All time
+    }
+
+    return await db
+      .select({
+        recipe: recipes,
+        viewCount: sql<number>`count(${recipeInteractions.id})`,
+        favoriteCount: sql<number>`count(${recipeFavorites.id})`,
+      })
+      .from(recipes)
+      .leftJoin(
+        recipeInteractions,
+        and(
+          eq(recipeInteractions.recipeId, recipes.id),
+          eq(recipeInteractions.interactionType, 'view'),
+          gte(recipeInteractions.interactionDate, dateFilter)
+        )
+      )
+      .leftJoin(
+        recipeFavorites,
+        and(
+          eq(recipeFavorites.recipeId, recipes.id),
+          gte(recipeFavorites.favoriteDate, dateFilter)
+        )
+      )
+      .where(eq(recipes.isApproved, true))
+      .groupBy(recipes.id)
+      .orderBy(desc(sql`count(${recipeInteractions.id}) + count(${recipeFavorites.id})`))
+      .limit(limit);
+  }
+
+  async getTrendingRecipes(limit: number, category?: string) {
+    const last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    let query = db
+      .select({
+        recipe: recipes,
+        recentViews: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${last7Days} then 1 end)`,
+        totalViews: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${last30Days} then 1 end)`,
+        favoriteCount: sql<number>`count(${recipeFavorites.id})`,
+      })
+      .from(recipes)
+      .leftJoin(recipeInteractions, eq(recipeInteractions.recipeId, recipes.id))
+      .leftJoin(recipeFavorites, eq(recipeFavorites.recipeId, recipes.id))
+      .where(eq(recipes.isApproved, true));
+
+    if (category) {
+      query = query.where(sql`${recipes.mealTypes} @> ${JSON.stringify([category])}`);
+    }
+
+    return await query
+      .groupBy(recipes.id)
+      .orderBy(desc(sql`count(case when ${recipeInteractions.interactionDate} >= ${last7Days} then 1 end)`))
+      .limit(limit);
+  }
+
+  async getRecipeRecommendations(userId: string, type: string, limit: number) {
+    // For now, return popular recipes based on user's activity
+    // In a real implementation, this would use ML algorithms
+    return await db
+      .select({
+        recipe: recipes,
+        score: sql<number>`random()`, // Placeholder scoring
+        reason: sql<string>`'Based on your recent activity'`,
+      })
+      .from(recipes)
+      .where(eq(recipes.isApproved, true))
+      .orderBy(sql`random()`)
+      .limit(limit);
+  }
+
+  async getUserActivitySummary(userId: string, days: number) {
+    const dateFilter = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const [activity] = await db
+      .select({
+        totalInteractions: sql<number>`count(${recipeInteractions.id})`,
+        recipesViewed: sql<number>`count(distinct case when ${recipeInteractions.interactionType} = 'view' then ${recipeInteractions.recipeId} end)`,
+        recipesRated: sql<number>`count(distinct case when ${recipeInteractions.interactionType} = 'rate' then ${recipeInteractions.recipeId} end)`,
+        totalFavorites: sql<number>`count(${recipeFavorites.id})`,
+        totalCollections: sql<number>`count(${recipeCollections.id})`,
+      })
+      .from(recipeInteractions)
+      .leftJoin(recipeFavorites, eq(recipeFavorites.userId, userId))
+      .leftJoin(recipeCollections, eq(recipeCollections.userId, userId))
+      .where(
+        and(
+          eq(recipeInteractions.userId, userId),
+          gte(recipeInteractions.interactionDate, dateFilter)
+        )
+      );
+
+    return activity;
   }
 
   // Transaction support

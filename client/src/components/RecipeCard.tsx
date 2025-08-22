@@ -1,7 +1,12 @@
-import { memo, useState, useCallback, useMemo } from "react";
+import { memo, useState, useCallback, useMemo, useEffect } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Checkbox } from "./ui/checkbox";
+import { Badge } from "./ui/badge";
 import type { Recipe } from "@shared/schema";
+import FavoriteButton from "./favorites/FavoriteButton";
+import { useRecipeViewTracking } from "../hooks/useEngagement";
+import { Eye, Clock, Star, Heart } from "lucide-react";
+import { cn } from "../lib/utils";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -9,6 +14,16 @@ interface RecipeCardProps {
   showCheckbox?: boolean;
   isSelected?: boolean;
   onSelectionChange?: (recipeId: string, selected: boolean) => void;
+  showFavoriteButton?: boolean;
+  showEngagementStats?: boolean;
+  engagementData?: {
+    viewCount?: number;
+    favoriteCount?: number;
+    avgRating?: number;
+    isRecommended?: boolean;
+    recommendationReason?: string;
+  };
+  className?: string;
 }
 
 // Memoized color mapping functions outside component to avoid recreation
@@ -37,9 +52,21 @@ const getDietaryTagColor = (tag: string) => {
   return DIETARY_TAG_COLORS[tag as keyof typeof DIETARY_TAG_COLORS] || "bg-slate-100 text-slate-700";
 };
 
-function RecipeCard({ recipe, onClick, showCheckbox = false, isSelected = false, onSelectionChange }: RecipeCardProps) {
+function RecipeCard({ 
+  recipe, 
+  onClick, 
+  showCheckbox = false, 
+  isSelected = false, 
+  onSelectionChange,
+  showFavoriteButton = true,
+  showEngagementStats = false,
+  engagementData,
+  className,
+}: RecipeCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  
+  const { trackView } = useRecipeViewTracking();
 
   // Memoized callbacks to prevent unnecessary re-renders
   const handleImageLoad = useCallback(() => {
@@ -58,15 +85,40 @@ function RecipeCard({ recipe, onClick, showCheckbox = false, isSelected = false,
   }, [recipe.id, onSelectionChange]);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
-    // Don't trigger card click if checkbox was clicked
-    if (showCheckbox && e.target !== e.currentTarget) {
+    // Don't trigger card click if checkbox or favorite button was clicked
+    if (e.target !== e.currentTarget) {
       const target = e.target as HTMLElement;
-      if (target.closest('[data-checkbox]')) {
+      if (target.closest('[data-checkbox]') || target.closest('[data-favorite-button]')) {
         return;
       }
     }
+    
+    // Track recipe view
+    trackView(recipe.id);
+    
     onClick();
-  }, [onClick, showCheckbox]);
+  }, [onClick, showCheckbox, trackView, recipe.id]);
+
+  // Auto-track view when card comes into viewport (optional)
+  useEffect(() => {
+    const cardElement = document.querySelector(`[data-recipe-id="${recipe.id}"]`);
+    if (!cardElement) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Optional: Auto-track views when card is visible
+            // trackView(recipe.id);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(cardElement);
+    return () => observer.disconnect();
+  }, [recipe.id, trackView]);
 
   // Memoized computed values
   const { primaryMealType, primaryDietaryTag, totalTime, formattedProtein, formattedCarbs, formattedFat } = useMemo(() => ({
@@ -80,10 +132,13 @@ function RecipeCard({ recipe, onClick, showCheckbox = false, isSelected = false,
 
   return (
     <Card 
-      className={`overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group h-full border-0 shadow-sm relative ${
-        isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
-      }`}
+      className={cn(
+        "overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group h-full border-0 shadow-sm relative",
+        isSelected && 'ring-2 ring-primary ring-offset-2',
+        className
+      )}
       onClick={handleCardClick}
+      data-recipe-id={recipe.id}
     >
       <div className="relative w-full h-36 sm:h-40 lg:h-48 bg-gray-100 overflow-hidden">
         {showCheckbox && (

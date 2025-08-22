@@ -21,11 +21,22 @@ import customerRouter from './routes/customerRoutes';
 import pdfRouter from './routes/pdf';
 import progressRouter from './routes/progressRoutes';
 import profileRouter from './routes/profileRoutes';
+import { favoritesRouter } from './routes/favorites';
+import { engagementRouter } from './routes/engagement';
+import { trendingRouter } from './routes/trending';
+import { adminAnalyticsRouter } from './routes/adminAnalytics';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
 import passport from './passport-config';
 import { requireAuth, requireAdmin, requireTrainerOrAdmin, requireRole } from './middleware/auth';
+import { 
+  securityAnalysis, 
+  requestMonitoring, 
+  sanitizeAnalyticsData,
+  privacyProtection,
+  analyticsErrorHandler 
+} from './middleware/analyticsMiddleware';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -139,6 +150,12 @@ app.get('/api/health', (req, res) => {
 // Public routes (no authentication required)
 app.use('/api/auth', authRouter);
 
+// Apply analytics middleware to all API routes
+app.use('/api', securityAnalysis);
+app.use('/api', requestMonitoring);
+app.use('/api', sanitizeAnalyticsData);
+app.use('/api', privacyProtection);
+
 // Invitations routes (mixed auth requirements - handled internally)
 app.use('/api/invitations', invitationRouter);
 app.use('/api/recipes', requireAuth, recipeRouter);
@@ -149,6 +166,15 @@ app.use('/api/meal-plan', requireAuth, mealPlanRouter);
 app.use('/api/pdf', requireAuth, pdfRouter);
 app.use('/api/progress', requireAuth, progressRouter);
 app.use('/api/profile', requireAuth, profileRouter);
+
+// New analytics and engagement routes
+app.use('/api/favorites', favoritesRouter);
+app.use('/api/analytics', engagementRouter);
+app.use('/api/trending', trendingRouter);
+app.use('/api/admin/analytics', adminAnalyticsRouter);
+
+// Apply analytics error handler
+app.use('/api', analyticsErrorHandler);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));

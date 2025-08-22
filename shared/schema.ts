@@ -712,5 +712,235 @@ export type CreateMeasurement = z.infer<typeof createMeasurementSchema>;
 export type CreateGoal = z.infer<typeof createGoalSchema>;
 export type UploadProgressPhoto = z.infer<typeof uploadProgressPhotoSchema>;
 
+/**
+ * Recipe Favorites Table
+ * 
+ * Stores individual recipe favorites for each user.
+ * Allows users to quickly access their preferred recipes.
+ */
+export const recipeFavorites = pgTable("recipe_favorites", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  recipeId: uuid("recipe_id")
+    .references(() => recipes.id, { onDelete: "cascade" })
+    .notNull(),
+  favoriteDate: timestamp("favorite_date").defaultNow(),
+  notes: text("notes"), // Personal notes about why they like this recipe
+}, (table) => ({
+  userIdIdx: index("recipe_favorites_user_id_idx").on(table.userId),
+  recipeIdIdx: index("recipe_favorites_recipe_id_idx").on(table.recipeId),
+  // Ensure users can't favorite the same recipe twice
+  uniqueFavorite: index("recipe_favorites_user_recipe_unique").on(table.userId, table.recipeId),
+}));
 
+/**
+ * Recipe Collections Table
+ * 
+ * Stores user-created collections for organizing favorite recipes.
+ * Similar to playlists for recipes (e.g., "Quick Breakfasts", "Post-Workout Meals").
+ */
+export const recipeCollections = pgTable("recipe_collections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  coverImageUrl: varchar("cover_image_url", { length: 500 }),
+  isPublic: boolean("is_public").default(false), // Allow sharing collections
+  tags: jsonb("tags").$type<string[]>().default([]), // For categorization
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userIdIdx: index("recipe_collections_user_id_idx").on(table.userId),
+  publicIdx: index("recipe_collections_public_idx").on(table.isPublic),
+}));
+
+/**
+ * Collection Recipes Table
+ * 
+ * Many-to-many relationship between collections and recipes.
+ * Tracks recipes within each collection with ordering.
+ */
+export const collectionRecipes = pgTable("collection_recipes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  collectionId: uuid("collection_id")
+    .references(() => recipeCollections.id, { onDelete: "cascade" })
+    .notNull(),
+  recipeId: uuid("recipe_id")
+    .references(() => recipes.id, { onDelete: "cascade" })
+    .notNull(),
+  addedDate: timestamp("added_date").defaultNow(),
+  orderIndex: integer("order_index").default(0), // For custom ordering within collection
+  notes: text("notes"), // Collection-specific notes about the recipe
+}, (table) => ({
+  collectionIdIdx: index("collection_recipes_collection_id_idx").on(table.collectionId),
+  recipeIdIdx: index("collection_recipes_recipe_id_idx").on(table.recipeId),
+  // Ensure recipes aren't duplicated in the same collection
+  uniqueCollectionRecipe: index("collection_recipes_unique").on(table.collectionId, table.recipeId),
+}));
+
+/**
+ * Recipe Interactions Table
+ * 
+ * Tracks user interactions with recipes for analytics and recommendations.
+ * Includes views, ratings, cooking attempts, etc.
+ */
+export const recipeInteractions = pgTable("recipe_interactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  recipeId: uuid("recipe_id")
+    .references(() => recipes.id, { onDelete: "cascade" })
+    .notNull(),
+  interactionType: varchar("interaction_type", { length: 50 }).notNull(), // view, rate, cook, share
+  interactionValue: integer("interaction_value"), // Rating value (1-5), or null for other types
+  sessionId: varchar("session_id", { length: 255 }), // For tracking user sessions
+  interactionDate: timestamp("interaction_date").defaultNow(),
+  metadata: jsonb("metadata").$type<Record<string, any>>().default({}), // Additional interaction data
+}, (table) => ({
+  userIdIdx: index("recipe_interactions_user_id_idx").on(table.userId),
+  recipeIdIdx: index("recipe_interactions_recipe_id_idx").on(table.recipeId),
+  typeIdx: index("recipe_interactions_type_idx").on(table.interactionType),
+  dateIdx: index("recipe_interactions_date_idx").on(table.interactionDate),
+}));
+
+/**
+ * Recipe Recommendations Table
+ * 
+ * Stores AI-generated recipe recommendations for users.
+ * Pre-computed for performance, refreshed periodically.
+ */
+export const recipeRecommendations = pgTable("recipe_recommendations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  recipeId: uuid("recipe_id")
+    .references(() => recipes.id, { onDelete: "cascade" })
+    .notNull(),
+  recommendationType: varchar("recommendation_type", { length: 50 }).notNull(), // similar, trending, personalized, new
+  score: decimal("score", { precision: 5, scale: 4 }).notNull(), // Recommendation strength (0.0000-1.0000)
+  reason: text("reason"), // Why this recipe was recommended
+  generatedAt: timestamp("generated_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(), // When to refresh this recommendation
+}, (table) => ({
+  userIdIdx: index("recipe_recommendations_user_id_idx").on(table.userId),
+  typeIdx: index("recipe_recommendations_type_idx").on(table.recommendationType),
+  scoreIdx: index("recipe_recommendations_score_idx").on(table.score),
+  expiresIdx: index("recipe_recommendations_expires_idx").on(table.expiresAt),
+}));
+
+/**
+ * User Activity Sessions Table
+ * 
+ * Tracks user browsing sessions for analytics and engagement insights.
+ * Helps understand user behavior patterns.
+ */
+export const userActivitySessions = pgTable("user_activity_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  sessionId: varchar("session_id", { length: 255 }).notNull(),
+  startTime: timestamp("start_time").defaultNow(),
+  endTime: timestamp("end_time"),
+  pagesViewed: integer("pages_viewed").default(0),
+  recipesViewed: integer("recipes_viewed").default(0),
+  favoritesAdded: integer("favorites_added").default(0),
+  collectionsCreated: integer("collections_created").default(0),
+  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address", { length: 45 }), // IPv6 support
+}, (table) => ({
+  userIdIdx: index("user_activity_sessions_user_id_idx").on(table.userId),
+  sessionIdIdx: index("user_activity_sessions_session_id_idx").on(table.sessionId),
+  startTimeIdx: index("user_activity_sessions_start_time_idx").on(table.startTime),
+}));
+
+// Type exports for favorites and user engagement
+export type InsertRecipeFavorite = typeof recipeFavorites.$inferInsert;
+export type RecipeFavorite = typeof recipeFavorites.$inferSelect;
+
+export type InsertRecipeCollection = typeof recipeCollections.$inferInsert;
+export type RecipeCollection = typeof recipeCollections.$inferSelect;
+
+export type InsertCollectionRecipe = typeof collectionRecipes.$inferInsert;
+export type CollectionRecipe = typeof collectionRecipes.$inferSelect;
+
+export type InsertRecipeInteraction = typeof recipeInteractions.$inferInsert;
+export type RecipeInteraction = typeof recipeInteractions.$inferSelect;
+
+export type InsertRecipeRecommendation = typeof recipeRecommendations.$inferInsert;
+export type RecipeRecommendation = typeof recipeRecommendations.$inferSelect;
+
+export type InsertUserActivitySession = typeof userActivitySessions.$inferInsert;
+export type UserActivitySession = typeof userActivitySessions.$inferSelect;
+
+// Extended types for frontend use
+export type RecipeWithFavoriteStatus = Recipe & {
+  isFavorited?: boolean;
+  favoriteDate?: Date;
+  favoriteCount?: number;
+  userRating?: number;
+  avgRating?: number;
+  viewCount?: number;
+  isRecommended?: boolean;
+  recommendationReason?: string;
+};
+
+export type CollectionWithRecipeCount = RecipeCollection & {
+  recipeCount?: number;
+  recentRecipes?: Recipe[];
+  isFollowing?: boolean;
+};
+
+export type RecipeEngagementStats = {
+  recipeId: string;
+  totalViews: number;
+  totalFavorites: number;
+  avgRating: number;
+  totalRatings: number;
+  recentViews: number; // Last 7 days
+  trendingScore: number;
+};
+
+// Validation schemas for favorites and collections
+export const createFavoriteSchema = z.object({
+  recipeId: z.string().uuid(),
+  notes: z.string().optional(),
+});
+
+export const createCollectionSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().optional(),
+  isPublic: z.boolean().default(false),
+  tags: z.array(z.string()).default([]),
+});
+
+export const addToCollectionSchema = z.object({
+  recipeId: z.string().uuid(),
+  notes: z.string().optional(),
+});
+
+export const rateRecipeSchema = z.object({
+  recipeId: z.string().uuid(),
+  rating: z.number().min(1).max(5),
+});
+
+export const trackInteractionSchema = z.object({
+  recipeId: z.string().uuid(),
+  interactionType: z.enum(['view', 'rate', 'cook', 'share', 'search']),
+  interactionValue: z.number().optional(),
+  sessionId: z.string().optional(),
+  metadata: z.record(z.any()).optional(),
+});
+
+export type CreateFavorite = z.infer<typeof createFavoriteSchema>;
+export type CreateCollection = z.infer<typeof createCollectionSchema>;
+export type AddToCollection = z.infer<typeof addToCollectionSchema>;
+export type RateRecipe = z.infer<typeof rateRecipeSchema>;
+export type TrackInteraction = z.infer<typeof trackInteractionSchema>;
 
