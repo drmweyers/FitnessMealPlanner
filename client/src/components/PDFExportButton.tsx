@@ -315,11 +315,13 @@ export default memo(PDFExportButton);
 const SimplePDFExportButton = memo(function SimplePDFExportButton({
   mealPlan,
   className = '',
-  size = 'sm'
+  size = 'sm',
+  onClick
 }: {
   mealPlan: any;
   className?: string;
   size?: 'sm' | 'default' | 'lg';
+  onClick?: (e: React.MouseEvent) => void;
 }) {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
@@ -349,12 +351,19 @@ const SimplePDFExportButton = memo(function SimplePDFExportButton({
     }
   }, [mealPlan, toast]);
 
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if (onClick) {
+      onClick(e);
+    }
+    handleExport();
+  }, [onClick, handleExport]);
+
   return (
     <Button
       variant="ghost"
       size={size}
       className={className}
-      onClick={handleExport}
+      onClick={handleClick}
       disabled={isExporting}
     >
       {isExporting ? (

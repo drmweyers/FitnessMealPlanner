@@ -594,12 +594,9 @@ adminRouter.get('/export', requireAdmin, async (req, res) => {
       const allUsers = await db.select({
         id: users.id,
         email: users.email,
-        username: users.username,
+        name: users.name,
         role: users.role,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        phoneNumber: users.phoneNumber,
-        profileImageUrl: users.profileImageUrl,
+        profilePicture: users.profilePicture,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       }).from(users);

@@ -52,7 +52,7 @@ export default function TrainerMealPlans() {
   });
 
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
-    queryKey: ['/api/trainer/customers'],
+    queryKey: ['trainerCustomers'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/trainer/customers');
       if (!response.ok) throw new Error('Failed to fetch customers');
@@ -92,13 +92,15 @@ export default function TrainerMealPlans() {
       if (!response.ok) throw new Error('Failed to assign meal plan');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       toast({
         title: 'Meal Plan Assigned',
         description: 'The meal plan has been successfully assigned to the customer.',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/trainer/meal-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/trainer/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['trainerCustomers'] });
+      // Invalidate the specific customer's meal plans cache
+      queryClient.invalidateQueries({ queryKey: ['customerMealPlans', variables.customerId] });
       // Close the modal and reset state
       handleCloseAssignmentModal();
     },

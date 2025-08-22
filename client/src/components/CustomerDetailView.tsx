@@ -15,6 +15,7 @@ import { useToast } from '../hooks/use-toast';
 import { apiRequest } from '../lib/queryClient';
 import { SimplePDFExportButton } from './PDFExportButton';
 import MealPlanGenerator from './MealPlanGenerator';
+import MealPlanModal from './MealPlanModal';
 import { 
   User, 
   Target, 
@@ -30,20 +31,12 @@ import {
   FileText,
   Zap
 } from 'lucide-react';
-import type { MealPlan } from '@shared/schema';
+import type { MealPlan, CustomerMealPlan } from '@shared/schema';
 
 interface Customer {
   id: string;
   email: string;
   firstAssignedAt: string;
-}
-
-interface CustomerMealPlan {
-  id: string;
-  customerId: string;
-  trainerId: string;
-  mealPlanData: MealPlan;
-  assignedAt: string;
 }
 
 interface ProgressMeasurement {
@@ -83,6 +76,7 @@ interface CustomerDetailViewProps {
 
 export default function CustomerDetailView({ customer, onBack }: CustomerDetailViewProps) {
   const [showMealPlanGenerator, setShowMealPlanGenerator] = useState(false);
+  const [selectedMealPlan, setSelectedMealPlan] = useState<CustomerMealPlan | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -407,17 +401,22 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
               ) : (
                 <div className="space-y-3">
                   {mealPlans.slice(0, 3).map((assignment) => (
-                    <div key={assignment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div 
+                      key={assignment.id} 
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      onClick={() => setSelectedMealPlan(assignment)}
+                    >
                       <div className="flex-1">
-                        <h5 className="font-medium">{assignment.mealPlanData.planName}</h5>
+                        <h5 className="font-medium hover:text-blue-600 transition-colors">{assignment.mealPlanData.planName}</h5>
                         <p className="text-sm text-gray-600">
-                          Assigned {new Date(assignment.assignedAt).toLocaleDateString()}
+                          Assigned {assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString() : 'Unknown'}
                         </p>
                       </div>
                       <SimplePDFExportButton
                         mealPlan={assignment}
                         className="text-blue-600 hover:text-blue-700"
                         size="sm"
+                        onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                   ))}
@@ -464,11 +463,15 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
           ) : (
             <div className="space-y-4">
               {mealPlans.map((assignment) => (
-                <Card key={assignment.id} className="hover:shadow-md transition-shadow">
+                <Card 
+                  key={assignment.id} 
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setSelectedMealPlan(assignment)}
+                >
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h5 className="text-lg font-medium text-gray-900 mb-2">
+                        <h5 className="text-lg font-medium text-gray-900 mb-2 hover:text-blue-600 transition-colors">
                           {assignment.mealPlanData.planName}
                         </h5>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -489,7 +492,7 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                           <div>
                             <div className="text-sm text-gray-600">Assigned</div>
                             <div className="text-sm font-medium">
-                              {new Date(assignment.assignedAt).toLocaleDateString()}
+                              {assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString() : 'Unknown'}
                             </div>
                           </div>
                         </div>
@@ -499,6 +502,7 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                           mealPlan={assignment}
                           className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                           size="sm"
+                          onClick={(e) => e.stopPropagation()}
                         />
                       </div>
                     </div>
@@ -659,6 +663,14 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Meal Plan Modal */}
+      {selectedMealPlan && (
+        <MealPlanModal
+          mealPlan={selectedMealPlan}
+          onClose={() => setSelectedMealPlan(null)}
+        />
+      )}
     </div>
   );
 }

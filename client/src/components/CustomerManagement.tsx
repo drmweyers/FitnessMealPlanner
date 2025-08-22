@@ -28,8 +28,10 @@ import {
   User,
   Mail,
   Clock,
-  Download
+  Download,
+  Eye
 } from 'lucide-react';
+import MealPlanModal from './MealPlanModal';
 import type { MealPlan } from '@shared/schema';
 
 interface Customer {
@@ -43,7 +45,7 @@ interface CustomerMealPlan {
   customerId: string;
   trainerId: string;
   mealPlanData: MealPlan;
-  assignedAt: string;
+  assignedAt: Date | null;
 }
 
 interface MealPlanAssignmentDialogProps {
@@ -191,6 +193,7 @@ function MealPlanAssignmentDialog({ customerId, customerEmail, onSuccess }: Meal
 function CustomerMealPlans({ customerId, customerEmail }: { customerId: string; customerEmail: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedMealPlan, setSelectedMealPlan] = useState<CustomerMealPlan | null>(null);
 
   const { data: mealPlansData, isLoading } = useQuery<{ mealPlans: CustomerMealPlan[]; total: number }>({
     queryKey: ['customerMealPlans', customerId],
@@ -260,7 +263,10 @@ function CustomerMealPlans({ customerId, customerEmail }: { customerId: string; 
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h5 className="font-medium text-gray-900">
+                    <h5 
+                      className="font-medium text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
+                      onClick={() => setSelectedMealPlan(assignment)}
+                    >
                       {assignment.mealPlanData.planName}
                     </h5>
                     <p className="text-sm text-gray-600 mb-2">
@@ -273,11 +279,19 @@ function CustomerMealPlans({ customerId, customerEmail }: { customerId: string; 
                       </div>
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-3 w-3" />
-                        <span>Assigned {new Date(assignment.assignedAt).toLocaleDateString()}</span>
+                        <span>Assigned {assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString() : 'Unknown'}</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedMealPlan(assignment)}
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <SimplePDFExportButton
                       mealPlan={assignment}
                       className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
@@ -298,6 +312,14 @@ function CustomerMealPlans({ customerId, customerEmail }: { customerId: string; 
             </Card>
           ))}
         </div>
+      )}
+      
+      {/* Meal Plan Modal */}
+      {selectedMealPlan && (
+        <MealPlanModal
+          mealPlan={selectedMealPlan}
+          onClose={() => setSelectedMealPlan(null)}
+        />
       )}
     </div>
   );
