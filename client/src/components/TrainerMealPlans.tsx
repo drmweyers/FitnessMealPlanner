@@ -10,7 +10,8 @@ import { Label } from './ui/label';
 import { apiRequest } from '../lib/queryClient';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, Users, Utensils, Search, MoreVertical, Trash2, UserPlus, Eye } from 'lucide-react';
+import { Calendar, Users, Utensils, Search, MoreVertical, Trash2, UserPlus, Eye, Share2 } from 'lucide-react';
+import ShareMealPlanButton from './ShareMealPlanButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,11 +44,16 @@ export default function TrainerMealPlans() {
   const [planToAssign, setPlanToAssign] = useState<TrainerMealPlanWithAssignments | null>(null);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
 
-  const { data: mealPlans, isLoading } = useQuery({
+  const { data: mealPlans, isLoading, error } = useQuery({
     queryKey: ['/api/trainer/meal-plans'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/trainer/meal-plans');
-      return response.json();
+      if (!response.ok) {
+        throw new Error('Failed to fetch meal plans');
+      }
+      const data = await response.json();
+      console.log('Fetched meal plans data:', data); // Debug log
+      return data;
     },
   });
 
@@ -113,6 +119,8 @@ export default function TrainerMealPlans() {
     },
   });
 
+  console.log('mealPlans data:', mealPlans); // Debug log
+  
   const filteredPlans = mealPlans?.mealPlans?.filter((plan: TrainerMealPlanWithAssignments) => {
     const searchLower = searchTerm.toLowerCase();
     const planData = plan.mealPlanData as any;
@@ -186,6 +194,21 @@ export default function TrainerMealPlans() {
     );
   }
 
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="text-center py-12">
+          <p className="text-red-500">
+            Error loading meal plans: {error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Search Bar */}
@@ -244,6 +267,15 @@ export default function TrainerMealPlans() {
                           <UserPlus className="mr-2 h-4 w-4" />
                           Assign to Customer
                         </DropdownMenuItem>
+                        <div className="px-2 py-1">
+                          <ShareMealPlanButton 
+                            mealPlanId={plan.id}
+                            mealPlanName={planData.planName || 'Unnamed Plan'}
+                            variant="ghost"
+                            size="sm"
+                            className="justify-start w-full h-8"
+                          />
+                        </div>
                         <DropdownMenuItem 
                           onClick={() => setPlanToDelete(plan.id)}
                           className="text-red-600"
