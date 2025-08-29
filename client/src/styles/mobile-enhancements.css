@@ -1,0 +1,346 @@
+/* Mobile Touch and Responsive Enhancements */
+
+/* Touch Target Minimum Size */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Safe Area Support */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Hide Scrollbars */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth Scrolling */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Pull to Refresh Animation */
+.pull-to-refresh {
+  transform: translateY(0);
+  transition: transform 0.3s ease-out;
+}
+
+.pull-to-refresh.pulling {
+  transform: translateY(60px);
+}
+
+/* Swipe Gestures */
+.swipe-item {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.swipe-item .swipe-content {
+  transform: translateX(0);
+  transition: transform 0.3s ease-out;
+}
+
+.swipe-item .swipe-actions {
+  position: absolute;
+  top: 0;
+  right: -100px;
+  bottom: 0;
+  width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: right 0.3s ease-out;
+}
+
+.swipe-item.swiped .swipe-content {
+  transform: translateX(-100px);
+}
+
+.swipe-item.swiped .swipe-actions {
+  right: 0;
+}
+
+/* Mobile Keyboard Adjustments */
+.keyboard-adjust {
+  transition: transform 0.3s ease-out;
+}
+
+.keyboard-adjust.keyboard-open {
+  transform: translateY(-50px);
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  .responsive-text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .responsive-text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  
+  .responsive-text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  
+  .responsive-text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+}
+
+/* Enhanced Touch Feedback */
+.touch-feedback {
+  position: relative;
+  overflow: hidden;
+}
+
+.touch-feedback::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+  pointer-events: none;
+}
+
+.touch-feedback:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Optimized Animations for Mobile */
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-animation {
+    animation-duration: 0.3s;
+    animation-timing-function: ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-animation {
+    animation: none;
+  }
+}
+
+/* Mobile-First Breakpoints */
+@media (min-width: 640px) {
+  .sm\:touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:touch-target {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:touch-target {
+    min-height: 36px;
+    min-width: 36px;
+  }
+}
+
+/* iOS Style Bounce Scroll */
+.ios-bounce {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Material Design Ripple Effect */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.ripple:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 1;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
+  }
+}
+
+/* Floating Action Button Styles */
+.fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.fab:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.fab:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Card Hover Effects for Mobile */
+.mobile-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-card:active {
+  transform: translateY(0);
+}
+
+/* Loading States for Mobile */
+.mobile-skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Mobile Form Enhancements */
+.mobile-form input,
+.mobile-form textarea,
+.mobile-form select {
+  font-size: 16px; /* Prevents zoom on iOS */
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: border-color 0.2s ease;
+}
+
+.mobile-form input:focus,
+.mobile-form textarea:focus,
+.mobile-form select:focus {
+  outline: none;
+  border-width: 2px;
+  padding: 11px 15px; /* Adjust for border increase */
+}
+
+/* Modal Optimizations for Mobile */
+.mobile-modal {
+  padding: 0;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+  border-radius: 0;
+}
+
+@media (min-width: 640px) {
+  .mobile-modal {
+    height: auto;
+    width: auto;
+    border-radius: 12px;
+    margin: 20px;
+  }
+}
+
+/* Sticky Elements with Safe Area */
+.sticky-header {
+  position: sticky;
+  top: env(safe-area-inset-top);
+  z-index: 10;
+}
+
+.sticky-footer {
+  position: sticky;
+  bottom: env(safe-area-inset-bottom);
+  z-index: 10;
+}
+
+/* Gesture Indicators */
+.swipe-indicator {
+  position: relative;
+}
+
+.swipe-indicator::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, #ccc, transparent);
+  border-radius: 2px;
+}

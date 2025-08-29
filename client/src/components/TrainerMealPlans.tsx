@@ -44,7 +44,7 @@ export default function TrainerMealPlans() {
   const [planToAssign, setPlanToAssign] = useState<TrainerMealPlanWithAssignments | null>(null);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
 
-  const { data: mealPlans, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['/api/trainer/meal-plans'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/trainer/meal-plans');
@@ -119,9 +119,10 @@ export default function TrainerMealPlans() {
     },
   });
 
-  console.log('mealPlans data:', mealPlans); // Debug log
+  console.log('data from API:', data); // Debug log
+  const mealPlans = data?.mealPlans || [];
   
-  const filteredPlans = mealPlans?.mealPlans?.filter((plan: TrainerMealPlanWithAssignments) => {
+  const filteredPlans = mealPlans.filter((plan: TrainerMealPlanWithAssignments) => {
     const searchLower = searchTerm.toLowerCase();
     const planData = plan.mealPlanData as any;
     return (
@@ -131,7 +132,7 @@ export default function TrainerMealPlans() {
       plan.notes?.toLowerCase().includes(searchLower) ||
       plan.tags?.some((tag: string) => tag.toLowerCase().includes(searchLower))
     );
-  }) || [];
+  });
 
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('en-US', {

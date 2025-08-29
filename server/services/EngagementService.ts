@@ -8,23 +8,22 @@
 import { db } from '../db.js';
 import { RedisService } from './RedisService.js';
 import { eq, and, count, desc, avg, sql, gte, lte } from 'drizzle-orm';
+import { recipes, users } from '../../shared/schema.js';
 import {
-  recipeViews,
-  recipeRatings,
-  userInteractions,
-  recipeShares,
-  userPreferences,
-  recipes,
-  users,
-  type RecipeView,
-  type RecipeRating,
-  type UserInteraction,
-  type RecipeShare,
-  type UserPreferences,
+  recipeInteractions,
+  
+  
+  
+  
+  
+  
+  
+  
+  
   type Recipe,
   type TrackInteraction,
-  type UpdatePreferences,
-  type ShareRecipe,
+  
+  
 } from '../../shared/schema.js';
 
 interface ServiceResult<T> {
@@ -189,8 +188,8 @@ export class EngagementService {
       const existingRating = await db.select()
         .from(recipeRatings)
         .where(and(
-          eq(recipeRatings.userId, userId),
-          eq(recipeRatings.recipeId, recipeId)
+          eq(recipeInteractions.userId, userId),
+          eq(recipeInteractions.recipeId, recipeId)
         ))
         .limit(1);
 
@@ -200,13 +199,13 @@ export class EngagementService {
         // Update existing rating
         const [updated] = await db.update(recipeRatings)
           .set({
-            rating: ratingData.rating,
+            rating: ratingData.interactionValue,
             review: ratingData.review,
             updatedAt: new Date(),
           })
           .where(and(
-            eq(recipeRatings.userId, userId),
-            eq(recipeRatings.recipeId, recipeId)
+            eq(recipeInteractions.userId, userId),
+            eq(recipeInteractions.recipeId, recipeId)
           ))
           .returning();
         rating = updated;
@@ -215,7 +214,7 @@ export class EngagementService {
         const [inserted] = await db.insert(recipeRatings).values({
           userId,
           recipeId,
-          rating: ratingData.rating,
+          rating: ratingData.interactionValue,
           review: ratingData.review,
         }).returning();
         rating = inserted;
@@ -330,24 +329,24 @@ export class EngagementService {
       const [analytics] = await db.select({
         viewCount: sql<number>`(
           SELECT COUNT(*) FROM ${recipeViews} 
-          WHERE ${recipeViews.recipeId} = ${recipeId}
+          WHERE ${recipeInteractions.recipeId} = ${recipeId}
         )`,
         shareCount: sql<number>`(
           SELECT COUNT(*) FROM ${recipeShares} 
-          WHERE ${recipeShares.recipeId} = ${recipeId}
+          WHERE ${recipeInteractions.recipeId} = ${recipeId}
         )`,
         avgRating: sql<number>`(
-          SELECT COALESCE(AVG(${recipeRatings.rating}), 0) FROM ${recipeRatings} 
-          WHERE ${recipeRatings.recipeId} = ${recipeId}
+          SELECT COALESCE(AVG(${recipeInteractions.interactionValue}), 0) FROM ${recipeRatings} 
+          WHERE ${recipeInteractions.recipeId} = ${recipeId}
         )`,
         totalRatings: sql<number>`(
           SELECT COUNT(*) FROM ${recipeRatings} 
-          WHERE ${recipeRatings.recipeId} = ${recipeId}
+          WHERE ${recipeInteractions.recipeId} = ${recipeId}
         )`,
         avgViewDuration: sql<number>`(
-          SELECT COALESCE(AVG(${recipeViews.viewDurationSeconds}), 0) FROM ${recipeViews} 
-          WHERE ${recipeViews.recipeId} = ${recipeId} 
-          AND ${recipeViews.viewDurationSeconds} IS NOT NULL
+          SELECT COALESCE(AVG(${recipeInteractions.viewDurationSeconds}), 0) FROM ${recipeViews} 
+          WHERE ${recipeInteractions.recipeId} = ${recipeId} 
+          AND ${recipeInteractions.viewDurationSeconds} IS NOT NULL
         )`,
       }).limit(1);
 
@@ -442,29 +441,29 @@ export class EngagementService {
       const [summary] = await db.select({
         totalViews: sql<number>`(
           SELECT COUNT(*) FROM ${recipeViews} 
-          WHERE ${recipeViews.userId} = ${userId}
-          AND ${recipeViews.viewedAt} >= ${startDate}
+          WHERE ${recipeInteractions.userId} = ${userId}
+          AND ${recipeInteractions.interactionDate} >= ${startDate}
         )`,
         totalInteractions: sql<number>`(
           SELECT COUNT(*) FROM ${userInteractions} 
-          WHERE ${userInteractions.userId} = ${userId}
-          AND ${userInteractions.interactedAt} >= ${startDate}
+          WHERE ${recipeInteractions.userId} = ${userId}
+          AND ${recipeInteractions.interactedAt} >= ${startDate}
         )`,
         totalShares: sql<number>`(
           SELECT COUNT(*) FROM ${recipeShares} 
-          WHERE ${recipeShares.userId} = ${userId}
-          AND ${recipeShares.sharedAt} >= ${startDate}
+          WHERE ${recipeInteractions.userId} = ${userId}
+          AND ${recipeInteractions.interactionDate} >= ${startDate}
         )`,
         uniqueRecipesViewed: sql<number>`(
-          SELECT COUNT(DISTINCT ${recipeViews.recipeId}) FROM ${recipeViews} 
-          WHERE ${recipeViews.userId} = ${userId}
-          AND ${recipeViews.viewedAt} >= ${startDate}
+          SELECT COUNT(DISTINCT ${recipeInteractions.recipeId}) FROM ${recipeViews} 
+          WHERE ${recipeInteractions.userId} = ${userId}
+          AND ${recipeInteractions.interactionDate} >= ${startDate}
         )`,
         avgViewDuration: sql<number>`(
-          SELECT COALESCE(AVG(${recipeViews.viewDurationSeconds}), 0) FROM ${recipeViews} 
-          WHERE ${recipeViews.userId} = ${userId}
-          AND ${recipeViews.viewedAt} >= ${startDate}
-          AND ${recipeViews.viewDurationSeconds} IS NOT NULL
+          SELECT COALESCE(AVG(${recipeInteractions.viewDurationSeconds}), 0) FROM ${recipeViews} 
+          WHERE ${recipeInteractions.userId} = ${userId}
+          AND ${recipeInteractions.interactionDate} >= ${startDate}
+          AND ${recipeInteractions.viewDurationSeconds} IS NOT NULL
         )`,
       }).limit(1);
 
@@ -474,10 +473,10 @@ export class EngagementService {
         viewCount: count(),
       })
       .from(recipeViews)
-      .innerJoin(recipes, eq(recipeViews.recipeId, recipes.id))
+      .innerJoin(recipes, eq(recipeInteractions.recipeId, recipes.id))
       .where(and(
-        eq(recipeViews.userId, userId),
-        gte(recipeViews.viewedAt, startDate)
+        eq(recipeInteractions.userId, userId),
+        gte(recipeInteractions.interactionDate, startDate)
       ))
       .groupBy(sql`unnest(${recipes.mealTypes})`)
       .orderBy(desc(count()))
@@ -532,12 +531,12 @@ export class EngagementService {
       
       // Get user's interaction history
       const recentViews = await db.select({
-        recipeId: recipeViews.recipeId,
+        recipeId: recipeInteractions.recipeId,
         viewCount: count(),
       })
       .from(recipeViews)
-      .where(eq(recipeViews.userId, userId))
-      .groupBy(recipeViews.recipeId)
+      .where(eq(recipeInteractions.userId, userId))
+      .groupBy(recipeInteractions.recipeId)
       .orderBy(desc(count()))
       .limit(10);
 
@@ -612,17 +611,17 @@ export class EngagementService {
         trendingScore: sql<number>`
           (
             SELECT (
-              COUNT(DISTINCT ${recipeViews.id}) * 1.0 +
-              COUNT(DISTINCT ${recipeRatings.id}) * 3.0 +
-              COUNT(DISTINCT ${recipeShares.id}) * 5.0
+              COUNT(DISTINCT ${recipeInteractions.id}) * 1.0 +
+              COUNT(DISTINCT ${recipeInteractions.id}) * 3.0 +
+              COUNT(DISTINCT ${recipeInteractions.id}) * 5.0
             )
             FROM ${recipeViews}
-            LEFT JOIN ${recipeRatings} ON ${recipeRatings.recipeId} = ${recipes.id}
-              AND ${recipeRatings.ratedAt} >= ${timeThreshold}
-            LEFT JOIN ${recipeShares} ON ${recipeShares.recipeId} = ${recipes.id}
-              AND ${recipeShares.sharedAt} >= ${timeThreshold}
-            WHERE ${recipeViews.recipeId} = ${recipes.id}
-              AND ${recipeViews.viewedAt} >= ${timeThreshold}
+            LEFT JOIN ${recipeRatings} ON ${recipeInteractions.recipeId} = ${recipes.id}
+              AND ${recipeInteractions.interactionDate} >= ${timeThreshold}
+            LEFT JOIN ${recipeShares} ON ${recipeInteractions.recipeId} = ${recipes.id}
+              AND ${recipeInteractions.interactionDate} >= ${timeThreshold}
+            WHERE ${recipeInteractions.recipeId} = ${recipes.id}
+              AND ${recipeInteractions.interactionDate} >= ${timeThreshold}
           ) as trending_score
         `,
       })
@@ -913,4 +912,14 @@ export class EngagementService {
       console.error('Error updating trending scores:', error);
     }
   }
+}
+
+// Singleton instance
+let engagementServiceInstance: EngagementService | null = null;
+
+export function getEngagementService(): EngagementService {
+  if (!engagementServiceInstance) {
+    engagementServiceInstance = new EngagementService();
+  }
+  return engagementServiceInstance;
 }

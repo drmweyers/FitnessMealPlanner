@@ -650,4 +650,396 @@ router.delete('/photos/:id', requireRole('customer'), async (req, res) => {
   }
 });
 
+// ====== STORY 1.6: ENHANCED PROGRESS TRACKING ======
+
+import { progressAnalyticsService } from '../services/progressAnalyticsService';
+import { milestoneAchievementService } from '../services/milestoneAchievementService';
+
+/**
+ * GET /api/progress/summary
+ * Get comprehensive progress summary with analytics
+ */
+router.get('/summary', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+    const period = req.query.period as 'week' | 'month' | 'quarter' | 'year' | 'all' || 'month';
+
+    const summary = await progressAnalyticsService.getProgressSummary(customerId, period);
+
+    res.json({
+      status: 'success',
+      data: summary
+    });
+  } catch (error) {
+    console.error('Failed to get progress summary:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch progress summary'
+    });
+  }
+});
+
+/**
+ * GET /api/progress/trends
+ * Get progress trends and projections
+ */
+router.get('/trends', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+
+    const defaultStart = new Date();
+    defaultStart.setMonth(defaultStart.getMonth() - 3);
+
+    const trends = await progressAnalyticsService.calculateTrends(
+      customerId,
+      startDate || defaultStart,
+      endDate || new Date()
+    );
+
+    res.json({
+      status: 'success',
+      data: trends
+    });
+  } catch (error) {
+    console.error('Failed to get progress trends:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch progress trends'
+    });
+  }
+});
+
+/**
+ * GET /api/progress/compare
+ * Compare progress between two periods
+ */
+router.get('/compare', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+    const { metric, currentStart, currentEnd, previousStart, previousEnd } = req.query;
+
+    if (!metric || !currentStart || !currentEnd || !previousStart || !previousEnd) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing required comparison parameters'
+      });
+    }
+
+    const comparison = await progressAnalyticsService.compareProgress(
+      customerId,
+      metric as string,
+      {
+        start: new Date(currentStart as string),
+        end: new Date(currentEnd as string)
+      },
+      {
+        start: new Date(previousStart as string),
+        end: new Date(previousEnd as string)
+      }
+    );
+
+    res.json({
+      status: 'success',
+      data: comparison
+    });
+  } catch (error) {
+    console.error('Failed to compare progress:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to compare progress'
+    });
+  }
+});
+
+/**
+ * GET /api/progress/export
+ * Export progress data for sharing with trainer
+ */
+router.get('/export', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date('2020-01-01');
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+    const includePhotos = req.query.includePhotos === 'true';
+    const format = req.query.format as 'json' | 'pdf' || 'json';
+
+    const exportData = await progressAnalyticsService.generateProgressExport(
+      customerId,
+      startDate,
+      endDate,
+      includePhotos
+    );
+
+    if (format === 'pdf') {
+      // TODO: Generate PDF report
+      res.status(501).json({
+        status: 'error',
+        message: 'PDF export not yet implemented'
+      });
+    } else {
+      res.json({
+        status: 'success',
+        data: exportData
+      });
+    }
+  } catch (error) {
+    console.error('Failed to export progress:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to export progress data'
+    });
+  }
+});
+
+/**
+ * GET /api/progress/achievements
+ * Get customer's achievements and milestones
+ */
+router.get('/achievements', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+
+    const summary = await milestoneAchievementService.getAchievementSummary(customerId);
+
+    res.json({
+      status: 'success',
+      data: summary
+    });
+  } catch (error) {
+    console.error('Failed to get achievements:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch achievements'
+    });
+  }
+});
+
+/**
+ * POST /api/progress/achievements/check
+ * Check and update milestones
+ */
+router.post('/achievements/check', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+
+    const newMilestones = await milestoneAchievementService.checkAndUpdateMilestones(customerId);
+
+    res.json({
+      status: 'success',
+      data: {
+        newAchievements: newMilestones,
+        count: newMilestones.length
+      }
+    });
+  } catch (error) {
+    console.error('Failed to check achievements:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to check achievements'
+    });
+  }
+});
+
+/**
+ * GET /api/progress/milestones/:id
+ * Get progress towards specific milestone
+ */
+router.get('/milestones/:id', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+    const milestoneId = req.params.id;
+
+    const progress = await milestoneAchievementService.getMilestoneProgress(customerId, milestoneId);
+
+    if (!progress) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Milestone not found'
+      });
+    }
+
+    res.json({
+      status: 'success',
+      data: progress
+    });
+  } catch (error) {
+    console.error('Failed to get milestone progress:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch milestone progress'
+    });
+  }
+});
+
+/**
+ * POST /api/progress/milestones/custom
+ * Create custom milestone for a goal
+ */
+router.post('/milestones/custom', requireRole('customer'), async (req, res) => {
+  try {
+    const { goalId, name, targetValue, unit } = req.body;
+
+    if (!goalId || !name || !targetValue || !unit) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing required milestone data'
+      });
+    }
+
+    await milestoneAchievementService.createCustomMilestone(goalId, name, targetValue, unit);
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Custom milestone created successfully'
+    });
+  } catch (error) {
+    console.error('Failed to create custom milestone:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to create custom milestone'
+    });
+  }
+});
+
+/**
+ * POST /api/progress/achievements/:id/share
+ * Share achievement on social media
+ */
+router.post('/achievements/:id/share', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+    const achievementId = req.params.id;
+    const { platform } = req.body;
+
+    if (!platform || !['facebook', 'twitter', 'instagram'].includes(platform)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid social media platform'
+      });
+    }
+
+    const shareData = await milestoneAchievementService.shareAchievement(
+      customerId,
+      achievementId,
+      platform as any
+    );
+
+    res.json({
+      status: 'success',
+      data: shareData
+    });
+  } catch (error) {
+    console.error('Failed to share achievement:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to share achievement'
+    });
+  }
+});
+
+/**
+ * GET /api/progress/privacy-settings
+ * Get progress visibility settings
+ */
+router.get('/privacy-settings', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+
+    const settings = await progressAnalyticsService.getProgressVisibilitySettings(customerId);
+
+    res.json({
+      status: 'success',
+      data: settings
+    });
+  } catch (error) {
+    console.error('Failed to get privacy settings:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch privacy settings'
+    });
+  }
+});
+
+/**
+ * PUT /api/progress/privacy-settings
+ * Update progress visibility settings
+ */
+router.put('/privacy-settings', requireRole('customer'), async (req, res) => {
+  try {
+    const customerId = req.user!.id;
+    const settings = req.body;
+
+    await progressAnalyticsService.updateProgressVisibilitySettings(customerId, settings);
+
+    res.json({
+      status: 'success',
+      message: 'Privacy settings updated successfully'
+    });
+  } catch (error) {
+    console.error('Failed to update privacy settings:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to update privacy settings'
+    });
+  }
+});
+
+// Trainer access endpoints for viewing customer progress (with permission)
+
+/**
+ * GET /api/progress/trainer/customer/:customerId/summary
+ * Trainer view of customer progress (requires permission)
+ */
+router.get('/trainer/customer/:customerId/summary', requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { customerId } = req.params;
+    const period = req.query.period as any || 'month';
+
+    // Verify trainer-customer relationship
+    const { personalizedMealPlans, personalizedRecipes } = await import('@shared/schema');
+    const hasRelationship = await db.select()
+      .from(personalizedMealPlans)
+      .where(
+        and(
+          eq(personalizedMealPlans.trainerId, trainerId),
+          eq(personalizedMealPlans.customerId, customerId)
+        )
+      )
+      .limit(1);
+
+    if (hasRelationship.length === 0) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Not authorized to view this customer\'s progress'
+      });
+    }
+
+    // Check customer's privacy settings
+    const privacySettings = await progressAnalyticsService.getProgressVisibilitySettings(customerId);
+    
+    if (privacySettings.measurements === 'private') {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Customer has set progress to private'
+      });
+    }
+
+    const summary = await progressAnalyticsService.getProgressSummary(customerId, period);
+
+    res.json({
+      status: 'success',
+      data: summary
+    });
+  } catch (error) {
+    console.error('Failed to get customer progress:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch customer progress'
+    });
+  }
+});
+
 export default router;

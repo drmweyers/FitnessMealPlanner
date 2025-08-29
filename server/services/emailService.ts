@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { emailAnalyticsService } from './emailAnalyticsService';
 
 // Initialize Resend (with fallback for testing)
 const resend = new Resend(process.env.RESEND_API_KEY || 'test-key');
@@ -9,6 +10,42 @@ export interface InvitationEmailData {
   trainerEmail: string;
   invitationLink: string;
   expiresAt: Date;
+}
+
+export interface ProgressSummaryEmailData {
+  customerEmail: string;
+  customerName: string;
+  trainerName: string;
+  trainerEmail: string;
+  weekStartDate: Date;
+  weekEndDate: Date;
+  progressData: {
+    measurementChanges?: {
+      weightChange?: { previous: number; current: number; unit: string };
+      bodyFatChange?: { previous: number; current: number };
+      measurements?: Array<{ name: string; change: number; unit: string }>;
+    };
+    goalsProgress?: Array<{
+      goalName: string;
+      progressPercentage: number;
+      targetValue: number;
+      currentValue: number;
+      unit: string;
+      status: string;
+    }>;
+    mealPlanCompliance?: {
+      assignedMealPlans: number;
+      completedMealPlans: number;
+      favoriteRecipes: string[];
+    };
+    engagementStats?: {
+      recipesViewed: number;
+      favoritesAdded: number;
+      ratingsGiven: number;
+    };
+  };
+  nextSteps?: string[];
+  motivationalMessage?: string;
 }
 
 export class EmailService {
@@ -122,11 +159,127 @@ export class EmailService {
       }
 
       console.log(`Invitation email sent successfully to ${data.customerEmail}, messageId: ${emailData?.id}`);
+      
+      // Log successful send
+      await emailAnalyticsService.logEmailSent({
+        emailType: 'invitation',
+        subject: `You're invited to join ${data.trainerName}'s meal planning program`,
+        recipientEmail: data.customerEmail,
+        status: 'sent',
+        messageId: emailData?.id
+      });
+      
       return { success: true, messageId: emailData?.id };
 
     } catch (error) {
       console.error('Error sending invitation email:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Log failed send
+      await emailAnalyticsService.logEmailSent({
+        emailType: 'invitation',
+        subject: `You're invited to join ${data.trainerName}'s meal planning program`,
+        recipientEmail: data.customerEmail,
+        status: 'failed',
+        errorMessage
+      });
+      
+      return { 
+        success: false, 
+        error: `Email service error: ${errorMessage}` 
+      };
+    }
+  }
+
+  /**
+   * Send weekly progress summary email
+   */
+  async sendProgressSummaryEmail(data: ProgressSummaryEmailData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY not configured. Email sending disabled.');
+        return { success: false, error: 'Email service not configured - missing API key' };
+      }
+
+      // Check if this email can receive emails in current environment
+      if (!this.canReceiveEmail(data.customerEmail)) {
+        const accountOwnerEmail = process.env.ACCOUNT_OWNER_EMAIL || 'evofitmeals@bcinnovationlabs.com';
+        return { 
+          success: false, 
+          error: `Email delivery restricted in testing mode. Can only send to: ${accountOwnerEmail} or common email providers (Gmail, Outlook, Yahoo).` 
+        };
+      }
+
+      // Get appropriate FROM email address
+      const fromEmail = this.getFromEmailAddress();
+      console.log(`Sending progress summary email from: ${fromEmail} to: ${data.customerEmail}`);
+
+      // Format week dates
+      const weekStart = data.weekStartDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      const weekEnd = data.weekEndDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      const { data: emailData, error } = await resend.emails.send({
+        from: fromEmail,
+        to: [data.customerEmail],
+        subject: `Your Weekly Progress Summary - ${weekStart} to ${weekEnd}`,
+        html: this.createProgressSummaryEmailTemplate(data, weekStart, weekEnd),
+        text: this.createProgressSummaryEmailText(data, weekStart, weekEnd),
+      });
+
+      if (error) {
+        console.error('Failed to send progress summary email:', error);
+        
+        // Provide more specific error messages based on error type
+        let errorMessage = error.message || 'Unknown email service error';
+        
+        if (error.message?.includes('domain is not verified')) {
+          errorMessage = `Email domain verification required. The domain for ${data.customerEmail} is not verified in Resend.`;
+        } else if (error.message?.includes('You can only send testing emails')) {
+          errorMessage = `Email delivery restricted to verified addresses. Cannot send to ${data.customerEmail} in testing mode.`;
+        } else if (error.message?.includes('rate limit')) {
+          errorMessage = 'Email rate limit exceeded. Please try again later.';
+        }
+        
+        return { success: false, error: errorMessage };
+      }
+
+      console.log(`Progress summary email sent successfully to ${data.customerEmail}, messageId: ${emailData?.id}`);
+      
+      // Log successful send
+      await emailAnalyticsService.logEmailSent({
+        emailType: 'progress_summary',
+        subject: `Your Weekly Progress Summary - ${weekStart} to ${weekEnd}`,
+        recipientEmail: data.customerEmail,
+        status: 'sent',
+        messageId: emailData?.id
+      });
+      
+      return { success: true, messageId: emailData?.id };
+
+    } catch (error) {
+      console.error('Error sending progress summary email:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      // Log failed send
+      await emailAnalyticsService.logEmailSent({
+        emailType: 'progress_summary',
+        subject: `Your Weekly Progress Summary - ${data.weekStartDate.toLocaleDateString()} to ${data.weekEndDate.toLocaleDateString()}`,
+        recipientEmail: data.customerEmail,
+        status: 'failed',
+        errorMessage
+      });
+      
       return { 
         success: false, 
         error: `Email service error: ${errorMessage}` 
@@ -386,6 +539,318 @@ This is an automated test email from the EvoFitMeals system.`,
         error: error instanceof Error ? error.message : 'Unknown error' 
       };
     }
+  }
+
+  /**
+   * Create HTML email template for progress summary
+   */
+  private createProgressSummaryEmailTemplate(data: ProgressSummaryEmailData, weekStart: string, weekEnd: string): string {
+    const { progressData } = data;
+    
+    // Generate weight change section
+    const weightChangeHtml = progressData.measurementChanges?.weightChange ? `
+      <div class="stat-item">
+        <h4>💪 Weight Progress</h4>
+        <div class="stat-value ${progressData.measurementChanges.weightChange.current < progressData.measurementChanges.weightChange.previous ? 'positive' : 'neutral'}">
+          ${progressData.measurementChanges.weightChange.previous} ${progressData.measurementChanges.weightChange.unit} 
+          → ${progressData.measurementChanges.weightChange.current} ${progressData.measurementChanges.weightChange.unit}
+          <span class="change">(${progressData.measurementChanges.weightChange.current - progressData.measurementChanges.weightChange.previous > 0 ? '+' : ''}${(progressData.measurementChanges.weightChange.current - progressData.measurementChanges.weightChange.previous).toFixed(1)} ${progressData.measurementChanges.weightChange.unit})</span>
+        </div>
+      </div>` : '';
+
+    // Generate goals progress section
+    const goalsHtml = progressData.goalsProgress?.length ? `
+      <h3>🎯 Goals Progress</h3>
+      <div class="goals-grid">
+        ${progressData.goalsProgress.map(goal => `
+          <div class="goal-item">
+            <div class="goal-header">
+              <h4>${goal.goalName}</h4>
+              <span class="progress-percent">${goal.progressPercentage}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${goal.progressPercentage}%"></div>
+            </div>
+            <div class="goal-details">
+              ${goal.currentValue} / ${goal.targetValue} ${goal.unit}
+              <span class="status ${goal.status}">${goal.status}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>` : '';
+
+    // Generate engagement stats
+    const engagementHtml = progressData.engagementStats ? `
+      <h3>📊 Weekly Activity</h3>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-number">${progressData.engagementStats.recipesViewed}</div>
+          <div class="stat-label">Recipes Viewed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">${progressData.engagementStats.favoritesAdded}</div>
+          <div class="stat-label">New Favorites</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">${progressData.engagementStats.ratingsGiven}</div>
+          <div class="stat-label">Recipe Ratings</div>
+        </div>
+      </div>` : '';
+
+    // Generate next steps
+    const nextStepsHtml = data.nextSteps?.length ? `
+      <h3>🚀 Next Steps</h3>
+      <ul class="next-steps">
+        ${data.nextSteps.map(step => `<li>${step}</li>`).join('')}
+      </ul>` : '';
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Progress Summary - EvoFitMeals</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8fafc;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        .week-range {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        .goals-grid {
+            margin: 20px 0;
+        }
+        .goal-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .progress-percent {
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .goal-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status.active { background: #dbeafe; color: #1d4ed8; }
+        .status.achieved { background: #d1fae5; color: #065f46; }
+        .status.paused { background: #fef3c7; color: #92400e; }
+        .next-steps {
+            background: #f0f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+        .motivational {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #6b7280;
+            text-align: center;
+        }
+        .positive { color: #10b981; }
+        .neutral { color: #6b7280; }
+        .change { font-size: 14px; font-weight: normal; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏋️ EvoFitMeals</div>
+            <h1 class="title">Weekly Progress Summary</h1>
+            <div class="week-range">${weekStart} - ${weekEnd}</div>
+        </div>
+
+        <p>Hi ${data.customerName}!</p>
+        
+        <p>Here's your personalized weekly progress summary from your trainer <strong>${data.trainerName}</strong>. You're doing great - keep up the excellent work! 💪</p>
+
+        ${weightChangeHtml}
+        ${goalsHtml}
+        ${engagementHtml}
+
+        ${data.motivationalMessage ? `
+        <div class="motivational">
+            <h3 style="margin-top: 0;">✨ Motivation Corner</h3>
+            <p style="margin-bottom: 0;">${data.motivationalMessage}</p>
+        </div>` : ''}
+
+        ${nextStepsHtml}
+
+        <div class="footer">
+            <p>This summary was prepared by your trainer <strong>${data.trainerName}</strong> (${data.trainerEmail})</p>
+            <p>Questions? Reply to this email to reach your trainer directly!</p>
+            <p>&copy; 2025 EvoFitMeals. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`;
+  }
+
+  /**
+   * Create plain text version of progress summary email
+   */
+  private createProgressSummaryEmailText(data: ProgressSummaryEmailData, weekStart: string, weekEnd: string): string {
+    const { progressData } = data;
+    
+    let textContent = `
+EvoFitMeals - Weekly Progress Summary
+${weekStart} - ${weekEnd}
+
+Hi ${data.customerName}!
+
+Here's your personalized weekly progress summary from your trainer ${data.trainerName}. You're doing great - keep up the excellent work!
+
+`;
+
+    // Add weight progress if available
+    if (progressData.measurementChanges?.weightChange) {
+      const change = progressData.measurementChanges.weightChange.current - progressData.measurementChanges.weightChange.previous;
+      textContent += `
+WEIGHT PROGRESS:
+${progressData.measurementChanges.weightChange.previous} ${progressData.measurementChanges.weightChange.unit} → ${progressData.measurementChanges.weightChange.current} ${progressData.measurementChanges.weightChange.unit} (${change > 0 ? '+' : ''}${change.toFixed(1)} ${progressData.measurementChanges.weightChange.unit})
+
+`;
+    }
+
+    // Add goals progress
+    if (progressData.goalsProgress?.length) {
+      textContent += `GOALS PROGRESS:\n`;
+      progressData.goalsProgress.forEach(goal => {
+        textContent += `• ${goal.goalName}: ${goal.progressPercentage}% (${goal.currentValue}/${goal.targetValue} ${goal.unit}) - ${goal.status}\n`;
+      });
+      textContent += '\n';
+    }
+
+    // Add engagement stats
+    if (progressData.engagementStats) {
+      textContent += `WEEKLY ACTIVITY:
+• Recipes Viewed: ${progressData.engagementStats.recipesViewed}
+• New Favorites: ${progressData.engagementStats.favoritesAdded}
+• Recipe Ratings: ${progressData.engagementStats.ratingsGiven}
+
+`;
+    }
+
+    // Add motivational message
+    if (data.motivationalMessage) {
+      textContent += `MOTIVATION CORNER:
+${data.motivationalMessage}
+
+`;
+    }
+
+    // Add next steps
+    if (data.nextSteps?.length) {
+      textContent += `NEXT STEPS:\n`;
+      data.nextSteps.forEach(step => {
+        textContent += `• ${step}\n`;
+      });
+      textContent += '\n';
+    }
+
+    textContent += `---
+This summary was prepared by your trainer ${data.trainerName} (${data.trainerEmail})
+Questions? Reply to this email to reach your trainer directly!
+
+© 2025 EvoFitMeals. All rights reserved.`;
+
+    return textContent;
   }
 }
 

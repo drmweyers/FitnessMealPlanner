@@ -10,13 +10,17 @@ import { and, desc, eq, gte, sql, inArray, lt } from 'drizzle-orm';
 import { db } from '../db';
 import {
   recipes,
-  recipeViews,
-  recipeRatings,
+  recipeInteractions,
+  
   recipeFavorites,
-  recipeShares,
-  userInteractions,
+  
+  
   type Recipe
 } from '../../shared/schema';
+import {
+  recipeShares,
+  recipeRatings
+} from '../../shared/schema-engagement';
 import { getRedisService } from './RedisService';
 import type { RedisService } from './RedisService';
 
@@ -157,27 +161,27 @@ export class TrendingService {
     const popularData = await db
       .select({
         recipe: recipes,
-        totalViews: sql<number>`count(distinct ${recipeViews.id})`,
-        totalRatings: sql<number>`count(distinct ${recipeRatings.id})`,
+        totalViews: sql<number>`count(distinct ${recipeInteractions.id})`,
+        totalRatings: sql<number>`count(distinct ${recipeInteractions.id})`,
         totalFavorites: sql<number>`count(distinct ${recipeFavorites.id})`,
-        totalShares: sql<number>`count(distinct ${recipeShares.id})`,
-        avgRating: sql<number>`avg(${recipeRatings.rating})`,
-        firstRating: sql<Date>`min(${recipeRatings.ratedAt})`,
-        lastRating: sql<Date>`max(${recipeRatings.ratedAt})`
+        totalShares: sql<number>`count(distinct ${recipeInteractions.id})`,
+        avgRating: sql<number>`avg(${recipeInteractions.interactionValue})`,
+        firstRating: sql<Date>`min(${recipeInteractions.interactionDate})`,
+        lastRating: sql<Date>`max(${recipeInteractions.interactionDate})`
       })
       .from(recipes)
-      .leftJoin(recipeViews, eq(recipes.id, recipeViews.recipeId))
-      .leftJoin(recipeRatings, eq(recipes.id, recipeRatings.recipeId))
+      .leftJoin(recipeInteractions, eq(recipes.id, recipeInteractions.recipeId))
+      .leftJoin( eq(recipes.id, recipeInteractions.recipeId))
       .leftJoin(recipeFavorites, eq(recipes.id, recipeFavorites.recipeId))
-      .leftJoin(recipeShares, eq(recipes.id, recipeShares.recipeId))
+      .leftJoin( eq(recipes.id, recipeInteractions.recipeId))
       .where(and(
         eq(recipes.isApproved, true),
         timeFilter,
         categoryFilter
       ))
       .groupBy(recipes.id)
-      .having(sql`count(distinct ${recipeViews.id}) > 0`) // Must have at least some engagement
-      .orderBy(sql`count(distinct ${recipeViews.id}) DESC`)
+      .having(sql`count(distinct ${recipeInteractions.id}) > 0`) // Must have at least some engagement
+      .orderBy(sql`count(distinct ${recipeInteractions.id}) DESC`)
       .limit(limit * 2); // Get more for scoring
 
     // Calculate popularity scores
@@ -253,17 +257,17 @@ export class TrendingService {
     // Get recipes with exponential growth patterns
     const viralCandidates = await db
       .select({
-        recipeId: recipeViews.recipeId,
-        views1h: sql<number>`count(case when ${recipeViews.viewedAt} >= ${timeframes.hours1} then 1 end)`,
-        views6h: sql<number>`count(case when ${recipeViews.viewedAt} >= ${timeframes.hours6} then 1 end)`,
-        views24h: sql<number>`count(case when ${recipeViews.viewedAt} >= ${timeframes.hours24} then 1 end)`,
-        shares1h: sql<number>`(select count(*) from ${recipeShares} where ${recipeShares.recipeId} = ${recipeViews.recipeId} and ${recipeShares.sharedAt} >= ${timeframes.hours1})`,
-        shares6h: sql<number>`(select count(*) from ${recipeShares} where ${recipeShares.recipeId} = ${recipeViews.recipeId} and ${recipeShares.sharedAt} >= ${timeframes.hours6})`,
-        shares24h: sql<number>`(select count(*) from ${recipeShares} where ${recipeShares.recipeId} = ${recipeViews.recipeId} and ${recipeShares.sharedAt} >= ${timeframes.hours24})`
+        recipeId: recipeInteractions.recipeId,
+        views1h: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${timeframes.hours1} then 1 end)`,
+        views6h: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${timeframes.hours6} then 1 end)`,
+        views24h: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${timeframes.hours24} then 1 end)`,
+        shares1h: sql<number>`(select count(*) from ${recipeShares} where ${recipeInteractions.recipeId} = ${recipeInteractions.recipeId} and ${recipeInteractions.interactionDate} >= ${timeframes.hours1})`,
+        shares6h: sql<number>`(select count(*) from ${recipeShares} where ${recipeInteractions.recipeId} = ${recipeInteractions.recipeId} and ${recipeInteractions.interactionDate} >= ${timeframes.hours6})`,
+        shares24h: sql<number>`(select count(*) from ${recipeShares} where ${recipeInteractions.recipeId} = ${recipeInteractions.recipeId} and ${recipeInteractions.interactionDate} >= ${timeframes.hours24})`
       })
       .from(recipeViews)
-      .where(gte(recipeViews.viewedAt, timeframes.hours24))
-      .groupBy(recipeViews.recipeId)
+      .where(gte(recipeInteractions.interactionDate, timeframes.hours24))
+      .groupBy(recipeInteractions.recipeId)
       .having(sql`count(*) >= 50`) // Minimum threshold for viral consideration
       .orderBy(sql`count(*) DESC`)
       .limit(limit * 3);
@@ -347,24 +351,24 @@ export class TrendingService {
     if (timeframe !== 'all') {
       const days = timeframe === '7d' ? 7 : 30;
       const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-      timeFilter = sql`${recipeRatings.ratedAt} >= ${cutoff}`;
+      timeFilter = sql`${recipeInteractions.interactionDate} >= ${cutoff}`;
     }
 
     const topRated = await db
       .select({
         recipe: recipes,
-        avgRating: sql<number>`avg(${recipeRatings.rating})`,
-        ratingCount: sql<number>`count(${recipeRatings.rating})`
+        avgRating: sql<number>`avg(${recipeInteractions.interactionValue})`,
+        ratingCount: sql<number>`count(${recipeInteractions.interactionValue})`
       })
       .from(recipes)
-      .innerJoin(recipeRatings, eq(recipes.id, recipeRatings.recipeId))
+      .innerJoin( eq(recipes.id, recipeInteractions.recipeId))
       .where(and(
         eq(recipes.isApproved, true),
         timeFilter
       ))
       .groupBy(recipes.id)
-      .having(sql`count(${recipeRatings.rating}) >= ${minRatings}`)
-      .orderBy(sql`avg(${recipeRatings.rating}) DESC, count(${recipeRatings.rating}) DESC`)
+      .having(sql`count(${recipeInteractions.interactionValue}) >= ${minRatings}`)
+      .orderBy(sql`avg(${recipeInteractions.interactionValue}) DESC, count(${recipeInteractions.interactionValue}) DESC`)
       .limit(limit);
 
     const result = topRated.map(item => item.recipe);
@@ -400,23 +404,23 @@ export class TrendingService {
     // Get 24h engagement metrics
     const [engagementResult] = await db
       .select({
-        totalViews24h: sql<number>`(select count(*) from ${recipeViews} where ${recipeViews.viewedAt} >= ${timeframes.hours24})`,
-        totalShares24h: sql<number>`(select count(*) from ${recipeShares} where ${recipeShares.sharedAt} >= ${timeframes.hours24})`,
+        totalViews24h: sql<number>`(select count(*) from ${recipeViews} where ${recipeInteractions.interactionDate} >= ${timeframes.hours24})`,
+        totalShares24h: sql<number>`(select count(*) from ${recipeShares} where ${recipeInteractions.interactionDate} >= ${timeframes.hours24})`,
         totalFavorites24h: sql<number>`(select count(*) from ${recipeFavorites} where ${recipeFavorites.favoritedAt} >= ${timeframes.hours24})`,
-        totalRatings24h: sql<number>`(select count(*) from ${recipeRatings} where ${recipeRatings.ratedAt} >= ${timeframes.hours24})`,
-        activeUsers24h: sql<number>`(select count(distinct coalesce(${recipeViews.userId}, ${recipeViews.sessionId})) from ${recipeViews} where ${recipeViews.viewedAt} >= ${timeframes.hours24})`
+        totalRatings24h: sql<number>`(select count(*) from ${recipeRatings} where ${recipeInteractions.interactionDate} >= ${timeframes.hours24})`,
+        activeUsers24h: sql<number>`(select count(distinct coalesce(${recipeInteractions.userId}, ${recipeInteractions.sessionId})) from ${recipeViews} where ${recipeInteractions.interactionDate} >= ${timeframes.hours24})`
       });
 
     // Get top performing recipe
     const [topRecipe] = await db
       .select({
-        recipeId: recipeViews.recipeId,
-        score: sql<number>`count(*) + coalesce((select count(*) * 5 from ${recipeShares} where ${recipeShares.recipeId} = ${recipeViews.recipeId} and ${recipeShares.sharedAt} >= ${timeframes.hours24}), 0)`
+        recipeId: recipeInteractions.recipeId,
+        score: sql<number>`count(*) + coalesce((select count(*) * 5 from ${recipeShares} where ${recipeInteractions.recipeId} = ${recipeInteractions.recipeId} and ${recipeInteractions.interactionDate} >= ${timeframes.hours24}), 0)`
       })
       .from(recipeViews)
-      .where(gte(recipeViews.viewedAt, timeframes.hours24))
-      .groupBy(recipeViews.recipeId)
-      .orderBy(sql`count(*) + coalesce((select count(*) * 5 from ${recipeShares} where ${recipeShares.recipeId} = ${recipeViews.recipeId} and ${recipeShares.sharedAt} >= ${timeframes.hours24}), 0) DESC`)
+      .where(gte(recipeInteractions.interactionDate, timeframes.hours24))
+      .groupBy(recipeInteractions.recipeId)
+      .orderBy(sql`count(*) + coalesce((select count(*) * 5 from ${recipeShares} where ${recipeInteractions.recipeId} = ${recipeInteractions.recipeId} and ${recipeInteractions.interactionDate} >= ${timeframes.hours24}), 0) DESC`)
       .limit(1);
 
     // Calculate growth rate (compare to previous 24h)
@@ -426,8 +430,8 @@ export class TrendingService {
       })
       .from(recipeViews)
       .where(and(
-        gte(recipeViews.viewedAt, new Date(timeframes.hours24.getTime() - 24 * 60 * 60 * 1000)),
-        lt(recipeViews.viewedAt, timeframes.hours24)
+        gte(recipeInteractions.interactionDate, new Date(timeframes.hours24.getTime() - 24 * 60 * 60 * 1000)),
+        lt(recipeInteractions.interactionDate, timeframes.hours24)
       ));
 
     const growthRate = previousEngagement.previousViews > 0 
@@ -471,24 +475,24 @@ export class TrendingService {
     return await db
       .select({
         recipe: recipes,
-        views24h: sql<number>`count(case when ${recipeViews.viewedAt} >= ${timeframes.hours24} then 1 end)`,
-        views7d: sql<number>`count(case when ${recipeViews.viewedAt} >= ${timeframes.days7} then 1 end)`,
-        shares24h: sql<number>`(select count(*) from ${recipeShares} where ${recipeShares.recipeId} = ${recipes.id} and ${recipeShares.sharedAt} >= ${timeframes.hours24})`,
-        shares7d: sql<number>`(select count(*) from ${recipeShares} where ${recipeShares.recipeId} = ${recipes.id} and ${recipeShares.sharedAt} >= ${timeframes.days7})`,
+        views24h: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${timeframes.hours24} then 1 end)`,
+        views7d: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${timeframes.days7} then 1 end)`,
+        shares24h: sql<number>`(select count(*) from ${recipeShares} where ${recipeInteractions.recipeId} = ${recipes.id} and ${recipeInteractions.interactionDate} >= ${timeframes.hours24})`,
+        shares7d: sql<number>`(select count(*) from ${recipeShares} where ${recipeInteractions.recipeId} = ${recipes.id} and ${recipeInteractions.interactionDate} >= ${timeframes.days7})`,
         favorites24h: sql<number>`(select count(*) from ${recipeFavorites} where ${recipeFavorites.recipeId} = ${recipes.id} and ${recipeFavorites.favoritedAt} >= ${timeframes.hours24})`,
         favorites7d: sql<number>`(select count(*) from ${recipeFavorites} where ${recipeFavorites.recipeId} = ${recipes.id} and ${recipeFavorites.favoritedAt} >= ${timeframes.days7})`,
-        ratings24h: sql<number>`(select count(*) from ${recipeRatings} where ${recipeRatings.recipeId} = ${recipes.id} and ${recipeRatings.ratedAt} >= ${timeframes.hours24})`,
-        avgRating: sql<number>`(select avg(${recipeRatings.rating}) from ${recipeRatings} where ${recipeRatings.recipeId} = ${recipes.id})`
+        ratings24h: sql<number>`(select count(*) from ${recipeRatings} where ${recipeInteractions.recipeId} = ${recipes.id} and ${recipeInteractions.interactionDate} >= ${timeframes.hours24})`,
+        avgRating: sql<number>`(select avg(${recipeInteractions.interactionValue}) from ${recipeRatings} where ${recipeInteractions.recipeId} = ${recipes.id})`
       })
       .from(recipes)
-      .leftJoin(recipeViews, eq(recipes.id, recipeViews.recipeId))
+      .leftJoin(recipeInteractions, eq(recipes.id, recipeInteractions.recipeId))
       .where(and(
         eq(recipes.isApproved, true),
-        gte(recipeViews.viewedAt, cutoffTime),
+        gte(recipeInteractions.interactionDate, cutoffTime),
         categoryFilter
       ))
       .groupBy(recipes.id)
-      .having(sql`count(case when ${recipeViews.viewedAt} >= ${cutoffTime} then 1 end) > 0`);
+      .having(sql`count(case when ${recipeInteractions.interactionDate} >= ${cutoffTime} then 1 end) > 0`);
   }
 
   private enhanceTrendingData(data: any): TrendingRecipe {
@@ -500,7 +504,7 @@ export class TrendingService {
     const baseScore = data.views24h * 1.0;
     const shareBoost = data.shares24h * 10.0;
     const favoriteBoost = data.favorites24h * 5.0;
-    const ratingBoost = data.ratings24h * 3.0;
+    const ratingBoost = data.interactionValues24h * 3.0;
     const qualityMultiplier = data.avgRating > 4 ? 1.5 : data.avgRating > 3 ? 1.2 : 1.0;
     const velocityMultiplier = 1 + (velocityScore / 100);
     const viralMultiplier = 1 + (viralCoefficient / 50);
@@ -517,7 +521,7 @@ export class TrendingService {
       shares7d: data.shares7d,
       favorites24h: data.favorites24h,
       favorites7d: data.favorites7d,
-      ratings24h: data.ratings24h,
+      ratings24h: data.interactionValues24h,
       avgRating: Number(data.avgRating) || 0,
       velocityScore,
       viralCoefficient,
@@ -646,9 +650,9 @@ export class TrendingService {
         count: sql<number>`count(*)`
       })
       .from(recipeViews)
-      .innerJoin(recipes, eq(recipeViews.recipeId, recipes.id))
+      .innerJoin(recipes, eq(recipeInteractions.recipeId, recipes.id))
       .where(and(
-        gte(recipeViews.viewedAt, timeframes.hours24),
+        gte(recipeInteractions.interactionDate, timeframes.hours24),
         sql`${recipes.mealTypes} @> ${JSON.stringify([category])}`
       ));
 
@@ -657,10 +661,10 @@ export class TrendingService {
         count: sql<number>`count(*)`
       })
       .from(recipeViews)
-      .innerJoin(recipes, eq(recipeViews.recipeId, recipes.id))
+      .innerJoin(recipes, eq(recipeInteractions.recipeId, recipes.id))
       .where(and(
-        gte(recipeViews.viewedAt, previousDay),
-        lt(recipeViews.viewedAt, timeframes.hours24),
+        gte(recipeInteractions.interactionDate, previousDay),
+        lt(recipeInteractions.interactionDate, timeframes.hours24),
         sql`${recipes.mealTypes} @> ${JSON.stringify([category])}`
       ));
 

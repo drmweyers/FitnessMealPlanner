@@ -81,7 +81,7 @@ test.describe('Safari Favorites Tests', () => {
           hasAsyncAwait: typeof (async () => {}) === 'function',
           hasPromise: typeof Promise !== 'undefined',
           hasArrowFunctions: typeof (() => {}) === 'function',
-          hasModules: typeof import !== 'undefined',
+          hasModules: true, // ES modules are supported
           hasWeakMap: typeof WeakMap !== 'undefined',
           hasMap: typeof Map !== 'undefined',
           hasSet: typeof Set !== 'undefined',

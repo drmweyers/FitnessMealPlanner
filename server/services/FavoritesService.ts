@@ -12,14 +12,17 @@ import {
   recipeFavorites,
   favoriteCollections,
   collectionRecipes,
-  recipes,
-  users,
   type RecipeFavorite,
   type FavoriteCollection,
-  type Recipe,
   type CreateFavorite,
   type CreateCollection,
-  type AddRecipeToCollection,
+  type AddToCollection,
+} from '../../shared/schema-favorites.js';
+
+import {
+  recipes,
+  users,
+  type Recipe,
 } from '../../shared/schema.js';
 
 interface ServiceResult<T> {
@@ -637,4 +640,14 @@ export class FavoritesService {
       console.error('Error invalidating collection cache:', error);
     }
   }
+}
+
+// Singleton instance
+let favoritesServiceInstance: FavoritesService | null = null;
+
+export function getFavoritesService(): FavoritesService {
+  if (!favoritesServiceInstance) {
+    favoritesServiceInstance = new FavoritesService();
+  }
+  return favoritesServiceInstance;
 }

@@ -207,7 +207,7 @@ export const sharedRecipes = pgTable("shared_recipes", {
     .references(() => recipes.id, { onDelete: "cascade" })
     .notNull(),
   sharedBy: uuid("shared_by")
-    .references(() => users.id, { onDelete: "set null")), // null if anonymous sharing
+    .references(() => users.id, { onDelete: "set null" }), // null if anonymous sharing
   
   shareType: shareTypeEnum("share_type").notNull(),
   
@@ -226,8 +226,7 @@ export const sharedRecipes = pgTable("shared_recipes", {
   sharedFromDevice: varchar("shared_from_device", { length: 20 }),
   
   // Attribution tracking
-  originalShareId: uuid("original_share_id")
-    .references(() => sharedRecipes.id, { onDelete: "set null" }), // if this is a re-share
+  originalShareId: uuid("original_share_id"), // if this is a re-share
   shareDepth: integer("share_depth").default(1), // how many times this has been re-shared
   
   createdAt: timestamp("created_at").defaultNow(),

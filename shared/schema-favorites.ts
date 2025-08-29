@@ -99,7 +99,7 @@ export const collectionRecipes = pgTable("collection_recipes", {
   orderIndex: integer("order_index").default(0), // For custom ordering within collections
   addedAt: timestamp("added_at").defaultNow(),
   addedBy: uuid("added_by")
-    .references(() => users.id, { onDelete: "set null")), // Track who added if shared collection
+    .references(() => users.id, { onDelete: "set null" }), // Track who added if shared collection
   notes: text("notes"), // Collection-specific notes about this recipe
 }, (table) => ({
   collectionIdx: index("collection_recipes_collection_idx").on(table.collectionId),

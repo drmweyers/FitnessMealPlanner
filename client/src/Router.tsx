@@ -19,6 +19,10 @@ import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { OAuthCallback } from "./components/OAuthCallback";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
+import SharedMealPlanView from "./components/SharedMealPlanView";
+import MacroTrackingDashboard from "./components/MacroTrackingDashboard";
+import MealPrepSchedulingCalendar from "./components/MealPrepSchedulingCalendar";
+import MobileGroceryList from "./components/MobileGroceryList";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -41,6 +45,11 @@ export default function Router() {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Check if this is a shared meal plan route (public access)
+  if (window.location.pathname.startsWith('/shared/')) {
+    return <SharedMealPlanView />;
   }
 
   if (!user) {
@@ -96,6 +105,28 @@ export default function Router() {
             return <Redirect to="/" />;
           }
           return <Customer />;
+        }} />
+        
+        {/* New Milestone 9 Routes - Customer only */}
+        <Route path="/nutrition" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <MacroTrackingDashboard />;
+        }} />
+        
+        <Route path="/meal-prep" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <MealPrepSchedulingCalendar />;
+        }} />
+        
+        <Route path="/grocery-list" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <MobileGroceryList />;
         }} />
         
         {/* Trainer Routes - More specific routes first */}

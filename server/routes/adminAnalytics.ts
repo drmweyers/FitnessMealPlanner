@@ -18,11 +18,11 @@ import { sql, desc, eq, gte, and, count } from 'drizzle-orm';
 import {
   users,
   recipes,
-  recipeViews,
-  recipeRatings,
+  recipeInteractions,
+  
   recipeFavorites,
-  recipeShares,
-  userInteractions,
+  
+  
   personalizedMealPlans
 } from '../../shared/schema';
 
@@ -472,8 +472,8 @@ async function getUserMetrics(startDate: Date) {
       newUsers: sql<number>`count(case when ${users.createdAt} >= ${startDate} then 1 end)`,
       activeUsers: sql<number>`count(distinct case when EXISTS(
         select 1 from ${recipeViews} 
-        where ${recipeViews.userId} = ${users.id} 
-        and ${recipeViews.viewedAt} >= ${startDate}
+        where ${recipeInteractions.userId} = ${users.id} 
+        and ${recipeInteractions.interactionDate} >= ${startDate}
       ) then ${users.id} end)`,
       adminUsers: sql<number>`count(case when ${users.role} = 'admin' then 1 end)`,
       trainerUsers: sql<number>`count(case when ${users.role} = 'trainer' then 1 end)`,
@@ -490,8 +490,8 @@ async function getContentMetrics(startDate: Date) {
       totalRecipes: sql<number>`count(*)`,
       approvedRecipes: sql<number>`count(case when ${recipes.isApproved} = true then 1 end)`,
       newRecipes: sql<number>`count(case when ${recipes.creationTimestamp} >= ${startDate} then 1 end)`,
-      averageRating: sql<number>`(select avg(${recipeRatings.rating}) from ${recipeRatings})`,
-      totalRatings: sql<number>`(select count(*) from ${recipeRatings} where ${recipeRatings.ratedAt} >= ${startDate})`,
+      averageRating: sql<number>`(select avg(${recipeInteractions.interactionValue}) from ${recipeRatings})`,
+      totalRatings: sql<number>`(select count(*) from ${recipeRatings} where ${recipeInteractions.interactionDate} >= ${startDate})`,
       totalFavorites: sql<number>`(select count(*) from ${recipeFavorites} where ${recipeFavorites.favoritedAt} >= ${startDate})`
     })
     .from(recipes);
@@ -502,11 +502,11 @@ async function getContentMetrics(startDate: Date) {
 async function getEngagementMetrics(startDate: Date) {
   const [result] = await db
     .select({
-      totalViews: sql<number>`(select count(*) from ${recipeViews} where ${recipeViews.viewedAt} >= ${startDate})`,
-      uniqueViewers: sql<number>`(select count(distinct coalesce(${recipeViews.userId}, ${recipeViews.sessionId})) from ${recipeViews} where ${recipeViews.viewedAt} >= ${startDate})`,
-      totalShares: sql<number>`(select count(*) from ${recipeShares} where ${recipeShares.sharedAt} >= ${startDate})`,
-      totalInteractions: sql<number>`(select count(*) from ${userInteractions} where ${userInteractions.interactedAt} >= ${startDate})`,
-      avgSessionDuration: sql<number>`(select avg(${recipeViews.viewDurationSeconds}) from ${recipeViews} where ${recipeViews.viewedAt} >= ${startDate} and ${recipeViews.viewDurationSeconds} is not null)`
+      totalViews: sql<number>`(select count(*) from ${recipeViews} where ${recipeInteractions.interactionDate} >= ${startDate})`,
+      uniqueViewers: sql<number>`(select count(distinct coalesce(${recipeInteractions.userId}, ${recipeInteractions.sessionId})) from ${recipeViews} where ${recipeInteractions.interactionDate} >= ${startDate})`,
+      totalShares: sql<number>`(select count(*) from ${recipeShares} where ${recipeInteractions.interactionDate} >= ${startDate})`,
+      totalInteractions: sql<number>`(select count(*) from ${userInteractions} where ${recipeInteractions.interactedAt} >= ${startDate})`,
+      avgSessionDuration: sql<number>`(select avg(${recipeInteractions.viewDurationSeconds}) from ${recipeViews} where ${recipeInteractions.interactionDate} >= ${startDate} and ${recipeInteractions.viewDurationSeconds} is not null)`
     });
 
   return result;
@@ -538,7 +538,7 @@ async function calculateGrowthRates(previousStart: Date, currentStart: Date) {
   const [previousMetrics] = await db
     .select({
       users: sql<number>`count(distinct ${users.id})`,
-      views: sql<number>`(select count(*) from ${recipeViews} where ${recipeViews.viewedAt} between ${previousStart} and ${currentStart})`
+      views: sql<number>`(select count(*) from ${recipeViews} where ${recipeInteractions.interactionDate} between ${previousStart} and ${currentStart})`
     })
     .from(users)
     .where(gte(users.createdAt, previousStart));
@@ -546,7 +546,7 @@ async function calculateGrowthRates(previousStart: Date, currentStart: Date) {
   const [currentMetrics] = await db
     .select({
       users: sql<number>`count(distinct ${users.id})`,
-      views: sql<number>`(select count(*) from ${recipeViews} where ${recipeViews.viewedAt} >= ${currentStart})`
+      views: sql<number>`(select count(*) from ${recipeViews} where ${recipeInteractions.interactionDate} >= ${currentStart})`
     })
     .from(users)
     .where(gte(users.createdAt, currentStart));
@@ -563,24 +563,24 @@ async function getTopRecipesByMetric(metric: string, limit: number) {
 
   switch (metric) {
     case 'views':
-      selectFields = sql<number>`count(${recipeViews.id})`;
-      orderBy = sql`count(${recipeViews.id}) DESC`;
+      selectFields = sql<number>`count(${recipeInteractions.id})`;
+      orderBy = sql`count(${recipeInteractions.id}) DESC`;
       break;
     case 'ratings':
-      selectFields = sql<number>`count(${recipeRatings.id})`;
-      orderBy = sql`count(${recipeRatings.id}) DESC`;
+      selectFields = sql<number>`count(${recipeInteractions.id})`;
+      orderBy = sql`count(${recipeInteractions.id}) DESC`;
       break;
     case 'favorites':
       selectFields = sql<number>`count(${recipeFavorites.id})`;
       orderBy = sql`count(${recipeFavorites.id}) DESC`;
       break;
     case 'shares':
-      selectFields = sql<number>`count(${recipeShares.id})`;
-      orderBy = sql`count(${recipeShares.id}) DESC`;
+      selectFields = sql<number>`count(${recipeInteractions.id})`;
+      orderBy = sql`count(${recipeInteractions.id}) DESC`;
       break;
     default: // engagement
-      selectFields = sql<number>`count(${recipeViews.id}) + count(${recipeRatings.id}) * 3 + count(${recipeFavorites.id}) * 2 + count(${recipeShares.id}) * 5`;
-      orderBy = sql`count(${recipeViews.id}) + count(${recipeRatings.id}) * 3 + count(${recipeFavorites.id}) * 2 + count(${recipeShares.id}) * 5 DESC`;
+      selectFields = sql<number>`count(${recipeInteractions.id}) + count(${recipeInteractions.id}) * 3 + count(${recipeFavorites.id}) * 2 + count(${recipeInteractions.id}) * 5`;
+      orderBy = sql`count(${recipeInteractions.id}) + count(${recipeInteractions.id}) * 3 + count(${recipeFavorites.id}) * 2 + count(${recipeInteractions.id}) * 5 DESC`;
   }
 
   return await db
@@ -589,10 +589,10 @@ async function getTopRecipesByMetric(metric: string, limit: number) {
       metricValue: selectFields
     })
     .from(recipes)
-    .leftJoin(recipeViews, eq(recipes.id, recipeViews.recipeId))
-    .leftJoin(recipeRatings, eq(recipes.id, recipeRatings.recipeId))
+    .leftJoin(recipeInteractions, eq(recipes.id, recipeInteractions.recipeId))
+    .leftJoin( eq(recipes.id, recipeInteractions.recipeId))
     .leftJoin(recipeFavorites, eq(recipes.id, recipeFavorites.recipeId))
-    .leftJoin(recipeShares, eq(recipes.id, recipeShares.recipeId))
+    .leftJoin( eq(recipes.id, recipeInteractions.recipeId))
     .where(eq(recipes.isApproved, true))
     .groupBy(recipes.id)
     .orderBy(orderBy)
@@ -688,11 +688,11 @@ async function getTopUsersByEngagement(limit: number) {
     })
     .from(users)
     .leftJoin(
-      sql`(select ${recipeViews.userId}, count(*) as count from ${recipeViews} group by ${recipeViews.userId}) as view_count`,
+      sql`(select ${recipeInteractions.userId}, count(*) as count from ${recipeViews} group by ${recipeInteractions.userId}) as view_count`,
       sql`view_count.user_id = ${users.id}`
     )
     .leftJoin(
-      sql`(select ${recipeRatings.userId}, count(*) as count from ${recipeRatings} group by ${recipeRatings.userId}) as rating_count`,
+      sql`(select ${recipeInteractions.userId}, count(*) as count from ${recipeRatings} group by ${recipeInteractions.userId}) as rating_count`,
       sql`rating_count.user_id = ${users.id}`
     )
     .leftJoin(
@@ -742,10 +742,10 @@ async function getPredictiveInsights(days: number) {
 async function getCurrentActiveUsers() {
   const [result] = await db
     .select({
-      count: sql<number>`count(distinct coalesce(${recipeViews.userId}, ${recipeViews.sessionId}))`
+      count: sql<number>`count(distinct coalesce(${recipeInteractions.userId}, ${recipeInteractions.sessionId}))`
     })
     .from(recipeViews)
-    .where(gte(recipeViews.viewedAt, new Date(Date.now() - 60 * 60 * 1000))); // Last hour
+    .where(gte(recipeInteractions.interactionDate, new Date(Date.now() - 60 * 60 * 1000))); // Last hour
 
   return result.count;
 }

@@ -70,7 +70,7 @@ services:
     container_name: fitnessmealplanner-dev
     ports:
       - "4000:4000"
-      - "24678:24678"
+      - "24679:24678"
     env_file:
       - .env
     environment:

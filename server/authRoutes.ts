@@ -7,6 +7,8 @@ import { users } from '../shared/schema';
 import crypto from 'crypto';
 import passport from './passport-config';
 import { requireAuth, requireAdmin, requireRole } from './middleware/auth';
+import { authRateLimiter, generalAuthRateLimiter, passwordResetRateLimiter } from './middleware/rateLimiter';
+import { AuditLogger } from './services/auditLogger';
 
 const authRouter = Router();
 
@@ -137,48 +139,62 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-authRouter.post('/login', async (req: Request, res: Response) => {
+authRouter.post('/login', authRateLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
 
-    // Check login attempts
+    // Check login attempts (backup to rate limiter)
     if (!checkLoginAttempts(email)) {
+      // Log the lockout event
+      await AuditLogger.logFailedLogin(req, email, 'Account temporarily locked');
       return res.status(429).json({ 
         status: 'error',
-        message: 'Too many failed attempts. Please try again later.',
-        code: 'TOO_MANY_ATTEMPTS'
+        message: 'Too many failed attempts. Please try again in 15 minutes.',
+        code: 'ACCOUNT_LOCKED',
+        retryAfter: new Date(Date.now() + LOCKOUT_TIME).toISOString()
       });
     }
 
     const user = await storage.getUserByEmail(email);
     if (!user) {
       recordLoginAttempt(email);
+      // Log failed login attempt
+      await AuditLogger.logFailedLogin(req, email, 'User not found');
       return res.status(401).json({ 
         status: 'error',
-        message: 'Invalid credentials',
-        code: 'INVALID_CREDENTIALS'
+        message: 'Invalid email or password. Please check your credentials and try again.',
+        code: 'AUTH_INVALID_CREDENTIALS',
+        field: 'email'
       });
     }
 
     if (!user.password) {
+      // User registered via OAuth only
+      await AuditLogger.logFailedLogin(req, email, 'OAuth-only account');
       return res.status(401).json({ 
         status: 'error',
-        message: 'Invalid credentials',
-        code: 'INVALID_CREDENTIALS'
+        message: 'This account uses social login. Please sign in with Google.',
+        code: 'AUTH_OAUTH_REQUIRED'
       });
     }
     const isPasswordValid = await comparePasswords(password, user.password);
     if (!isPasswordValid) {
       recordLoginAttempt(email);
+      // Log failed login attempt
+      await AuditLogger.logFailedLogin(req, email, 'Invalid password');
       return res.status(401).json({ 
         status: 'error',
-        message: 'Invalid credentials',
-        code: 'INVALID_CREDENTIALS'
+        message: 'Invalid email or password. Please check your credentials and try again.',
+        code: 'AUTH_INVALID_CREDENTIALS',
+        field: 'password'
       });
     }
 
     // Reset login attempts on successful login
     loginAttempts.delete(email);
+    
+    // Log successful login
+    await AuditLogger.logLogin(req, user.id, 'password');
 
     const { accessToken, refreshToken } = generateTokens(user);
 
@@ -272,13 +288,36 @@ authRouter.post('/refresh_token', async (req: Request, res: Response) => {
   }
 });
 
-authRouter.post('/logout', async (req: Request, res: Response) => {
-    const { refreshToken } = req.cookies;
-    if (refreshToken) {
-        await storage.deleteRefreshToken(refreshToken);
+authRouter.post('/logout', requireAuth, async (req: Request & { user?: any }, res: Response) => {
+    try {
+        // Log the logout event if user is available
+        if (req.user?.id) {
+            await AuditLogger.logLogout(req, req.user.id);
+        }
+        
+        const { refreshToken } = req.cookies;
+        if (refreshToken) {
+            await storage.deleteRefreshToken(refreshToken);
+        }
+        
+        // Clear both tokens
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
+        
+        res.status(200).json({ 
+            status: 'success', 
+            message: 'Logged out successfully' 
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+        // Still clear cookies even if logging fails
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
+        res.status(200).json({ 
+            status: 'success', 
+            message: 'Logged out successfully' 
+        });
     }
-    res.clearCookie('refreshToken');
-    res.status(200).json({ status: 'success', message: 'Logged out successfully' });
 });
 
 interface AuthRequest extends Request {
@@ -554,5 +593,27 @@ authRouter.get('/google/:role', (req: Request, res: Response, next: NextFunction
   
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });
+
+// Development endpoint to reset rate limiting for testing
+if (process.env.NODE_ENV === 'development') {
+  authRouter.post('/dev/reset-rate-limits', (req: Request, res: Response) => {
+    try {
+      loginAttempts.clear();
+      console.log('🧹 Rate limits reset for development testing');
+      res.json({ 
+        status: 'success',
+        message: 'Rate limits reset successfully',
+        resetCount: loginAttempts.size
+      });
+    } catch (error) {
+      console.error('Error resetting rate limits:', error);
+      res.status(500).json({ 
+        status: 'error',
+        message: 'Failed to reset rate limits',
+        code: 'RESET_ERROR'
+      });
+    }
+  });
+}
 
 export default authRouter;

@@ -11,10 +11,10 @@ import { db } from '../db';
 import {
   recipes,
   recipeFavorites,
-  recipeViews,
-  recipeRatings,
+  recipeInteractions,
+  
   userPreferences,
-  userInteractions,
+  
   users,
   type Recipe,
   type UserPreferences,
@@ -182,37 +182,37 @@ export class RecommendationService {
     const collaborativeRecipes = await db
       .select({
         recipe: recipes,
-        avgRating: sql<number>`avg(${recipeRatings.rating})`,
-        ratingCount: sql<number>`count(${recipeRatings.rating})`,
-        similarityScore: sql<number>`avg(case when ${recipeRatings.userId} = ANY(${similarUserIds}) then ${recipeRatings.rating} else 0 end)`
+        avgRating: sql<number>`avg(${recipeInteractions.interactionValue})`,
+        ratingCount: sql<number>`count(${recipeInteractions.interactionValue})`,
+        similarityScore: sql<number>`avg(case when ${recipeInteractions.userId} = ANY(${similarUserIds}) then ${recipeInteractions.interactionValue} else 0 end)`
       })
       .from(recipes)
-      .innerJoin(recipeRatings, eq(recipes.id, recipeRatings.recipeId))
+      .innerJoin( eq(recipes.id, recipeInteractions.recipeId))
       .where(and(
         eq(recipes.isApproved, true),
-        inArray(recipeRatings.userId, similarUserIds),
-        gte(recipeRatings.rating, 4), // Only recommend highly rated recipes
+        inArray(recipeInteractions.userId, similarUserIds),
+        gte(recipeInteractions.interactionValue, 4), // Only recommend highly rated recipes
         not(
           sql`${recipes.id} IN (
-            SELECT ${recipeRatings.recipeId} FROM ${recipeRatings} WHERE ${recipeRatings.userId} = ${userId}
+            SELECT ${recipeInteractions.recipeId} FROM ${recipeRatings} WHERE ${recipeInteractions.userId} = ${userId}
           )`
         )
       ))
       .groupBy(recipes.id)
-      .having(sql`count(${recipeRatings.rating}) >= 2`) // At least 2 ratings from similar users
-      .orderBy(sql`avg(${recipeRatings.rating}) DESC`)
+      .having(sql`count(${recipeInteractions.interactionValue}) >= 2`) // At least 2 ratings from similar users
+      .orderBy(sql`avg(${recipeInteractions.interactionValue}) DESC`)
       .limit(request.count || 20);
 
     return collaborativeRecipes.map(item => ({
       ...item.recipe,
       recommendationScore: this.calculateCollaborativeScore(
         item.avgRating,
-        item.ratingCount,
+        item.interactionValueCount,
         item.similarityScore,
         similarUsers
       ),
       recommendationReason: `Users with similar tastes love this recipe (${Number(item.avgRating).toFixed(1)}/5 stars)`,
-      confidence: Math.min(item.ratingCount / 10, 1), // Confidence based on number of ratings
+      confidence: Math.min(item.interactionValueCount / 10, 1), // Confidence based on number of ratings
       estimatedRating: item.avgRating
     }));
   }
@@ -234,7 +234,7 @@ export class RecommendationService {
     whereConditions.push(
       not(
         sql`${recipes.id} IN (
-          SELECT ${recipeRatings.recipeId} FROM ${recipeRatings} WHERE ${recipeRatings.userId} = ${userId}
+          SELECT ${recipeInteractions.recipeId} FROM ${recipeRatings} WHERE ${recipeInteractions.userId} = ${userId}
         )`
       )
     );
@@ -332,35 +332,35 @@ export class RecommendationService {
     const popularRecipes = await db
       .select({
         recipe: recipes,
-        avgRating: sql<number>`avg(${recipeRatings.rating})`,
-        ratingCount: sql<number>`count(${recipeRatings.rating})`,
-        viewCount: sql<number>`count(${recipeViews.id})`
+        avgRating: sql<number>`avg(${recipeInteractions.interactionValue})`,
+        ratingCount: sql<number>`count(${recipeInteractions.interactionValue})`,
+        viewCount: sql<number>`count(${recipeInteractions.id})`
       })
       .from(recipes)
-      .leftJoin(recipeRatings, eq(recipes.id, recipeRatings.recipeId))
-      .leftJoin(recipeViews, eq(recipes.id, recipeViews.recipeId))
+      .leftJoin( eq(recipes.id, recipeInteractions.recipeId))
+      .leftJoin(recipeInteractions, eq(recipes.id, recipeInteractions.recipeId))
       .where(and(
         eq(recipes.isApproved, true),
         // Exclude recipes user has already rated
         not(
           sql`${recipes.id} IN (
-            SELECT ${recipeRatings.recipeId} FROM ${recipeRatings} WHERE ${recipeRatings.userId} = ${userId}
+            SELECT ${recipeInteractions.recipeId} FROM ${recipeRatings} WHERE ${recipeInteractions.userId} = ${userId}
           )`
         )
       ))
       .groupBy(recipes.id)
-      .having(sql`count(${recipeRatings.rating}) >= 5`) // At least 5 ratings
-      .orderBy(sql`avg(${recipeRatings.rating}) DESC, count(${recipeRatings.rating}) DESC`)
+      .having(sql`count(${recipeInteractions.interactionValue}) >= 5`) // At least 5 ratings
+      .orderBy(sql`avg(${recipeInteractions.interactionValue}) DESC, count(${recipeInteractions.interactionValue}) DESC`)
       .limit(request.count || 20);
 
     return popularRecipes.map(item => ({
       ...item.recipe,
       recommendationScore: this.calculatePopularityScore(
         item.avgRating,
-        item.ratingCount,
+        item.interactionValueCount,
         item.viewCount
       ),
-      recommendationReason: `Popular recipe with ${Number(item.avgRating).toFixed(1)}/5 stars from ${item.ratingCount} reviews`,
+      recommendationReason: `Popular recipe with ${Number(item.avgRating).toFixed(1)}/5 stars from ${item.interactionValueCount} reviews`,
       confidence: 0.9,
       estimatedRating: item.avgRating
     }));
@@ -461,7 +461,7 @@ export class RecommendationService {
     const userRatings = await db
       .select()
       .from(recipeRatings)
-      .where(eq(recipeRatings.userId, userId));
+      .where(eq(recipeInteractions.userId, userId));
 
     if (userRatings.length < 3) {
       return []; // Need at least 3 ratings for similarity calculation
@@ -472,14 +472,14 @@ export class RecommendationService {
     // Find users who rated the same recipes
     const potentialSimilarUsers = await db
       .select({
-        userId: recipeRatings.userId,
-        recipeId: recipeRatings.recipeId,
-        rating: recipeRatings.rating
+        userId: recipeInteractions.userId,
+        recipeId: recipeInteractions.recipeId,
+        rating: recipeInteractions.interactionValue
       })
       .from(recipeRatings)
       .where(and(
-        inArray(recipeRatings.recipeId, userRecipeIds),
-        not(eq(recipeRatings.userId, userId))
+        inArray(recipeInteractions.recipeId, userRecipeIds),
+        not(eq(recipeInteractions.userId, userId))
       ));
 
     // Group by user and calculate similarity
@@ -489,7 +489,7 @@ export class RecommendationService {
       if (!userRatingMap.has(rating.userId)) {
         userRatingMap.set(rating.userId, new Map());
       }
-      userRatingMap.get(rating.userId)!.set(rating.recipeId, rating.rating);
+      userRatingMap.get(rating.userId)!.set(rating.recipeId, rating.interactionValue);
     });
 
     // Calculate Pearson correlation coefficient for each user
@@ -504,7 +504,7 @@ export class RecommendationService {
       userRatings.forEach(userRating => {
         if (otherRatings.has(userRating.recipeId)) {
           commonRecipes.push(userRating.recipeId);
-          userCommonRatings.push(userRating.rating);
+          userCommonRatings.push(userRating.interactionValue);
           otherCommonRatings.push(otherRatings.get(userRating.recipeId)!);
         }
       });
@@ -556,9 +556,9 @@ export class RecommendationService {
 
     // Get user's average rating
     const [avgRatingResult] = await db
-      .select({ avgRating: sql<number>`avg(${recipeRatings.rating})` })
+      .select({ avgRating: sql<number>`avg(${recipeInteractions.interactionValue})` })
       .from(recipeRatings)
-      .where(eq(recipeRatings.userId, userId));
+      .where(eq(recipeInteractions.userId, userId));
 
     const averageRating = avgRatingResult.avgRating || 0;
 
@@ -595,9 +595,9 @@ export class RecommendationService {
     // Exclude viewed recipes
     if (request.excludeViewed) {
       const viewedRecipeIds = await db
-        .select({ recipeId: recipeViews.recipeId })
+        .select({ recipeId: recipeInteractions.recipeId })
         .from(recipeViews)
-        .where(eq(recipeViews.userId, request.userId));
+        .where(eq(recipeInteractions.userId, request.userId));
       
       const viewedIds = new Set(viewedRecipeIds.map(v => v.recipeId));
       filtered = filtered.filter(r => !viewedIds.has(r.id));
@@ -762,10 +762,10 @@ export class RecommendationService {
     const highlyRatedRecipes = await db
       .select({ recipe: recipes })
       .from(recipeRatings)
-      .innerJoin(recipes, eq(recipeRatings.recipeId, recipes.id))
+      .innerJoin(recipes, eq(recipeInteractions.recipeId, recipes.id))
       .where(and(
-        eq(recipeRatings.userId, userId),
-        gte(recipeRatings.rating, 4)
+        eq(recipeInteractions.userId, userId),
+        gte(recipeInteractions.interactionValue, 4)
       ));
 
     const ingredientCounts = new Map<string, number>();
@@ -789,16 +789,16 @@ export class RecommendationService {
   private async calculateActivityLevel(userId: string): Promise<'low' | 'medium' | 'high'> {
     const [result] = await db
       .select({
-        ratingCount: sql<number>`count(${recipeRatings.id})`,
-        viewCount: sql<number>`count(${recipeViews.id})`
+        ratingCount: sql<number>`count(${recipeInteractions.id})`,
+        viewCount: sql<number>`count(${recipeInteractions.id})`
       })
       .from(users)
-      .leftJoin(recipeRatings, eq(users.id, recipeRatings.userId))
-      .leftJoin(recipeViews, eq(users.id, recipeViews.userId))
+      .leftJoin( eq(users.id, recipeInteractions.userId))
+      .leftJoin(recipeInteractions, eq(users.id, recipeInteractions.userId))
       .where(eq(users.id, userId))
       .groupBy(users.id);
 
-    const totalActivity = (result.ratingCount || 0) + (result.viewCount || 0) / 10;
+    const totalActivity = (result.interactionValueCount || 0) + (result.viewCount || 0) / 10;
 
     if (totalActivity >= 50) return 'high';
     if (totalActivity >= 15) return 'medium';
@@ -810,8 +810,8 @@ export class RecommendationService {
     const ratedRecipes = await db
       .select({ recipe: recipes })
       .from(recipeRatings)
-      .innerJoin(recipes, eq(recipeRatings.recipeId, recipes.id))
-      .where(eq(recipeRatings.userId, userId));
+      .innerJoin(recipes, eq(recipeInteractions.recipeId, recipes.id))
+      .where(eq(recipeInteractions.userId, userId));
 
     if (ratedRecipes.length === 0) return 0;
 

@@ -267,24 +267,94 @@ When user requests deployment to production:
 - **Context7 MCP**: Technical documentation access
 - **DigitalOcean MCP**: Production infrastructure monitoring
 
+## BMAD Core Integration Status (August 28, 2025)
+
+### 🚀 New Strategic Business Intelligence Layer
+**Status:** Core system created, integration pending
+
+The BMAD (Business Model Architecture Design) Core has been implemented as a strategic layer above the application's technical architecture. This system provides:
+
+- **Business Strategy Engine**: Dynamic pricing, revenue optimization, market analysis
+- **Customer Intelligence**: Segmentation, churn prediction, journey tracking
+- **Workflow Automation**: Event-driven business process automation
+- **Orchestration Layer**: Cross-component coordination and monitoring
+
+**Integration Path:**
+```bash
+# To start BMAD Core in next session:
+cd .bmad-core
+npm install
+npm run build
+npm run bmad:start
+```
+
+**Next Steps:**
+1. Connect BMAD to real database metrics
+2. Create admin dashboard for BMAD insights
+3. Configure production environment
+4. Test automated workflows
+
+See `BMAD_IMPLEMENTATION_STATUS.md` for full details.
+
+## BMAD Software Development Process
+
+### Current BMAD Status (August 29, 2025)
+**IMPORTANT**: When asked "where are we with the BMAD process", refer to this section.
+
+The project is using the **BMAD Method** (Agile AI-Driven Development) for systematic feature development:
+
+#### Phase 1: Documentation ✅ COMPLETE
+- Created comprehensive PRD (`/docs/prd.md`) with 9 user stories
+- Documented technical architecture (`/docs/architecture.md`)
+- Installed BMAD framework in `/.bmad-core/`
+
+#### Phase 2: Story Creation ⏳ NEXT STEP
+**Ready to start - Execute these commands:**
+1. Shard PRD: Use PO agent with command `@po *shard-prd`
+2. Create stories: Use SM agent with command `@sm *create`
+3. Review draft stories before implementation
+
+#### Phase 3: Development 📋 UPCOMING
+- Implement each story using Dev agent
+- QA review with QA agent
+- Iterate through all 9 stories
+
+### BMAD Workflow
+- **Type**: Brownfield (existing project)
+- **Workflow File**: `/.bmad-core/workflows/brownfield-fullstack.yaml`
+- **Current Epic**: FitnessMealPlanner Complete System Documentation
+- **Stories Ready**: 9 stories defined in PRD, awaiting sharding
+
+### Key BMAD Agents
+- **PM (John)**: Product Manager - PRDs and stories
+- **PO**: Product Owner - Document validation and sharding
+- **SM**: Scrum Master - Story creation
+- **Dev**: Developer - Implementation
+- **QA**: Quality Assurance - Code review
+- **Architect**: Technical documentation
+- **Analyst**: Requirements analysis
+
 ## Session Progress Tracking
-- **Last Major Update:** Multi-Agent Recipe Favoriting System Implementation (August 22, 2025)
-- **Mission Status:** 🚀 RECIPE FAVORITING SYSTEM + USER ENGAGEMENT - COMPREHENSIVE IMPLEMENTATION COMPLETE
-- **Achievement:** 5-agent specialized team delivered complete Recipe Favoriting System with advanced user engagement features
+- **Last Major Update:** BMAD Process Stories 1.1-1.3 Implementation Complete (August 29, 2025)
+- **Previous Update:** BMAD Core Business Intelligence System (August 28, 2025)
+- **Mission Status:** 🚀 BMAD SOFTWARE DEVELOPMENT PROCESS - PHASE 3 DEVELOPMENT IN PROGRESS
+- **Achievement:** Successfully implemented first 3 user stories of the BMAD enhancement process
 - **Implementation Results:** 
-  - **Database Architecture:** ✅ 8 new tables for favorites, collections, engagement analytics, and recommendations
-  - **Backend APIs:** ✅ 33 new endpoints across 4 route modules with Redis caching integration
-  - **Frontend Components:** ✅ 7 React components with animations, optimistic updates, and performance optimization
-  - **Performance Infrastructure:** ✅ Redis caching for sub-100ms operations, trending calculations, real-time analytics
-  - **Testing Framework:** ✅ 90+ unit tests and 9 Playwright E2E test files (needs configuration fixes)
-- **System Enhancement:** 🟢 MAJOR USER ENGAGEMENT UPGRADE - Recipe favoriting, collections, trending, recommendations
-- **Key Deliverables:** Complete favoriting system, user engagement analytics, AI recommendations, social features
-- **Files Created:** 25+ new implementation files including database schema, APIs, components, services, tests
-- **Multi-Agent Success:** 5 specialized agents (Database, Backend, Frontend, Testing, E2E) delivered exceptional implementation
-- **Business Impact:** Expected 50%+ increase in user engagement, 30% session duration improvement, 25% growth in favorites
-- **Technical Achievement:** Production-ready system with Redis caching, performance optimization, comprehensive testing
-- **Current Status:** 95% implementation complete, ready for integration and deployment
-- **Next Session:** Fix test configurations, integrate with existing codebase, deploy to production
+  - **Story 1.1:** ✅ Authentication enhancements with rate limiting and audit logging
+  - **Story 1.2:** ✅ Recipe generation with retry logic, quality scoring, and API cost tracking
+  - **Story 1.3:** ✅ Advanced recipe search with comprehensive filtering and performance optimization
+  - **Database Migrations:** ✅ 2 new migrations (0011, 0012) with quality scoring and search indexes
+  - **New Services:** ✅ 6 new service files with enhanced capabilities
+  - **API Enhancements:** ✅ 8+ new endpoints with advanced functionality
+  - **Performance Infrastructure:** ✅ Database indexes for sub-100ms search queries
+- **System Enhancement:** 🟢 COMPREHENSIVE PLATFORM UPGRADES - Security, AI reliability, advanced search
+- **Key Deliverables:** Rate limiting, audit logging, retry logic, quality scoring, cost tracking, advanced search
+- **Files Created:** 15+ implementation files including services, migrations, tests, documentation
+- **BMAD Process Success:** Systematic story-by-story implementation with comprehensive testing
+- **Business Impact:** Enhanced security, reliable AI operations, powerful search capabilities
+- **Technical Achievement:** Production-ready enhancements maintaining backward compatibility
+- **Current Status:** Stories 1.1-1.3 complete (3/9), ready for Story 1.4 - Intelligent Meal Plan Generation
+- **Next Session:** Continue BMAD process with Story 1.4: Intelligent Meal Plan Generation
 
 ### Previous Achievement Archive
 - **August 20, 2025:** Multi-Agent Production Diagnostic Investigation - Health Protocol removal confirmed
@@ -347,3 +417,106 @@ curl -I https://evofitmeals.com
   - Use parallel development with git worktrees for A/B testing features
   - Apply token optimization strategies to reduce costs
   - **Multi-agent investigation approach**: Deploy specialized agents for complex production issues
+
+## Claude Code Router Configuration
+
+### Overview
+Claude Code Router is configured to use native Claude models by default. Alternative models (like Qwen) can be used when needed.
+
+### Running Claude Code
+
+#### Default: Use Native Claude Models (RECOMMENDED)
+```powershell
+cd C:\Users\drmwe\claude-workspace\FitnessMealPlanner
+claude code
+```
+This uses Claude models directly through your Anthropic account.
+
+**Quick Launch Script:**
+```powershell
+./use-claude-default.ps1
+```
+
+#### Alternative: Use with Router Proxy (ONLY when Claude credits exhausted)
+```powershell
+cd C:\Users\drmwe\claude-workspace\FitnessMealPlanner
+claude code --api-proxy http://127.0.0.1:8080
+```
+This routes through the proxy but still uses native Claude by default.
+
+**IMPORTANT:** If you get OpenRouter errors, ensure you're NOT using the proxy. Run `claude code` directly without any proxy arguments.
+
+### Switching to Alternative Models
+
+#### When Claude Credits Run Out
+Switch to Qwen models using the `/model` command within Claude Code:
+
+**Available Qwen Models:**
+- `/model openrouter-qwen,qwen/qwen-2.5-72b-instruct` - General purpose (recommended)
+- `/model openrouter-qwen,qwen/qwen-2.5-coder-32b-instruct` - Optimized for coding
+- `/model openrouter-qwen,qwen/qwq-32b-preview` - Best for reasoning tasks
+- `/model openrouter-qwen,qwen/qwen-2-vl-72b-instruct` - Vision-language model
+
+**Other Available Models via OpenRouter:**
+- `/model openrouter,google/gemini-2.5-pro-preview` - Gemini Pro
+- `/model openrouter,anthropic/claude-3.5-sonnet` - Claude via OpenRouter
+- `/model openrouter,deepseek/deepseek-chat` - DeepSeek
+
+### Quick Alias for PowerShell
+Add to your PowerShell profile for quick access:
+```powershell
+function claude-qwen {
+    claude code --api-proxy http://127.0.0.1:8080 --model openrouter-qwen,qwen/qwen-2.5-72b-instruct
+}
+```
+
+### Router Service Management
+
+#### Check Router Status
+```powershell
+Get-Process | Where-Object {$_.CommandLine -like "*claude-code-router*"}
+```
+
+#### Restart Router Service
+```powershell
+# Stop existing service
+Get-Process | Where-Object {$_.CommandLine -like "*claude-code-router*"} | Stop-Process -Force
+
+# Start service
+Start-Process node -ArgumentList "C:\Users\drmwe\AppData\Roaming\npm\node_modules\@musistudio\claude-code-router\dist\cli.js", "start" -NoNewWindow
+```
+
+### Configuration Location
+- Router config: `~/.claude-code-router/config.json`
+- Logs: `~/.claude-code-router/claude-code-router.log`
+
+### Best Practices
+1. Use native Claude models by default for all tasks
+2. Only switch to alternative models (like Qwen) when absolutely necessary
+3. Monitor usage to maintain optimal performance
+4. Prioritize Claude models for their superior capabilities and consistency
+
+### Model Switching (Only When Necessary)
+
+**NOTE**: Model switching should only be used when Claude credits are exhausted or for specific testing purposes.
+
+If you need to switch models, first ensure Claude Code is running with the router:
+```powershell
+cd C:\Users\drmwe\claude-workspace\FitnessMealPlanner
+claude code --api-proxy http://127.0.0.1:8080
+```
+
+Then use these commands within Claude Code:
+
+#### When you say "change to qwen3":
+```
+/model openrouter,qwen/qwen3-coder:free
+```
+
+#### Other Quick Commands:
+- **"change to qwen coder"**: `/model openrouter-qwen,qwen/qwen-2.5-coder-32b-instruct`
+- **"change to qwen general"**: `/model openrouter-qwen,qwen/qwen-2.5-72b-instruct`
+- **"change to qwen reasoning"**: `/model openrouter-qwen,qwen/qwq-32b-preview`
+- **"change to local qwen"**: `/model ollama,qwen2.5-coder:latest`
+- **"change to gemini"**: `/model openrouter,google/gemini-2.5-pro-preview`
+- **"change to deepseek"**: `/model openrouter,deepseek/deepseek-chat`

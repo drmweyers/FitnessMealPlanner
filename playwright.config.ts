@@ -49,16 +49,23 @@ export default defineConfig({
       },
     },
 
-    // Uncomment if you want to test in other browsers too
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
+    {
+      name: 'firefox',
+      use: { 
+        ...devices['Desktop Firefox'],
+        headless: true,
+        viewport: { width: 1280, height: 720 }
+      },
+    },
 
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
+    {
+      name: 'webkit',
+      use: { 
+        ...devices['Desktop Safari'],
+        headless: true,
+        viewport: { width: 1280, height: 720 }
+      },
+    },
   ],
 
   /* Run your local dev server before starting the tests */

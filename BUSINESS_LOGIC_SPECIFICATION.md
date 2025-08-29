@@ -4,9 +4,21 @@
 **Last Updated:** August 7, 2025  
 **Document Purpose:** Comprehensive specification of all business logic and role interactions
 
+### **Version 2.1 Updates (BMAD Story 1.7 Implementation):**
+- ✅ **ENHANCED PDF GENERATION**: Unified PDF service with both meal plan and progress report generation
+- ✅ **PROGRESS REPORT PDFs**: Comprehensive progress tracking reports with charts and comparisons
+- ✅ **PROFESSIONAL TEMPLATES**: High-quality PDF templates with EvoFit branding
+- ✅ **BATCH PDF EXPORT**: Support for multiple PDF generation in a single operation
+- ✅ **CLIENT-SIDE PDF**: Enhanced jsPDF implementation for recipe cards and quick exports
+- ✅ **SERVER-SIDE PDF**: Puppeteer-based generation for high-quality professional documents
+- ✅ **PRIVACY CONTROLS**: Photo privacy options (blur/exclude) in progress reports
+- ✅ **NUTRITIONAL CHARTS**: Visual representations of nutritional data in PDF exports
+- ✅ **SHOPPING LISTS**: Automated shopping list generation from meal plans
+- ✅ **PREP SCHEDULES**: Meal preparation scheduling in PDF exports
+
 ### **Version 2.0 Major Updates (Production Release):**
 - ✅ **SECURITY ENHANCEMENTS**: JWT authentication hardened with mandatory 32+ char secrets
-- ✅ **HEALTH PROTOCOLS SYSTEM**: Comprehensive client ailments tracking and specialized meal planning
+- ✅ **CLIENT TRACKING SYSTEM**: Comprehensive client progress tracking and meal planning
 - ✅ **LONGEVITY PROTOCOLS**: Advanced anti-aging meal planning with fasting integration
 - ✅ **PARASITE CLEANSE PROTOCOLS**: Specialized detox and anti-parasitic meal plans
 - ✅ **PROGRESS TRACKING**: Enhanced body measurements, photo tracking, and goal management
@@ -33,10 +45,65 @@
 
 ## 🏗️ **System Architecture Overview**
 
+The system now includes a **four-layer architecture** with strategic business intelligence:
+
+### **Layer 1: BMAD Core (Business Model Architecture Design)** 🆕
+**Status:** ✅ Core Implementation Complete | ⏳ Integration Pending (August 28, 2025)
+
+#### Business Strategy Engine
+- **Revenue Optimization**: MRR, ARR, LTV, CAC metrics tracking
+- **Dynamic Pricing**: Tier-based pricing optimization (Basic, Professional, Enterprise)
+- **Market Analysis**: Growth opportunity identification and competitive positioning
+- **Strategic Recommendations**: AI-driven business insights and action items
+- **Business Health Scoring**: Real-time business performance monitoring
+
+#### Customer Intelligence System
+- **Customer Segmentation**: Power Users, At Risk, Growth Potential, New Users, Champions
+- **Behavioral Analytics**: Engagement scoring and activity tracking
+- **Churn Prediction**: ML-based churn risk assessment and prevention
+- **Customer Journey Mapping**: Complete lifecycle tracking and optimization
+- **Next Best Action**: Personalized recommendations for each customer segment
+
+#### Workflow Automation Engine
+- **Event-Driven Architecture**: JSON Rules Engine with conditional logic
+- **Pre-configured Workflows**:
+  1. Customer Onboarding Automation
+  2. Trainer Engagement Optimization
+  3. Churn Prevention Campaign
+  4. Upsell Opportunity Detection
+  5. Content Quality Control
+- **Scheduled Execution**: Cron-based workflow triggers
+- **Success/Failure Handling**: Comprehensive error management and retry logic
+
+#### Orchestration Layer
+- **Central Coordination**: Manages all BMAD components
+- **Event Bus**: Cross-component communication via EventEmitter
+- **Metrics Aggregation**: Unified business metrics collection
+- **Alert System**: Real-time alerts for critical business events
+- **Health Monitoring**: System-wide performance and availability tracking
+
+**Integration Requirements:**
+- Database connection for real metrics (pending)
+- Authentication system integration (pending)
+- Email service integration for notifications (pending)
+- Redis caching for performance (pending)
+- Admin dashboard UI creation (pending)
+
+### **Layer 2: Application Services**
 The system operates on a **three-tier role hierarchy** with strict data isolation and permission boundaries:
 - **Admin** → System-wide control and content moderation
 - **Trainer** → Client management and meal planning professional
 - **Customer** → End-user consuming fitness content and tracking progress
+
+### **Layer 3: Data Persistence**
+- **PostgreSQL Database** → Primary data storage
+- **Redis Cache** → Performance optimization and session management
+- **AWS S3** → Media and document storage
+
+### **Layer 4: External Services**
+- **OpenAI API** → Recipe generation and recommendations
+- **Email Service** → Notifications and invitations
+- **PDF Generation** → Document creation services
 
 ---
 
@@ -78,13 +145,11 @@ The system operates on a **three-tier role hierarchy** with strict data isolatio
 - ✅ **Content Guidelines**: Enforce recipe quality standards
 - ✅ **Bulk Moderation**: Process multiple content items efficiently
 
-#### **Health Protocols & Specialized Nutrition Management**
-- ✅ **Health Protocols Templates**: Manage longevity and detox protocol templates
-- ✅ **Ailments Database**: Maintain comprehensive database of client health conditions
-- ✅ **Anti-Parasitic Ingredients**: Curate specialized ingredient recommendations
-- ✅ **Fasting Protocol Integration**: Manage intermittent fasting templates (16:8, 20:4, etc.)
-- ✅ **Specialized Recipe Categories**: Organize recipes by therapeutic benefits
-- ✅ **Protocol Analytics**: Monitor usage and effectiveness of health protocols
+#### **Specialized Nutrition Management**
+- ✅ **Recipe Templates**: Manage nutrition and meal planning templates
+- ✅ **Ingredients Database**: Maintain comprehensive database of nutritional ingredients
+- ✅ **Specialized Recipe Categories**: Organize recipes by nutritional benefits
+- ✅ **Analytics**: Monitor usage and effectiveness of meal plans
 
 ### **🔗 Admin Interactions with Other Roles**
 
@@ -136,27 +201,22 @@ The system operates on a **three-tier role hierarchy** with strict data isolatio
 - ✅ **Meal Plan Library**: Save frequently used meal plans for reuse
 - ✅ **Template Management**: Create and manage meal plan templates
 
-#### **🏥 Health Protocols & Specialized Meal Planning**
-- ✅ **Client Ailments Assessment**: Track and document client health conditions
-  - Comprehensive ailments selection interface
-  - Nutritional focus customization based on health needs
+#### **🍽️ Specialized Meal Planning**
+- ✅ **Client Assessment**: Track and document client nutritional needs
+  - Comprehensive nutritional preferences interface
+  - Dietary customization based on fitness goals
   - Priority level assignment (low, medium, high, critical)
   - Integration with meal planning algorithms
-- ✅ **Longevity Protocol Planning**: Create anti-aging focused meal plans
-  - Intermittent fasting integration (16:8, 20:4, OMAD)
-  - Antioxidant-rich ingredient prioritization
-  - Cellular health optimization recipes
-  - Advanced longevity protocol templates
-- ✅ **Parasite Cleanse Protocols**: Specialized detox meal planning
-  - Anti-parasitic ingredient recommendations
-  - Digestive health optimization
-  - Liver support and detox recipes
-  - Traditional anti-parasitic foods (garlic, ginger, turmeric, pumpkin seeds)
-- ✅ **Targeted Nutrition Planning**: Condition-specific meal recommendations
-  - Diabetes-friendly meal plans with blood sugar optimization
-  - Heart-healthy protocols with omega-3 emphasis
-  - Autoimmune support with anti-inflammatory focus
-  - Gut health protocols with probiotic and prebiotic foods
+- ✅ **Advanced Meal Planning**: Create specialized nutrition-focused meal plans
+  - Macronutrient optimization
+  - Performance-focused ingredient selection
+  - Recovery optimization recipes
+  - Advanced meal planning templates
+- ✅ **Targeted Nutrition Planning**: Goal-specific meal recommendations
+  - Weight management meal plans
+  - Performance optimization plans
+  - Recovery and wellness focus
+  - Balanced nutrition protocols
 
 #### **Content Assignment System**
 - ✅ **Recipe Assignment**: Assign approved recipes to specific customers
@@ -473,34 +533,41 @@ S3/Local Storage → Database Update → UI Refresh → Header Avatar Update
 
 ## 🔌 **API Endpoints**
 
-### **Health Protocols & Specialized Planning Endpoints**
+### **BMAD Core API Endpoints** 🆕
 ```
-GET /api/health/longevity-templates
-- Purpose: Retrieve available longevity protocol templates
-- Response: { templates: LongevityProtocol[], total: number }
+POST /api/bmad/metrics
+- Purpose: Update business metrics from actual data sources
+- Body: { metrics: BusinessMetrics, timestamp: string }
+- Response: { status: 'success', processed: boolean }
+- Security: Requires admin authentication
+
+GET /api/bmad/recommendations
+- Purpose: Get strategic business recommendations
+- Query: { type?: string, limit?: number }
+- Response: { recommendations: StrategicRecommendation[] }
+- Security: Requires admin authentication
+
+GET /api/bmad/dashboard
+- Purpose: Get comprehensive BMAD dashboard data
+- Response: { healthScore: number, metrics: BusinessMetrics, alerts: Alert[] }
+- Security: Requires admin authentication
+
+POST /api/bmad/workflow/:id
+- Purpose: Manually trigger a BMAD workflow
+- Body: { input: any, runImmediately?: boolean }
+- Response: { execution: WorkflowExecution, status: string }
+- Security: Requires admin authentication
+
+GET /api/bmad/customer/:id
+- Purpose: Get customer intelligence insights
+- Response: { profile: CustomerProfile, segment: string, predictions: ChurnPrediction }
 - Security: Requires trainer or admin authentication
 
-GET /api/health/anti-parasitic-ingredients
-- Purpose: Get curated list of anti-parasitic ingredients
-- Response: { ingredients: AntiParasiticIngredient[], categories: string[] }
-- Security: Requires trainer or admin authentication
-
-GET /api/health/user-preferences/:userId
-- Purpose: Retrieve user's health preferences and protocol settings
-- Response: { preferences: HealthPreferences }
-- Security: Requires authentication and user ownership or trainer relationship
-
-PUT /api/health/user-preferences/:userId
-- Purpose: Update user's health preferences and ailments
-- Body: { longevityGoals: string[], fastingProtocol: string, ailments: ClientAilments }
-- Response: { preferences: HealthPreferences, message: string }
-- Security: Requires authentication and user ownership or trainer relationship
-
-POST /api/health/log-symptoms/:userId
-- Purpose: Log protocol symptoms and progress for tracking
-- Body: { symptoms: string[], severity: number, notes: string }
-- Response: { logEntry: SymptomLog, message: string }
-- Security: Requires user authentication
+GET /api/bmad/analytics
+- Purpose: Get business analytics and trends
+- Query: { period?: string, metrics?: string[] }
+- Response: { analytics: AnalyticsData, trends: TrendAnalysis }
+- Security: Requires admin authentication
 ```
 
 ### **Enhanced Progress Tracking Endpoints**
@@ -537,7 +604,7 @@ PUT /api/progress/goals/:goalId
 - Security: Requires customer authentication and goal ownership
 ```
 
-### **Enhanced PDF Export Endpoints**
+### **Enhanced PDF Export Endpoints (Story 1.7 Implementation)**
 ```
 POST /api/pdf/export/meal-plan
 - Purpose: Generate professional PDF from meal plan data
@@ -649,12 +716,6 @@ GET /api/trainer/meal-plans
 11. **Password Policy**: Minimum 8 characters with mixed case, numbers, special characters
 12. **Rate Limiting**: Failed login attempts trigger IP-based temporary lockouts
 
-### **Health Protocols & Specialized Planning Rules**
-13. **Ailments Privacy**: Client health information only accessible to assigned trainer
-14. **Protocol Authorization**: Only trainers can assign health protocols to customers
-15. **Longevity Protocol Validation**: Fasting protocols must be age and health appropriate
-16. **Anti-Parasitic Safety**: Specialized protocols require health screening documentation
-17. **Progress Monitoring**: Health protocol symptoms must be logged and monitored
 
 ### **Progress Tracking Rules**
 18. **Measurement Accuracy**: Body measurements require date validation and reasonable ranges
@@ -698,13 +759,6 @@ GET /api/trainer/meal-plans
 12. **CORS Security**: Cross-origin request validation and protection
 13. **XSS Protection**: Input sanitization and output encoding validation
 
-#### **Health Protocols & Specialized Planning Testing**
-14. **Ailments System**: Client health condition tracking and privacy
-15. **Longevity Protocols**: Anti-aging meal planning and fasting integration
-16. **Parasite Cleanse**: Anti-parasitic ingredient recommendations and safety
-17. **Protocol Assignment**: Trainer-to-customer health protocol assignment
-18. **Health Privacy**: Medical information access control and data isolation
-19. **Symptom Logging**: Health protocol progress tracking and monitoring
 
 #### **Enhanced Progress Tracking Testing**
 20. **Comprehensive Measurements**: Advanced body measurement tracking system
@@ -745,7 +799,7 @@ GET /api/trainer/meal-plans
 
 #### **Content Data**
 - Approved and unapproved recipes for testing content gates
-- Health protocol templates (longevity, anti-parasitic)
+- Meal plan templates with nutritional focus
 - Meal plan templates with various dietary restrictions
 - Recipe collections for PDF export testing
 
@@ -753,8 +807,8 @@ GET /api/trainer/meal-plans
 - Comprehensive body measurements over time
 - Progress photos (front, side, back angles)
 - Multiple fitness goals with milestones
-- Health ailments and protocol assignments
-- Symptom logs and protocol progress data
+- Nutritional preferences and meal plan assignments
+- Progress logs and meal plan effectiveness data
 
 #### **Media Testing Files**
 - **Valid image files**: JPEG, PNG, WebP (various sizes under 5MB)
@@ -800,51 +854,55 @@ GET /api/trainer/meal-plans
 - ✅ **Progressive Enhancement**: Graceful degradation for older browsers
 - ✅ **Accessibility**: WCAG 2.1 AA compliance for mobile accessibility
 
-## 🧬 **Specialized Health Protocol Components**
+## 🧬 **Specialized Nutrition Components**
 
-### **Client Ailments Interface Components**
+### **Client Assessment Interface Components**
 ```typescript
-// MinimalSpecializedPanel.tsx - Streamlined ailments selection
-- Purpose: Simplified client ailments input for meal plan generation
-- Features: Checkbox-based ailment selection with priority levels
+// Client nutritional assessment interface
+- Purpose: Simplified client dietary preferences and fitness goals input
+- Features: Checkbox-based preference selection with priority levels
 - Integration: Direct integration with meal plan generation workflow
-- Security: Validates health information privacy and trainer access
-
-// TestSpecializedPanel.tsx - Development testing interface
-- Purpose: Comprehensive testing of health protocol features
-- Features: Full ailments system testing with mock data
-- Integration: Development environment testing and debugging
-- Usage: Component testing and health protocol validation
+- Security: Validates user information privacy and trainer access
 ```
 
-### **Health Protocol API Integration**
-- ✅ **Ailments Tracking**: Comprehensive client health condition management
-- ✅ **Protocol Templates**: Pre-built health protocol configurations
-- ✅ **Ingredient Recommendations**: Therapeutic ingredient suggestions
-- ✅ **Progress Monitoring**: Health protocol effectiveness tracking
-- ✅ **Safety Validation**: Health screening and contraindication checks
-
-### **Longevity & Anti-Aging Features**
-- ✅ **Fasting Integration**: Intermittent fasting protocol management
-- ✅ **Antioxidant Optimization**: Meal plans optimized for cellular health
-- ✅ **Nutrient Timing**: Strategic nutrient delivery for longevity benefits
-- ✅ **Biomarker Tracking**: Health metrics monitoring and analysis
-
-### **Parasite Cleanse & Detox Protocols**
-- ✅ **Anti-Parasitic Foods**: Curated ingredient database with therapeutic properties
-- ✅ **Cleanse Phases**: Multi-phase protocol management with timeline tracking
-- ✅ **Symptom Monitoring**: Detox reaction tracking and management
-- ✅ **Safety Protocols**: Medical supervision requirements and contraindications
+### **Nutrition Planning Integration**
+- ✅ **Preferences Tracking**: Comprehensive client dietary preference management
+- ✅ **Plan Templates**: Pre-built nutrition plan configurations
+- ✅ **Ingredient Recommendations**: Nutritional ingredient suggestions
+- ✅ **Progress Monitoring**: Meal plan effectiveness tracking
 
 ---
 
 ## 🔄 **New Workflow Processes (v2.0)**
 
-### **Health Protocol Assignment Flow**
+### **BMAD Automated Business Workflows** 🆕
 ```
-Trainer → Client Assessment → Health Ailments Selection → 
-Protocol Template Selection → Custom Protocol Creation → 
-Client Assignment → Progress Monitoring → Protocol Adjustment
+1. Customer Onboarding Automation
+   New User Registration → Segment Assignment → Welcome Email → 
+   Engagement Tracking → 7-Day Check-in → Trainer Assignment
+
+2. Churn Prevention Campaign
+   Low Engagement Detection → Risk Assessment → Personalized Offer → 
+   Re-engagement Email → Trainer Notification → Success Tracking
+
+3. Upsell Opportunity Detection
+   High Engagement + Basic Tier → LTV Analysis → Upgrade Recommendation → 
+   Targeted Campaign → Conversion Tracking → Revenue Impact
+
+4. Trainer Performance Optimization
+   Activity Monitoring → Performance Scoring → Best Practice Identification → 
+   Coaching Recommendations → Success Metrics → Reward Distribution
+
+5. Content Quality Control
+   Recipe Generation → Automated Review → Nutritional Validation → 
+   Approval Queue → Trainer Distribution → Usage Analytics
+```
+
+### **Meal Plan Assignment Flow**
+```
+Trainer → Client Assessment → Nutritional Preferences → 
+Plan Template Selection → Custom Plan Creation → 
+Client Assignment → Progress Monitoring → Plan Adjustment
 ```
 
 ### **Enhanced Progress Tracking Flow**
@@ -873,10 +931,14 @@ Progressive Loading → Offline Capability → Sync on Reconnect
 - **Owner**: Development Team
 - **Review Schedule**: Monthly or on major feature changes
 - **Version Control**: Update version number on any changes
-- **Current Version**: 2.0 (Production Release - August 7, 2025)
+- **Current Version**: 2.1 (BMAD Core Implementation - August 28, 2025)
+- **Last Major Update**: Added BMAD Core architecture and workflows
 - **Related Documents**: 
   - `API_DOCUMENTATION.md` - Complete API endpoint specifications
   - `DATABASE_SCHEMA.md` - Database structure and relationships
   - `SECURITY.md` - Security best practices and incident response
   - `DEPLOYMENT_REPORT.md` - Production deployment procedures
   - `test/BUSINESS_LOGIC_TESTS_README.md` - Testing procedures and requirements
+  - `BMAD_IMPLEMENTATION_STATUS.md` - BMAD Core implementation details
+  - `.bmad-core/README.md` - BMAD technical documentation
+  - `.bmad-core/INTEGRATION_GUIDE.md` - BMAD integration instructions

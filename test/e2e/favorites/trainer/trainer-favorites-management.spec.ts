@@ -162,7 +162,7 @@ test.describe('Trainer Favorites Management', () => {
       await expect(page.locator('[data-testid="total-favorites-metric"]')).toBeVisible();
       await expect(page.locator('[data-testid="active-customers-metric"]')).toBeVisible();
       await expect(page.locator('[data-testid="collection-views-metric"]')).toBeVisible();
-      await expect(page.locator="recipe-completion-rate-metric"]')).toBeVisible();
+      await expect(page.locator('[data-testid="recipe-completion-rate-metric"]')).toBeVisible();
       
       // Check that metrics have actual values
       const totalFavorites = await page.locator('[data-testid="total-favorites-value"]').textContent();

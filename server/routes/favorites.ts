@@ -13,12 +13,12 @@ import {
   createFavoriteSchema,
   createCollectionSchema,
   updateCollectionSchema,
-  addRecipeToCollectionSchema,
+  addToCollectionSchema,
   type CreateFavorite,
   type CreateCollection,
   type UpdateCollection,
-  type AddRecipeToCollection
-} from '../../shared/schema';
+  type AddToCollection
+} from '../../shared/schema-favorites';
 
 const router = Router();
 const favoritesService = getFavoritesService();
@@ -466,12 +466,12 @@ router.post(
   '/collections/:collectionId/recipes',
   requireAuth,
   favoritesRateLimit,
-  validateRequest(addRecipeToCollectionSchema),
+  validateRequest(addToCollectionSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.id;
       const { collectionId } = req.params;
-      const { recipeId, notes }: AddRecipeToCollection = req.body;
+      const { recipeId, notes }: AddToCollection = req.body;
 
       // Validate UUID format
       if (!z.string().uuid().safeParse(collectionId).success) {

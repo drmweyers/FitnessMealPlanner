@@ -433,3 +433,21 @@ export type AnalyticsReport = {
     sessionToConversion: number;
   };
 };
+
+// Export aliases for service compatibility
+export { userRecipeInteractions as userInteractions };
+export { recipeViewMetrics as recipeViews };
+
+// Add missing tables that services expect
+export const recipeShares = pgTable("recipe_shares", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  recipeId: uuid("recipe_id").references(() => recipes.id, { onDelete: "cascade" }).notNull(),
+  shareMethod: text("share_method").notNull(), // 'email', 'link', 'social', etc.
+  shareData: jsonb("share_data"), // Additional share context
+  sharedAt: timestamp("shared_at").defaultNow(),
+}, (table) => ({
+  userIdx: index("recipe_shares_user_idx").on(table.userId),
+  recipeIdx: index("recipe_shares_recipe_idx").on(table.recipeId),
+  sharedAtIdx: index("recipe_shares_shared_at_idx").on(table.sharedAt),
+}));

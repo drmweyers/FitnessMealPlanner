@@ -1,10 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Button } from "./ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Separator } from "./ui/separator";
 import { apiRequest } from "../lib/queryClient";
 import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";
-import type { Recipe } from "@shared/schema";
+import { useAuth } from "../contexts/AuthContext";
+import RatingDisplay from "./ratings/RatingDisplay";
+import RecipeReviewForm from "./ratings/RecipeReviewForm";
+import RecipeReviewsList from "./ratings/RecipeReviewsList";
+import { Star, MessageSquare } from "lucide-react";
+import type { Recipe, RecipeRatingSummary, RecipeRating } from "@shared/schema";
 
 interface RecipeDetailModalProps {
   recipeId: string | null;
@@ -13,19 +21,50 @@ interface RecipeDetailModalProps {
 }
 
 export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeDetailModalProps) {
+  console.log('RecipeDetailModal rendered:', { recipeId, isOpen });
+  
+  const [showRatingForm, setShowRatingForm] = useState(false);
+  const { user } = useAuth();
+  
   const { data: recipe, isLoading } = useQuery<Recipe>({
-    queryKey: [`/api/admin/recipes/${recipeId}`],
+    queryKey: [`/api/recipes/${recipeId}`],
     queryFn: async () => {
       if (!recipeId) return null;
-      const res = await apiRequest('GET', `/api/admin/recipes/${recipeId}`);
+      const res = await apiRequest('GET', `/api/recipes/${recipeId}`);
       return res.json();
     },
     enabled: !!recipeId && isOpen,
   });
 
+  // Fetch rating summary
+  const { data: ratingSummary } = useQuery<{ success: boolean; summary: RecipeRatingSummary }>({
+    queryKey: [`/api/recipes/${recipeId}/rating-summary`],
+    queryFn: async () => {
+      if (!recipeId) return null;
+      const res = await apiRequest('GET', `/api/recipes/${recipeId}/rating-summary`);
+      return res.json();
+    },
+    enabled: !!recipeId && isOpen,
+  });
+
+  // Fetch current user's rating (if authenticated)
+  const { data: userRating } = useQuery<{ success: boolean; rating: RecipeRating }>({
+    queryKey: [`/api/users/my-ratings`, recipeId],
+    queryFn: async () => {
+      if (!recipeId || !user) return null;
+      const res = await apiRequest('GET', `/api/users/my-ratings?recipeId=${recipeId}`);
+      return res.json();
+    },
+    enabled: !!recipeId && !!user && isOpen,
+  });
+
+  const handleRatingSuccess = () => {
+    setShowRatingForm(false);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto z-[60]">
         <DialogHeader>
           <DialogTitle>Recipe Details</DialogTitle>
         </DialogHeader>
@@ -41,123 +80,188 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
             </div>
           </div>
         ) : recipe ? (
-          <div className="space-y-6">
-            {/* Recipe Title and Status */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-slate-900">{recipe.name}</h2>
-              <Badge variant={recipe.isApproved ? "success" : "warning"}>
-                {recipe.isApproved ? "Approved" : "Pending"}
-              </Badge>
-            </div>
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="ratings" className="flex items-center gap-2">
+                <Star className="w-4 h-4" />
+                Ratings ({ratingSummary?.summary?.totalRatings || 0})
+              </TabsTrigger>
+              <TabsTrigger value="reviews" className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Reviews ({ratingSummary?.summary?.totalReviews || 0})
+              </TabsTrigger>
+            </TabsList>
 
-            {/* Recipe Description */}
-            <p className="text-slate-600">{recipe.description}</p>
+            {/* Recipe Details Tab */}
+            <TabsContent value="details" className="space-y-6">
+              {/* Recipe Header */}
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-bold text-slate-900">{recipe.name}</h2>
+                    {recipe.description && (
+                      <p className="text-slate-600">{recipe.description}</p>
+                    )}
+                  </div>
+                  <Badge variant={recipe.isApproved ? "success" : "warning"}>
+                    {recipe.isApproved ? "Approved" : "Pending"}
+                  </Badge>
+                </div>
 
-            {/* Recipe Image */}
-            {recipe.imageUrl && (
-              <div className="relative h-64 rounded-lg overflow-hidden">
-                <img
-                  src={recipe.imageUrl}
-                  alt={recipe.name}
-                  className="w-full h-full object-cover"
-                />
+                {/* Rating Summary Display */}
+                {ratingSummary?.summary && (
+                  <div className="flex items-center justify-between">
+                    <RatingDisplay 
+                      summary={ratingSummary.summary} 
+                      size="md"
+                    />
+                    {user && (
+                      <Button
+                        onClick={() => setShowRatingForm(!showRatingForm)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        {userRating?.rating ? 'Update Rating' : 'Rate Recipe'}
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                <Separator />
               </div>
-            )}
 
-            {/* Recipe Details Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Preparation Time */}
-              <div className="p-4 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-500">Prep Time</p>
-                <p className="text-lg font-semibold">{recipe.prepTimeMinutes} mins</p>
-              </div>
-
-              {/* Cook Time */}
-              <div className="p-4 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-500">Cook Time</p>
-                <p className="text-lg font-semibold">{recipe.cookTimeMinutes} mins</p>
-              </div>
-
-              {/* Calories */}
-              <div className="p-4 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-500">Calories</p>
-                <p className="text-lg font-semibold">{recipe.caloriesKcal} kcal</p>
-              </div>
-
-              {/* Servings */}
-              <div className="p-4 bg-slate-50 rounded-lg">
-                <p className="text-sm text-slate-500">Servings</p>
-                <p className="text-lg font-semibold">{recipe.servings}</p>
-              </div>
-            </div>
-
-            {/* Macronutrients */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-600">Protein</p>
-                <p className="text-lg font-semibold">{recipe.proteinGrams}g</p>
-              </div>
-              <div className="p-4 bg-green-50 rounded-lg">
-                <p className="text-sm text-green-600">Carbs</p>
-                <p className="text-lg font-semibold">{recipe.carbsGrams}g</p>
-              </div>
-              <div className="p-4 bg-yellow-50 rounded-lg">
-                <p className="text-sm text-yellow-600">Fat</p>
-                <p className="text-lg font-semibold">{recipe.fatGrams}g</p>
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {recipe.mealTypes?.map((type) => (
-                  <Badge key={type} variant="outline" className="bg-purple-50">{type}</Badge>
-                ))}
-                {recipe.dietaryTags?.map((tag) => (
-                  <Badge key={tag} variant="outline" className="bg-green-50">{tag}</Badge>
-                ))}
-                {recipe.mainIngredientTags?.map((tag) => (
-                  <Badge key={tag} variant="outline" className="bg-blue-50">{tag}</Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Ingredients */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Ingredients</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {recipe.ingredientsJson?.map((ingredient, index) => (
-                  <li key={index} className="text-slate-600">
-                    {ingredient.amount} {ingredient.unit} {ingredient.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Instructions */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Instructions</h3>
-              <div className="text-slate-600 whitespace-pre-wrap">
-                {recipe.instructionsText}
-              </div>
-            </div>
-
-            {/* Source Reference */}
-            {/* {recipe.sourceReference && (
-              <div className="text-sm text-slate-500">
-                <p>Source: {recipe.sourceReference}</p>
-              </div>
-            )} */}
-
-            {/* Metadata */}
-            <div className="text-sm text-slate-500 space-y-1">
-                <p>Created: {recipe.creationTimestamp ? new Date(recipe.creationTimestamp).toLocaleDateString() : ''}</p>
-              {recipe.lastUpdatedTimestamp && (
-                <p>Last Updated: {recipe.lastUpdatedTimestamp ? new Date(recipe.lastUpdatedTimestamp).toLocaleDateString() : ''}</p>
+              {/* Recipe Image */}
+              {recipe.imageUrl && (
+                <div className="relative h-64 rounded-lg overflow-hidden">
+                  <img
+                    src={recipe.imageUrl}
+                    alt={recipe.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               )}
-            </div>
-          </div>
+
+              {/* Recipe Details Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <p className="text-sm text-slate-500">Prep Time</p>
+                  <p className="text-lg font-semibold">{recipe.prepTimeMinutes} mins</p>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <p className="text-sm text-slate-500">Cook Time</p>
+                  <p className="text-lg font-semibold">{recipe.cookTimeMinutes} mins</p>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <p className="text-sm text-slate-500">Calories</p>
+                  <p className="text-lg font-semibold">{recipe.caloriesKcal} kcal</p>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <p className="text-sm text-slate-500">Servings</p>
+                  <p className="text-lg font-semibold">{recipe.servings}</p>
+                </div>
+              </div>
+
+              {/* Macronutrients */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-600">Protein</p>
+                  <p className="text-lg font-semibold">{recipe.proteinGrams}g</p>
+                </div>
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <p className="text-sm text-green-600">Carbs</p>
+                  <p className="text-lg font-semibold">{recipe.carbsGrams}g</p>
+                </div>
+                <div className="p-4 bg-yellow-50 rounded-lg">
+                  <p className="text-sm text-yellow-600">Fat</p>
+                  <p className="text-lg font-semibold">{recipe.fatGrams}g</p>
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {recipe.mealTypes?.map((type) => (
+                    <Badge key={type} variant="outline" className="bg-purple-50">{type}</Badge>
+                  ))}
+                  {recipe.dietaryTags?.map((tag) => (
+                    <Badge key={tag} variant="outline" className="bg-green-50">{tag}</Badge>
+                  ))}
+                  {recipe.mainIngredientTags?.map((tag) => (
+                    <Badge key={tag} variant="outline" className="bg-blue-50">{tag}</Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ingredients */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Ingredients</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  {recipe.ingredientsJson?.map((ingredient, index) => (
+                    <li key={index} className="text-slate-600">
+                      {ingredient.amount} {ingredient.unit} {ingredient.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Instructions */}
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Instructions</h3>
+                <div className="text-slate-600 whitespace-pre-wrap">
+                  {recipe.instructionsText}
+                </div>
+              </div>
+
+              {/* Metadata */}
+              <div className="text-sm text-slate-500 space-y-1">
+                <p>Created: {recipe.creationTimestamp ? new Date(recipe.creationTimestamp).toLocaleDateString() : ''}</p>
+                {recipe.lastUpdatedTimestamp && (
+                  <p>Last Updated: {recipe.lastUpdatedTimestamp ? new Date(recipe.lastUpdatedTimestamp).toLocaleDateString() : ''}</p>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Ratings Tab */}
+            <TabsContent value="ratings" className="space-y-6">
+              {ratingSummary?.summary ? (
+                <RatingDisplay 
+                  summary={ratingSummary.summary} 
+                  showDistribution={true}
+                  size="lg"
+                />
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <p>No ratings yet</p>
+                </div>
+              )}
+
+              {/* Rating Form */}
+              {user && showRatingForm && (
+                <RecipeReviewForm
+                  recipeId={recipeId!}
+                  existingRating={userRating?.rating}
+                  onSuccess={handleRatingSuccess}
+                  onCancel={() => setShowRatingForm(false)}
+                />
+              )}
+
+              {!user && (
+                <div className="text-center py-4 text-slate-500">
+                  <p>Please sign in to rate this recipe</p>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Reviews Tab */}
+            <TabsContent value="reviews" className="space-y-6">
+              <RecipeReviewsList 
+                recipeId={recipeId!} 
+                currentUserId={user?.id}
+              />
+            </TabsContent>
+          </Tabs>
         ) : (
           <div className="text-center py-8 text-slate-500">
             Recipe not found

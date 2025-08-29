@@ -301,6 +301,7 @@ const FavoritesList = memo(({ className }: FavoritesListProps) => {
                 <RecipeCard
                   recipe={recipe}
                   onClick={() => handleRecipeClick(recipe)}
+                  showFavoriteButton={true}
                   className={cn(
                     'h-full transition-all duration-200 hover:shadow-xl',
                     viewMode === 'list' && 'flex flex-row'

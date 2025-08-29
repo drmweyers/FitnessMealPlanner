@@ -7,6 +7,8 @@ import FavoriteButton from "./favorites/FavoriteButton";
 import { useRecipeViewTracking } from "../hooks/useEngagement";
 import { Eye, Clock, Star, Heart } from "lucide-react";
 import { cn } from "../lib/utils";
+import StarRating from "./ratings/StarRating";
+import { RatingDisplay } from "./ratings";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -20,9 +22,18 @@ interface RecipeCardProps {
     viewCount?: number;
     favoriteCount?: number;
     avgRating?: number;
+    totalRatings?: number;
     isRecommended?: boolean;
     recommendationReason?: string;
+    recentReview?: {
+      rating: number;
+      comment: string;
+      authorName: string;
+      createdAt: string;
+    };
   };
+  allowRating?: boolean;
+  onRateRecipe?: (recipeId: string, rating: number) => void;
   className?: string;
 }
 
@@ -61,6 +72,8 @@ function RecipeCard({
   showFavoriteButton = true,
   showEngagementStats = false,
   engagementData,
+  allowRating = false,
+  onRateRecipe,
   className,
 }: RecipeCardProps) {
   const [imageError, setImageError] = useState(false);
@@ -85,10 +98,12 @@ function RecipeCard({
   }, [recipe.id, onSelectionChange]);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
-    // Don't trigger card click if checkbox or favorite button was clicked
+    // Don't trigger card click if checkbox, favorite button, or rating was clicked
     if (e.target !== e.currentTarget) {
       const target = e.target as HTMLElement;
-      if (target.closest('[data-checkbox]') || target.closest('[data-favorite-button]')) {
+      if (target.closest('[data-checkbox]') || 
+          target.closest('[data-favorite-button]') || 
+          target.closest('[data-rating-component]')) {
         return;
       }
     }
@@ -98,6 +113,12 @@ function RecipeCard({
     
     onClick();
   }, [onClick, showCheckbox, trackView, recipe.id]);
+
+  const handleRating = useCallback((rating: number) => {
+    if (onRateRecipe) {
+      onRateRecipe(recipe.id, rating);
+    }
+  }, [recipe.id, onRateRecipe]);
 
   // Auto-track view when card comes into viewport (optional)
   useEffect(() => {
@@ -174,6 +195,18 @@ function RecipeCard({
             </div>
           </div>
         )}
+        
+        {/* Favorite Button */}
+        {showFavoriteButton && (
+          <div className="absolute top-2 right-2 z-10" data-favorite-button>
+            <FavoriteButton 
+              recipeId={recipe.id} 
+              size="sm"
+              variant="ghost"
+              className="bg-white/90 backdrop-blur-sm hover:bg-white/95 shadow-sm"
+            />
+          </div>
+        )}
       </div>
       
       <CardContent className="p-3 sm:p-4 flex flex-col h-auto">
@@ -190,9 +223,82 @@ function RecipeCard({
         </div>
         
         {/* Recipe Name */}
-        <h3 className="font-semibold text-slate-900 mb-2 sm:mb-3 group-hover:text-primary transition-colors text-sm sm:text-base line-clamp-2 leading-tight">
+        <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-primary transition-colors text-sm sm:text-base line-clamp-2 leading-tight">
           {recipe.name}
         </h3>
+        
+        {/* Enhanced Rating Display */}
+        {(showEngagementStats || allowRating) && (
+          <div className="mb-2 sm:mb-3" data-rating-component>
+            {allowRating ? (
+              <div className="space-y-2">
+                <StarRating
+                  rating={engagementData?.avgRating || 0}
+                  onRatingChange={handleRating}
+                  size="sm"
+                  showValue={false}
+                  className="justify-start"
+                  hoverEffect={true}
+                />
+                {engagementData?.totalRatings && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>
+                      {engagementData.avgRating?.toFixed(1)} 
+                      ({engagementData.totalRatings} review{engagementData.totalRatings !== 1 ? 's' : ''})
+                    </span>
+                    {engagementData.viewCount && (
+                      <>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {engagementData.viewCount}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : engagementData?.avgRating ? (
+              <RatingDisplay
+                rating={engagementData.avgRating}
+                totalRatings={engagementData.totalRatings || 0}
+                size="sm"
+                showReviewCount={true}
+                className="justify-start"
+              />
+            ) : null}
+            
+            {/* Recent Review Preview */}
+            {engagementData?.recentReview && (
+              <div className="mt-2 p-2 bg-muted/50 rounded-md text-xs">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-medium">{engagementData.recentReview.authorName}</span>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    <span>{engagementData.recentReview.rating}</span>
+                  </div>
+                </div>
+                <p className="text-muted-foreground line-clamp-2">
+                  "{engagementData.recentReview.comment}"
+                </p>
+              </div>
+            )}
+            
+            {/* Recommendation Badge */}
+            {engagementData?.isRecommended && (
+              <Badge 
+                variant="secondary" 
+                className="mt-2 text-xs bg-blue-100 text-blue-800 border-blue-200"
+              >
+                <Star className="h-3 w-3 mr-1 fill-blue-600 text-blue-600" />
+                Recommended
+                {engagementData.recommendationReason && (
+                  <span className="hidden sm:inline"> - {engagementData.recommendationReason}</span>
+                )}
+              </Badge>
+            )}
+          </div>
+        )}
         
         {/* Basic Info */}
         <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4">

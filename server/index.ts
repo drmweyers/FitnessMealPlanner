@@ -13,6 +13,7 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import { recipeRouter } from './routes/recipes';
 import { mealPlanRouter } from './routes/mealPlan';
+import { mealPlanSharingRouter } from './routes/mealPlanSharing';
 import authRouter from './authRoutes';
 import invitationRouter from './invitationRoutes';
 import adminRouter from './routes/adminRoutes';
@@ -22,9 +23,14 @@ import pdfRouter from './routes/pdf';
 import progressRouter from './routes/progressRoutes';
 import profileRouter from './routes/profileRoutes';
 import { favoritesRouter } from './routes/favorites';
-import { engagementRouter } from './routes/engagement';
+// import { engagementRouter } from './routes/engagement';
 import { trendingRouter } from './routes/trending';
 import { adminAnalyticsRouter } from './routes/adminAnalytics';
+import ratingsRouter from './routes/ratings';
+import { progressSummariesRouter } from './routes/progressSummaries';
+import { emailPreferencesRouter } from './routes/emailPreferences';
+import { emailAnalyticsRouter } from './routes/emailAnalytics';
+import { schedulerService } from './services/schedulerService';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
@@ -158,20 +164,26 @@ app.use('/api', privacyProtection);
 
 // Invitations routes (mixed auth requirements - handled internally)
 app.use('/api/invitations', invitationRouter);
-app.use('/api/recipes', requireAuth, recipeRouter);
+app.use('/api/recipes', recipeRouter); // Remove requireAuth to allow public access to approved recipes
+app.use('/api/ratings', ratingsRouter); // Recipe rating endpoints - separate path to avoid conflicts
 app.use('/api/admin', requireAdmin, adminRouter);
 app.use('/api/trainer', requireTrainerOrAdmin, trainerRouter);
 app.use('/api/customer', requireRole('customer'), customerRouter);
 app.use('/api/meal-plan', requireAuth, mealPlanRouter);
+// Add sharing routes with mixed auth (some public, some require auth)
+app.use('/api/meal-plans', mealPlanSharingRouter);
 app.use('/api/pdf', requireAuth, pdfRouter);
 app.use('/api/progress', requireAuth, progressRouter);
 app.use('/api/profile', requireAuth, profileRouter);
 
 // New analytics and engagement routes
 app.use('/api/favorites', favoritesRouter);
-app.use('/api/analytics', engagementRouter);
+// app.use('/api/analytics', engagementRouter);
 app.use('/api/trending', trendingRouter);
 app.use('/api/admin/analytics', adminAnalyticsRouter);
+app.use('/api/progress-summaries', progressSummariesRouter);
+app.use('/api/email-preferences', emailPreferencesRouter);
+app.use('/api/email-analytics', emailAnalyticsRouter);
 
 // Apply analytics error handler
 app.use('/api', analyticsErrorHandler);
@@ -200,13 +212,17 @@ if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'producti
     viteConfigFile: path.join(__dirname, '../vite.config.ts')
   });
   
-  ViteExpress.listen(app, Number(port), () =>
-    console.log(`Server is listening on port ${port}...`),
-  );
+  ViteExpress.listen(app, Number(port), () => {
+    console.log(`Server is listening on port ${port}...`);
+    // Initialize scheduler service
+    schedulerService.initialize();
+  });
 } else {
-  app.listen(Number(port), () =>
-    console.log(`Server is listening on port ${port}...`),
-  );
+  app.listen(Number(port), () => {
+    console.log(`Server is listening on port ${port}...`);
+    // Initialize scheduler service
+    schedulerService.initialize();
+  });
 }
 
 export { app };

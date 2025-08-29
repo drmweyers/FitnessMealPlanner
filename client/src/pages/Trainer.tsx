@@ -207,6 +207,7 @@ export default function Trainer() {
                         key={recipe.id}
                         recipe={recipe}
                         onClick={() => setSelectedRecipe(recipe)}
+                        showFavoriteButton={true}
                       />
                     )
                   ))}

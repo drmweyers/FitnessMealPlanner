@@ -77,13 +77,18 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
     }
   };
 
-  const handleRecipeClick = (recipeId: string) => {
+  const handleRecipeClick = (recipeId: string, event?: React.MouseEvent) => {
+    console.log('Recipe clicked:', { recipeId, event });
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     setSelectedRecipeId(recipeId);
   };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] xs:w-[90vw] sm:max-w-6xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] xs:w-[90vw] sm:max-w-6xl max-h-[95vh] overflow-y-auto z-[50]">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Utensils className="h-5 w-5 text-blue-600" />
@@ -209,7 +214,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                                 <tr
                                   key={mealIndex}
                                   className="border-b hover:bg-gray-50 transition-colors cursor-pointer"
-                                  onClick={() => handleRecipeClick(recipe.id)}
+                                  onClick={(e) => handleRecipeClick(recipe.id, e)}
                                 >
                                   <td className="py-4 px-4">
                                     <div className="flex items-center space-x-3">
@@ -219,7 +224,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                                           "/api/placeholder/60/60"
                                         }
                                         alt={recipe.name}
-                                        className="w-12 h-12 rounded-lg object-cover"
+                                        className="w-12 h-12 rounded-lg object-cover pointer-events-none"
                                         onError={(e) => {
                                           const img = e.target as HTMLImageElement;
                                           img.src = `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=60&h=60&fit=crop`;

@@ -8,9 +8,10 @@ import { loginAsCustomer, takeTestScreenshot, waitForNetworkIdle } from '../../a
  * behaviors, privacy features, and compatibility requirements.
  */
 
+// Configure specifically for Firefox
+test.use({ browserName: 'firefox' });
+
 test.describe('Firefox Favorites Tests', () => {
-  // Configure specifically for Firefox
-  test.use({ browserName: 'firefox' });
 
   let page: Page;
 

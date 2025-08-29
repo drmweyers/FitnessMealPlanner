@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { loginAsCustomer, takeTestScreenshot, waitForNetworkIdle } from '../../auth-helper';
-import { injectAxe, checkA11y } from '@axe-core/playwright';
+import AxeBuilder from '@axe-core/playwright';
 
 /**
  * Favorites Accessibility Tests

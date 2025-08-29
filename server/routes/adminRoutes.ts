@@ -3,6 +3,9 @@ import { requireAdmin, requireTrainerOrAdmin, requireAuth } from '../middleware/
 import { storage } from '../storage';
 import { z } from 'zod';
 import { recipeGenerator } from '../services/recipeGenerator';
+import { enhancedRecipeGenerator } from '../services/recipeGeneratorEnhanced';
+import { recipeQualityScorer } from '../services/recipeQualityScorer';
+import { apiCostTracker } from '../services/apiCostTracker';
 import { progressTracker } from '../services/progressTracker';
 import { eq, sql } from 'drizzle-orm';
 import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
@@ -167,6 +170,98 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error("Error starting recipe generation:", error);
     res.status(500).json({ message: "Failed to start recipe generation" });
+  }
+});
+
+// Enhanced recipe generation with retry logic and quality scoring
+adminRouter.post('/generate-enhanced', requireAdmin, async (req, res) => {
+  try {
+    const { prompt, calories, protein, carbs, fat, mealType, dietaryRestrictions, model } = req.body;
+    
+    console.log('[Enhanced Generation] Starting with params:', req.body);
+    
+    // Generate recipe with retry logic and fallback
+    const recipe = await enhancedRecipeGenerator.generateWithFallback({
+      prompt,
+      calories,
+      protein,
+      carbs,
+      fat,
+      mealType,
+      dietaryRestrictions,
+      model
+    });
+    
+    // Score the recipe quality
+    const qualityScore = recipeQualityScorer.scoreRecipe(recipe);
+    
+    // Track API cost (mock usage for now - will be replaced with actual usage from OpenAI response)
+    const estimatedTokens = 1300; // Average tokens for recipe generation
+    const modelUsed = model || 'gpt-3.5-turbo-1106';
+    const cost = await apiCostTracker.trackUsage(
+      modelUsed,
+      { promptTokens: 500, completionTokens: 800, totalTokens: estimatedTokens },
+      req.user?.id,
+      recipe.id
+    );
+    
+    // Add metadata to recipe before storing
+    const enhancedRecipe = {
+      ...recipe,
+      quality_score: qualityScore,
+      api_cost: cost,
+      model_used: modelUsed,
+      generation_attempts: 1 // Will be updated by retry logic
+    };
+    
+    // Store the enhanced recipe
+    await storage.createRecipe(enhancedRecipe);
+    
+    res.json({
+      status: 'success',
+      data: enhancedRecipe,
+      metadata: {
+        qualityScore: qualityScore.overall,
+        cost: `$${cost.toFixed(4)}`,
+        suggestions: qualityScore.metadata.suggestions,
+        warnings: qualityScore.metadata.warnings,
+        strengths: qualityScore.metadata.strengths
+      }
+    });
+  } catch (error) {
+    console.error('[Enhanced Generation] Failed:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to generate enhanced recipe',
+      error: error.message
+    });
+  }
+});
+
+// API usage statistics endpoint
+adminRouter.get('/api-usage', requireAdmin, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate as string) : new Date();
+    
+    const [usageStats, budgetStatus, topConsumers, costByModel] = await Promise.all([
+      apiCostTracker.getUsageStats(start, end),
+      apiCostTracker.getMonthlyBudgetStatus(),
+      apiCostTracker.getTopConsumers(),
+      apiCostTracker.getCostByModel(start)
+    ]);
+    
+    res.json({
+      usageStats,
+      budgetStatus,
+      topConsumers,
+      costByModel
+    });
+  } catch (error) {
+    console.error('[API Usage] Failed to get stats:', error);
+    res.status(500).json({ error: 'Failed to fetch API usage statistics' });
   }
 });
 

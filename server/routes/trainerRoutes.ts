@@ -630,6 +630,322 @@ trainerRouter.delete('/meal-plans/:planId/assign/:customerId', requireAuth, requ
   }
 });
 
+// === Story 1.5: Enhanced Trainer-Customer Relationship Management ===
 
+import { customerRelationshipManager } from '../services/customerRelationshipManager';
+import { assignmentHistoryTracker } from '../services/assignmentHistoryTracker';
+
+// Get comprehensive customer relationships with engagement metrics
+trainerRouter.get('/customer-relationships', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const filters = {
+      status: req.query.status as any,
+      engagementLevel: req.query.engagementLevel as any,
+      hasRecentActivity: req.query.hasRecentActivity === 'true',
+      tags: req.query.tags ? (req.query.tags as string).split(',') : undefined,
+      sortBy: req.query.sortBy as any,
+      sortOrder: req.query.sortOrder as any,
+      search: req.query.search as string
+    };
+
+    const relationships = await customerRelationshipManager.getCustomerRelationships(trainerId, filters);
+
+    res.json({
+      status: 'success',
+      data: {
+        relationships,
+        total: relationships.length
+      }
+    });
+  } catch (error) {
+    console.error('Failed to get customer relationships:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch customer relationships',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get customer engagement metrics
+trainerRouter.get('/customers/:customerId/engagement', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { customerId } = req.params;
+
+    const metrics = await customerRelationshipManager.getCustomerEngagementMetrics(trainerId, customerId);
+
+    res.json({
+      status: 'success',
+      data: metrics
+    });
+  } catch (error) {
+    console.error('Failed to get customer engagement metrics:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch engagement metrics',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get trainer dashboard with comprehensive stats
+trainerRouter.get('/dashboard-stats', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const stats = await customerRelationshipManager.getTrainerDashboardStats(trainerId);
+
+    res.json({
+      status: 'success',
+      data: stats
+    });
+  } catch (error) {
+    console.error('Failed to get dashboard stats:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch dashboard statistics',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Update customer relationship notes and tags
+trainerRouter.put('/customers/:customerId/relationship', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { customerId } = req.params;
+    const { notes, tags } = req.body;
+
+    await customerRelationshipManager.updateCustomerRelationshipNotes(trainerId, customerId, notes, tags);
+
+    res.json({
+      status: 'success',
+      message: 'Customer relationship updated successfully'
+    });
+  } catch (error) {
+    console.error('Failed to update customer relationship:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to update customer relationship',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get customer progress timeline
+trainerRouter.get('/customers/:customerId/progress-timeline', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { customerId } = req.params;
+    const days = parseInt(req.query.days as string) || 90;
+
+    const timeline = await customerRelationshipManager.getCustomerProgressTimeline(trainerId, customerId, days);
+
+    res.json({
+      status: 'success',
+      data: timeline
+    });
+  } catch (error) {
+    console.error('Failed to get progress timeline:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch progress timeline',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get assignment history with advanced filtering
+trainerRouter.get('/assignment-history', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const filters = {
+      trainerId,
+      customerId: req.query.customerId as string,
+      type: req.query.type as any,
+      status: req.query.status as any,
+      startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+      endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
+      sortBy: req.query.sortBy as any,
+      sortOrder: req.query.sortOrder as any,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+      offset: req.query.offset ? parseInt(req.query.offset as string) : 0
+    };
+
+    const history = await assignmentHistoryTracker.getAssignmentHistory(filters);
+
+    res.json({
+      status: 'success',
+      data: {
+        assignments: history,
+        total: history.length
+      }
+    });
+  } catch (error) {
+    console.error('Failed to get assignment history:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch assignment history',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get assignment statistics
+trainerRouter.get('/assignment-statistics', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const days = parseInt(req.query.days as string) || 30;
+
+    const statistics = await assignmentHistoryTracker.getAssignmentStatistics(trainerId, days);
+
+    res.json({
+      status: 'success',
+      data: statistics
+    });
+  } catch (error) {
+    console.error('Failed to get assignment statistics:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch assignment statistics',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get assignment trends
+trainerRouter.get('/assignment-trends', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const period = req.query.period as any || 'weekly';
+    const duration = parseInt(req.query.duration as string) || 12;
+
+    const trends = await assignmentHistoryTracker.getAssignmentTrends(trainerId, period, duration);
+
+    res.json({
+      status: 'success',
+      data: trends
+    });
+  } catch (error) {
+    console.error('Failed to get assignment trends:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch assignment trends',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Track new assignment (enhanced)
+trainerRouter.post('/track-assignment', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { type, customerId, data, notes } = req.body;
+
+    const assignment = await assignmentHistoryTracker.trackAssignment(
+      type,
+      trainerId,
+      customerId,
+      data,
+      notes
+    );
+
+    res.status(201).json({
+      status: 'success',
+      data: assignment
+    });
+  } catch (error) {
+    console.error('Failed to track assignment:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to track assignment',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Export assignment history
+trainerRouter.get('/export-assignments', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const format = req.query.format as 'json' | 'csv' || 'json';
+    const filters = {
+      customerId: req.query.customerId as string,
+      type: req.query.type as any,
+      status: req.query.status as any,
+      startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+      endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined
+    };
+
+    const exported = await assignmentHistoryTracker.exportAssignmentHistory(trainerId, format, filters);
+
+    if (format === 'csv') {
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="assignment-history.csv"');
+      res.send(exported);
+    } else {
+      res.json({
+        status: 'success',
+        data: exported
+      });
+    }
+  } catch (error) {
+    console.error('Failed to export assignments:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to export assignment history',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Get specific customer assignment history
+trainerRouter.get('/customers/:customerId/assignment-history', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { customerId } = req.params;
+
+    const history = await assignmentHistoryTracker.getCustomerAssignmentHistory(trainerId, customerId);
+
+    res.json({
+      status: 'success',
+      data: {
+        assignments: history,
+        total: history.length
+      }
+    });
+  } catch (error) {
+    console.error('Failed to get customer assignment history:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch customer assignment history',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Update customer relationship status (active/paused/inactive)
+trainerRouter.put('/customers/:customerId/status', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { customerId } = req.params;
+    const { status, reason } = req.body;
+
+    await customerRelationshipManager.updateCustomerRelationshipStatus(trainerId, customerId, status, reason);
+
+    res.json({
+      status: 'success',
+      message: 'Customer status updated successfully'
+    });
+  } catch (error) {
+    console.error('Failed to update customer status:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to update customer status',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
 
 export default trainerRouter;

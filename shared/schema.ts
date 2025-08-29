@@ -59,6 +59,64 @@ export const users = pgTable("users", {
 });
 
 /**
+ * Email Preferences Table
+ *
+ * Stores user preferences for email communications.
+ *
+ * Fields:
+ * - id: Unique preference identifier (UUID)
+ * - user_id: Foreign key to the users table
+ * - weekly_progress_summaries: Enable/disable weekly progress summary emails
+ * - meal_plan_updates: Enable/disable meal plan update notifications
+ * - recipe_recommendations: Enable/disable recipe recommendation emails
+ * - system_notifications: Enable/disable system notification emails
+ * - marketing_emails: Enable/disable marketing emails
+ * - frequency: Email frequency preference (daily, weekly, monthly)
+ */
+export const emailPreferences = pgTable("email_preferences", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull()
+    .unique(),
+  weeklyProgressSummaries: boolean("weekly_progress_summaries").default(true).notNull(),
+  mealPlanUpdates: boolean("meal_plan_updates").default(true).notNull(),
+  recipeRecommendations: boolean("recipe_recommendations").default(true).notNull(),
+  systemNotifications: boolean("system_notifications").default(true).notNull(),
+  marketingEmails: boolean("marketing_emails").default(false).notNull(),
+  frequency: text("frequency").default("weekly").notNull(), // daily, weekly, monthly
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+/**
+ * Email Send Log Table
+ *
+ * Tracks all emails sent to users for analytics and debugging.
+ *
+ * Fields:
+ * - id: Unique log entry identifier (UUID)
+ * - user_id: Foreign key to the users table (nullable for system emails)
+ * - email_type: Type of email sent (progress_summary, invitation, notification, etc.)
+ * - subject: Email subject line
+ * - recipient_email: Email address where the email was sent
+ * - status: Delivery status (sent, failed, delivered, bounced)
+ * - message_id: External email service message ID
+ * - error_message: Error details if sending failed
+ */
+export const emailSendLog = pgTable("email_send_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  emailType: varchar("email_type", { length: 100 }).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  recipientEmail: varchar("recipient_email", { length: 255 }).notNull(),
+  status: varchar("status", { length: 50 }).default("sent").notNull(),
+  messageId: varchar("message_id", { length: 255 }),
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+});
+
+/**
  * Password Reset Tokens Table
  *
  * Stores tokens for the "forgot password" feature.
@@ -943,4 +1001,224 @@ export type CreateCollection = z.infer<typeof createCollectionSchema>;
 export type AddToCollection = z.infer<typeof addToCollectionSchema>;
 export type RateRecipe = z.infer<typeof rateRecipeSchema>;
 export type TrackInteraction = z.infer<typeof trackInteractionSchema>;
+
+// Type exports for recipe ratings
+export type InsertRecipeRating = typeof recipeRatings.$inferInsert;
+export type RecipeRating = typeof recipeRatings.$inferSelect;
+
+export type InsertRecipeRatingSummary = typeof recipeRatingSummary.$inferInsert;
+export type RecipeRatingSummary = typeof recipeRatingSummary.$inferSelect;
+
+export type InsertRatingHelpfulness = typeof ratingHelpfulness.$inferInsert;
+export type RatingHelpfulness = typeof ratingHelpfulness.$inferSelect;
+
+// Extended types for frontend use
+export type RecipeRatingWithUser = RecipeRating & {
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+  helpfulnessStats: {
+    helpfulCount: number;
+    notHelpfulCount: number;
+    userVote?: boolean; // Whether current user voted helpful/not helpful
+  };
+};
+
+export type RecipeWithRatingData = Recipe & {
+  ratingData?: RecipeRatingSummary;
+  userRating?: RecipeRating;
+  isFavorited?: boolean;
+  favoriteCount?: number;
+};
+
+// Validation schemas for rating system
+export const createRatingSchema = z.object({
+  recipeId: z.string().uuid(),
+  rating: z.number().min(1).max(5),
+  reviewText: z.string().max(1000).optional(),
+  cookingDifficulty: z.number().min(1).max(5).optional(),
+  wouldCookAgain: z.boolean().optional(),
+  isHelpful: z.boolean().optional(),
+});
+
+export const updateRatingSchema = createRatingSchema.partial().omit({ recipeId: true });
+
+export const ratingFilterSchema = z.object({
+  minRating: z.number().min(1).max(5).optional(),
+  maxRating: z.number().min(1).max(5).optional(),
+  hasReviews: z.boolean().optional(), // Only show recipes with text reviews
+  sortBy: z.enum(['rating_desc', 'rating_asc', 'reviews_desc', 'recent']).optional(),
+});
+
+export const voteHelpfulnessSchema = z.object({
+  ratingId: z.string().uuid(),
+  isHelpful: z.boolean(),
+});
+
+export type CreateRating = z.infer<typeof createRatingSchema>;
+export type UpdateRating = z.infer<typeof updateRatingSchema>;
+export type RatingFilter = z.infer<typeof ratingFilterSchema>;
+export type VoteHelpfulness = z.infer<typeof voteHelpfulnessSchema>;
+
+/**
+ * Recipe Ratings Table
+ * 
+ * Stores individual recipe ratings and reviews from users.
+ * Each user can only rate a recipe once, but can update their rating.
+ */
+export const recipeRatings = pgTable("recipe_ratings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  recipeId: uuid("recipe_id")
+    .references(() => recipes.id, { onDelete: "cascade" })
+    .notNull(),
+  rating: integer("rating").notNull(), // 1-5 stars
+  reviewText: text("review_text"), // Optional review text
+  isHelpful: boolean("is_helpful").default(false), // Whether the user found the recipe helpful
+  cookingDifficulty: integer("cooking_difficulty"), // Optional 1-5 difficulty rating
+  wouldCookAgain: boolean("would_cook_again"), // Would user cook this again?
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userIdIdx: index("recipe_ratings_user_id_idx").on(table.userId),
+  recipeIdIdx: index("recipe_ratings_recipe_id_idx").on(table.recipeId),
+  ratingIdx: index("recipe_ratings_rating_idx").on(table.rating),
+  // Ensure users can only rate each recipe once
+  uniqueUserRecipeRating: index("recipe_ratings_user_recipe_unique").on(table.userId, table.recipeId),
+}));
+
+/**
+ * Recipe Rating Summary Table
+ * 
+ * Stores aggregated rating statistics for each recipe.
+ * Updated whenever ratings change for performance optimization.
+ */
+export const recipeRatingSummary = pgTable("recipe_rating_summary", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  recipeId: uuid("recipe_id")
+    .references(() => recipes.id, { onDelete: "cascade" })
+    .notNull()
+    .unique(),
+  averageRating: decimal("average_rating", { precision: 3, scale: 2 }).notNull(), // e.g., 4.25
+  totalRatings: integer("total_ratings").default(0).notNull(),
+  totalReviews: integer("total_reviews").default(0).notNull(), // Ratings with review text
+  ratingDistribution: jsonb("rating_distribution")
+    .$type<{ 1: number; 2: number; 3: number; 4: number; 5: number }>()
+    .default({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }), // Count of each star rating
+  helpfulCount: integer("helpful_count").default(0), // How many found it helpful
+  wouldCookAgainCount: integer("would_cook_again_count").default(0),
+  averageDifficulty: decimal("average_difficulty", { precision: 3, scale: 2 }), // Average cooking difficulty
+  lastUpdated: timestamp("last_updated").defaultNow(),
+}, (table) => ({
+  recipeIdIdx: index("recipe_rating_summary_recipe_id_idx").on(table.recipeId),
+  averageRatingIdx: index("recipe_rating_summary_avg_rating_idx").on(table.averageRating),
+  totalRatingsIdx: index("recipe_rating_summary_total_ratings_idx").on(table.totalRatings),
+}));
+
+/**
+ * Rating Helpfulness Table
+ * 
+ * Tracks which users found specific ratings/reviews helpful.
+ * Enables community moderation of review quality.
+ */
+export const ratingHelpfulness = pgTable("rating_helpfulness", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  ratingId: uuid("rating_id")
+    .references(() => recipeRatings.id, { onDelete: "cascade" })
+    .notNull(),
+  isHelpful: boolean("is_helpful").notNull(), // true = helpful, false = not helpful
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userIdIdx: index("rating_helpfulness_user_id_idx").on(table.userId),
+  ratingIdIdx: index("rating_helpfulness_rating_id_idx").on(table.ratingId),
+  // Ensure users can only vote once per rating
+  uniqueUserRatingVote: index("rating_helpfulness_user_rating_unique").on(table.userId, table.ratingId),
+}));
+
+/**
+ * Shared Meal Plans Table
+ * 
+ * Stores shareable links for meal plans that allow public access without authentication.
+ * Trainers can generate shareable links for their meal plans that clients can view.
+ */
+export const sharedMealPlans = pgTable("shared_meal_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  mealPlanId: uuid("meal_plan_id")
+    .references(() => trainerMealPlans.id, { onDelete: "cascade" })
+    .notNull(),
+  shareToken: uuid("share_token").defaultRandom().notNull().unique(),
+  expiresAt: timestamp("expires_at"), // Optional expiration
+  createdBy: uuid("created_by")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  viewCount: integer("view_count").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  mealPlanIdIdx: index("shared_meal_plans_meal_plan_id_idx").on(table.mealPlanId),
+  shareTokenIdx: index("shared_meal_plans_share_token_idx").on(table.shareToken),
+  createdByIdx: index("shared_meal_plans_created_by_idx").on(table.createdBy),
+  expiresAtIdx: index("shared_meal_plans_expires_at_idx").on(table.expiresAt),
+  isActiveIdx: index("shared_meal_plans_is_active_idx").on(table.isActive),
+  // Ensure only one active share per meal plan (partial index would be handled at DB level)
+  oneActivePerPlan: index("shared_meal_plans_one_active_per_plan").on(table.mealPlanId),
+}));
+
+// Type exports for shared meal plans
+export type InsertSharedMealPlan = typeof sharedMealPlans.$inferInsert;
+export type SharedMealPlan = typeof sharedMealPlans.$inferSelect;
+
+// Extended type for shared meal plans with meal plan data
+export type SharedMealPlanWithData = SharedMealPlan & {
+  mealPlan: TrainerMealPlan;
+  createdByUser: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+};
+
+// Validation schemas for meal plan sharing
+export const createShareSchema = z.object({
+  mealPlanId: z.string().uuid(),
+  expiresAt: z.string().datetime().optional(), // ISO datetime string
+});
+
+export const updateShareSchema = z.object({
+  expiresAt: z.string().datetime().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type CreateShare = z.infer<typeof createShareSchema>;
+export type UpdateShare = z.infer<typeof updateShareSchema>;
+
+// Email preferences type exports
+export type InsertEmailPreferences = typeof emailPreferences.$inferInsert;
+export type EmailPreferences = typeof emailPreferences.$inferSelect;
+
+export type InsertEmailSendLog = typeof emailSendLog.$inferInsert;
+export type EmailSendLog = typeof emailSendLog.$inferSelect;
+
+// Email preferences validation schemas
+export const emailPreferencesSchema = z.object({
+  weeklyProgressSummaries: z.boolean().default(true),
+  mealPlanUpdates: z.boolean().default(true),
+  recipeRecommendations: z.boolean().default(true),
+  systemNotifications: z.boolean().default(true),
+  marketingEmails: z.boolean().default(false),
+  frequency: z.enum(['daily', 'weekly', 'monthly']).default('weekly'),
+});
+
+export const updateEmailPreferencesSchema = emailPreferencesSchema.partial();
+
+export type EmailPreferencesInput = z.infer<typeof emailPreferencesSchema>;
+export type UpdateEmailPreferencesInput = z.infer<typeof updateEmailPreferencesSchema>;
 

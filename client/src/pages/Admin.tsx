@@ -397,6 +397,7 @@ export default function Admin() {
                           showCheckbox={isSelectionMode}
                           isSelected={selectedRecipeIds.has(recipe.id)}
                           onSelectionChange={handleRecipeSelection}
+                          showFavoriteButton={true}
                         />
                       ))}
                     </div>

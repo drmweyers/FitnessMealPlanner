@@ -8,7 +8,7 @@ import { apiRequest } from '../lib/queryClient';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Search, Filter, TrendingUp, Calendar, Target, Zap, ChefHat, RotateCcw, SlidersHorizontal, Info, User, Database, Activity } from 'lucide-react';
+import { Search, Filter, TrendingUp, Calendar, Target, Zap, ChefHat, RotateCcw, SlidersHorizontal, Info, User, Database, Activity, Calculator, CalendarDays, ShoppingCart } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -328,6 +328,54 @@ const Customer = () => {
               </Card>
             </div>
           )}
+
+          {/* Quick Navigation Cards */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-4 flex items-center">
+              <Target className="w-5 h-5 mr-2 text-blue-600" />
+              Quick Access Tools
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card 
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:from-blue-100 hover:to-blue-200/50"
+                onClick={() => window.location.href = '/nutrition'}
+              >
+                <CardContent className="p-4 sm:p-6 text-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <Calculator className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-slate-900 mb-2">Nutrition Tracker</h3>
+                  <p className="text-sm text-slate-600">Track your daily macros and calories</p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-green-50 to-green-100/50 hover:from-green-100 hover:to-green-200/50"
+                onClick={() => window.location.href = '/meal-prep'}
+              >
+                <CardContent className="p-4 sm:p-6 text-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <CalendarDays className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-slate-900 mb-2">Meal Prep Calendar</h3>
+                  <p className="text-sm text-slate-600">Schedule and organize your meal prep</p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 bg-gradient-to-br from-purple-50 to-purple-100/50 hover:from-purple-100 hover:to-purple-200/50"
+                onClick={() => window.location.href = '/grocery-list'}
+              >
+                <CardContent className="p-4 sm:p-6 text-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <ShoppingCart className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-slate-900 mb-2">Grocery List</h3>
+                  <p className="text-sm text-slate-600">Generate smart shopping lists</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
         {/* Enhanced Search and Filters */}
         <Card className="mb-4 xs:mb-6 sm:mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">

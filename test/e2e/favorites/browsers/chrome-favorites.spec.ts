@@ -8,9 +8,10 @@ import { loginAsCustomer, takeTestScreenshot, waitForNetworkIdle } from '../../a
  * features, performance optimizations, and browser-specific behaviors.
  */
 
+// Configure specifically for Chrome
+test.use({ browserName: 'chromium' });
+
 test.describe('Chrome Favorites Tests', () => {
-  // Configure specifically for Chrome
-  test.use({ browserName: 'chromium' });
 
   let page: Page;
 
