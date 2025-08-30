@@ -312,14 +312,15 @@ export class CustomerPreferenceService {
         const mealPlanData = typeof item.mealPlanData === 'string' ? JSON.parse(item.mealPlanData) : item.mealPlanData;
         if (mealPlanData.meals) {
           mealPlanData.meals.forEach((meal: any) => {
-          const cuisines = extractCuisineFromTags(meal.recipe.dietaryTags || []);
-          cuisines.forEach(cuisine => {
-            const current = cuisineScores.get(cuisine) || {positive: 0, negative: 0, total: 0};
-            current.positive += 1;
-            current.total += 1;
-            cuisineScores.set(cuisine, current);
+            const cuisines = extractCuisineFromTags(meal.recipe.dietaryTags || []);
+            cuisines.forEach(cuisine => {
+              const current = cuisineScores.get(cuisine) || {positive: 0, negative: 0, total: 0};
+              current.positive += 1;
+              current.total += 1;
+              cuisineScores.set(cuisine, current);
+            });
           });
-        });
+        }
       }
     });
     
@@ -329,14 +330,15 @@ export class CustomerPreferenceService {
         const mealPlanData = typeof item.mealPlanData === 'string' ? JSON.parse(item.mealPlanData) : item.mealPlanData;
         if (mealPlanData.meals) {
           mealPlanData.meals.forEach((meal: any) => {
-          const cuisines = extractCuisineFromTags(meal.recipe.dietaryTags || []);
-          cuisines.forEach(cuisine => {
-            const current = cuisineScores.get(cuisine) || {positive: 0, negative: 0, total: 0};
-            current.negative += 1;
-            current.total += 1;
-            cuisineScores.set(cuisine, current);
+            const cuisines = extractCuisineFromTags(meal.recipe.dietaryTags || []);
+            cuisines.forEach(cuisine => {
+              const current = cuisineScores.get(cuisine) || {positive: 0, negative: 0, total: 0};
+              current.negative += 1;
+              current.total += 1;
+              cuisineScores.set(cuisine, current);
+            });
           });
-        });
+        }
       }
     });
     
