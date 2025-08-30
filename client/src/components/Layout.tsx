@@ -22,6 +22,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import MobileNavigation from './MobileNavigation';
 
 interface LayoutProps {
   children: ReactNode;
@@ -58,10 +59,16 @@ const Layout = ({ children }: LayoutProps) => {
       : []),
   ];
 
+  // Check if mobile viewport
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Top Navigation Bar */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      {/* Mobile Navigation Component */}
+      <MobileNavigation />
+      
+      {/* Desktop Navigation Bar - Hidden on Mobile */}
+      <header className="hidden lg:block bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo and Navigation */}
@@ -140,66 +147,10 @@ const Layout = ({ children }: LayoutProps) => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Mobile menu button */}
-              <div className="lg:hidden">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="h-8 w-8 sm:h-10 sm:w-10"
-                >
-                  {isMobileMenuOpen ? (
-                    <X className="h-5 w-5 sm:h-6 sm:w-6" />
-                  ) : (
-                    <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
-                  )}
-                </Button>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200 bg-white shadow-lg">
-            <div className="space-y-1 px-3 py-3 sm:px-4">
-              {navigation.map((item) => {
-                const isActive = location === item.href;
-                return (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setLocation(item.href);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={cn(
-                      "flex items-center px-3 py-3 text-base font-medium rounded-lg transition-colors duration-200",
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    )}
-                  >
-                    <item.icon className="w-5 h-5 mr-3" />
-                    {item.name}
-                  </a>
-                );
-              })}
-              
-              {/* Mobile-only notifications */}
-              <div className="sm:hidden pt-2 border-t border-gray-200 mt-2">
-                <a
-                  href="#notifications"
-                  className="flex items-center px-3 py-3 text-base font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
-                >
-                  <Bell className="w-5 h-5 mr-3" />
-                  Notifications
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Main Content */}

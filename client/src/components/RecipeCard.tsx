@@ -155,6 +155,7 @@ function RecipeCard({
     <Card 
       className={cn(
         "overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group h-full border-0 shadow-sm relative",
+        "mobile-card touch-manipulation",
         isSelected && 'ring-2 ring-primary ring-offset-2',
         className
       )}

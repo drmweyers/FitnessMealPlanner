@@ -129,6 +129,20 @@ export default function Router() {
           return <MobileGroceryList />;
         }} />
         
+        {/* Common Routes */}
+        <Route path="/recipes" component={() => {
+          // Recipes page accessible to all authenticated users
+          return <Trainer />;
+        }} />
+        
+        <Route path="/favorites" component={() => {
+          // Favorites page accessible to trainers and customers
+          if (user.role === 'admin') {
+            return <Redirect to="/" />;
+          }
+          return <Trainer />;
+        }} />
+        
         {/* Trainer Routes - More specific routes first */}
         <Route path="/trainer/customers" component={() => {
           if (user.role !== 'trainer') {
