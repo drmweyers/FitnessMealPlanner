@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Home,
@@ -28,8 +28,7 @@ interface NavItem {
 }
 
 const MobileNavigation: React.FC = () => {
-  const [location] = useLocation();
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -95,7 +94,7 @@ const MobileNavigation: React.FC = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    setLocation('/login');
   };
 
   // Don't show navigation on auth pages
@@ -123,7 +122,7 @@ const MobileNavigation: React.FC = () => {
           </h1>
           
           <button
-            onClick={() => navigate('/profile')}
+            onClick={() => setLocation('/profile')}
             className="p-2 -mr-2 touch-feedback touch-target"
             aria-label="Profile"
           >
@@ -144,7 +143,7 @@ const MobileNavigation: React.FC = () => {
           return (
             <button
               key={item.path}
-              onClick={() => navigate(item.path)}
+              onClick={() => setLocation(item.path)}
               className={`mobile-nav-item ${isActive ? 'active' : ''}`}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
@@ -218,7 +217,7 @@ const MobileNavigation: React.FC = () => {
                 return (
                   <button
                     key={item.path}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => setLocation(item.path)}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
                       isActive 
                         ? 'bg-blue-50 text-blue-600' 
@@ -240,7 +239,7 @@ const MobileNavigation: React.FC = () => {
             
             <div className="p-4 space-y-1">
               <button
-                onClick={() => navigate('/settings')}
+                onClick={() => setLocation('/settings')}
                 className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center space-x-3">
