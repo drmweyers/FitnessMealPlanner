@@ -10,10 +10,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '../hooks/use-toast';
 import { Link, useLocation } from 'wouter';
 
-// Login form schema with basic validation
+// Login form schema with comprehensive validation
 const loginSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(1, { message: 'Password is required' }),
+  email: z.string()
+    .min(1, { message: 'Email is required' })
+    .email({ message: 'Please enter a valid email address' })
+    .toLowerCase()
+    .trim(),
+  password: z.string()
+    .min(1, { message: 'Password is required' })
+    .min(6, { message: 'Password must be at least 6 characters' }),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
