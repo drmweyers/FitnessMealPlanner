@@ -28,6 +28,7 @@
     "test:business-logic:robust": "playwright test test/e2e/business-logic-robust.spec.ts --headed",
     "test:business-logic:simple": "playwright test test/e2e/business-logic-simple-visual.spec.ts --headed",
     "test:comprehensive": "tsx test/test-runner.ts",
+    "seed:test-accounts": "tsx server/db/seeds/test-accounts.ts",
     "test:comprehensive:unit": "tsx test/test-runner.ts --unit-only",
     "test:comprehensive:critical": "tsx test/test-runner.ts --skip-optional",
     "test:comprehensive:fast": "tsx test/test-runner.ts --skip-optional --fail-fast",

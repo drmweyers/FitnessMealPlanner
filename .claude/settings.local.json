@@ -14,7 +14,9 @@
       "Bash(node:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(docker ps:*)",
+      "Bash(npm run seed:test-accounts:*)"
     ],
     "deny": [],
     "ask": [],

@@ -4,6 +4,8 @@
 
 These are the official test credentials for the FitnessMealPlanner application. Always use these credentials when testing functionality.
 
+**IMPORTANT:** These credentials are active on both DEVELOPMENT and PRODUCTION environments.
+
 ### Admin Account
 - **Email:** `admin@fitmeal.pro`
 - **Password:** `AdminPass123`
@@ -28,9 +30,22 @@ These are the official test credentials for the FitnessMealPlanner application. 
 - Never change these passwords in the development environment
 - These accounts have sufficient data for testing all features
 
-## Test Environment
-- **Development URL:** http://localhost:4000
+## Test Environments
+
+### Development
+- **URL:** http://localhost:4000
 - **API Endpoint:** http://localhost:4000/api
 - **Health Check:** http://localhost:4000/api/health
+
+### Production
+- **URL:** https://evofitmeals.com
+- **API Endpoint:** https://evofitmeals.com/api
+- **Health Check:** https://evofitmeals.com/api/health
+
+## Important Notes
+- ✅ These credentials are **ACTIVE** on both DEV and PROD
+- ✅ Verified and tested on September 1, 2025
+- ✅ All three accounts authenticate successfully
+- ✅ Customer accounts redirect to `/my-meal-plans`
 
 Last Updated: September 1, 2025
