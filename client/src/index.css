@@ -1,5 +1,6 @@
 @import './styles/responsive-design-system.css';
 @import './styles/mobile-enhancements.css';
+@import './styles/mobile-fixes.css';
 
 @tailwind base;
 @tailwind components;

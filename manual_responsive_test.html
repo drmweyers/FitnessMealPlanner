@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitnessMealPlanner Responsive Test Tool</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .iframe-container { 
+            border: 2px solid #333; 
+            margin: 20px 0; 
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .viewport-controls { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap;
+        }
+        .viewport-btn { 
+            padding: 10px 15px; 
+            border: none; 
+            background: #007bff; 
+            color: white; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 14px;
+        }
+        .viewport-btn:hover { 
+            background: #0056b3; 
+        }
+        .viewport-btn.active { 
+            background: #28a745; 
+        }
+        .custom-size { 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+            margin-left: 20px;
+        }
+        .custom-size input { 
+            width: 80px; 
+            padding: 8px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px;
+        }
+        .test-checklist { 
+            margin: 20px 0; 
+            padding: 20px; 
+            background: #f8f9fa; 
+            border-radius: 8px;
+        }
+        .test-section { 
+            margin: 15px 0; 
+        }
+        .test-item { 
+            display: flex; 
+            align-items: center; 
+            margin: 8px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .test-item input[type="checkbox"] { 
+            margin-right: 10px; 
+            transform: scale(1.2);
+        }
+        .test-item.pass { 
+            background: #d4edda; 
+            color: #155724;
+        }
+        .test-item.fail { 
+            background: #f8d7da; 
+            color: #721c24;
+        }
+        .credentials { 
+            background: #e3f2fd; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin: 20px 0;
+        }
+        .credentials h3 { 
+            margin-top: 0; 
+            color: #1976d2;
+        }
+        .screenshot-btn {
+            background: #17a2b8; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 4px; 
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .results-summary {
+            position: sticky;
+            top: 20px;
+            background: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .current-viewport {
+            font-weight: bold;
+            color: #007bff;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 FitnessMealPlanner Responsive Testing Tool</h1>
+        
+        <div class="credentials">
+            <h3>🔑 Test Credentials</h3>
+            <p><strong>Admin:</strong> admin@example.com / admin123</p>
+            <p><strong>Trainer:</strong> trainer@example.com / trainer123</p>
+            <p><strong>Customer:</strong> customer@example.com / customer123</p>
+            <p><strong>Application URL:</strong> <a href="http://localhost:4000" target="_blank">http://localhost:4000</a></p>
+        </div>
+
+        <div class="results-summary">
+            <h3>📊 Current Test Status</h3>
+            <div class="current-viewport" id="currentViewport">Viewport: Desktop (1280x720)</div>
+            <div>Tests Passed: <span id="passCount">0</span></div>
+            <div>Tests Failed: <span id="failCount">0</span></div>
+            <div>Total Progress: <span id="progressPercent">0%</span></div>
+        </div>
+
+        <div class="viewport-controls">
+            <h3>📱 Viewport Controls:</h3>
+            <button class="viewport-btn active" onclick="setViewport(375, 667, 'Mobile - iPhone SE')">
+                📱 Mobile (375px)
+            </button>
+            <button class="viewport-btn" onclick="setViewport(768, 1024, 'Tablet - iPad')">
+                📟 Tablet (768px)
+            </button>
+            <button class="viewport-btn" onclick="setViewport(1280, 720, 'Desktop')">
+                💻 Desktop (1280px)
+            </button>
+            <button class="viewport-btn" onclick="setViewport(1920, 1080, 'Large Desktop')">
+                🖥️ Large (1920px)
+            </button>
+            
+            <div class="custom-size">
+                <label>Custom:</label>
+                <input type="number" id="customWidth" value="375" min="320" max="2560">
+                <span>×</span>
+                <input type="number" id="customHeight" value="667" min="400" max="1600">
+                <button class="viewport-btn" onclick="setCustomViewport()">Apply</button>
+            </div>
+            
+            <button class="screenshot-btn" onclick="takeScreenshot()">
+                📷 Screenshot
+            </button>
+        </div>
+
+        <div class="iframe-container">
+            <iframe 
+                id="testFrame" 
+                src="http://localhost:4000" 
+                style="width: 375px; height: 667px; border: none; display: block; margin: 0 auto;"
+                title="FitnessMealPlanner Test Frame">
+            </iframe>
+        </div>
+
+        <div class="test-checklist">
+            <h3>✅ Responsive Testing Checklist</h3>
+            
+            <!-- Mobile Tests -->
+            <div class="test-section">
+                <h4>📱 Mobile View (375px) Tests</h4>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="mobile-header" onchange="updateResults()">
+                    <label for="mobile-header">Header displays correctly with hamburger menu and user profile</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="mobile-nav-bottom" onchange="updateResults()">
+                    <label for="mobile-nav-bottom">Bottom navigation bar shows 5 items (4 main + More)</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="mobile-nav-drawer" onchange="updateResults()">
+                    <label for="mobile-nav-drawer">Side navigation drawer opens/closes smoothly with overlay</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="mobile-touch-targets" onchange="updateResults()">
+                    <label for="mobile-touch-targets">All buttons meet 44px minimum touch target size</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="mobile-cards" onchange="updateResults()">
+                    <label for="mobile-cards">Recipe cards display in single column with proper spacing</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="mobile-forms" onchange="updateResults()">
+                    <label for="mobile-forms">Form inputs use 16px font size (no iOS zoom) and full width</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="mobile-no-horizontal-scroll" onchange="updateResults()">
+                    <label for="mobile-no-horizontal-scroll">No horizontal scrolling required</label>
+                </div>
+            </div>
+
+            <!-- Tablet Tests -->
+            <div class="test-section">
+                <h4>📟 Tablet View (768px) Tests</h4>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="tablet-layout" onchange="updateResults()">
+                    <label for="tablet-layout">Layout adapts with 2-3 column card grid</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="tablet-navigation" onchange="updateResults()">
+                    <label for="tablet-navigation">Navigation system appropriate for tablet size</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="tablet-touch-targets" onchange="updateResults()">
+                    <label for="tablet-touch-targets">Touch targets remain accessible but not oversized</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="tablet-typography" onchange="updateResults()">
+                    <label for="tablet-typography">Typography scales appropriately</label>
+                </div>
+            </div>
+
+            <!-- Desktop Tests -->
+            <div class="test-section">
+                <h4>💻 Desktop View (1280px) Tests</h4>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="desktop-nav-horizontal" onchange="updateResults()">
+                    <label for="desktop-nav-horizontal">Horizontal navigation bar replaces mobile navigation</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="desktop-tables" onchange="updateResults()">
+                    <label for="desktop-tables">Recipe tables display full data without horizontal scrolling</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="desktop-no-mobile-elements" onchange="updateResults()">
+                    <label for="desktop-no-mobile-elements">No mobile navigation elements visible</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="desktop-hover-effects" onchange="updateResults()">
+                    <label for="desktop-hover-effects">Hover effects work correctly</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="desktop-view-toggle" onchange="updateResults()">
+                    <label for="desktop-view-toggle">Table/Card view toggle works (ViewToggle component)</label>
+                </div>
+            </div>
+
+            <!-- Login Page Tests -->
+            <div class="test-section">
+                <h4>🔐 Login Page Responsive Tests</h4>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="login-mobile-centered" onchange="updateResults()">
+                    <label for="login-mobile-centered">Login form centers properly on mobile</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="login-form-inputs" onchange="updateResults()">
+                    <label for="login-form-inputs">Input fields sized correctly (h-11 sm:h-12)</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="login-button-fullwidth" onchange="updateResults()">
+                    <label for="login-button-fullwidth">Submit button full width on mobile</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="login-typography-scaling" onchange="updateResults()">
+                    <label for="login-typography-scaling">Typography scales with breakpoints (text-2xl sm:text-3xl)</label>
+                </div>
+            </div>
+
+            <!-- Cross-Browser Tests -->
+            <div class="test-section">
+                <h4>🌐 Cross-Viewport Transition Tests</h4>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="smooth-transitions" onchange="updateResults()">
+                    <label for="smooth-transitions">Smooth transitions when resizing between breakpoints</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="no-layout-breaking" onchange="updateResults()">
+                    <label for="no-layout-breaking">No layout breaking at intermediate sizes</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="table-card-switching" onchange="updateResults()">
+                    <label for="table-card-switching">Table/Card switching works at lg breakpoint (1024px)</label>
+                </div>
+            </div>
+
+            <!-- Performance Tests -->
+            <div class="test-section">
+                <h4>⚡ Performance & Accessibility</h4>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="fast-loading" onchange="updateResults()">
+                    <label for="fast-loading">Page loads quickly on mobile (< 3 seconds)</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="keyboard-navigation" onchange="updateResults()">
+                    <label for="keyboard-navigation">Keyboard navigation works on all viewport sizes</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="focus-indicators" onchange="updateResults()">
+                    <label for="focus-indicators">Focus indicators visible and appropriate</label>
+                </div>
+                
+                <div class="test-item">
+                    <input type="checkbox" id="no-horizontal-scroll-tables" onchange="updateResults()">
+                    <label for="no-horizontal-scroll-tables">Tables handle overflow appropriately</label>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <h3>📝 Testing Instructions</h3>
+            <ol>
+                <li><strong>Login:</strong> Use the test credentials above to login to the application</li>
+                <li><strong>Test Each Viewport:</strong> Click the viewport buttons to test different screen sizes</li>
+                <li><strong>Check Features:</strong> For each viewport, verify the features listed in the checklist</li>
+                <li><strong>Mark Tests:</strong> Check off each test as you complete it</li>
+                <li><strong>Take Screenshots:</strong> Use the screenshot button to document any issues</li>
+                <li><strong>Test Navigation:</strong> Try all navigation methods (drawer, bottom nav, header nav)</li>
+                <li><strong>Test Forms:</strong> Verify form inputs and buttons work correctly</li>
+                <li><strong>Test Data Tables:</strong> Check recipe tables and card view switching</li>
+            </ol>
+            
+            <h4>🔍 What to Look For:</h4>
+            <ul>
+                <li><strong>Layout Issues:</strong> Content overflowing, misaligned elements</li>
+                <li><strong>Touch Targets:</strong> Buttons too small for mobile interaction</li>
+                <li><strong>Typography:</strong> Text too small or too large at different sizes</li>
+                <li><strong>Navigation:</strong> Mobile drawer not working, bottom nav missing</li>
+                <li><strong>Performance:</strong> Slow loading, choppy animations</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentViewportName = 'Mobile - iPhone SE';
+        
+        function setViewport(width, height, name) {
+            const iframe = document.getElementById('testFrame');
+            iframe.style.width = width + 'px';
+            iframe.style.height = height + 'px';
+            currentViewportName = name;
+            
+            // Update custom inputs
+            document.getElementById('customWidth').value = width;
+            document.getElementById('customHeight').value = height;
+            
+            // Update active button
+            document.querySelectorAll('.viewport-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updateViewportDisplay();
+        }
+        
+        function setCustomViewport() {
+            const width = document.getElementById('customWidth').value;
+            const height = document.getElementById('customHeight').value;
+            setViewport(parseInt(width), parseInt(height), `Custom (${width}×${height})`);
+        }
+        
+        function updateViewportDisplay() {
+            document.getElementById('currentViewport').textContent = `Viewport: ${currentViewportName}`;
+        }
+        
+        function updateResults() {
+            const checkboxes = document.querySelectorAll('.test-item input[type="checkbox"]');
+            let passed = 0;
+            let total = checkboxes.length;
+            
+            checkboxes.forEach(checkbox => {
+                const testItem = checkbox.closest('.test-item');
+                if (checkbox.checked) {
+                    passed++;
+                    testItem.classList.remove('fail');
+                    testItem.classList.add('pass');
+                } else {
+                    testItem.classList.remove('pass');
+                    testItem.classList.remove('fail');
+                }
+            });
+            
+            document.getElementById('passCount').textContent = passed;
+            document.getElementById('failCount').textContent = total - passed;
+            document.getElementById('progressPercent').textContent = 
+                Math.round((passed / total) * 100) + '%';
+        }
+        
+        function takeScreenshot() {
+            // Since we can't actually take screenshots, we'll provide instructions
+            alert(`📷 Screenshot Instructions:
+            
+1. Use your browser's built-in screenshot tools:
+   - Chrome: Ctrl+Shift+I → Device Mode → Screenshot icon
+   - Firefox: F12 → Responsive Mode → Camera icon
+   
+2. Or use browser extensions like:
+   - Full Page Screen Capture
+   - Awesome Screenshot
+   
+3. Current viewport: ${currentViewportName}
+   
+Save screenshots with descriptive names like:
+"mobile-375-navigation-issue.png"`);
+        }
+        
+        // Initialize
+        updateViewportDisplay();
+        updateResults();
+    </script>
+</body>
+</html>

@@ -26,6 +26,7 @@ import { favoritesRouter } from './routes/favorites';
 // import { engagementRouter } from './routes/engagement';
 import { trendingRouter } from './routes/trending';
 import { adminAnalyticsRouter } from './routes/adminAnalytics';
+import analyticsRouter from './routes/analytics';
 import ratingsRouter from './routes/ratings';
 import { progressSummariesRouter } from './routes/progressSummaries';
 import { emailPreferencesRouter } from './routes/emailPreferences';
@@ -179,6 +180,7 @@ app.use('/api/profile', requireAuth, profileRouter);
 // New analytics and engagement routes
 app.use('/api/favorites', favoritesRouter);
 // app.use('/api/analytics', engagementRouter);
+app.use('/api/analytics', analyticsRouter);
 app.use('/api/trending', trendingRouter);
 app.use('/api/admin/analytics', adminAnalyticsRouter);
 app.use('/api/progress-summaries', progressSummariesRouter);

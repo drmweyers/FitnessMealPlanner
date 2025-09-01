@@ -7,6 +7,7 @@ import Trainer from "./pages/Trainer";
 import Admin from "./pages/Admin";
 import Customer from "./pages/Customer";
 import AdminProfile from "./pages/AdminProfile";
+import AdminAnalytics from "./pages/AdminAnalytics";
 import TrainerProfile from "./pages/TrainerProfile";
 import CustomerProfile from "./pages/CustomerProfile";
 import LoginPage from "./pages/LoginPage";
@@ -89,6 +90,12 @@ export default function Router() {
         <Route path="/admin" component={() => (
           <ProtectedRoute requiredRole="admin">
             <Admin />
+          </ProtectedRoute>
+        )} />
+        
+        <Route path="/admin/analytics" component={() => (
+          <ProtectedRoute requiredRole="admin">
+            <AdminAnalytics />
           </ProtectedRoute>
         )} />
         

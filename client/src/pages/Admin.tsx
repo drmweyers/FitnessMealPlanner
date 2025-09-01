@@ -5,7 +5,8 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Check, X } from "lucide-react";
+import { Check, X, BarChart3 } from "lucide-react";
+import { Link } from "wouter";
 import { 
   Pagination, 
   PaginationContent, 
@@ -236,6 +237,12 @@ export default function Admin() {
             Manage recipes, users, and meal plan generation
           </p>
         </div>
+        <Link href="/admin/analytics">
+          <Button variant="outline" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Analytics Dashboard
+          </Button>
+        </Link>
       </div>
 
       {/* Main Tabs */}
