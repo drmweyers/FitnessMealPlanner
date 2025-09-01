@@ -397,7 +397,7 @@ async function analyzeSecurityContext(req: Request, window?: RateLimitWindow): P
   if (isBot) riskScore += 30;
 
   // Check for suspicious IPs
-  if (SUSPICIOUS_IPS.has(ip)) riskScore += 50;
+  if (SUSPICIOUS_PATTERNS.SUSPICIOUS_IPS.has(ip)) riskScore += 50;
 
   // Analyze request patterns
   // Note: window is not available in Node.js environment
