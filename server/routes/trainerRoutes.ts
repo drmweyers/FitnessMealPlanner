@@ -118,8 +118,8 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
     const trainerId = req.user!.id;
     const { recipeId } = req.query;
     
-    // Import customerInvitations if not already imported
-    const { customerInvitations } = await import('@shared/schema');
+    // Import customerInvitations and mealPlanAssignments if not already imported
+    const { customerInvitations, mealPlanAssignments } = await import('@shared/schema');
     
     // Get customers who have accepted invitations from this trainer
     const invitedCustomers = await db.select({
@@ -136,6 +136,16 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
         eq(users.role, 'customer')
       )
     );
+    
+    // Get customers from meal_plan_assignments table (new trainer_meal_plans workflow)
+    const customersFromAssignments = await db.select({
+      customerId: mealPlanAssignments.customerId,
+      customerEmail: users.email,
+      assignedAt: mealPlanAssignments.assignedAt,
+    })
+    .from(mealPlanAssignments)
+    .innerJoin(users, eq(users.id, mealPlanAssignments.customerId))
+    .where(eq(mealPlanAssignments.assignedBy, trainerId));
     
     // Get unique customers who have meal plans or recipes assigned by this trainer
     const customersWithMealPlans = await db.select({
@@ -187,7 +197,27 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
       });
     });
     
-    // Then add/update with customers who have assignments
+    // Add customers from meal_plan_assignments (new workflow)
+    customersFromAssignments.forEach(customer => {
+      if (!customerMap.has(customer.customerId)) {
+        customerMap.set(customer.customerId, {
+          id: customer.customerId,
+          email: customer.customerEmail,
+          role: 'customer',
+          firstAssignedAt: customer.assignedAt,
+          hasRecipe: recipeId ? customersWithThisRecipe.has(customer.customerId) : false,
+          hasMealPlan: true, // They have a meal plan from the new assignments table
+        });
+      } else {
+        const existing = customerMap.get(customer.customerId);
+        existing.hasMealPlan = true;
+        if (customer.assignedAt && existing.firstAssignedAt && customer.assignedAt < existing.firstAssignedAt) {
+          existing.firstAssignedAt = customer.assignedAt;
+        }
+      }
+    });
+    
+    // Then add/update with customers who have assignments from old workflow
     [...customersWithMealPlans, ...customersWithRecipes].forEach(customer => {
       if (!customerMap.has(customer.customerId)) {
         customerMap.set(customer.customerId, {
