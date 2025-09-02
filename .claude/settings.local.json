@@ -21,7 +21,15 @@
       "Bash(docker tag:*)",
       "Bash(docker push:*)",
       "WebFetch(domain:evofitmeals.com)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(npm run test:coverage:full:*)",
+      "Bash(npm run test:unit:*)",
+      "Bash(npm run test:components:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(npm run migrate:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0014_optimize_customer_visibility_indexes.sql)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0014_optimize_customer_visibility_indexes_notx.sql)",
+      "Bash(npm audit:*)"
     ],
     "deny": [],
     "ask": [],

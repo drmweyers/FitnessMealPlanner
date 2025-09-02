@@ -32,7 +32,9 @@ customerRouter.get('/profile/stats', requireAuth, requireRole('customer'), async
       .where(eq(personalizedMealPlans.customerId, customerId));
 
     const totalPlanDays = mealPlans.reduce((sum, plan) => {
-      return sum + (plan.mealPlanData as any)?.days || 0;
+      // Type-safe access to meal plan data
+      const mealPlan = plan.mealPlanData as Record<string, any>;
+      return sum + (mealPlan?.days || 0);
     }, 0);
 
     // Mock completed days (in reality, this would track user progress)
@@ -41,7 +43,9 @@ customerRouter.get('/profile/stats', requireAuth, requireRole('customer'), async
     // Calculate average calories (mock calculation)
     const avgCaloriesPerDay = mealPlans.length > 0 
       ? Math.floor(mealPlans.reduce((sum, plan) => {
-          return sum + ((plan.mealPlanData as any)?.dailyCalorieTarget || 2000);
+          // Type-safe access to calorie target
+          const mealPlan = plan.mealPlanData as Record<string, any>;
+          return sum + (mealPlan?.dailyCalorieTarget || 2000);
         }, 0) / mealPlans.length)
       : 0;
 

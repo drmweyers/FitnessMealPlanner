@@ -9,6 +9,7 @@ import passport from './passport-config';
 import { requireAuth, requireAdmin, requireRole } from './middleware/auth';
 import { authRateLimiter, generalAuthRateLimiter, passwordResetRateLimiter } from './middleware/rateLimiter';
 import { AuditLogger } from './services/auditLogger';
+import { ExtendedSession } from './types/auth';
 
 const authRouter = Router();
 
@@ -524,7 +525,7 @@ authRouter.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login?error=oauth_failed' }),
   async (req: Request, res: Response) => {
     try {
-      const user = req.user as any;
+      const user = req.user;
       console.log('Google OAuth callback - user:', user);
       
       if (!user) {
@@ -589,7 +590,7 @@ authRouter.get('/google/:role', (req: Request, res: Response, next: NextFunction
   }
 
   // Store the intended role in session
-  (req.session as any).intendedRole = role;
+  (req.session as ExtendedSession).intendedRole = role;
   
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });

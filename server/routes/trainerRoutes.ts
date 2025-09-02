@@ -1,3 +1,18 @@
+/**
+ * @fileoverview Trainer Routes Module
+ * 
+ * This module provides API endpoints for trainer-specific functionality including
+ * profile statistics, customer management, meal plan assignments, and progress tracking.
+ * All routes require trainer authentication and role-based authorization.
+ * 
+ * @module trainerRoutes
+ * @requires express
+ * @requires drizzle-orm
+ * @requires ../middleware/auth
+ * @requires ../storage
+ * @requires ../db
+ */
+
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { storage } from '../storage';
@@ -15,7 +30,32 @@ import { z } from 'zod';
 
 const trainerRouter = Router();
 
-// Trainer profile statistics endpoint
+/**
+ * Get Trainer Profile Statistics
+ * 
+ * Retrieves comprehensive statistics for the authenticated trainer including:
+ * - Total number of unique clients
+ * - Number of meal plans created
+ * - Number of recipes assigned
+ * - Client activity metrics
+ * 
+ * @route GET /api/trainer/profile/stats
+ * @access Private (Trainer only)
+ * @returns {Object} Profile statistics object
+ * @returns {number} returns.totalClients - Total unique clients
+ * @returns {number} returns.mealPlansCreated - Total meal plans created
+ * @returns {number} returns.recipesAssigned - Total recipes assigned
+ * @returns {number} returns.activeClients - Clients with recent activity
+ * 
+ * @example
+ * // Response
+ * {
+ *   "totalClients": 15,
+ *   "mealPlansCreated": 45,
+ *   "recipesAssigned": 120,
+ *   "activeClients": 12
+ * }
+ */
 trainerRouter.get('/profile/stats', requireAuth, requireRole('trainer'), async (req, res) => {
   try {
     const trainerId = req.user!.id;
