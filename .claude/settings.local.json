@@ -16,7 +16,12 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(docker ps:*)",
-      "Bash(npm run seed:test-accounts:*)"
+      "Bash(npm run seed:test-accounts:*)",
+      "Bash(docker build:*)",
+      "Bash(docker tag:*)",
+      "Bash(docker push:*)",
+      "WebFetch(domain:evofitmeals.com)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": [],
