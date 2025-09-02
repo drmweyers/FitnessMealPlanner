@@ -78,6 +78,25 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
     const trainerId = req.user!.id;
     const { recipeId } = req.query;
     
+    // Import customerInvitations if not already imported
+    const { customerInvitations } = await import('@shared/schema');
+    
+    // Get customers who have accepted invitations from this trainer
+    const invitedCustomers = await db.select({
+      customerId: users.id,
+      customerEmail: users.email,
+      invitedAt: customerInvitations.createdAt,
+    })
+    .from(customerInvitations)
+    .innerJoin(users, eq(users.email, customerInvitations.customerEmail))
+    .where(
+      and(
+        eq(customerInvitations.trainerId, trainerId),
+        sql`${customerInvitations.usedAt} IS NOT NULL`,
+        eq(users.role, 'customer')
+      )
+    );
+    
     // Get unique customers who have meal plans or recipes assigned by this trainer
     const customersWithMealPlans = await db.select({
       customerId: personalizedMealPlans.customerId,
@@ -113,9 +132,22 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
       customersWithThisRecipe = new Set(recipeAssignments.map(a => a.customerId));
     }
     
-    // Combine and deduplicate customers
+    // Combine and deduplicate customers from all sources
     const customerMap = new Map();
     
+    // First add invited customers
+    invitedCustomers.forEach(customer => {
+      customerMap.set(customer.customerId, {
+        id: customer.customerId,
+        email: customer.customerEmail,
+        role: 'customer',
+        firstAssignedAt: customer.invitedAt,
+        hasRecipe: recipeId ? customersWithThisRecipe.has(customer.customerId) : false,
+        hasMealPlan: false, // Will be updated if they have meal plans
+      });
+    });
+    
+    // Then add/update with customers who have assignments
     [...customersWithMealPlans, ...customersWithRecipes].forEach(customer => {
       if (!customerMap.has(customer.customerId)) {
         customerMap.set(customer.customerId, {
@@ -124,11 +156,16 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
           role: 'customer',
           firstAssignedAt: customer.assignedAt,
           hasRecipe: recipeId ? customersWithThisRecipe.has(customer.customerId) : false,
+          hasMealPlan: customersWithMealPlans.some(c => c.customerId === customer.customerId),
         });
       } else {
         const existing = customerMap.get(customer.customerId);
         if (customer.assignedAt && existing.firstAssignedAt && customer.assignedAt < existing.firstAssignedAt) {
           existing.firstAssignedAt = customer.assignedAt;
+        }
+        // Update hasMealPlan flag if this customer has meal plans
+        if (customersWithMealPlans.some(c => c.customerId === customer.customerId)) {
+          existing.hasMealPlan = true;
         }
       }
     });
