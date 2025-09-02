@@ -52,7 +52,6 @@ export default function TrainerMealPlans() {
         throw new Error('Failed to fetch meal plans');
       }
       const data = await response.json();
-      console.log('Fetched meal plans data:', data); // Debug log
       return data;
     },
   });
@@ -119,7 +118,6 @@ export default function TrainerMealPlans() {
     },
   });
 
-  console.log('data from API:', data); // Debug log
   const mealPlans = data?.mealPlans || [];
   
   const filteredPlans = mealPlans.filter((plan: TrainerMealPlanWithAssignments) => {

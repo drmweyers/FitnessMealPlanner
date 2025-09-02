@@ -1,9 +1,0 @@
-Environment - NODE_ENV: false, REPLIT_ENVIRONMENT: false
-Database mode: Production
-Database SSL mode: Production - using standard SSL
-No NODE_EXTRA_CA_CERTS found, SSL is disabled for this connection.
-JWT_SECRET in use: your-jwt-secret-key
-[2m8:21:40 PM[22m [1m[36m[vite-express][39m[22m [32mRunning in [33mdevelopment[32m mode[39m
-✅ Database connection successful
-[2m8:21:41 PM[22m [1m[36m[vite-express][39m[22m [32mUsing [33mVite[32m to resolve the [33mconfig file[32m[39m
-Server is listening on port 3001...
