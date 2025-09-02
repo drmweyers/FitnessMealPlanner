@@ -157,6 +157,8 @@ export default function TrainerMealPlans() {
   const handleAssignToPlan = (plan: TrainerMealPlanWithAssignments) => {
     setPlanToAssign(plan);
     setSelectedCustomers([]);
+    // Close the meal plan modal when opening assignment modal
+    setSelectedPlan(null);
   };
 
   const handleCloseAssignmentModal = () => {
