@@ -29,7 +29,13 @@
       "Bash(npm run migrate:*)",
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0014_optimize_customer_visibility_indexes.sql)",
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0014_optimize_customer_visibility_indexes_notx.sql)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run seed:test-accounts)",
+      "Bash(docker run:*)",
+      "Bash(git log:*)",
+      "Bash(git pull:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" node server/scripts/seed-test-accounts.js)",
+      "Read(\\c\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner/**)"
     ],
     "deny": [],
     "ask": [],

@@ -2,12 +2,21 @@
 
 ## 🚀 Quick Deployment Commands
 
+### ⚠️ CRITICAL: Pre-Deployment Synchronization
+**ALWAYS synchronize with GitHub before building to prevent deploying outdated code!**
+
 ```bash
+# 0. MANDATORY: Synchronize with latest code from GitHub
+git status                         # Check current branch and uncommitted changes
+git checkout main                  # Ensure you're on the main branch
+git pull origin main               # Pull latest changes from GitHub
+git log --oneline -5              # Verify recent commits are present
+
 # 1. Login to DigitalOcean Container Registry
 doctl registry login
 
-# 2. Build production Docker image
-docker build --target prod -t fitnessmealplanner:prod .
+# 2. Build production Docker image (use --no-cache for clean build)
+docker build --target prod -t fitnessmealplanner:prod . --no-cache
 
 # 3. Tag for DigitalOcean registry
 docker tag fitnessmealplanner:prod registry.digitalocean.com/bci/fitnessmealplanner:prod
@@ -15,6 +24,13 @@ docker tag fitnessmealplanner:prod registry.digitalocean.com/bci/fitnessmealplan
 # 4. Push to registry (triggers auto-deploy)
 docker push registry.digitalocean.com/bci/fitnessmealplanner:prod
 ```
+
+### 🛑 Pre-Build Checklist
+- [ ] ✅ Verified on correct branch (`git branch`)
+- [ ] ✅ All local changes committed (`git status`)
+- [ ] ✅ Pulled latest from GitHub (`git pull origin main`)
+- [ ] ✅ Recent commits verified (`git log --oneline -5`)
+- [ ] ✅ Test features working in dev (`docker-compose --profile dev up -d`)
 
 ## 📋 Production App Details
 
@@ -112,6 +128,33 @@ doctl registry repository delete-tag bci/fitnessmealplanner <tag>
 
 ### Common Issues
 
+#### ⚠️ Production Missing Recent Features/Fixes
+**Symptom**: Features working in development are missing or broken in production
+**Root Cause**: Local repository was not synchronized with GitHub before building
+
+```bash
+# SOLUTION: Always sync before building
+git status                         # Check current state
+git checkout main                  # Switch to main branch  
+git pull origin main               # Pull ALL latest changes
+git log --oneline -10              # Verify expected commits are present
+
+# Look for specific commits that fixed the issue
+git log --grep="saved plans" --oneline
+git log --grep="blank page" --oneline
+
+# Rebuild with clean cache to ensure all changes included
+docker build --target prod -t fitnessmealplanner:prod . --no-cache
+
+# Continue with tagging and pushing...
+```
+
+**Prevention**: 
+- Always run `git pull origin main` before building
+- Verify specific commits are present with `git log`
+- Use `--no-cache` flag when building after fixes
+- Test the specific feature in dev before deploying
+
 #### Docker Push Fails with Network Errors
 ```bash
 # Solution 1: Retry after network stabilizes
@@ -152,13 +195,46 @@ doctl apps logs 600abc04-b784-426c-8799-0c09f8b9a958 --type run
 
 ## 🔄 Deployment Workflow
 
-1. **Code Changes**: Make changes to local codebase
-2. **Test Locally**: `npm run docker:dev` to test in Docker
-3. **Build**: `docker build --target prod -t fitnessmealplanner:prod .`
-4. **Tag**: `docker tag fitnessmealplanner:prod registry.digitalocean.com/bci/fitnessmealplanner:prod`
-5. **Push**: `docker push registry.digitalocean.com/bci/fitnessmealplanner:prod`
-6. **Auto-Deploy**: DigitalOcean automatically deploys the new image
-7. **Verify**: Check https://evofitmeals.com for successful deployment
+### ⚠️ IMPORTANT: Synchronization is Critical
+**Failure to sync with GitHub before building can result in deploying outdated code!**
+
+1. **Sync with GitHub** *(MANDATORY FIRST STEP)*:
+   ```bash
+   git status                    # Check for uncommitted changes
+   git checkout main             # Switch to main branch
+   git pull origin main          # Pull latest changes
+   git log --oneline -5          # Verify recent commits are present
+   ```
+
+2. **Test Locally**: 
+   ```bash
+   docker-compose --profile dev up -d
+   # Test the specific features you're deploying
+   # Verify everything works as expected
+   ```
+
+3. **Build Production Image**:
+   ```bash
+   # Use --no-cache for critical deployments to ensure fresh build
+   docker build --target prod -t fitnessmealplanner:prod . --no-cache
+   ```
+
+4. **Tag for Registry**:
+   ```bash
+   docker tag fitnessmealplanner:prod registry.digitalocean.com/bci/fitnessmealplanner:prod
+   ```
+
+5. **Push to Registry**:
+   ```bash
+   docker push registry.digitalocean.com/bci/fitnessmealplanner:prod
+   ```
+
+6. **Auto-Deploy**: DigitalOcean automatically deploys the new image (7-10 minutes)
+
+7. **Verify Deployment**:
+   - Check https://evofitmeals.com for successful deployment
+   - Test the specific features that were deployed
+   - Verify no functionality was lost
 
 ## 📝 Git Integration
 
@@ -186,5 +262,12 @@ The following MCP servers are configured for this project:
 
 ---
 
-**Last Updated**: August 5, 2025  
+**Last Updated**: September 2, 2025  
+**Critical Update**: Added mandatory GitHub synchronization steps to prevent deploying outdated code
 **Next Review**: Check when deployment process or credentials change
+
+### 📌 Key Lessons Learned
+- **Always sync with GitHub before building** - Local code can be outdated
+- **Verify specific commits are present** - Use `git log` to confirm fixes are included
+- **Use `--no-cache` for critical builds** - Ensures fresh build with all changes
+- **Test features in dev before deploying** - Catch issues before production
