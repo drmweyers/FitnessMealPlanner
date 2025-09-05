@@ -41,7 +41,12 @@
       "Bash(git merge:*)",
       "Bash(git stash:*)",
       "Bash(docker images:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitmeal\" node server/scripts/fix-missing-recipe-images.js status)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitmeal\" node server/scripts/fix-missing-recipe-images.js)",
+      "Bash(find:*)",
+      "Bash(for i in {1..10})",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": [],

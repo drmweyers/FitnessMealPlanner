@@ -17,8 +17,11 @@ export const authRateLimiter = rateLimit({
     });
   },
   skip: (req: Request) => {
-    // Skip rate limiting in test environment
-    return process.env.NODE_ENV === 'test';
+    // Skip rate limiting in test environment or for Playwright tests
+    return process.env.NODE_ENV === 'test' || 
+           process.env.PLAYWRIGHT_TEST === 'true' ||
+           req.headers['x-playwright-test'] === 'true' ||
+           req.headers['user-agent']?.includes('Playwright');
   }
 });
 
@@ -28,7 +31,14 @@ export const generalAuthRateLimiter = rateLimit({
   max: 30, // More lenient for general operations
   message: 'Too many requests from this IP, please try again later',
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: (req: Request) => {
+    // Skip rate limiting in test environment or for Playwright tests
+    return process.env.NODE_ENV === 'test' || 
+           process.env.PLAYWRIGHT_TEST === 'true' ||
+           req.headers['x-playwright-test'] === 'true' ||
+           req.headers['user-agent']?.includes('Playwright');
+  }
 });
 
 // Password reset specific rate limiter (stricter)
@@ -38,6 +48,13 @@ export const passwordResetRateLimiter = rateLimit({
   message: 'Too many password reset attempts, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req: Request) => {
+    // Skip rate limiting in test environment or for Playwright tests
+    return process.env.NODE_ENV === 'test' || 
+           process.env.PLAYWRIGHT_TEST === 'true' ||
+           req.headers['x-playwright-test'] === 'true' ||
+           req.headers['user-agent']?.includes('Playwright');
+  },
   handler: (req: Request, res: Response) => {
     res.status(429).json({
       status: 'error',

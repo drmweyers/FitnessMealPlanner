@@ -248,17 +248,17 @@ export default function Admin() {
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 sm:space-y-8">
         <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3">
-          <TabsTrigger value="recipes" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+          <TabsTrigger value="recipes" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-recipes">
             <i className="fas fa-utensils text-sm sm:text-base"></i>
             <span className="hidden sm:inline">Recipes</span>
             <span className="sm:hidden">Recipes</span>
           </TabsTrigger>
-          <TabsTrigger value="meal-plans" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+          <TabsTrigger value="meal-plans" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-meal-plans">
             <i className="fas fa-utensils text-sm sm:text-base"></i>
             <span className="hidden sm:inline">Meal Plan Generator</span>
             <span className="sm:hidden">Plans</span>
           </TabsTrigger>
-          <TabsTrigger value="admin" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+          <TabsTrigger value="admin" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-admin">
             <i className="fas fa-cog text-sm sm:text-base"></i>
             <span className="hidden sm:inline">Admin</span>
             <span className="sm:hidden">Admin</span>
@@ -545,6 +545,7 @@ export default function Admin() {
                 <Button 
                   className="w-full bg-primary hover:bg-primary/90" 
                   onClick={() => setShowRecipeGenerationModal(true)}
+                  data-testid="admin-generate-recipes"
                 >
                   <span className="flex items-center justify-center">
                     <i className="fas fa-magic mr-2"></i>
@@ -567,6 +568,7 @@ export default function Admin() {
                   variant="outline" 
                   className="w-full border-secondary text-secondary hover:bg-secondary hover:text-white"
                   onClick={handleViewPendingClick}
+                  data-testid="admin-view-pending"
                 >
                   <span className="flex items-center justify-center">
                     <i className="fas fa-list mr-2"></i>
@@ -589,6 +591,7 @@ export default function Admin() {
                   variant="outline" 
                   className="w-full border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
                   onClick={() => setShowExportModal(true)}
+                  data-testid="admin-export-data"
                 >
                   <span className="flex items-center justify-center">
                     <i className="fas fa-database mr-2"></i>

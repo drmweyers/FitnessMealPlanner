@@ -45,10 +45,8 @@ const MobileNavigation: React.FC = () => {
     switch (user.role) {
       case 'admin':
         return [
-          ...baseItems,
-          { path: '/admin', label: 'Dashboard', icon: BarChart3 },
-          { path: '/admin/users', label: 'Users', icon: Users },
-          { path: '/admin/analytics', label: 'Analytics', icon: FileText },
+          { path: '/admin', label: 'Dashboard', icon: Home },
+          { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
         ];
       
       case 'trainer':
@@ -113,6 +111,7 @@ const MobileNavigation: React.FC = () => {
             onClick={() => setIsSideMenuOpen(true)}
             className="p-2 -ml-2 touch-feedback touch-target"
             aria-label="Open menu"
+            data-testid="mobile-header-menu"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -147,6 +146,7 @@ const MobileNavigation: React.FC = () => {
               className={`mobile-nav-item ${isActive ? 'active' : ''}`}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
+              data-testid={`mobile-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
             >
               <Icon className="w-6 h-6" />
               <span className="text-xs mt-1">{item.label}</span>
@@ -158,6 +158,7 @@ const MobileNavigation: React.FC = () => {
           onClick={() => setIsSideMenuOpen(true)}
           className="mobile-nav-item"
           aria-label="More options"
+          data-testid="mobile-nav-more"
         >
           <Menu className="w-6 h-6" />
           <span className="text-xs mt-1">More</span>
@@ -223,6 +224,7 @@ const MobileNavigation: React.FC = () => {
                         ? 'bg-blue-50 text-blue-600' 
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
+                    data-testid={`side-menu-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                   >
                     <div className="flex items-center space-x-3">
                       <Icon className="w-5 h-5" />
