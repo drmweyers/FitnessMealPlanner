@@ -49,7 +49,7 @@ function recordLoginAttempt(email: string) {
   loginAttempts.set(email, attempts);
 }
 
-authRouter.post('/register', async (req: Request, res: Response) => {
+authRouter.post('/register', generalAuthRateLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password, role } = registerSchema.parse(req.body);
 
@@ -248,7 +248,7 @@ authRouter.post('/login', authRateLimiter, async (req: Request, res: Response) =
   }
 });
 
-authRouter.post('/refresh_token', async (req: Request, res: Response) => {
+authRouter.post('/refresh_token', generalAuthRateLimiter, async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
   if (!refreshToken) {
     return res.status(401).json({ status: 'error', message: 'Refresh token not found', code: 'NO_REFRESH_TOKEN' });
