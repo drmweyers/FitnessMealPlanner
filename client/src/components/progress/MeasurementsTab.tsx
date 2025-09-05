@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import {
   Dialog,
   DialogContent,
@@ -60,12 +61,7 @@ const MeasurementsTab: React.FC = () => {
   const { data: measurements, isLoading } = useQuery({
     queryKey: ['measurements'],
     queryFn: async () => {
-      const response = await fetch('/api/progress/measurements', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch measurements');
+      const response = await apiRequest('GET', '/api/progress/measurements');
       const result = await response.json();
       return result.data as Measurement[];
     },
@@ -74,18 +70,14 @@ const MeasurementsTab: React.FC = () => {
   // Create measurement mutation
   const createMutation = useMutation({
     mutationFn: async (data: Partial<Measurement>) => {
-      const response = await fetch('/api/progress/measurements', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
+      const response = await apiRequest(
+        'POST',
+        '/api/progress/measurements',
+        {
           ...data,
-          measurementDate: new Date(data.measurementDate!).toISOString(),
-        }),
-      });
-      if (!response.ok) throw new Error('Failed to create measurement');
+          measurementDate: data.measurementDate ? new Date(data.measurementDate).toISOString() : new Date().toISOString(),
+        }
+      );
       return response.json();
     },
     onSuccess: () => {
@@ -109,18 +101,14 @@ const MeasurementsTab: React.FC = () => {
   // Update measurement mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Measurement> }) => {
-      const response = await fetch(`/api/progress/measurements/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
+      const response = await apiRequest(
+        'PUT',
+        `/api/progress/measurements/${id}`,
+        {
           ...data,
-          measurementDate: new Date(data.measurementDate!).toISOString(),
-        }),
-      });
-      if (!response.ok) throw new Error('Failed to update measurement');
+          measurementDate: data.measurementDate ? new Date(data.measurementDate).toISOString() : new Date().toISOString(),
+        }
+      );
       return response.json();
     },
     onSuccess: () => {
@@ -143,13 +131,10 @@ const MeasurementsTab: React.FC = () => {
   // Delete measurement mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/progress/measurements/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to delete measurement');
+      const response = await apiRequest(
+        'DELETE',
+        `/api/progress/measurements/${id}`
+      );
       return response.json();
     },
     onSuccess: () => {
@@ -396,7 +381,10 @@ const MeasurementsTab: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Latest Measurement - {format(new Date(latestMeasurement.measurementDate), 'MMM d, yyyy')}
+              Latest Measurement - {(() => {
+                const date = latestMeasurement.measurementDate ? new Date(latestMeasurement.measurementDate) : null;
+                return date && isValid(date) ? format(date, 'MMM d, yyyy') : 'Invalid Date';
+              })()}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -439,28 +427,39 @@ const MeasurementsTab: React.FC = () => {
           {isLoading ? (
             <p>Loading measurements...</p>
           ) : measurements && measurements.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Weight</TableHead>
-                    <TableHead>Body Fat %</TableHead>
-                    <TableHead>Waist</TableHead>
-                    <TableHead>Chest</TableHead>
-                    <TableHead>Actions</TableHead>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <div className="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                  <Table className="min-w-[600px] sm:min-w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs sm:text-sm">Date</TableHead>
+                        <TableHead className="text-xs sm:text-sm">Weight</TableHead>
+                        <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Body Fat %</TableHead>
+                        <TableHead className="text-xs sm:text-sm hidden md:table-cell">Waist</TableHead>
+                        <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Chest</TableHead>
+                        <TableHead className="text-xs sm:text-sm">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {measurements.map((measurement) => (
                     <TableRow key={measurement.id}>
-                      <TableCell>
-                        {format(new Date(measurement.measurementDate), 'MMM d, yyyy')}
+                      <TableCell className="text-xs sm:text-sm font-medium">
+                        {(() => {
+                          const date = measurement.measurementDate ? new Date(measurement.measurementDate) : null;
+                          if (!date || !isValid(date)) return '-';
+                          return (
+                            <>
+                              <span className="hidden sm:inline">{format(date, 'MMM d, yyyy')}</span>
+                              <span className="sm:hidden">{format(date, 'M/d/yy')}</span>
+                            </>
+                          );
+                        })()}
                       </TableCell>
-                      <TableCell>{measurement.weightLbs || '-'} lbs</TableCell>
-                      <TableCell>{measurement.bodyFatPercentage || '-'}%</TableCell>
-                      <TableCell>{measurement.waistCm || '-'} cm</TableCell>
-                      <TableCell>{measurement.chestCm || '-'} cm</TableCell>
+                      <TableCell className="text-xs sm:text-sm">{measurement.weightLbs || '-'} lbs</TableCell>
+                      <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{measurement.bodyFatPercentage || '-'}%</TableCell>
+                      <TableCell className="text-xs sm:text-sm hidden md:table-cell">{measurement.waistCm || '-'} cm</TableCell>
+                      <TableCell className="text-xs sm:text-sm hidden lg:table-cell">{measurement.chestCm || '-'} cm</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <Button
@@ -475,7 +474,9 @@ const MeasurementsTab: React.FC = () => {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+                  </Table>
+                </div>
+              </div>
             </div>
           ) : (
             <p className="text-gray-500 text-center py-8">

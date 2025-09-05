@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
@@ -44,8 +44,8 @@ export default function TrainerMealPlans() {
   const [planToAssign, setPlanToAssign] = useState<TrainerMealPlanWithAssignments | null>(null);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/trainer/meal-plans'],
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['trainer-meal-plans', user?.id],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/trainer/meal-plans');
       if (!response.ok) {
@@ -54,10 +54,21 @@ export default function TrainerMealPlans() {
       const data = await response.json();
       return data;
     },
+    enabled: !!user?.id,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
+  // Force refetch when component mounts or user changes
+  useEffect(() => {
+    if (user?.id) {
+      refetch();
+    }
+  }, [user?.id, refetch]);
+
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
-    queryKey: ['trainerCustomers'],
+    queryKey: ['trainerCustomersForAssignment'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/trainer/customers');
       if (!response.ok) throw new Error('Failed to fetch customers');
@@ -77,7 +88,7 @@ export default function TrainerMealPlans() {
         title: 'Meal Plan Deleted',
         description: 'The meal plan has been removed from your library.',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/trainer/meal-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans'] });
       setPlanToDelete(null);
     },
     onError: (error: Error) => {
@@ -102,8 +113,9 @@ export default function TrainerMealPlans() {
         title: 'Meal Plan Assigned',
         description: 'The meal plan has been successfully assigned to the customer.',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/trainer/meal-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['trainerCustomers'] });
+      queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['trainerCustomersForAssignment'] });
+      queryClient.invalidateQueries({ queryKey: ['trainerCustomers'] }); // Keep for CustomerManagement
       // Invalidate the specific customer's meal plans cache
       queryClient.invalidateQueries({ queryKey: ['customerMealPlans', variables.customerId] });
       // Close the modal and reset state

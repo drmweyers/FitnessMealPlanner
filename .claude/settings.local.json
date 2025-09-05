@@ -39,7 +39,9 @@
       "Bash(npx playwright install:*)",
       "Bash(grep:*)",
       "Bash(git merge:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(docker images:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": [],

@@ -137,12 +137,14 @@ export default function TrainerProfile() {
 
   // Fetch trainer customers for PDF export
   const { data: customers } = useQuery({
-    queryKey: ['trainerCustomers'],
+    queryKey: ['trainerProfileCustomers', user?.id],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/trainer/customers');
       return res.json();
     },
-    enabled: !!user
+    enabled: !!user,
+    refetchOnMount: false,
+    staleTime: 30000, // Cache for 30 seconds to avoid conflicts
   });
 
   // Fetch all customer meal plans for PDF export
