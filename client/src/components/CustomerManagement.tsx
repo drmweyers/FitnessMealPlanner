@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -86,6 +86,7 @@ function MealPlanAssignmentDialog({ customerId, customerEmail, onSuccess }: Meal
       setIsOpen(false);
       setSelectedMealPlan(null);
       queryClient.invalidateQueries({ queryKey: ['trainerCustomers'] });
+      queryClient.invalidateQueries({ queryKey: ['trainerCustomersForAssignment'] }); // Keep TrainerMealPlans updated
       queryClient.invalidateQueries({ queryKey: ['customerMealPlans', customerId] });
       onSuccess();
     },
@@ -215,6 +216,7 @@ function CustomerMealPlans({ customerId, customerEmail }: { customerId: string; 
       });
       queryClient.invalidateQueries({ queryKey: ['customerMealPlans', customerId] });
       queryClient.invalidateQueries({ queryKey: ['trainerCustomers'] });
+      queryClient.invalidateQueries({ queryKey: ['trainerCustomersForAssignment'] }); // Keep TrainerMealPlans updated
     },
     onError: (error: any) => {
       toast({
@@ -329,13 +331,22 @@ export default function CustomerManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-  const { data: customersData, isLoading, error } = useQuery<{ customers: Customer[]; total: number }>({
+  const { data: customersData, isLoading, error, refetch } = useQuery<{ customers: Customer[]; total: number }>({
     queryKey: ['trainerCustomers'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/trainer/customers');
+      if (!res.ok) throw new Error('Failed to fetch customers');
       return res.json();
-    }
+    },
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
+
+  // Force refetch when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const customers = customersData?.customers || [];
   const filteredCustomers = customers.filter(customer => 

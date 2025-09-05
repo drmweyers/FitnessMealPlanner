@@ -37,7 +37,9 @@
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" node server/scripts/seed-test-accounts.js)",
       "Read(\\c\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner/**)",
       "Bash(npx playwright install:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(docker images:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": [],
