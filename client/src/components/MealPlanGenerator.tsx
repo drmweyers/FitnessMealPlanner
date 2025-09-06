@@ -1976,7 +1976,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                 {(user?.role === 'trainer' || user?.role === 'admin') && (
                   <>
                     <Button
-                      onClick={() => saveMealPlan.mutate({})}
+                      onClick={() => saveMealPlan.mutate({ notes: "Saved from meal plan generator", tags: [] })}
                       variant="outline"
                       size="sm"
                       disabled={saveMealPlan.isPending}

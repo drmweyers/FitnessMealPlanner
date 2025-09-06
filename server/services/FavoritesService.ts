@@ -6,7 +6,7 @@
  */
 
 import { db } from '../db.js';
-import { RedisService } from './RedisService.js';
+import { getRedisService } from './RedisService.js';
 import { eq, and, count, desc, sql } from 'drizzle-orm';
 import {
   recipeFavorites,
@@ -52,8 +52,11 @@ export class FavoritesService {
   private readonly MAX_COLLECTIONS_PER_USER = 50;
   private readonly RATE_LIMIT_WINDOW = 60; // 1 minute
   private readonly RATE_LIMIT_MAX_ACTIONS = 100;
+  private readonly redisService;
 
-  constructor() {}
+  constructor() {
+    this.redisService = getRedisService();
+  }
 
   /**
    * Add a recipe to user's favorites
@@ -302,7 +305,7 @@ export class FavoritesService {
       const cacheKey = `favorite:${userId}:${recipeId}`;
       
       // Check cache first
-      const cached = await RedisService.get(cacheKey);
+      const cached = await this.redisService.get(cacheKey);
       if (cached !== null) {
         return cached === 'true';
       }
@@ -318,7 +321,7 @@ export class FavoritesService {
       const isFavorited = favorite.length > 0;
 
       // Cache the result
-      await RedisService.set(cacheKey, isFavorited ? 'true' : 'false', this.CACHE_TTL);
+      await this.redisService.set(cacheKey, isFavorited ? 'true' : 'false', this.CACHE_TTL);
 
       return isFavorited;
     } catch (error) {
@@ -562,10 +565,10 @@ export class FavoritesService {
   private async checkRateLimit(userId: string): Promise<boolean> {
     try {
       const key = `rate_limit:favorites:${userId}`;
-      const current = await RedisService.get(key);
+      const current = await this.redisService.get(key);
       
       if (current === null) {
-        await RedisService.set(key, '1', this.RATE_LIMIT_WINDOW);
+        await this.redisService.set(key, '1', this.RATE_LIMIT_WINDOW);
         return true;
       }
 
@@ -574,7 +577,7 @@ export class FavoritesService {
         return false;
       }
 
-      await RedisService.set(key, (count + 1).toString(), this.RATE_LIMIT_WINDOW);
+      await this.redisService.set(key, (count + 1).toString(), this.RATE_LIMIT_WINDOW);
       return true;
     } catch (error) {
       console.error('Error checking rate limit:', error);
@@ -589,7 +592,7 @@ export class FavoritesService {
   ): Promise<PaginatedFavorites | null> {
     try {
       const cacheKey = `favorites:${userId}:page:${page}:limit:${limit}`;
-      const cached = await RedisService.get(cacheKey);
+      const cached = await this.redisService.get(cacheKey);
       
       if (cached) {
         return JSON.parse(cached);
@@ -610,7 +613,7 @@ export class FavoritesService {
   ): Promise<void> {
     try {
       const cacheKey = `favorites:${userId}:page:${page}:limit:${limit}`;
-      await RedisService.set(cacheKey, JSON.stringify(data), this.CACHE_TTL);
+      await this.redisService.set(cacheKey, JSON.stringify(data), this.CACHE_TTL);
     } catch (error) {
       console.error('Error setting cached favorites:', error);
     }
@@ -618,8 +621,8 @@ export class FavoritesService {
 
   private async invalidateUserFavoritesCache(userId: string): Promise<void> {
     try {
-      await RedisService.invalidatePattern(`favorites:${userId}:*`);
-      await RedisService.invalidatePattern(`favorite:${userId}:*`);
+      await this.redisService.invalidatePattern(`favorites:${userId}:*`);
+      await this.redisService.invalidatePattern(`favorite:${userId}:*`);
     } catch (error) {
       console.error('Error invalidating favorites cache:', error);
     }
@@ -627,7 +630,7 @@ export class FavoritesService {
 
   private async invalidateUserCollectionsCache(userId: string): Promise<void> {
     try {
-      await RedisService.invalidatePattern(`collections:${userId}:*`);
+      await this.redisService.invalidatePattern(`collections:${userId}:*`);
     } catch (error) {
       console.error('Error invalidating collections cache:', error);
     }
@@ -635,7 +638,7 @@ export class FavoritesService {
 
   private async invalidateCollectionCache(collectionId: string): Promise<void> {
     try {
-      await RedisService.invalidatePattern(`collection:${collectionId}:*`);
+      await this.redisService.invalidatePattern(`collection:${collectionId}:*`);
     } catch (error) {
       console.error('Error invalidating collection cache:', error);
     }

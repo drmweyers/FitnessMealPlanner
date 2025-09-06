@@ -19,6 +19,7 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import RecipeGenerationProgress from "./RecipeGenerationProgress";
+import { useLocation } from "wouter";
 
 interface RecipeGenerationModalProps {
   isOpen: boolean;
@@ -49,6 +50,7 @@ export default function RecipeGenerationModal({
 }: RecipeGenerationModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [recipeCount, setRecipeCount] = useState(10);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -88,8 +90,10 @@ export default function RecipeGenerationModal({
       onClose();
     }, 1500);
     
+    // Refresh handled by queryClient invalidation - no need for full page reload
     setTimeout(() => {
-      window.location.reload();
+      // Optional: Could redirect to admin recipes tab to show new recipes
+      // setLocation("/admin");
     }, 3000);
   };
 
@@ -132,9 +136,9 @@ export default function RecipeGenerationModal({
         });
         // Clear expired tokens
         localStorage.removeItem('token');
-        // Redirect to login
+        // Redirect to login using React Router
         setTimeout(() => {
-          window.location.href = "/login";
+          setLocation("/login");
         }, 1000);
         return;
       }
@@ -189,7 +193,7 @@ export default function RecipeGenerationModal({
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/login";
+        setLocation("/login");
       }, 1000);
       return false;
     }

@@ -797,7 +797,7 @@ export default function AdminRecipeGenerator() {
                 <div className="space-y-2">
                   {statusSteps.map((step, index) => (
                     <div 
-                      key={index} 
+                      key={`step-${index}-${step.text}`} 
                       className={`flex items-center gap-2 text-sm ${
                         step.completed ? 'text-blue-700' : 'text-slate-500'
                       }`}
