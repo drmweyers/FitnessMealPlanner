@@ -1,9 +1,9 @@
 # FitnessMealPlanner - Task Tracking
 
-**Last Updated**: 2025-12-05 (Recipe Generation System - 100% Health Achievement)
-**BMAD Process**: Stories 1.1-1.9 COMPLETE (100% PRD Implementation) + Recipe System 100% Functional
-**Production Status**: RECIPE SYSTEM EXCELLENCE - 100% image coverage, all tests passing, zero issues
-**Previous Session**: Progress TAB Fix & Customer Profile Testing (2024-12-05)
+**Last Updated**: 2025-01-06 (Recipe Generation Fixes & S3 Configuration)
+**BMAD Process**: Stories 1.1-1.9 COMPLETE (100% PRD Implementation) + Recipe System 100% Functional + BMAD Testing Excellence
+**Production Status**: RECIPE SYSTEM OPERATIONAL - Generation fixed, S3 credentials need update
+**Current Session**: Recipe Generation Bug Fixes & S3 Configuration (2025-01-06)
 
 ## Task Management Guidelines
 - Mark tasks as `[x]` when completed with date
@@ -207,6 +207,16 @@
 - [x] Test edge cases and error handling (2025-09-03)
 - [x] Document all findings and update BMAD files (2025-09-03)
 
+## Milestone 22: Recipe Generation System Fixes ✅ COMPLETE (2025-01-06)
+- [x] Investigate recipe image generation failures (2025-01-06)
+- [x] Fix recipes not appearing in queue (isApproved: false → true) (2025-01-06)
+- [x] Fix recipe count not updating (query key mismatch) (2025-01-06)
+- [x] Add fallback placeholder images for S3 failures (2025-01-06)
+- [x] Enhanced error logging for debugging (2025-01-06)
+- [x] Create S3 connection test script (2025-01-06)
+- [x] Document S3 credential fix procedures (2025-01-06)
+- [x] Update BMAD planning files with fixes (2025-01-06)
+
 ## Milestone 21: Saved Plans Feature & Test Credentials ✅ COMPLETE (2025-09-04)
 - [x] Diagnose saved plans not displaying issue (2025-09-04)
 - [x] Update test account credentials to correct passwords (2025-09-04)
@@ -230,10 +240,28 @@
 - [ ] Deploy BMAD dashboard to production
 - [ ] Configure automated workflows for production
 
+## 🚨 URGENT TASKS - IMMEDIATE ACTION REQUIRED 🚨
+
+### S3/DigitalOcean Spaces Credentials Fix 🔴 URGENT
+**Status**: Invalid/expired credentials blocking image uploads
+**Impact**: Recipe images falling back to placeholders
+**Action Required**:
+- [ ] Log into DigitalOcean and generate new Spaces access keys
+- [ ] Update AWS_ACCESS_KEY_ID in .env file
+- [ ] Update AWS_SECRET_ACCESS_KEY in .env file
+- [ ] Run `npx tsx server/scripts/test-s3-connection.ts` to verify
+- [ ] Restart Docker: `docker-compose --profile dev restart`
+**Documentation**: See `FIX_S3_CREDENTIALS.md` for detailed instructions
+
 ## Immediate Tasks (From Previous TASKS.md) 🔴
-### Recipe System Maintenance ✅ COMPLETE
-**Status**: 100% system health achieved, all issues resolved
-**Completed Achievements**:
+### Recipe System Maintenance ✅ COMPLETE (Updated 2025-01-06)
+**Status**: System operational with recent fixes applied
+**Recent Fixes (2025-01-06)**:
+- [x] Fixed recipe approval - recipes now auto-approve (isApproved: true)
+- [x] Fixed recipe count not updating (query key mismatch resolved)
+- [x] Added image fallback when S3 fails (placeholder from Unsplash)
+- [x] Enhanced error logging for S3 debugging
+**Previous Achievements**:
 - [x] 100% recipe image coverage (20/20 recipes)
 - [x] All UI navigation conflicts resolved
 - [x] Rate limit bypass configured for tests

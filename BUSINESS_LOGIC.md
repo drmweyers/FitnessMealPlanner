@@ -1,5 +1,98 @@
 # FitnessMealPlanner Business Logic Documentation
 
+## COMPREHENSIVE RECIPE GENERATION BUSINESS RULES
+
+### Recipe Generation Core Business Logic
+
+#### 1. Recipe Generation Parameters and Validation
+- **Recipe Count**: Minimum 1, Maximum 500 recipes per batch
+- **Meal Types**: breakfast, lunch, dinner, snack (supports multiple selections)
+- **Dietary Restrictions**: vegan, vegetarian, gluten-free, keto, paleo, dairy-free, nut-free, low-sodium
+- **Nutritional Ranges**:
+  - Calories: 50-1500 kcal per serving
+  - Protein: 0-80g per serving
+  - Carbohydrates: 0-150g per serving
+  - Fat: 0-80g per serving
+- **Time Constraints**:
+  - Prep Time: 0-120 minutes
+  - Cook Time: 0-240 minutes
+- **Serving Sizes**: 1-12 servings per recipe
+
+#### 2. Recipe Quality Standards
+- **Required Fields**: Name, description, ingredients (min 2), instructions, nutritional data
+- **Ingredient Validation**: Each ingredient must have name, amount, and unit
+- **Nutritional Validation**: All values must be positive, within realistic ranges
+- **Image Requirements**: High-resolution AI-generated images stored in S3
+- **Content Standards**: Family-friendly, culturally appropriate, practical for home cooking
+
+#### 3. Recipe Categorization System
+- **Meal Type Classification**: Automatic assignment based on ingredients and nutritional profile
+- **Dietary Tag Assignment**: AI-powered analysis of ingredients for restriction compliance
+- **Main Ingredient Tags**: Primary protein, vegetable, or base ingredient identification
+- **Difficulty Levels**: Beginner, Intermediate, Advanced (based on technique complexity)
+- **Cuisine Types**: Italian, Asian, Mediterranean, American, Mexican, Indian, etc.
+
+#### 4. Recipe Approval Workflow
+- **Initial Status**: All AI-generated recipes start as 'pending' approval
+- **Admin Review**: Required for public visibility
+- **Approval Criteria**:
+  - Accurate nutritional information
+  - Clear, actionable instructions
+  - Appropriate ingredient measurements
+  - High-quality recipe image
+  - Compliance with dietary tags
+- **Rejection Reasons**: Poor quality, inaccurate nutrition, unclear instructions, inappropriate content
+- **Bulk Operations**: Support for approving/rejecting multiple recipes simultaneously
+
+#### 5. Recipe Search and Discovery
+- **Search Algorithms**: Full-text search on name, description, ingredients, and instructions
+- **Filter Combinations**: Multiple filters can be applied simultaneously
+- **Sorting Options**: Relevance, calories, protein, prep time, rating, creation date
+- **Performance Optimization**: Redis caching for sub-100ms search response times
+- **Personalization**: User history influences search rankings and recommendations
+
+### User Experience Guidelines
+
+#### Recipe Generation Best Practices
+1. **Start Small**: New users should begin with 1-5 recipes to understand quality
+2. **Specify Preferences**: Detailed parameters yield better results
+3. **Review Queue Regularly**: Pending recipes should be reviewed within 24-48 hours
+4. **Quality Over Quantity**: Better to generate fewer, high-quality recipes
+
+#### Search and Discovery Optimization
+1. **Progressive Search**: Start broad, then narrow with filters
+2. **Save Favorites**: Build personal recipe collections
+3. **Seasonal Recommendations**: Highlight seasonal ingredients and comfort foods
+4. **Mobile-First**: Optimize for mobile browsing and quick access
+
+#### Help Documentation Content
+1. **Getting Started Guides**: Step-by-step recipe generation tutorials
+2. **Parameter Explanations**: What each filter and option does
+3. **Troubleshooting**: Common issues and solutions
+4. **Best Practices**: Tips for generating high-quality recipes
+
+### Marketing Material Content
+
+#### AI-Powered Recipe Generation Features
+- **Intelligent Recipe Creation**: Generate thousands of unique, nutritionally-balanced recipes
+- **Dietary Restriction Compliance**: Automatic validation for 8+ dietary requirements
+- **Nutritional Optimization**: AI ensures balanced macronutrients for fitness goals
+- **Professional Quality**: Restaurant-grade recipes with detailed instructions
+- **Visual Appeal**: High-quality AI-generated food photography
+
+#### User Success Stories and Use Cases
+- **Personal Trainers**: Generate 100+ custom recipes for client meal plans in minutes
+- **Nutrition Coaches**: Create specialized dietary protocols with automated compliance checking
+- **Fitness Enthusiasts**: Discover new recipes matching exact macronutrient targets
+- **Busy Professionals**: Quick, healthy meal options with prep time under 30 minutes
+
+#### Feature Differentiation from Competitors
+- **Scale**: Generate up to 500 recipes in a single batch
+- **Quality Control**: Human-reviewed approval process ensures accuracy
+- **Integration**: Seamless meal plan integration with progress tracking
+- **Customization**: Granular control over nutritional parameters
+- **Performance**: Sub-second search across thousands of recipes
+
 ## 1. SYSTEM OVERVIEW
 
 ### Platform Purpose

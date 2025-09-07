@@ -30,9 +30,16 @@ async function runMigration() {
   try {
     console.log(`🚀 Running migration: ${migrationFile}`);
     
-    // Read the SQL file
-    const sqlPath = join(process.cwd(), 'scripts', migrationFile);
-    const sql = readFileSync(sqlPath, 'utf-8');
+    // Read the SQL file - first try migrations directory, then scripts
+    let sqlPath = join(process.cwd(), 'migrations', migrationFile);
+    let sql: string;
+    try {
+      sql = readFileSync(sqlPath, 'utf-8');
+    } catch (err) {
+      // Fallback to scripts directory
+      sqlPath = join(process.cwd(), 'scripts', migrationFile);
+      sql = readFileSync(sqlPath, 'utf-8');
+    }
     
     // Connect to database
     client = await pool.connect();

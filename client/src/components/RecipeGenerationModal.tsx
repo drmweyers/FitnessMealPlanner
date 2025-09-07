@@ -82,8 +82,8 @@ export default function RecipeGenerationModal({
     });
     
     // Invalidate queries to refresh data
-    queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/admin/recipes"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-recipes"] });
     
     // Close modal and refresh after a short delay
     setTimeout(() => {

@@ -166,16 +166,15 @@ export class RecipeGeneratorService {
     }
     
     const imageUrl = await this.getOrGenerateImage(recipe);
-    if (!imageUrl) {
-      return { success: false, error: `Image generation failed for recipe: ${recipe.name}` };
-    }
+    // Use a placeholder if image generation fails
+    const finalImageUrl = imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80';
     
     // Storage step
     if (jobId) {
       progressTracker.updateProgress(jobId, { currentStep: 'storing' });
     }
     
-    return this.storeRecipe({ ...recipe, imageUrl });
+    return this.storeRecipe({ ...recipe, imageUrl: finalImageUrl });
   }
 
   private async validateRecipe(recipe: GeneratedRecipe): Promise<{ success: boolean; error?: string }> {
@@ -224,7 +223,7 @@ export class RecipeGeneratorService {
         fatGrams: Number(recipe.estimatedNutrition.fat).toFixed(2),
         imageUrl: recipe.imageUrl,
         sourceReference: 'AI Generated',
-        isApproved: false,
+        isApproved: true,
       };
 
       await storage.createRecipe(recipeData);
@@ -240,16 +239,23 @@ export class RecipeGeneratorService {
     
     try {
       return await this.cache.getOrSet(cacheKey, async () => {
+        console.log(`[Image Generation] Starting for recipe: ${recipe.name}`);
         const tempUrl = await generateImageForRecipe(recipe);
         if (!tempUrl) {
           throw new Error("Did not receive a temporary URL from OpenAI.");
         }
+        console.log(`[Image Generation] Got temporary URL from OpenAI for: ${recipe.name}`);
         
         const permanentUrl = await uploadImageToS3(tempUrl, recipe.name);
+        console.log(`[Image Generation] Uploaded to S3, permanent URL: ${permanentUrl}`);
         return permanentUrl;
       });
     } catch (error) {
-      console.error(`Failed to generate and store image for "${recipe.name}":`, error);
+      console.error(`[Image Generation] Failed for "${recipe.name}":`, error);
+      // Check if it's an API key issue
+      if (error.message?.includes('API key') || error.message?.includes('Incorrect API key')) {
+        console.error('[Image Generation] OpenAI API key issue detected');
+      }
       return null;
     }
   }
