@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { apiRequest } from '../lib/queryClient';
-import ProfileImageUpload from '../components/ProfileImageUpload';
+// MealPlanRating component removed - feature deleted
 import { 
   User, 
   Heart, 
@@ -48,7 +48,6 @@ interface CustomerProfile {
   height?: number;
   age?: number;
   bio?: string;
-  profilePicture?: string | null;
 }
 
 const activityLevels = [
@@ -79,6 +78,7 @@ export default function CustomerProfile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  // Rating dialog state removed - feature deleted
   const [editForm, setEditForm] = useState({
     email: user?.email || '',
     bio: '',
@@ -291,41 +291,6 @@ export default function CustomerProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {/* Profile Information */}
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          {/* Profile Image Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
-                <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span>Profile Image</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center space-x-6 p-4 sm:p-6">
-              <ProfileImageUpload
-                currentImageUrl={profile?.profilePicture}
-                userEmail={user?.email || ''}
-                size="xl"
-                onImageUpdate={(newImageUrl) => {
-                  // Update profile data optimistically
-                  if (profile) {
-                    queryClient.setQueryData(['customerProfile', 'details'], {
-                      ...profile,
-                      profilePicture: newImageUrl
-                    });
-                  }
-                }}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-slate-600 mb-2">
-                  Upload a profile image that will be displayed in your header and profile.
-                </p>
-                <p className="text-xs text-slate-500">
-                  Recommended: Square image, at least 200x200px. Max file size: 5MB.
-                  Supported formats: JPEG, PNG, WebP.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Personal Details Card */}
           <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 pb-4">
@@ -759,49 +724,6 @@ export default function CustomerProfile() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader className="pb-3 sm:pb-4">
-              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
-                <Target className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                <span>Quick Actions</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6">
-              <Button
-                variant="outline"
-                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
-                onClick={() => {
-                  window.location.href = '/customer?tab=progress';
-                }}
-              >
-                <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">View Progress</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
-                onClick={() => {
-                  toast({
-                    title: "Meal Plan Feedback",
-                    description: "Meal plan feedback feature would be implemented here.",
-                  });
-                }}
-              >
-                <Heart className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">Rate Meal Plans</span>
-              </Button>
-              <Button
-                variant="destructive"
-                className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
-                onClick={logout}
-              >
-                <User className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">Sign Out</span>
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* Session Info */}
           {profile && (
             <Card>
@@ -831,6 +753,8 @@ export default function CustomerProfile() {
           )}
         </div>
       </div>
+        
+        {/* Meal Plan Rating Dialog removed - feature deleted */}
     </div>
   );
 }

@@ -1,18 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Button } from "./ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Separator } from "./ui/separator";
 import { apiRequest } from "../lib/queryClient";
 import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";
-import { useAuth } from "../contexts/AuthContext";
-import RatingDisplay from "./ratings/RatingDisplay";
-import RecipeReviewForm from "./ratings/RecipeReviewForm";
-import RecipeReviewsList from "./ratings/RecipeReviewsList";
-import { Star, MessageSquare } from "lucide-react";
-import type { Recipe, RecipeRatingSummary, RecipeRating } from "@shared/schema";
+import type { Recipe } from "@shared/schema";
 
 interface RecipeDetailModalProps {
   recipeId: string | null;
@@ -22,9 +15,6 @@ interface RecipeDetailModalProps {
 
 export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeDetailModalProps) {
   console.log('RecipeDetailModal rendered:', { recipeId, isOpen });
-  
-  const [showRatingForm, setShowRatingForm] = useState(false);
-  const { user } = useAuth();
   
   const { data: recipe, isLoading } = useQuery<Recipe>({
     queryKey: [`/api/recipes/${recipeId}`],
@@ -36,31 +26,6 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
     enabled: !!recipeId && isOpen,
   });
 
-  // Fetch rating summary
-  const { data: ratingSummary } = useQuery<{ success: boolean; summary: RecipeRatingSummary }>({
-    queryKey: [`/api/recipes/${recipeId}/rating-summary`],
-    queryFn: async () => {
-      if (!recipeId) return null;
-      const res = await apiRequest('GET', `/api/recipes/${recipeId}/rating-summary`);
-      return res.json();
-    },
-    enabled: !!recipeId && isOpen,
-  });
-
-  // Fetch current user's rating (if authenticated)
-  const { data: userRating } = useQuery<{ success: boolean; rating: RecipeRating }>({
-    queryKey: [`/api/users/my-ratings`, recipeId],
-    queryFn: async () => {
-      if (!recipeId || !user) return null;
-      const res = await apiRequest('GET', `/api/users/my-ratings?recipeId=${recipeId}`);
-      return res.json();
-    },
-    enabled: !!recipeId && !!user && isOpen,
-  });
-
-  const handleRatingSuccess = () => {
-    setShowRatingForm(false);
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -80,21 +45,7 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
             </div>
           </div>
         ) : recipe ? (
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="ratings" className="flex items-center gap-2">
-                <Star className="w-4 h-4" />
-                Ratings ({ratingSummary?.summary?.totalRatings || 0})
-              </TabsTrigger>
-              <TabsTrigger value="reviews" className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" />
-                Reviews ({ratingSummary?.summary?.totalReviews || 0})
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Recipe Details Tab */}
-            <TabsContent value="details" className="space-y-6">
+          <div className="w-full space-y-6">
               {/* Recipe Header */}
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
@@ -108,25 +59,6 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
                     {recipe.isApproved ? "Approved" : "Pending"}
                   </Badge>
                 </div>
-
-                {/* Rating Summary Display */}
-                {ratingSummary?.summary && (
-                  <div className="flex items-center justify-between">
-                    <RatingDisplay 
-                      summary={ratingSummary.summary} 
-                      size="md"
-                    />
-                    {user && (
-                      <Button
-                        onClick={() => setShowRatingForm(!showRatingForm)}
-                        size="sm"
-                        variant="outline"
-                      >
-                        {userRating?.rating ? 'Update Rating' : 'Rate Recipe'}
-                      </Button>
-                    )}
-                  </div>
-                )}
 
                 <Separator />
               </div>
@@ -221,47 +153,7 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
                   <p>Last Updated: {recipe.lastUpdatedTimestamp ? new Date(recipe.lastUpdatedTimestamp).toLocaleDateString() : ''}</p>
                 )}
               </div>
-            </TabsContent>
-
-            {/* Ratings Tab */}
-            <TabsContent value="ratings" className="space-y-6">
-              {ratingSummary?.summary ? (
-                <RatingDisplay 
-                  summary={ratingSummary.summary} 
-                  showDistribution={true}
-                  size="lg"
-                />
-              ) : (
-                <div className="text-center py-8 text-slate-500">
-                  <p>No ratings yet</p>
-                </div>
-              )}
-
-              {/* Rating Form */}
-              {user && showRatingForm && (
-                <RecipeReviewForm
-                  recipeId={recipeId!}
-                  existingRating={userRating?.rating}
-                  onSuccess={handleRatingSuccess}
-                  onCancel={() => setShowRatingForm(false)}
-                />
-              )}
-
-              {!user && (
-                <div className="text-center py-4 text-slate-500">
-                  <p>Please sign in to rate this recipe</p>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Reviews Tab */}
-            <TabsContent value="reviews" className="space-y-6">
-              <RecipeReviewsList 
-                recipeId={recipeId!} 
-                currentUserId={user?.id}
-              />
-            </TabsContent>
-          </Tabs>
+          </div>
         ) : (
           <div className="text-center py-8 text-slate-500">
             Recipe not found

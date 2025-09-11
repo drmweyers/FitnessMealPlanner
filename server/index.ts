@@ -25,9 +25,10 @@ import profileRouter from './routes/profileRoutes';
 import { favoritesRouter } from './routes/favorites';
 // import { engagementRouter } from './routes/engagement';
 import { trendingRouter } from './routes/trending';
+// Meal plan rating feature removed
 import { adminAnalyticsRouter } from './routes/adminAnalytics';
 import analyticsRouter from './routes/analytics';
-import ratingsRouter from './routes/ratings';
+// import ratingsRouter from './routes/ratings'; // REMOVED - rating feature deleted
 import { progressSummariesRouter } from './routes/progressSummaries';
 import { emailPreferencesRouter } from './routes/emailPreferences';
 import { emailAnalyticsRouter } from './routes/emailAnalytics';
@@ -166,9 +167,10 @@ app.use('/api', privacyProtection);
 // Invitations routes (mixed auth requirements - handled internally)
 app.use('/api/invitations', invitationRouter);
 app.use('/api/recipes', recipeRouter); // Remove requireAuth to allow public access to approved recipes
-app.use('/api/ratings', ratingsRouter); // Recipe rating endpoints - separate path to avoid conflicts
+// app.use('/api/ratings', ratingsRouter); // Recipe rating endpoints REMOVED - feature deleted
 app.use('/api/admin', requireAdmin, adminRouter);
 app.use('/api/trainer', requireTrainerOrAdmin, trainerRouter);
+// Meal plan rating routes removed - feature deleted
 app.use('/api/customer', requireRole('customer'), customerRouter);
 app.use('/api/meal-plan', requireAuth, mealPlanRouter);
 // Add sharing routes with mixed auth (some public, some require auth)
