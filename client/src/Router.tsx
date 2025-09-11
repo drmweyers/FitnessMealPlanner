@@ -22,7 +22,6 @@ import { OAuthCallback } from "./components/OAuthCallback";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import SharedMealPlanView from "./components/SharedMealPlanView";
 import MacroTrackingDashboard from "./components/MacroTrackingDashboard";
-import MealPrepSchedulingCalendar from "./components/MealPrepSchedulingCalendar";
 import MobileGroceryList from "./components/MobileGroceryList";
 
 export default function Router() {
@@ -120,13 +119,6 @@ export default function Router() {
             return <Redirect to="/" />;
           }
           return <MacroTrackingDashboard />;
-        }} />
-        
-        <Route path="/meal-prep" component={() => {
-          if (user.role !== 'customer') {
-            return <Redirect to="/" />;
-          }
-          return <MealPrepSchedulingCalendar />;
         }} />
         
         <Route path="/grocery-list" component={() => {

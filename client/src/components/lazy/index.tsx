@@ -38,16 +38,8 @@ export const LazyTrainerMealPlans = lazy(() =>
 );
 
 // Progress tracking sub-components
-export const LazyGoalsTab = lazy(() => 
-  import('../progress/GoalsTab').then(module => ({ default: module.default }))
-);
-
 export const LazyMeasurementsTab = lazy(() => 
   import('../progress/MeasurementsTab').then(module => ({ default: module.default }))
-);
-
-export const LazyPhotosTab = lazy(() => 
-  import('../progress/PhotosTab').then(module => ({ default: module.default }))
 );
 
 export const LazyProgressCharts = lazy(() => 

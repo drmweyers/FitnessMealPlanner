@@ -4,10 +4,7 @@ import { db } from '../db';
 import { 
   progressMeasurements, 
   progressPhotos, 
-  customerGoals,
-  goalMilestones,
   createMeasurementSchema,
-  createGoalSchema,
   uploadProgressPhotoSchema
 } from '@shared/schema';
 import { requireAuth, requireRole } from '../middleware/auth';
@@ -25,7 +22,6 @@ import sharp from 'sharp';
  * 
  * Features:
  * - Body measurements CRUD operations with date filtering
- * - Fitness goals management with automatic progress calculation
  * - Progress photo upload with S3 storage and image processing
  * - Comprehensive error handling and input validation
  * - User data isolation (customers can only access their own data)
@@ -299,172 +295,6 @@ router.delete('/measurements/:id', requireRole('customer'), async (req, res) => 
     res.status(500).json({
       status: 'error',
       message: 'Failed to delete measurement',
-    });
-  }
-});
-
-// ====== GOALS ROUTES ======
-
-// Get all goals for the current customer
-router.get('/goals', requireRole('customer'), async (req, res) => {
-  try {
-    const userId = req.user!.id;
-    const { status } = req.query;
-
-    let query = db
-      .select()
-      .from(customerGoals)
-      .where(eq(customerGoals.customerId, userId))
-      .orderBy(desc(customerGoals.createdAt));
-
-    if (status) {
-      query = db
-        .select()
-        .from(customerGoals)
-        .where(
-          and(
-            eq(customerGoals.customerId, userId),
-            eq(customerGoals.status, status as string)
-          )
-        )
-        .orderBy(desc(customerGoals.createdAt));
-    }
-
-    const goals = await query;
-
-    // For each goal, fetch its milestones
-    const goalsWithMilestones = await Promise.all(
-      goals.map(async (goal) => {
-        const milestones = await db
-          .select()
-          .from(goalMilestones)
-          .where(eq(goalMilestones.goalId, goal.id))
-          .orderBy(desc(goalMilestones.createdAt));
-
-        return {
-          ...goal,
-          milestones,
-        };
-      })
-    );
-
-    res.json({
-      status: 'success',
-      data: goalsWithMilestones,
-    });
-  } catch (error) {
-    console.error('Error fetching goals:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch goals',
-    });
-  }
-});
-
-// Create a new goal
-router.post('/goals', requireRole('customer'), async (req, res) => {
-  try {
-    const userId = req.user!.id;
-    const validatedData = createGoalSchema.parse(req.body);
-
-    const [goal] = await db
-      .insert(customerGoals)
-      .values({
-        customerId: userId,
-        goalType: validatedData.goalType,
-        goalName: validatedData.goalName,
-        description: validatedData.description,
-        targetValue: validatedData.targetValue.toString(),
-        targetUnit: validatedData.targetUnit,
-        currentValue: validatedData.currentValue?.toString(),
-        startingValue: validatedData.startingValue?.toString(),
-        startDate: new Date(validatedData.startDate),
-        targetDate: validatedData.targetDate ? new Date(validatedData.targetDate) : null,
-        notes: validatedData.notes,
-      })
-      .returning();
-
-    res.status(201).json({
-      status: 'success',
-      data: goal,
-    });
-  } catch (error) {
-    console.error('Error creating goal:', error);
-    if (error instanceof Error && error.name === 'ZodError') {
-      res.status(400).json({
-        status: 'error',
-        message: 'Invalid goal data',
-        errors: error,
-      });
-    } else {
-      res.status(500).json({
-        status: 'error',
-        message: 'Failed to create goal',
-      });
-    }
-  }
-});
-
-// Update goal progress
-router.patch('/goals/:id/progress', requireRole('customer'), async (req, res) => {
-  try {
-    const userId = req.user!.id;
-    const goalId = req.params.id;
-    const { currentValue } = req.body;
-
-    // First check if the goal belongs to the user
-    const [existing] = await db
-      .select()
-      .from(customerGoals)
-      .where(
-        and(
-          eq(customerGoals.id, goalId),
-          eq(customerGoals.customerId, userId)
-        )
-      );
-
-    if (!existing) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Goal not found',
-      });
-    }
-
-    // Calculate progress percentage
-    const target = parseFloat(existing.targetValue || '0');
-    const starting = parseFloat(existing.startingValue || '0');
-    const current = parseFloat(currentValue);
-    
-    let progressPercentage = 0;
-    if (target !== starting) {
-      progressPercentage = Math.round(((current - starting) / (target - starting)) * 100);
-      progressPercentage = Math.max(0, Math.min(100, progressPercentage));
-    }
-
-    // Check if goal is achieved
-    const isAchieved = progressPercentage >= 100;
-
-    const [updated] = await db
-      .update(customerGoals)
-      .set({
-        currentValue: currentValue.toString(),
-        progressPercentage,
-        status: isAchieved ? 'achieved' : existing.status,
-        achievedDate: isAchieved ? new Date() : null,
-        updatedAt: new Date(),
-      })
-      .where(eq(customerGoals.id, goalId))
-      .returning();
-
-    res.json({
-      status: 'success',
-      data: updated,
-    });
-  } catch (error) {
-    console.error('Error updating goal progress:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to update goal progress',
     });
   }
 });
