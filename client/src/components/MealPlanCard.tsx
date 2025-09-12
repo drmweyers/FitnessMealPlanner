@@ -1,16 +1,20 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import type { CustomerMealPlan } from "@shared/schema";
-import { Calendar, Users, Utensils, Clock, Zap, Target, Activity } from "lucide-react";
+import { Calendar, Users, Utensils, Clock, Zap, Target, Activity, Trash2 } from "lucide-react";
 import { useSafeMealPlan } from '../hooks/useSafeMealPlan';
+import { useAuth } from '../contexts/AuthContext';
 
 interface MealPlanCardProps {
   mealPlan: CustomerMealPlan;
   onClick?: () => void;
+  onDelete?: (mealPlanId: string) => void;
 }
 
-function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
+function MealPlanCard({ mealPlan, onClick, onDelete }: MealPlanCardProps) {
+  const { user } = useAuth();
   const {
     isValid,
     validMeals,
@@ -42,6 +46,14 @@ function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
     onClick?.();
   }, [onClick]);
   
+  // Delete handler
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    if (onDelete && mealPlan.id) {
+      onDelete(mealPlan.id);
+    }
+  }, [onDelete, mealPlan.id]);
+  
   // Early return with error display if invalid meal plan
   if (!isValid) {
     return (
@@ -70,6 +82,19 @@ function MealPlanCard({ mealPlan, onClick }: MealPlanCardProps) {
               </span>
             </div>
           </div>
+          
+          {/* Delete button - only show for customers viewing their own plans */}
+          {user?.role === 'customer' && onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/80 hover:bg-red-50 hover:text-red-600 rounded-full shadow-sm"
+              onClick={handleDelete}
+              aria-label="Delete meal plan"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         <CardContent className="p-2 xs:p-3 sm:p-4" onClick={handleClick}>

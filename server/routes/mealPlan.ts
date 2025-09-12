@@ -8,6 +8,9 @@ import { mealPlanScheduler } from '../services/mealPlanScheduler';
 import { mealPlanVariationService } from '../services/mealPlanVariationService';
 import { requireAuth } from '../middleware/auth';
 import { storage } from '../storage';
+import { db } from '../db';
+import { personalizedMealPlans } from '@shared/schema';
+import { eq, and } from 'drizzle-orm';
 import type { MealPlanGeneration } from '@shared/schema';
 
 const mealPlanRouter = express.Router();
@@ -496,6 +499,53 @@ mealPlanRouter.get('/personalized', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch personalized meal plans:', error);
     res.status(500).json({ error: 'Failed to fetch personalized meal plans' });
+  }
+});
+
+// DELETE /api/meal-plan/:id - Delete a meal plan for the current customer
+mealPlanRouter.delete('/:id', requireAuth, async (req, res) => {
+  const mealPlanId = req.params.id;
+  const userId = req.user?.id;
+  const userRole = req.user?.role;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+
+  if (userRole !== 'customer') {
+    return res.status(403).json({ error: 'Only customers can delete their meal plans' });
+  }
+
+  try {
+    // Get the customer's personalized meal plans
+    const customerMealPlans = await storage.getPersonalizedMealPlans(userId);
+    
+    // Check if the meal plan exists and belongs to this customer
+    const mealPlanToDelete = customerMealPlans.find((mp: any) => mp.id === mealPlanId);
+    
+    if (!mealPlanToDelete) {
+      return res.status(404).json({ error: 'Meal plan not found or you do not have permission to delete it' });
+    }
+
+    // Delete the meal plan from the database
+    const result = await db.delete(personalizedMealPlans)
+      .where(
+        and(
+          eq(personalizedMealPlans.id, mealPlanId),
+          eq(personalizedMealPlans.customerId, userId)
+        )
+      );
+
+    console.log(`[Meal Plan Delete] Customer ${userId} deleted meal plan ${mealPlanId}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Meal plan deleted successfully',
+      deletedMealPlanId: mealPlanId
+    });
+  } catch (error) {
+    console.error('Failed to delete meal plan:', error);
+    res.status(500).json({ error: 'Failed to delete meal plan' });
   }
 });
 

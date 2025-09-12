@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { CustomerMealPlan, MealPlan } from '@shared/schema';
 import MealPlanCard from '../components/MealPlanCard';
 import MealPlanModal from '../components/MealPlanModal';
@@ -8,10 +8,21 @@ import { apiRequest } from '../lib/queryClient';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Search, Filter, TrendingUp, Calendar, Target, Zap, ChefHat, RotateCcw, SlidersHorizontal, Info, User, Database, Activity, Calculator, ShoppingCart } from 'lucide-react';
+import { Search, Filter, TrendingUp, Calendar, Target, Zap, ChefHat, RotateCcw, SlidersHorizontal, Info, User, Database, Activity, Calculator, ShoppingCart, AlertTriangle } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
+import { useToast } from '../hooks/use-toast';
 import ProgressTracking from '../components/ProgressTracking';
 
 // Enhanced MealPlan includes the flattened properties from the API
@@ -46,6 +57,8 @@ const fetchPersonalizedMealPlans = async (): Promise<MealPlanResponse> => {
 
 const Customer = () => {
   const { isAuthenticated, user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   // Debug logging
   React.useEffect(() => {
@@ -63,6 +76,8 @@ const Customer = () => {
   const [sortBy, setSortBy] = useState('date');
   const [showFilters, setShowFilters] = useState(false);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
+  const [mealPlanToDelete, setMealPlanToDelete] = useState<string | null>(null);
+  const [deletingPlanName, setDeletingPlanName] = useState<string>('');
 
   const { data: mealPlanResponse, isLoading, error } = useQuery<MealPlanResponse, Error>({
     queryKey: ['personalizedMealPlans'],
@@ -71,6 +86,34 @@ const Customer = () => {
     retry: (failureCount: number, error: Error) => {
       console.error('Meal plans query failed:', error);
       return failureCount < 2;
+    }
+  });
+
+  // Delete meal plan mutation
+  const deleteMealPlanMutation = useMutation({
+    mutationFn: async (mealPlanId: string) => {
+      const response = await apiRequest('DELETE', `/api/meal-plan/${mealPlanId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete meal plan');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['personalizedMealPlans'] });
+      toast({
+        title: "Success",
+        description: "Meal plan deleted successfully",
+      });
+      setMealPlanToDelete(null);
+      setDeletingPlanName('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete meal plan",
+        variant: "destructive",
+      });
     }
   });
 
@@ -163,6 +206,22 @@ const Customer = () => {
 
   const formatGoalName = (goal: string) => {
     return goal.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
+  // Handle delete meal plan
+  const handleDeleteMealPlan = (mealPlanId: string) => {
+    const mealPlan = mealPlans.find((plan: EnhancedMealPlan) => plan.id === mealPlanId);
+    if (mealPlan) {
+      setDeletingPlanName(mealPlan.planName);
+      setMealPlanToDelete(mealPlanId);
+    }
+  };
+
+  // Confirm deletion
+  const confirmDelete = () => {
+    if (mealPlanToDelete) {
+      deleteMealPlanMutation.mutate(mealPlanToDelete);
+    }
   };
 
   // Early return if not authenticated or user data missing
@@ -515,6 +574,7 @@ const Customer = () => {
                       <MealPlanCard 
                         mealPlan={mealPlan as unknown as CustomerMealPlan} 
                         onClick={() => setSelectedMealPlan(mealPlan)}
+                        onDelete={handleDeleteMealPlan}
                       />
                     </div>
                   ))}
@@ -577,6 +637,36 @@ const Customer = () => {
             onClose={() => setSelectedMealPlan(null)}
           />
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!mealPlanToDelete} onOpenChange={(open) => !open && setMealPlanToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                Delete Meal Plan
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <span className="font-semibold">"{deletingPlanName}"</span>? 
+                This action cannot be undone and will permanently remove this meal plan from your account.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setMealPlanToDelete(null);
+                setDeletingPlanName('');
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmDelete}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
