@@ -39,3 +39,7 @@ puppeteer-*.cjs
 # Profile image uploads (local development)
 public/uploads/profile-images/
 fitnessmealplanner-prod.tar
+
+# App spec files with secrets
+app-spec*.yaml
+token.txt

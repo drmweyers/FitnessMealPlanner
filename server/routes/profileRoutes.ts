@@ -1,16 +1,16 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth';
-import { upload, uploadProfileImage, uploadProfileImageLocal, deleteProfileImage, validateImageFile } from '../services/s3Upload';
+// Profile image upload removed - feature deleted
 import { db } from '../db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 const profileRouter = Router();
 
-/**
- * Upload profile image
- * POST /api/profile/upload-image
- */
+// Profile image upload endpoint removed - feature deleted
+// POST /api/profile/upload-image - REMOVED
+
+/*
 profileRouter.post('/upload-image', requireAuth, upload.single('profileImage'), async (req, res) => {
   try {
     const userId = req.user!.id;
@@ -101,11 +101,12 @@ profileRouter.post('/upload-image', requireAuth, upload.single('profileImage'), 
     });
   }
 });
+*/
 
-/**
- * Delete profile image
- * DELETE /api/profile/delete-image
- */
+// Profile image delete endpoint removed - feature deleted  
+// DELETE /api/profile/delete-image - REMOVED
+
+/*
 profileRouter.delete('/delete-image', requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
@@ -181,6 +182,7 @@ profileRouter.delete('/delete-image', requireAuth, async (req, res) => {
     });
   }
 });
+*/
 
 /**
  * Get current user profile
@@ -195,7 +197,7 @@ profileRouter.get('/', requireAuth, async (req, res) => {
         id: users.id,
         email: users.email,
         role: users.role,
-        profilePicture: users.profilePicture,
+        // profilePicture removed - feature deleted
         createdAt: users.createdAt,
         updatedAt: users.updatedAt
       })

@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { ProfileAvatar } from './ProfileImageUpload';
+// ProfileAvatar removed - using initials only
 import { 
   Home, 
   User, 
@@ -119,12 +119,11 @@ const Layout = ({ children }: LayoutProps) => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2">
-                    <ProfileAvatar 
-                      imageUrl={user?.profilePicture} 
-                      userEmail={user?.email || ''} 
-                      size="sm"
-                      className="h-6 w-6 sm:h-8 sm:w-8"
-                    />
+                    <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-xs sm:text-sm font-medium text-primary">
+                        {user?.email?.substring(0, 2).toUpperCase() || 'U'}
+                      </span>
+                    </div>
                     <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 hidden sm:block" />
                   </Button>
                 </DropdownMenuTrigger>

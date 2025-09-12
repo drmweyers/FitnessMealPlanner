@@ -86,7 +86,8 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "npm run db:push && npm run dev"
+    # Temporarily bypassing db:push to avoid customer_goals table deletion prompt
+    command: sh -c "npm run dev"
     profiles:
       - dev
 
