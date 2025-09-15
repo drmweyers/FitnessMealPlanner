@@ -308,7 +308,60 @@
 }
 
 /* ========================================
-   10. LANDSCAPE ORIENTATION FIXES
+   10. GROCERY LIST MOBILE FIXES
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Grocery list specific touch targets */
+  .touch-target-checkbox {
+    min-width: 24px !important;
+    min-height: 24px !important;
+    touch-action: manipulation;
+  }
+  
+  /* Grocery list item text rendering */
+  .grocery-item-text {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+    word-break: break-word;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Grocery list checkboxes */
+  input[type="checkbox"].touch-target-checkbox {
+    width: 24px !important;
+    height: 24px !important;
+    margin: 0 !important;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  
+  /* Ensure proper checkbox container sizing */
+  .touch-target[role="button"] {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    touch-action: manipulation;
+  }
+  
+  /* Fix text rendering in grocery lists */
+  .grocery-list-item {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* Improve contrast for checked items */
+  .line-through {
+    text-decoration-thickness: 2px !important;
+    text-decoration-color: currentColor !important;
+  }
+}
+
+/* ========================================
+   11. LANDSCAPE ORIENTATION FIXES
    ======================================== */
 
 @media (max-width: 812px) and (orientation: landscape) {

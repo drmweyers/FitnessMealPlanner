@@ -343,19 +343,32 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
           item.isChecked ? 'opacity-50' : ''
         }`}>
           <div 
-            className="flex-shrink-0 cursor-pointer touch-target p-1"
-            onClick={() => toggleItemChecked(item.id)}
+            className="flex-shrink-0 cursor-pointer touch-target p-2 -m-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleItemChecked(item.id);
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label={`${item.isChecked ? 'Uncheck' : 'Check'} ${item.name}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleItemChecked(item.id);
+              }
+            }}
           >
             <Checkbox 
               checked={item.isChecked} 
-              onChange={() => {}} 
-              className="h-6 w-6"
+              onChange={() => toggleItemChecked(item.id)} 
+              className="h-6 w-6 touch-target-checkbox"
             />
           </div>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className={`font-medium ${item.isChecked ? 'line-through' : ''}`}>
+              <span className={`font-medium text-base leading-tight grocery-item-text ${item.isChecked ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                 {item.quantity} {item.unit} {item.name}
               </span>
               {item.priority === 'high' && (
@@ -369,18 +382,18 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
             {showCategory && category && (
               <div className="flex items-center gap-1 mt-1">
                 <CategoryIcon category={category} />
-                <span className="text-sm text-muted-foreground">{category.name}</span>
+                <span className="text-sm text-muted-foreground grocery-item-text">{category.name}</span>
               </div>
             )}
             
             {item.notes && (
-              <p className="text-sm text-muted-foreground mt-1">{item.notes}</p>
+              <p className="text-sm text-muted-foreground mt-1 grocery-item-text">{item.notes}</p>
             )}
           </div>
           
           {item.estimatedPrice && (
             <div className="text-right">
-              <span className="text-sm font-medium">${item.estimatedPrice.toFixed(2)}</span>
+              <span className="text-sm font-medium grocery-item-text">${item.estimatedPrice.toFixed(2)}</span>
             </div>
           )}
           
