@@ -55,7 +55,11 @@ const fetchPersonalizedMealPlans = async (): Promise<MealPlanResponse> => {
   return data;
 };
 
-const Customer = () => {
+interface CustomerProps {
+  initialTab?: string;
+}
+
+const Customer = ({ initialTab }: CustomerProps = {}) => {
   const { isAuthenticated, user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -69,6 +73,7 @@ const Customer = () => {
   const [selectedMealPlan, setSelectedMealPlan] = useState<EnhancedMealPlan | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState(() => {
+    if (initialTab) return initialTab;
     const params = new URLSearchParams(window.location.search);
     return params.get('tab') === 'progress' ? 'progress' : 'meal-plans';
   });

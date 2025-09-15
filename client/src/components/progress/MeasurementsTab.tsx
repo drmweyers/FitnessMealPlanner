@@ -185,7 +185,7 @@ const MeasurementsTab: React.FC = () => {
               Add Measurement
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Measurement</DialogTitle>
               <DialogDescription>

@@ -106,6 +106,21 @@ export default function Router() {
           return <Customer />;
         }} />
         
+        <Route path="/customer/meal-plans" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <Customer />;
+        }} />
+        
+        <Route path="/customer/progress" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          const Component = Customer;
+          return <Component initialTab="progress" />;
+        }} />
+        
         <Route path="/my-meal-plans" component={() => {
           if (user.role !== 'customer') {
             return <Redirect to="/" />;
