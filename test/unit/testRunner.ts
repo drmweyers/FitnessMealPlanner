@@ -34,6 +34,7 @@ class UnitTestRunner {
     'test/unit/emailService.test.ts',
     'test/unit/invitationRoutes.test.ts', 
     'test/unit/emailUtils.test.ts',
+    'test/unit/MobileGroceryList.test.tsx',
     'test/email-service.test.ts' // Keep existing basic tests
   ];
 
