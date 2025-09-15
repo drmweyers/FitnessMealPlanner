@@ -10,13 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { format, isValid, parseISO } from 'date-fns';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  MobileDialog as Dialog,
+  MobileDialogContent as DialogContent,
+  MobileDialogDescription as DialogDescription,
+  MobileDialogHeader as DialogHeader,
+  MobileDialogTitle as DialogTitle,
+  MobileDialogTrigger as DialogTrigger,
+} from '@/components/ui/mobile-dialog';
 import {
   Table,
   TableBody,
@@ -185,7 +185,7 @@ const MeasurementsTab: React.FC = () => {
               Add Measurement
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Measurement</DialogTitle>
               <DialogDescription>

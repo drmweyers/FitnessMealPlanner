@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
+import {
+  MobileDialog as Dialog,
+  MobileDialogContent as DialogContent,
+  MobileDialogHeader as DialogHeader,
+  MobileDialogTitle as DialogTitle,
+  MobileDialogDescription as DialogDescription
+} from "./ui/mobile-dialog";
 import { Badge } from "./ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -88,7 +94,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Utensils className="h-5 w-5 text-blue-600" />

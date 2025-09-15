@@ -41,8 +41,8 @@ const Layout = ({ children }: LayoutProps) => {
 
   const navigation = [
     // Customer navigation
-    ...(user?.role === 'customer' 
-      ? [{ name: 'My Meal Plans', href: '/my-meal-plans', icon: User }] 
+    ...(user?.role === 'customer'
+      ? [{ name: 'My Dashboard', href: '/customer', icon: User }]
       : []),
     
     // Trainer navigation

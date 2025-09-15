@@ -63,8 +63,8 @@ const MobileNavigation: React.FC = () => {
         return [
           ...baseItems,
           { path: '/customer', label: 'Dashboard', icon: Home },
-          { path: '/customer/meal-plans', label: 'My Plans', icon: Calendar },
-          { path: '/customer/progress', label: 'Progress', icon: Target },
+          { path: '/customer?tab=meal-plans', label: 'My Plans', icon: Calendar },
+          { path: '/customer?tab=progress', label: 'Progress', icon: Target },
           { path: '/favorites', label: 'Favorites', icon: Heart },
         ];
       
