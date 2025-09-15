@@ -17,8 +17,8 @@ async function seedTestAccounts() {
     const testAccounts = [
       {
         id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-        email: 'admin.test@evofitmeals.com',
-        password: 'TestAdmin123!',
+        email: 'admin@fitmeal.pro',
+        password: 'AdminPass123',
         name: 'Test Admin',
         role: 'admin'
       },
@@ -160,7 +160,7 @@ async function seedTestAccounts() {
     console.log('\n🎉 Test accounts setup complete!\n');
     console.log('Test Credentials:');
     console.log('================');
-    console.log('Admin:    admin.test@evofitmeals.com    / TestAdmin123!');
+    console.log('Admin:    admin@fitmeal.pro             / AdminPass123');
     console.log('Trainer:  trainer.test@evofitmeals.com  / TestTrainer123!');
     console.log('Customer: customer.test@evofitmeals.com / TestCustomer123!');
     console.log('\nRelationships:');

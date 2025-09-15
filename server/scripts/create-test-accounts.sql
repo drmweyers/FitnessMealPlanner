@@ -2,14 +2,14 @@
 -- This script creates three test accounts (admin, trainer, customer) with proper relationships
 
 -- First, delete existing test accounts if they exist
-DELETE FROM users WHERE email IN ('admin.test@evofitmeals.com', 'trainer.test@evofitmeals.com', 'customer.test@evofitmeals.com');
+DELETE FROM users WHERE email IN ('admin@fitmeal.pro', 'trainer.test@evofitmeals.com', 'customer.test@evofitmeals.com');
 
 -- Create Admin account
 INSERT INTO users (id, email, password, name, role, created_at, updated_at)
 VALUES (
   'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  'admin.test@evofitmeals.com',
-  '$2b$10$YHxPxe8N2j7tQHSvLhpAGu.dQqxc0r3S7lXQ1yzRkvCQ4iWnxyUDa', -- TestAdmin123!
+  'admin@fitmeal.pro',
+  '$2b$10$Y84J1JYTx0yeozHw1ZXsqezi4L1RjqBtI06DRc2pKTJDlds8qaRxu', -- AdminPass123
   'Test Admin',
   'admin',
   NOW(),
@@ -25,7 +25,7 @@ INSERT INTO users (id, email, password, name, role, created_at, updated_at)
 VALUES (
   'e4ae14a6-fa78-4146-be61-c8fa9a4472f5',
   'trainer.test@evofitmeals.com',
-  '$2b$10$dJ5FU3BW5p/vP5eWzp1cDOFD5WV7t1M0H.KHFsLzNjxp4jQNc.A7e', -- TestTrainer123!
+  '$2b$10$7sh6W8wrOgGRM5zh9H1DHO4aNLHw3YLhc/1Zi30VL40Xr3tU4OnDy', -- TestTrainer123!
   'Test Trainer',
   'trainer',
   NOW(),
@@ -41,7 +41,7 @@ INSERT INTO users (id, email, password, name, role, created_at, updated_at)
 VALUES (
   'f32890cc-af72-40dc-b92e-beef32118ca0',
   'customer.test@evofitmeals.com',
-  '$2b$10$MRKJr9R5UZhqf0HNElj5nu5.2eMg1Sx3fXYnl1fH1qBfzPHwGZYGu', -- TestCustomer123!
+  '$2b$10$ntpn4fEKnGz/Gnbi4eoUv.RzfbskycPl5Ln8jJjdHfuScg0W./s2m', -- TestCustomer123!
   'Test Customer',
   'customer',
   NOW(),
@@ -94,4 +94,4 @@ VALUES (
 
 -- Output confirmation
 SELECT 'Test accounts created successfully!' as status;
-SELECT email, role FROM users WHERE email LIKE '%test@evofitmeals.com' ORDER BY role;
+SELECT email, role FROM users WHERE email IN ('admin@fitmeal.pro', 'trainer.test@evofitmeals.com', 'customer.test@evofitmeals.com') ORDER BY role;
