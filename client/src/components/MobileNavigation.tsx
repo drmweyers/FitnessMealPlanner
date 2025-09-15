@@ -11,7 +11,6 @@ import {
   ChefHat,
   Users,
   FileText,
-  Settings,
   LogOut,
   ChevronRight,
   BarChart3,
@@ -257,19 +256,8 @@ const MobileNavigation: React.FC = () => {
 
             {/* Additional Options */}
             <div className="border-t mx-4 my-2" />
-            
+
             <div className="p-4 space-y-1">
-              <button
-                onClick={() => setLocation('/settings')}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center space-x-3">
-                  <Settings className="w-5 h-5" />
-                  <span className="font-medium">Settings</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
-              
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
