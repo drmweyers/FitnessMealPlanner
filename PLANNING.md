@@ -1,8 +1,103 @@
 # FitnessMealPlanner - Project Planning & Architecture
 
-**Last Updated**: 2025-01-12 (Production S3 Configuration Fix)
+**Last Updated**: 2025-09-15 (Test Credentials Standardization)
 **BMAD Process Status**: Phase 7 Complete - Production Infrastructure Updates | Stories 1.1-1.9 Complete (100% PRD) | Production Fully Operational
-**Current Session**: Recipe Generation S3 Credentials - Successfully Synchronized
+**Current Session**: Test Credentials Standardization - 100% Success Rate Achieved
+
+## 🔐 TEST CREDENTIALS STANDARDIZATION - SEPTEMBER 15, 2025
+
+### Test Account Credentials Fixed (100% Success)
+**Status**: ✅ FIXED - All test accounts verified and working
+**Implementation Date**: September 15, 2025
+**BMAD Process**: Following systematic documentation and testing approach
+
+**Standardized Test Credentials**:
+1. **Admin Account**:
+   - Email: `admin@fitmeal.pro`
+   - Password: `AdminPass123`
+   - Role: admin
+
+2. **Trainer Account**:
+   - Email: `trainer.test@evofitmeals.com`
+   - Password: `TestTrainer123!`
+   - Role: trainer
+
+3. **Customer Account**:
+   - Email: `customer.test@evofitmeals.com`
+   - Password: `TestCustomer123!`
+   - Role: customer
+
+**Technical Implementation**:
+1. **Seed Scripts Updated**:
+   - File: `server/scripts/seed-test-accounts.js` - Uses correct passwords
+   - File: `server/db/seeds/test-accounts.ts` - TypeScript version updated
+
+2. **SQL Scripts Fixed**:
+   - File: `server/scripts/create-test-accounts.sql`
+   - Updated bcrypt hashes for all three accounts
+   - Hashes generated with bcrypt rounds=10
+
+3. **Test Coverage Added**:
+   - Created `test-credentials.js` - Automated test script
+   - Verifies all three accounts can login successfully
+   - Confirms correct roles are assigned
+
+**Results**:
+- All three accounts login successfully ✅
+- JWT tokens generated correctly ✅
+- User roles match expected values ✅
+- Docker environment fully operational ✅
+
+## 📱 MOBILE UI FIXES - JANUARY 15, 2025
+
+### Critical Mobile UI Issues Resolved (100% Success)
+**Status**: ✅ FIXED - All 4 mobile UI issues resolved with comprehensive testing
+**Implementation Date**: January 15, 2025
+**BMAD Process**: Used multi-agent workflow with deep analysis and comprehensive testing
+
+**Issues Fixed**:
+1. ✅ **Customer Login Navigation** - Fixed redirect from `/my-meal-plans` (404) to `/customer`
+2. ✅ **My Plans Navigation** - Fixed 404 error, now correctly uses `/customer?tab=meal-plans`
+3. ✅ **Add Measurement Modal** - Fixed positioning from top-left to centered on mobile
+4. ✅ **Recipe Modal from Meal Plan** - Fixed nested modal positioning and empty content
+
+**Technical Solutions**:
+1. **Login Navigation Fix**:
+   - File: `client/src/pages/LoginPage.tsx`
+   - Changed: Line 60 from `navigate('/my-meal-plans')` to `navigate('/customer')`
+
+2. **My Plans Navigation Fix**:
+   - File: `client/src/components/MobileNavigation.tsx`
+   - Solution: Already had proper `customAction` handlers with `navigateToCustomerTab('meal-plans')`
+
+3. **Modal Centering Fixes**:
+   - Files: `client/src/components/ui/dialog.tsx`, `client/src/components/ui/mobile-dialog.tsx`
+   - Solution: Added CSS `left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%]`
+   - Fixed CSS conflict in `client/src/styles/mobile-fixes.css` using `:not([data-mobile-dialog])` selectors
+
+4. **Recipe Modal Fix**:
+   - File: `client/src/components/RecipeDetailModal.tsx`
+   - Solution: Changed from standard Dialog to MobileDialog components
+   - Added proper z-index layering (z-70) for nested modals
+
+**Test Coverage Added**:
+- `test/unit/mobile-fixes.test.tsx` - Unit tests for all fixes
+- `test/e2e/mobile-comprehensive-final.spec.ts` - Comprehensive E2E tests
+- `test/e2e/nested-modal-test.spec.ts` - Nested modal behavior tests
+- `test/e2e/mobile-verification-simple.spec.ts` - Simple verification tests
+
+**Results**:
+- Modal positioning: Perfectly centered at 187.5px on 375px viewport
+- All navigation routes working without 404 errors
+- Nested modals properly layered and displaying content
+- 100% Playwright test success rate achieved
+
+### Settings Menu Option Removal (January 15, 2025)
+**Status**: ✅ COMPLETED
+**Issue**: Settings option in mobile menu navigated to 404 page
+**Solution**: Removed Settings button from mobile navigation menu as it's not needed for customers
+**Files Modified**: `client/src/components/MobileNavigation.tsx`
+**Test Coverage**: `test/e2e/mobile-settings-removal.spec.ts`
 
 ## 🚀 PRODUCTION FIX - JANUARY 12, 2025
 
