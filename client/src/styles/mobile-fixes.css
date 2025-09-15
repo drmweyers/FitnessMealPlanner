@@ -199,10 +199,10 @@
    ======================================== */
 
 @media (max-width: 768px) {
-  /* Full-screen modals on mobile */
-  [role="dialog"],
-  .modal,
-  .dialog {
+  /* Full-screen modals on mobile - but EXCLUDE MobileDialog components */
+  [role="dialog"]:not([data-mobile-dialog]),
+  .modal:not([data-mobile-dialog]),
+  .dialog:not([data-mobile-dialog]) {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -216,19 +216,19 @@
     border-radius: 0 !important;
   }
   
-  /* Modal content padding */
-  [role="dialog"] > div,
-  .modal-content {
+  /* Modal content padding - but EXCLUDE MobileDialog components */
+  [role="dialog"]:not([data-mobile-dialog]) > div,
+  .modal-content:not([data-mobile-dialog]) {
     padding: 20px;
     height: 100%;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Close buttons in modals */
-  [role="dialog"] button[aria-label*="close"],
-  [role="dialog"] button[aria-label*="Close"],
-  .modal-close {
+  /* Close buttons in modals - but EXCLUDE MobileDialog components */
+  [role="dialog"]:not([data-mobile-dialog]) button[aria-label*="close"],
+  [role="dialog"]:not([data-mobile-dialog]) button[aria-label*="Close"],
+  .modal-close:not([data-mobile-dialog]) {
     position: fixed;
     top: 16px;
     right: 16px;

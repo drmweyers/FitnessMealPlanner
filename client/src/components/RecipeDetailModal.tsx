@@ -1,6 +1,11 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import {
+  MobileDialog as Dialog,
+  MobileDialogContent as DialogContent,
+  MobileDialogHeader as DialogHeader,
+  MobileDialogTitle as DialogTitle
+} from "./ui/mobile-dialog";
 import { Separator } from "./ui/separator";
 import { apiRequest } from "../lib/queryClient";
 import { Badge } from "./ui/badge";
@@ -15,13 +20,24 @@ interface RecipeDetailModalProps {
 
 export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeDetailModalProps) {
   console.log('RecipeDetailModal rendered:', { recipeId, isOpen });
-  
-  const { data: recipe, isLoading } = useQuery<Recipe>({
+
+  const { data: recipe, isLoading, error } = useQuery<Recipe>({
     queryKey: [`/api/recipes/${recipeId}`],
     queryFn: async () => {
-      if (!recipeId) return null;
-      const res = await apiRequest('GET', `/api/recipes/${recipeId}`);
-      return res.json();
+      if (!recipeId) {
+        console.log('No recipeId provided');
+        return null;
+      }
+      console.log('Fetching recipe:', recipeId);
+      try {
+        const res = await apiRequest('GET', `/api/recipes/${recipeId}`);
+        const data = await res.json();
+        console.log('Recipe fetched:', data);
+        return data;
+      } catch (err) {
+        console.error('Error fetching recipe:', err);
+        throw err;
+      }
     },
     enabled: !!recipeId && isOpen,
   });
@@ -29,12 +45,17 @@ export default function RecipeDetailModal({ recipeId, isOpen, onClose }: RecipeD
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto z-[60]">
+      <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto" style={{ zIndex: 70 }}>
         <DialogHeader>
           <DialogTitle>Recipe Details</DialogTitle>
         </DialogHeader>
 
-        {isLoading ? (
+        {error ? (
+          <div className="text-center py-8 text-red-500">
+            <p className="font-semibold">Error loading recipe</p>
+            <p className="text-sm mt-2">{error instanceof Error ? error.message : 'An error occurred'}</p>
+          </div>
+        ) : isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-8 w-3/4" />
             <Skeleton className="h-4 w-1/2" />

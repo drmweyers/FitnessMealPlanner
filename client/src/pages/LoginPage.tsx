@@ -57,7 +57,7 @@ const LoginPage = () => {
           navigate('/trainer');
           break;
         case 'customer':
-          navigate('/my-meal-plans');
+          navigate('/customer');
           break;
         default:
           navigate('/');

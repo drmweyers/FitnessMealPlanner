@@ -25,6 +25,7 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   roles?: string[];
+  customAction?: () => void;
 }
 
 const MobileNavigation: React.FC = () => {
@@ -32,6 +33,12 @@ const MobileNavigation: React.FC = () => {
   const { user, logout } = useAuth();
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Helper function to navigate with tab parameter
+  const navigateToCustomerTab = (tab: string) => {
+    const newUrl = `/customer${tab ? `?tab=${tab}` : ''}`;
+    setLocation(newUrl);
+  };
 
   // Define navigation items based on user role
   const getNavItems = (): NavItem[] => {
@@ -48,7 +55,7 @@ const MobileNavigation: React.FC = () => {
           { path: '/admin', label: 'Dashboard', icon: Home },
           { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
         ];
-      
+
       case 'trainer':
         return [
           ...baseItems,
@@ -58,16 +65,16 @@ const MobileNavigation: React.FC = () => {
           { path: '/trainer/meal-plans', label: 'Saved', icon: Calendar },
           { path: '/favorites', label: 'Favorites', icon: Heart },
         ];
-      
+
       case 'customer':
         return [
           ...baseItems,
           { path: '/customer', label: 'Dashboard', icon: Home },
-          { path: '/customer?tab=meal-plans', label: 'My Plans', icon: Calendar },
-          { path: '/customer?tab=progress', label: 'Progress', icon: Target },
+          { path: '/customer', label: 'My Plans', icon: Calendar, customAction: () => navigateToCustomerTab('meal-plans') },
+          { path: '/customer', label: 'Progress', icon: Target, customAction: () => navigateToCustomerTab('progress') },
           { path: '/favorites', label: 'Favorites', icon: Heart },
         ];
-      
+
       default:
         return baseItems;
     }
@@ -137,12 +144,18 @@ const MobileNavigation: React.FC = () => {
       <nav className="mobile-nav lg:hidden">
         {navItems.slice(0, 4).map((item) => {
           const Icon = item.icon;
-          const isActive = location === item.path;
-          
+          // For items with customAction, check active state based on current tab
+          const isActive = item.customAction
+            ? (location.includes('/customer') &&
+               ((item.label === 'My Plans' && new URLSearchParams(window.location.search).get('tab') === 'meal-plans') ||
+                (item.label === 'Progress' && new URLSearchParams(window.location.search).get('tab') === 'progress') ||
+                (item.label === 'Dashboard' && !new URLSearchParams(window.location.search).get('tab'))))
+            : location === item.path;
+
           return (
             <button
-              key={item.path}
-              onClick={() => setLocation(item.path)}
+              key={`${item.path}-${item.label}`}
+              onClick={() => item.customAction ? item.customAction() : setLocation(item.path)}
               className={`mobile-nav-item ${isActive ? 'active' : ''}`}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
@@ -213,15 +226,21 @@ const MobileNavigation: React.FC = () => {
             <nav className="p-4 space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = location === item.path;
-                
+                // For items with customAction, check active state based on current tab
+                const isActive = item.customAction
+                  ? (location.includes('/customer') &&
+                     ((item.label === 'My Plans' && new URLSearchParams(window.location.search).get('tab') === 'meal-plans') ||
+                      (item.label === 'Progress' && new URLSearchParams(window.location.search).get('tab') === 'progress') ||
+                      (item.label === 'Dashboard' && !new URLSearchParams(window.location.search).get('tab'))))
+                  : location === item.path;
+
                 return (
                   <button
-                    key={item.path}
-                    onClick={() => setLocation(item.path)}
+                    key={`${item.path}-${item.label}`}
+                    onClick={() => item.customAction ? item.customAction() : setLocation(item.path)}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
-                      isActive 
-                        ? 'bg-blue-50 text-blue-600' 
+                      isActive
+                        ? 'bg-blue-50 text-blue-600'
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                     data-testid={`side-menu-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
