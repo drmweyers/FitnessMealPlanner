@@ -231,8 +231,6 @@
   /* Force interactive elements to be touchable */
   *[onclick]:not(input):not(textarea),
   *[ng-click],
-  *[v-on\\:click],
-  *[@click],
   .pointer-events-auto,
   .cursor-pointer {
     min-height: 44px !important;
