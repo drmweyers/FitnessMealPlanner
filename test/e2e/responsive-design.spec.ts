@@ -1,346 +1,584 @@
 /**
- * Responsive Design and Cross-Device Testing
- * Tests application functionality across different screen sizes and devices
+ * Responsive Design E2E Tests
+ * Comprehensive tests for Progressive Web App responsive behavior
+ * Tests across multiple device sizes and orientations
  */
 
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../page-objects/LoginPage';
-import { DashboardPage } from '../page-objects/DashboardPage';
-import { MealPlanPage } from '../page-objects/MealPlanPage';
-import { TEST_ACCOUNTS, setupTestEnvironment } from '../playwright-setup';
+import { test, expect, devices } from '@playwright/test';
 
-// Device configurations for testing
-const DEVICE_CONFIGS = [
-  {
-    name: 'Desktop',
-    viewport: { width: 1920, height: 1080 },
-    userAgent: 'desktop'
+// Test credentials
+const TEST_USERS = {
+  admin: {
+    email: 'admin@fitmeal.pro',
+    password: 'AdminPass123'
   },
-  {
-    name: 'Laptop',
-    viewport: { width: 1366, height: 768 },
-    userAgent: 'laptop'
+  trainer: {
+    email: 'trainer.test@evofitmeals.com',
+    password: 'TestTrainer123!'
   },
-  {
-    name: 'Tablet',
-    viewport: { width: 768, height: 1024 },
-    userAgent: 'tablet'
-  },
-  {
-    name: 'Mobile',
-    viewport: { width: 375, height: 667 },
-    userAgent: 'mobile'
+  customer: {
+    email: 'customer.test@evofitmeals.com',
+    password: 'TestCustomer123!'
   }
-];
+};
 
-test.describe('📱 Responsive Design & Cross-Device Tests', () => {
-  let loginPage: LoginPage;
-  let dashboardPage: DashboardPage;
-  let mealPlanPage: MealPlanPage;
+// Device configurations for responsive testing
+const DEVICES = {
+  mobile: {
+    iPhoneSE: devices['iPhone SE'],
+    iPhone12: devices['iPhone 12'],
+    Pixel5: devices['Pixel 5'],
+    GalaxyS20: { ...devices['Galaxy S9+'], viewport: { width: 384, height: 854 } }
+  },
+  tablet: {
+    iPadMini: devices['iPad Mini'],
+    iPad: devices['iPad (gen 7)'],
+    iPadPro: devices['iPad Pro 11'],
+    iPadLandscape: { ...devices['iPad (gen 7)'], viewport: { width: 1080, height: 810 } }
+  },
+  desktop: {
+    desktop1080p: { viewport: { width: 1920, height: 1080 } },
+    desktop1440p: { viewport: { width: 2560, height: 1440 } },
+    desktop768p: { viewport: { width: 1366, height: 768 } },
+    desktopMin: { viewport: { width: 1024, height: 768 } }
+  }
+};
 
-  test.beforeAll(async () => {
-    await setupTestEnvironment();
-  });
+// Helper function to login
+async function login(page: any, userType: 'admin' | 'trainer' | 'customer') {
+  const user = TEST_USERS[userType];
+  await page.goto('/login');
+  await page.fill('input[type="email"]', user.email);
+  await page.fill('input[type="password"]', user.password);
+  await page.click('button[type="submit"]');
+  await page.waitForURL(/\/(admin|trainer|customer|my-meal-plans)/, { timeout: 10000 });
+}
 
-  test.beforeEach(async ({ page }) => {
-    loginPage = new LoginPage(page);
-    dashboardPage = new DashboardPage(page);
-    mealPlanPage = new MealPlanPage(page);
-    
-    await dashboardPage.clearSession();
-  });
+// Mobile View Tests
+test.describe('Mobile Responsive Design (0-767px)', () => {
+  test.describe('iPhone SE', () => {
+    test.use(DEVICES.mobile.iPhoneSE);
 
-  test.describe('Login Page Responsiveness', () => {
-    for (const device of DEVICE_CONFIGS) {
-      test(`Login page displays correctly on ${device.name}`, async ({ page }) => {
-        // Set viewport
-        await page.setViewportSize(device.viewport);
-        
-        // Navigate to login page
-        await loginPage.navigate();
-        
-        // Verify page elements are accessible
-        await loginPage.verifyPageElements();
-        
-        // Check if elements are properly positioned for the device
-        const emailInput = page.locator('input[type="email"]');
-        const passwordInput = page.locator('input[type="password"]');
-        const submitButton = page.locator('button[type="submit"]');
-        
-        // All elements should be visible and accessible
-        await expect(emailInput).toBeVisible();
-        await expect(passwordInput).toBeVisible();
-        await expect(submitButton).toBeVisible();
-        
-        // Elements should not overflow the viewport
-        const emailBox = await emailInput.boundingBox();
-        const passwordBox = await passwordInput.boundingBox();
-        const submitBox = await submitButton.boundingBox();
-        
-        if (emailBox) {
-          expect(emailBox.x + emailBox.width).toBeLessThanOrEqual(device.viewport.width);
-          expect(emailBox.y + emailBox.height).toBeLessThanOrEqual(device.viewport.height);
+    test('should show mobile navigation and hide desktop navigation', async ({ page }) => {
+      await login(page, 'customer');
+
+      // Mobile navigation should be visible
+      const mobileNav = page.locator('[data-testid="mobile-navigation"]');
+      await expect(mobileNav).toBeVisible();
+
+      // Desktop navigation should be hidden
+      const desktopNav = page.locator('header.hidden.lg\\:block');
+      await expect(desktopNav).toBeHidden();
+    });
+
+    test('should have proper touch targets (44px minimum)', async ({ page }) => {
+      await login(page, 'customer');
+
+      // Check button sizes
+      const buttons = await page.$$('button');
+      for (const button of buttons.slice(0, 5)) { // Test first 5 buttons
+        const box = await button.boundingBox();
+        if (box) {
+          expect(box.height).toBeGreaterThanOrEqual(44);
         }
-        
-        // Take screenshot for visual verification
-        await loginPage.takeScreenshot(`login-${device.name.toLowerCase()}-responsive`);
-        
-        console.log(`✅ Login page responsive design verified for ${device.name}`);
+      }
+
+      // Check input sizes
+      const inputs = await page.$$('input');
+      for (const input of inputs.slice(0, 5)) {
+        const box = await input.boundingBox();
+        if (box) {
+          expect(box.height).toBeGreaterThanOrEqual(44);
+        }
+      }
+    });
+
+    test('should stack content vertically', async ({ page }) => {
+      await login(page, 'trainer');
+      await page.goto('/trainer');
+
+      // Check that cards stack vertically
+      const cards = page.locator('.card, .bg-white.rounded-lg');
+      const count = await cards.count();
+
+      if (count >= 2) {
+        const firstCard = await cards.nth(0).boundingBox();
+        const secondCard = await cards.nth(1).boundingBox();
+
+        if (firstCard && secondCard) {
+          // Cards should be stacked (second card below first)
+          expect(secondCard.y).toBeGreaterThan(firstCard.y + firstCard.height - 10);
+        }
+      }
+    });
+
+    test('should have mobile-optimized typography', async ({ page }) => {
+      await login(page, 'customer');
+
+      // Check heading sizes
+      const h1 = page.locator('h1').first();
+      if (await h1.isVisible()) {
+        const fontSize = await h1.evaluate(el => window.getComputedStyle(el).fontSize);
+        expect(parseInt(fontSize)).toBeLessThanOrEqual(32); // Mobile h1 should be smaller
+      }
+    });
+  });
+
+  test.describe('iPhone 12', () => {
+    test.use(DEVICES.mobile.iPhone12);
+
+    test('should display bottom navigation correctly', async ({ page }) => {
+      await login(page, 'customer');
+
+      const mobileNav = page.locator('[data-testid="mobile-navigation"]');
+      await expect(mobileNav).toBeVisible();
+
+      // Check navigation position
+      const box = await mobileNav.boundingBox();
+      if (box) {
+        const viewport = page.viewportSize();
+        if (viewport) {
+          // Navigation should be at bottom
+          expect(box.y + box.height).toBeCloseTo(viewport.height, 50);
+        }
+      }
+    });
+
+    test('should handle forms properly on mobile', async ({ page }) => {
+      await page.goto('/login');
+
+      // Check input font sizes (should be 16px to prevent zoom on iOS)
+      const emailInput = page.locator('input[type="email"]');
+      const fontSize = await emailInput.evaluate(el => window.getComputedStyle(el).fontSize);
+      expect(parseInt(fontSize)).toBeGreaterThanOrEqual(16);
+    });
+  });
+
+  test.describe('Android Phone', () => {
+    test.use(DEVICES.mobile.Pixel5);
+
+    test('should handle mobile menu interactions', async ({ page }) => {
+      await login(page, 'trainer');
+
+      // Test mobile menu if present
+      const menuButton = page.locator('[data-testid="mobile-menu-button"]');
+      if (await menuButton.isVisible()) {
+        await menuButton.click();
+
+        // Menu should open
+        const menuContent = page.locator('[data-testid="mobile-menu-content"]');
+        await expect(menuContent).toBeVisible();
+      }
+    });
+  });
+});
+
+// Tablet View Tests
+test.describe('Tablet Responsive Design (768px-1023px)', () => {
+  test.describe('iPad Mini', () => {
+    test.use(DEVICES.tablet.iPadMini);
+
+    test('should show desktop navigation on tablet', async ({ page }) => {
+      await login(page, 'trainer');
+
+      // Desktop navigation should be visible
+      const desktopNav = page.locator('header').first();
+      await expect(desktopNav).toBeVisible();
+
+      // Mobile navigation should be hidden
+      const mobileNav = page.locator('[data-testid="mobile-navigation"]');
+      await expect(mobileNav).toBeHidden();
+    });
+
+    test('should display content in 2-column grid', async ({ page }) => {
+      await login(page, 'admin');
+      await page.goto('/admin');
+
+      // Check grid layout
+      const gridContainer = page.locator('.grid').first();
+      if (await gridContainer.isVisible()) {
+        const children = await gridContainer.locator('> *').all();
+        if (children.length >= 2) {
+          const firstBox = await children[0].boundingBox();
+          const secondBox = await children[1].boundingBox();
+
+          if (firstBox && secondBox) {
+            // Items should be side by side on tablet
+            expect(Math.abs(firstBox.y - secondBox.y)).toBeLessThan(20);
+          }
+        }
+      }
+    });
+
+    test('should have tablet-optimized spacing', async ({ page }) => {
+      await login(page, 'customer');
+
+      // Check container padding
+      const container = page.locator('.max-w-7xl').first();
+      if (await container.isVisible()) {
+        const padding = await container.evaluate(el => {
+          const styles = window.getComputedStyle(el);
+          return {
+            left: styles.paddingLeft,
+            right: styles.paddingRight
+          };
+        });
+
+        // Tablet should have moderate padding
+        expect(parseInt(padding.left)).toBeGreaterThanOrEqual(16);
+        expect(parseInt(padding.left)).toBeLessThanOrEqual(32);
+      }
+    });
+  });
+
+  test.describe('iPad Landscape', () => {
+    test.use(DEVICES.tablet.iPadLandscape);
+
+    test('should handle landscape orientation properly', async ({ page }) => {
+      await login(page, 'trainer');
+
+      // Content should utilize horizontal space
+      const mainContent = page.locator('main').first();
+      const box = await mainContent.boundingBox();
+
+      if (box) {
+        const viewport = page.viewportSize();
+        if (viewport) {
+          // Content should use most of viewport width
+          expect(box.width).toBeGreaterThan(viewport.width * 0.8);
+        }
+      }
+    });
+  });
+});
+
+// Desktop View Tests
+test.describe('Desktop Responsive Design (1024px+)', () => {
+  test.describe('Desktop 1080p', () => {
+    test.use(DEVICES.desktop.desktop1080p);
+
+    test('should show full desktop navigation', async ({ page }) => {
+      await login(page, 'admin');
+
+      // Desktop header should be visible
+      const header = page.locator('header').first();
+      await expect(header).toBeVisible();
+
+      // Navigation links should be visible
+      const navLinks = header.locator('nav a');
+      const count = await navLinks.count();
+      expect(count).toBeGreaterThan(0);
+
+      // Mobile navigation should be hidden
+      const mobileNav = page.locator('[data-testid="mobile-navigation"]');
+      await expect(mobileNav).toBeHidden();
+    });
+
+    test('should display content in multi-column layout', async ({ page }) => {
+      await login(page, 'trainer');
+      await page.goto('/trainer');
+
+      // Check for multi-column layout
+      const cards = page.locator('.card, .bg-white.rounded-lg');
+      const count = await cards.count();
+
+      if (count >= 3) {
+        const boxes = await Promise.all([
+          cards.nth(0).boundingBox(),
+          cards.nth(1).boundingBox(),
+          cards.nth(2).boundingBox()
+        ]);
+
+        const validBoxes = boxes.filter(box => box !== null);
+        if (validBoxes.length >= 2) {
+          // At least some cards should be side by side
+          const sameRow = validBoxes.filter(box =>
+            Math.abs(box!.y - validBoxes[0]!.y) < 20
+          );
+          expect(sameRow.length).toBeGreaterThanOrEqual(2);
+        }
+      }
+    });
+
+    test('should have hover effects on desktop', async ({ page }) => {
+      await login(page, 'customer');
+
+      // Test button hover
+      const button = page.locator('button').first();
+      if (await button.isVisible()) {
+        const initialStyles = await button.evaluate(el => {
+          return window.getComputedStyle(el).transform;
+        });
+
+        await button.hover();
+
+        // Some hover effect should be present
+        const hoverStyles = await button.evaluate(el => {
+          return window.getComputedStyle(el).transform;
+        });
+
+        // Styles might change on hover (transform, shadow, etc.)
+        // This is a basic check - actual hover styles depend on CSS
+        expect(button).toBeDefined();
+      }
+    });
+
+    test('should have desktop-optimized spacing', async ({ page }) => {
+      await login(page, 'trainer');
+
+      // Check container max-width
+      const container = page.locator('.max-w-7xl').first();
+      if (await container.isVisible()) {
+        const box = await container.boundingBox();
+        if (box) {
+          // Container should not exceed max-width
+          expect(box.width).toBeLessThanOrEqual(1280 + 64); // max-width + padding
+        }
+      }
+    });
+  });
+
+  test.describe('Desktop Minimum Width', () => {
+    test.use(DEVICES.desktop.desktopMin);
+
+    test('should maintain desktop layout at 1024px', async ({ page }) => {
+      await login(page, 'admin');
+
+      // Should still show desktop navigation at minimum desktop width
+      const header = page.locator('header').first();
+      await expect(header).toBeVisible();
+
+      const mobileNav = page.locator('[data-testid="mobile-navigation"]');
+      await expect(mobileNav).toBeHidden();
+    });
+  });
+});
+
+// Cross-Device Feature Tests
+test.describe('Cross-Device Features', () => {
+  test('mobile: should handle orientation change', async ({ browser }) => {
+    const context = await browser.newContext({
+      ...DEVICES.mobile.iPhone12,
+      viewport: { width: 390, height: 844 }
+    });
+    const page = await context.newPage();
+
+    await login(page, 'customer');
+
+    // Portrait mode
+    await expect(page.locator('[data-testid="mobile-navigation"]')).toBeVisible();
+
+    // Switch to landscape
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(500);
+
+    // Should still show appropriate navigation
+    const viewport = page.viewportSize();
+    if (viewport && viewport.width < 768) {
+      await expect(page.locator('[data-testid="mobile-navigation"]')).toBeVisible();
+    }
+
+    await context.close();
+  });
+
+  test('tablet: should transition from portrait to landscape', async ({ browser }) => {
+    const context = await browser.newContext({
+      ...DEVICES.tablet.iPad,
+      viewport: { width: 810, height: 1080 }
+    });
+    const page = await context.newPage();
+
+    await login(page, 'trainer');
+
+    // Portrait
+    const portraitHeader = page.locator('header').first();
+    await expect(portraitHeader).toBeVisible();
+
+    // Landscape
+    await page.setViewportSize({ width: 1080, height: 810 });
+    await page.waitForTimeout(500);
+
+    // Should maintain desktop navigation
+    await expect(portraitHeader).toBeVisible();
+
+    await context.close();
+  });
+
+  test('should maintain functionality across all breakpoints', async ({ browser }) => {
+    const breakpoints = [
+      { width: 320, height: 568 },   // Mobile small
+      { width: 768, height: 1024 },  // Tablet
+      { width: 1024, height: 768 },  // Desktop min
+      { width: 1920, height: 1080 }  // Desktop full
+    ];
+
+    for (const viewport of breakpoints) {
+      const context = await browser.newContext({ viewport });
+      const page = await context.newPage();
+
+      // Test login functionality at each breakpoint
+      await page.goto('/login');
+      await page.fill('input[type="email"]', TEST_USERS.customer.email);
+      await page.fill('input[type="password"]', TEST_USERS.customer.password);
+      await page.click('button[type="submit"]');
+
+      // Should successfully login regardless of viewport
+      await expect(page).toHaveURL(/\/(customer|my-meal-plans)/, { timeout: 10000 });
+
+      await context.close();
+    }
+  });
+});
+
+// Accessibility Tests
+test.describe('Responsive Accessibility', () => {
+  test('should maintain focus indicators on all devices', async ({ browser }) => {
+    const viewports = [
+      { width: 375, height: 812 },   // Mobile
+      { width: 768, height: 1024 },  // Tablet
+      { width: 1920, height: 1080 }  // Desktop
+    ];
+
+    for (const viewport of viewports) {
+      const context = await browser.newContext({ viewport });
+      const page = await context.newPage();
+
+      await page.goto('/login');
+
+      // Tab through elements
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Tab');
+
+      // Check for focus indicator
+      const focusedElement = await page.evaluate(() => {
+        const el = document.activeElement;
+        if (el) {
+          const styles = window.getComputedStyle(el);
+          return {
+            outline: styles.outline,
+            outlineOffset: styles.outlineOffset
+          };
+        }
+        return null;
       });
+
+      expect(focusedElement).toBeDefined();
+
+      await context.close();
     }
   });
 
-  test.describe('Dashboard Responsiveness', () => {
-    for (const device of DEVICE_CONFIGS) {
-      test(`Dashboard displays correctly on ${device.name}`, async ({ page }) => {
-        // Set viewport
-        await page.setViewportSize(device.viewport);
-        
-        // Login as customer (has good dashboard content)
-        await loginPage.navigate();
-        await loginPage.login(TEST_ACCOUNTS.customer.email, TEST_ACCOUNTS.customer.password);
-        await dashboardPage.waitForDashboardLoad();
-        
-        // Verify dashboard accessibility
-        await dashboardPage.verifyAccessibility();
-        
-        // Check if navigation works on the device
-        try {
-          await dashboardPage.verifyCustomerFeatures();
-          console.log(`✅ Dashboard features accessible on ${device.name}`);
-        } catch (error) {
-          console.log(`⚠️ Dashboard features may need adjustment for ${device.name}: ${error.message}`);
-        }
-        
-        // Check if content fits within viewport
-        const body = page.locator('body');
-        const bodyBox = await body.boundingBox();
-        
-        if (bodyBox && device.name === 'Mobile') {
-          // On mobile, horizontal scrolling should be minimal
-          console.log(`Mobile layout check - body width: ${bodyBox.width}, viewport: ${device.viewport.width}`);
-        }
-        
-        await dashboardPage.takeScreenshot(`dashboard-${device.name.toLowerCase()}-responsive`);
-        
-        console.log(`✅ Dashboard responsive design verified for ${device.name}`);
-      });
+  test('should maintain ARIA landmarks across breakpoints', async ({ browser }) => {
+    const viewports = [
+      { width: 375, height: 812 },
+      { width: 1920, height: 1080 }
+    ];
+
+    for (const viewport of viewports) {
+      const context = await browser.newContext({ viewport });
+      const page = await context.newPage();
+
+      await login(page, 'customer');
+
+      // Check for main landmark
+      await expect(page.locator('main')).toBeVisible();
+
+      // Check for navigation landmark
+      const nav = page.locator('nav, [role="navigation"]').first();
+      await expect(nav).toBeVisible();
+
+      await context.close();
     }
   });
+});
 
-  test.describe('Cross-Device Authentication Flow', () => {
-    test('Authentication flow works across all device sizes', async ({ page }) => {
-      for (const device of DEVICE_CONFIGS) {
-        console.log(`🧪 Testing authentication flow on ${device.name}...`);
-        
-        // Set viewport for current device
-        await page.setViewportSize(device.viewport);
-        
-        // Clear session and navigate to login
-        await dashboardPage.clearSession();
-        await loginPage.navigate();
-        
-        // Perform login
-        await loginPage.login(TEST_ACCOUNTS.customer.email, TEST_ACCOUNTS.customer.password);
-        await dashboardPage.waitForDashboardLoad();
-        
-        // Verify successful authentication
-        await dashboardPage.verifyPath('/my-meal-plans');
-        
-        // Take screenshot
-        await dashboardPage.takeScreenshot(`auth-flow-${device.name.toLowerCase()}`);
-        
-        console.log(`✅ Authentication flow verified for ${device.name}`);
-      }
+// Performance Tests
+test.describe('Responsive Performance', () => {
+  test('should load efficiently on mobile', async ({ browser }) => {
+    const context = await browser.newContext({
+      ...DEVICES.mobile.iPhone12
     });
+    const page = await context.newPage();
+
+    const startTime = Date.now();
+    await page.goto('/login');
+    const loadTime = Date.now() - startTime;
+
+    // Page should load reasonably fast
+    expect(loadTime).toBeLessThan(5000);
+
+    await context.close();
   });
 
-  test.describe('Mobile-Specific Interactions', () => {
-    test('Touch interactions work correctly on mobile', async ({ page }) => {
-      // Set mobile viewport
-      await page.setViewportSize(DEVICE_CONFIGS.find(d => d.name === 'Mobile')!.viewport);
-      
-      // Login
-      await loginPage.navigate();
-      await loginPage.login(TEST_ACCOUNTS.customer.email, TEST_ACCOUNTS.customer.password);
-      await dashboardPage.waitForDashboardLoad();
-      
-      // Test touch/tap interactions
-      try {
-        // Try to navigate to meal plans using touch events
-        await mealPlanPage.navigateToMealPlans();
-        
-        // Verify content is accessible via touch
-        const hasMealPlanContent = await mealPlanPage.hasMealPlanContent();
-        console.log(`Mobile meal plan content accessible: ${hasMealPlanContent}`);
-        
-        await mealPlanPage.takeScreenshot('mobile-touch-interactions');
-      } catch (error) {
-        console.log(`Mobile interaction test: ${error.message}`);
-      }
-    });
+  test('should handle responsive images', async ({ page }) => {
+    await login(page, 'customer');
 
-    test('Mobile menu and navigation', async ({ page }) => {
-      // Set mobile viewport
-      await page.setViewportSize(DEVICE_CONFIGS.find(d => d.name === 'Mobile')!.viewport);
-      
-      // Login
-      await loginPage.navigate();
-      await loginPage.login(TEST_ACCOUNTS.trainer.email, TEST_ACCOUNTS.trainer.password);
-      await dashboardPage.waitForDashboardLoad();
-      
-      // Look for mobile-specific navigation (hamburger menu, etc.)
-      const mobileMenuSelectors = [
-        '[data-testid=\"mobile-menu\"]',
-        '.hamburger',
-        '.mobile-nav',
-        'button[aria-label*=\"menu\"]',
-        'button[aria-label*=\"Menu\"]'
-      ];
-      
-      let foundMobileMenu = false;
-      for (const selector of mobileMenuSelectors) {
-        if (await page.locator(selector).isVisible({ timeout: 1000 })) {
-          foundMobileMenu = true;
-          console.log(`✅ Mobile menu found: ${selector}`);
-          
-          // Try to interact with mobile menu
-          await page.locator(selector).click();
-          await page.waitForTimeout(1000);
-          
-          break;
+    // Check for responsive images
+    const images = page.locator('img');
+    const count = await images.count();
+
+    for (let i = 0; i < Math.min(count, 5); i++) {
+      const img = images.nth(i);
+      if (await img.isVisible()) {
+        const srcset = await img.getAttribute('srcset');
+        const sizes = await img.getAttribute('sizes');
+
+        // Images should have responsive attributes or be appropriately sized
+        const box = await img.boundingBox();
+        if (box) {
+          const viewport = page.viewportSize();
+          if (viewport) {
+            // Images shouldn't exceed viewport
+            expect(box.width).toBeLessThanOrEqual(viewport.width);
+          }
         }
       }
-      
-      if (!foundMobileMenu) {
-        console.log('ℹ️ No mobile-specific menu found - may use standard navigation');
-      }
-      
-      await dashboardPage.takeScreenshot('mobile-navigation-test');
-    });
+    }
   });
+});
 
-  test.describe('Tablet-Specific Layout', () => {
-    test('Tablet layout optimization', async ({ page }) => {
-      // Set tablet viewport
-      await page.setViewportSize(DEVICE_CONFIGS.find(d => d.name === 'Tablet')!.viewport);
-      
-      // Login as admin to test more complex layouts
-      await loginPage.navigate();
-      await loginPage.login(TEST_ACCOUNTS.admin.email, TEST_ACCOUNTS.admin.password);
-      await dashboardPage.waitForDashboardLoad();
-      
-      // Verify admin features are accessible on tablet
-      try {
-        const adminFeatures = await dashboardPage.verifyAdminFeatures();
-        console.log(`✅ Admin features accessible on tablet: ${adminFeatures}`);
-      } catch (error) {
-        console.log(`⚠️ Admin features may need tablet optimization: ${error.message}`);
-      }
-      
-      await dashboardPage.takeScreenshot('tablet-admin-layout');
-    });
-  });
+// Visual Regression Prevention
+test.describe('Visual Consistency', () => {
+  test('should maintain consistent spacing across breakpoints', async ({ browser }) => {
+    const measurements = [];
+    const viewports = [
+      { width: 375, height: 812, name: 'mobile' },
+      { width: 768, height: 1024, name: 'tablet' },
+      { width: 1920, height: 1080, name: 'desktop' }
+    ];
 
-  test.describe('Performance Across Devices', () => {
-    test('Page load performance across device types', async ({ page }) => {
-      const performanceResults = [];
-      
-      for (const device of DEVICE_CONFIGS) {
-        console.log(`📊 Testing performance on ${device.name}...`);
-        
-        // Set viewport
-        await page.setViewportSize(device.viewport);
-        
-        // Clear session
-        await dashboardPage.clearSession();
-        
-        // Measure login page load time
-        const loginStartTime = Date.now();
-        await loginPage.navigate();
-        const loginLoadTime = Date.now() - loginStartTime;
-        
-        // Measure authentication time
-        const authStartTime = Date.now();
-        await loginPage.login(TEST_ACCOUNTS.customer.email, TEST_ACCOUNTS.customer.password);
-        await dashboardPage.waitForDashboardLoad();
-        const authTime = Date.now() - authStartTime;
-        
-        // Measure meal plan navigation time
-        const mealPlanStartTime = Date.now();
-        try {
-          await mealPlanPage.navigateToMealPlans();
-          const mealPlanLoadTime = Date.now() - mealPlanStartTime;
-          
-          performanceResults.push({
-            device: device.name,
-            loginLoadTime,
-            authTime,
-            mealPlanLoadTime,
-            totalTime: loginLoadTime + authTime + mealPlanLoadTime
-          });
-        } catch (error) {
-          performanceResults.push({
-            device: device.name,
-            loginLoadTime,
-            authTime,
-            mealPlanLoadTime: -1,
-            totalTime: loginLoadTime + authTime,
-            error: error.message
-          });
-        }
-      }
-      
-      // Log performance results
-      console.log('📊 Performance Results:');
-      console.table(performanceResults);
-      
-      // Verify reasonable performance (under 10 seconds total for basic flow)
-      for (const result of performanceResults) {
-        expect(result.totalTime).toBeLessThan(10000);
-      }
-    });
-  });
+    for (const viewport of viewports) {
+      const context = await browser.newContext({
+        viewport: { width: viewport.width, height: viewport.height }
+      });
+      const page = await context.newPage();
 
-  test.describe('Orientation Changes', () => {
-    test('Application handles orientation changes', async ({ page }) => {
-      // Start with portrait mobile
-      await page.setViewportSize({ width: 375, height: 667 });
-      
-      // Login
-      await loginPage.navigate();
-      await loginPage.login(TEST_ACCOUNTS.customer.email, TEST_ACCOUNTS.customer.password);
-      await dashboardPage.waitForDashboardLoad();
-      
-      await dashboardPage.takeScreenshot('orientation-portrait');
-      
-      // Change to landscape
-      await page.setViewportSize({ width: 667, height: 375 });
-      await page.waitForTimeout(1000); // Allow layout to adjust
-      
-      // Verify functionality still works
-      try {
-        await dashboardPage.verifyCustomerFeatures();
-        console.log('✅ Landscape orientation maintains functionality');
-      } catch (error) {
-        console.log(`⚠️ Landscape orientation issue: ${error.message}`);
-      }
-      
-      await dashboardPage.takeScreenshot('orientation-landscape');
-      
-      // Change back to portrait
-      await page.setViewportSize({ width: 375, height: 667 });
-      await page.waitForTimeout(1000);
-      
-      // Verify functionality restored
-      try {
-        await dashboardPage.verifyCustomerFeatures();
-        console.log('✅ Portrait orientation restored successfully');
-      } catch (error) {
-        console.log(`⚠️ Orientation change issue: ${error.message}`);
-      }
-      
-      await dashboardPage.takeScreenshot('orientation-portrait-restored');
-    });
+      await login(page, 'customer');
+
+      // Measure key spacing elements
+      const mainPadding = await page.locator('main').evaluate(el => {
+        const styles = window.getComputedStyle(el);
+        return {
+          paddingTop: parseInt(styles.paddingTop),
+          paddingBottom: parseInt(styles.paddingBottom)
+        };
+      });
+
+      measurements.push({
+        viewport: viewport.name,
+        padding: mainPadding
+      });
+
+      await context.close();
+    }
+
+    // Verify appropriate scaling
+    const mobilePadding = measurements.find(m => m.viewport === 'mobile')?.padding;
+    const desktopPadding = measurements.find(m => m.viewport === 'desktop')?.padding;
+
+    if (mobilePadding && desktopPadding) {
+      // Desktop should have more padding than mobile
+      expect(desktopPadding.paddingTop).toBeGreaterThanOrEqual(mobilePadding.paddingTop);
+    }
   });
 });

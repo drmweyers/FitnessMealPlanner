@@ -1,0 +1,111 @@
+/**
+ * Clean Responsive Design System
+ * Progressive enhancement without forcing mobile styles on desktop
+ */
+
+/* Mobile styles ONLY for screens below 768px */
+@media (max-width: 767px) {
+  /* Touch targets for mobile only */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Mobile navigation visible */
+  [data-testid="mobile-navigation"] {
+    display: block;
+  }
+
+  /* Hide desktop header on mobile */
+  header.lg\:block {
+    display: none !important;
+  }
+
+  /* Stack content on mobile */
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Mobile typography */
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+
+  /* Mobile container padding */
+  .container, .max-w-7xl {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Tablet styles for 768px to 1023px */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Hide mobile navigation */
+  [data-testid="mobile-navigation"] {
+    display: none;
+  }
+
+  /* Show desktop header */
+  header {
+    display: block;
+  }
+
+  /* 2-column grid on tablets */
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Tablet typography */
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+
+  /* Tablet container padding */
+  .container, .max-w-7xl {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Desktop styles for 1024px and above */
+@media (min-width: 1024px) {
+  /* Hide mobile navigation completely */
+  [data-testid="mobile-navigation"] {
+    display: none !important;
+  }
+
+  /* Show desktop header */
+  header {
+    display: block;
+  }
+
+  /* Desktop doesn't need touch target enforcement */
+  button, a, input, select, textarea {
+    /* Let natural sizes apply */
+    min-height: auto;
+  }
+
+  /* Multi-column grid on desktop */
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  /* Desktop typography */
+  h1 { font-size: 2.25rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.75rem; }
+
+  /* Desktop container with max-width */
+  .container, .max-w-7xl {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  /* Enable hover effects only on desktop */
+  button:hover, a:hover {
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+}
