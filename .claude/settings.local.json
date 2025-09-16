@@ -74,7 +74,11 @@
       "Bash(for i in {1..5})",
       "Bash(do echo \"Attempt $i:\")",
       "Bash(for i in {1..3})",
-      "Bash(do echo \"Test $i:\")"
+      "Bash(do echo \"Test $i:\")",
+      "mcp__github__list_issues",
+      "Bash(doctl:*)",
+      "Bash(dir \"C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\client\\src\\styles\" /b)",
+      "Bash(dir C:Usersdrmweclaude-workspaceFitnessMealPlanner)"
     ],
     "deny": [],
     "ask": [],

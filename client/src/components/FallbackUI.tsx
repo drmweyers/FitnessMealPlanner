@@ -7,7 +7,7 @@ export default function FallbackUI() {
     <div className="min-h-screen bg-slate-50">
       {/* Navigation */}
       <nav className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full xl:max-w-9xl 2xl:max-w-10xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <i className="fas fa-utensils text-primary text-2xl"></i>
@@ -27,7 +27,7 @@ export default function FallbackUI() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full xl:max-w-9xl 2xl:max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="recipes" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="recipes">

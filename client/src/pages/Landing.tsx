@@ -6,7 +6,7 @@ export default function Landing() {
     <div className="min-h-screen bg-slate-50">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-primary to-primary/80 text-white">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-24">
+        <div className="w-full xl:max-w-9xl 2xl:max-w-10xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-24">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4 sm:mb-6">
               <i className="fas fa-utensils text-2xl sm:text-3xl lg:text-4xl"></i>
@@ -36,7 +36,7 @@ export default function Landing() {
 
       {/* Features Section */}
       <div className="py-12 sm:py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="w-full xl:max-w-9xl 2xl:max-w-10xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-12 lg:mb-16">
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-3 sm:mb-4">
               Why Choose EvoFitMeals?
@@ -94,7 +94,7 @@ export default function Landing() {
 
       {/* Stats Section */}
       <div className="bg-white py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="w-full xl:max-w-9xl 2xl:max-w-10xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
             <div className="p-4 sm:p-6">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2">

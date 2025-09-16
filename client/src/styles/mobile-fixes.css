@@ -255,8 +255,23 @@
   .max-w-7xl {
     padding-left: 32px;
     padding-right: 32px;
-    max-width: 1280px;
     margin: 0 auto;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1280px) {
+  .container,
+  .max-w-7xl {
+    max-width: 1536px;
+  }
+}
+
+/* XL Desktop */
+@media (min-width: 1920px) {
+  .container,
+  .max-w-7xl {
+    max-width: 1920px;
   }
 
   /* Multi-column grids on desktop */

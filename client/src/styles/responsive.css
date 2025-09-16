@@ -95,11 +95,11 @@
   h2 { font-size: 2rem; }
   h3 { font-size: 1.75rem; }
 
-  /* Desktop container with max-width */
+  /* Desktop container - wider for larger screens */
   .container, .max-w-7xl {
     padding-left: 2rem;
     padding-right: 2rem;
-    max-width: 1280px;
+    width: 100%;
     margin: 0 auto;
   }
 
@@ -108,4 +108,23 @@
     transform: translateY(-1px);
     transition: all 0.2s ease;
   }
+}
+
+/* Large desktop styles for 1536px and above */
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
+  }
+}
+
+/* Extra large desktop styles for 1920px and above */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1920px;
+  }
+
+  /* Larger typography for bigger screens */
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 2.25rem; }
+  h3 { font-size: 2rem; }
 }

@@ -134,6 +134,13 @@ body {
   }
 }
 
+/* 3X large devices */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1920px;
+  }
+}
+
 /* ========================================
    4. RESPONSIVE GRID SYSTEM
    ======================================== */

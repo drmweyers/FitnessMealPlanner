@@ -13,6 +13,11 @@ export default {
       '2xl': '1536px',
     },
     extend: {
+      maxWidth: {
+        '8xl': '1408px',
+        '9xl': '1536px',
+        '10xl': '1920px',
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

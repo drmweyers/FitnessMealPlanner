@@ -242,8 +242,7 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
-      <div className="p-2 xs:p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="w-full">
         {/* Debug Information Panel
         <Card className="mb-6 border-amber-200 bg-amber-50/80 backdrop-blur-sm">
           <CardContent className="p-4">
@@ -672,7 +671,6 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
     </div>
   );
 };

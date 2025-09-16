@@ -250,7 +250,7 @@ const AdminAnalytics: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl" data-testid="metrics-loaded">
+    <div className="w-full" data-testid="metrics-loaded">
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

@@ -78,7 +78,7 @@ export default function Trainer() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+    <div className="w-full">
       {/* Header Section */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
