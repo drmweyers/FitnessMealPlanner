@@ -1,17 +1,68 @@
 /**
- * Mobile-Specific Fixes
- * Story 1.8: Responsive UI/UX Enhancement
- * 
- * Critical fixes for mobile devices to ensure proper functionality
+ * COMPREHENSIVE MOBILE FIXES
+ * Production-Ready Mobile UI Enhancements
+ *
+ * Fixes for:
+ * - Touch target compliance (100% at 44px minimum)
+ * - Mobile navigation visibility
+ * - Login flow issues
+ * - Cross-browser compatibility (Chrome, Firefox, Safari)
+ * - Performance optimization
  */
 
 /* ========================================
-   1. iOS ZOOM PREVENTION
-   Force 16px minimum font size on form inputs
+   1. UNIVERSAL TOUCH TARGET COMPLIANCE
+   Ensure ALL interactive elements meet 44px minimum
    ======================================== */
 
-/* Mobile-only: Force 16px font size on ALL form inputs */
 @media (max-width: 768px) {
+  /* Universal touch target rule - applies to ALL interactive elements */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="checkbox"],
+  [role="radio"],
+  [tabindex]:not([tabindex="-1"]),
+  .btn,
+  .button,
+  .clickable,
+  [onclick],
+  span[onclick],
+  div[onclick],
+  li[onclick],
+  [class*="btn"],
+  [class*="button"],
+  [class*="click"],
+  [class*="touch"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+    cursor: pointer !important;
+    position: relative !important;
+    /* Ensure minimum clickable area even if visual element is smaller */
+    padding: max(12px, calc((44px - 1em) / 2)) 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Ensure proper padding for buttons and links */
+  button,
+  a[href],
+  [role="button"] {
+    padding: 12px 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    border-radius: 8px !important;
+  }
+
+  /* Form inputs - maintain 16px font but ensure touch targets */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -24,178 +75,510 @@
   input[type="datetime-local"],
   textarea,
   select {
+    min-height: 44px !important;
+    padding: 12px 16px !important;
     font-size: 16px !important; /* Prevent iOS zoom */
-    min-height: 44px !important; /* Ensure touch target */
+    line-height: 1.2 !important;
+    border-radius: 8px !important;
+    border: 2px solid #e5e7eb !important;
+    background: white !important;
   }
-  
-  /* Override any text-sm classes on mobile */
+
+  /* Override any conflicting size classes */
   .text-sm input,
   .text-sm textarea,
   .text-sm select,
   input.text-sm,
   textarea.text-sm,
-  select.text-sm {
+  select.text-sm,
+  .h-8 input,
+  .h-9 input,
+  .h-10 input,
+  .h-11 input {
     font-size: 16px !important;
-  }
-  
-  /* Ensure input containers are properly sized */
-  .h-11 {
     min-height: 44px !important;
+    padding: 12px 16px !important;
   }
-}
 
-/* ========================================
-   2. TOUCH TARGET ENHANCEMENT
-   Ensure all interactive elements meet 44px minimum
-   ======================================== */
-
-@media (max-width: 768px) {
-  /* Buttons and links */
-  button,
-  a[href],
-  [role="button"],
-  .btn,
-  .button {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 12px 16px;
-  }
-  
-  /* Small buttons need special handling */
+  /* Small buttons - force larger sizes */
+  button.h-6,
+  button.h-7,
   button.h-8,
   button.h-9,
   button.h-10,
-  .btn-sm {
+  .btn-xs,
+  .btn-sm,
+  .text-xs button,
+  .text-sm button {
     min-height: 44px !important;
-    padding: 10px 12px;
+    min-width: 44px !important;
+    padding: 10px 12px !important;
+    font-size: 14px !important;
   }
-  
-  /* Icon buttons */
-  button.w-8.h-8,
-  button.w-10.h-10 {
+
+  /* Icon-only buttons - ensure square touch targets */
+  button[aria-label]:empty,
+  button:has(svg):not(:has(span, div, p)),
+  .icon-button,
+  [class*="icon-btn"],
+  button.w-8,
+  button.w-9,
+  button.w-10,
+  /* Additional icon button patterns */
+  button[aria-label*="menu"],
+  button[aria-label*="Menu"],
+  button[aria-label*="close"],
+  button[aria-label*="Close"],
+  button[aria-label*="back"],
+  button[aria-label*="Back"],
+  button[data-testid*="menu"],
+  button[data-testid*="close"],
+  /* SVG-only buttons */
+  button > svg:only-child,
+  [role="button"] > svg:only-child,
+  /* Small utility buttons */
+  .hamburger,
+  .menu-button,
+  .close-button {
     width: 44px !important;
     height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+    transition: background-color 0.2s ease !important;
   }
-  
-  /* Links that are too small */
+
+  /* Links - both standalone and inline */
   a[href] {
-    display: inline-block;
-    min-height: 44px;
-    line-height: 44px;
-    padding: 0 8px;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 8px 12px !important;
+    touch-action: manipulation;
+    text-decoration: underline;
   }
-  
-  /* Links in text */
-  p a,
-  span a,
-  .text-xs a,
-  .text-sm a {
-    padding: 8px 4px;
-    margin: -8px -4px;
-    min-height: auto;
-    line-height: inherit;
+
+  /* Special handling for inline text links */
+  p a[href],
+  span a[href],
+  li a[href],
+  .text-xs a[href],
+  .text-sm a[href] {
+    padding: 12px 8px !important;
+    margin: -12px -8px !important;
+    min-height: 44px !important;
+    line-height: 1.2 !important;
+    display: inline-flex !important;
+    align-items: center !important;
   }
-  
-  /* Checkboxes and radio buttons */
+
+  /* Checkboxes and radio buttons with larger touch areas */
   input[type="checkbox"],
   input[type="radio"] {
-    min-width: 24px !important;
-    min-height: 24px !important;
-    margin: 10px;
+    width: 20px !important;
+    height: 20px !important;
+    margin: 12px !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
   }
-  
-  /* Their label containers */
+
+  /* Label containers for checkboxes/radios */
   label:has(input[type="checkbox"]),
-  label:has(input[type="radio"]) {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
+  label:has(input[type="radio"]),
+  .checkbox-label,
+  .radio-label {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px 8px !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+  }
+
+  /* ==== AGGRESSIVE TOUCH TARGET ENFORCEMENT ==== */
+  /* Override any framework classes that might make elements too small */
+
+  /* Tailwind size overrides for interactive elements only */
+  button.h-6, button.h-7, button.h-8, button.h-9, button.h-10,
+  a.h-6, a.h-7, a.h-8, a.h-9, a.h-10,
+  button.w-6, button.w-7, button.w-8, button.w-9, button.w-10,
+  a.w-6, a.w-7, a.w-8, a.w-9, a.w-10 {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Small padding overrides for interactive elements */
+  button.p-1, button.p-2, button.p-3,
+  a.p-1, a.p-2, a.p-3,
+  button.px-1, button.px-2, button.px-3,
+  a.px-1, a.px-2, a.px-3,
+  button.py-1, button.py-2, button.py-3,
+  a.py-1, a.py-2, a.py-3 {
+    padding: 12px 16px !important;
+  }
+
+  /* Tiny margin fixes */
+  .-m-1, .-m-2, .-m-3,
+  .-mx-1, .-mx-2, .-mx-3,
+  .-my-1, .-my-2, .-my-3 {
+    margin: 0 !important;
+  }
+
+  /* Force interactive elements to be touchable */
+  *[onclick]:not(input):not(textarea),
+  *[ng-click],
+  *[v-on\\:click],
+  *[@click],
+  .pointer-events-auto,
+  .cursor-pointer {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    touch-action: manipulation !important;
+    cursor: pointer !important;
+  }
+
+  /* Special handling for React/Vue event handlers */
+  *[class*="onClick"],
+  *[class*="onTap"],
+  *[class*="onTouch"],
+  *[data-click],
+  *[data-tap] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 12px !important;
+    touch-action: manipulation !important;
+  }
+
+  /* Ensure list items with click handlers are touchable */
+  li[onclick],
+  li[role="button"],
+  li.clickable,
+  ul > li > button,
+  ol > li > button,
+  .list-item.clickable {
+    min-height: 48px !important;
+    padding: 12px 16px !important;
+    display: flex !important;
+    align-items: center !important;
   }
 }
 
 /* ========================================
-   3. MOBILE NAVIGATION FIXES
+   2. MOBILE NAVIGATION VISIBILITY FIXES
+   Ensure navigation appears after login
    ======================================== */
 
 @media (max-width: 1023px) {
-  /* Ensure mobile nav items are properly sized */
-  .mobile-nav-item {
+  /* Force mobile navigation to be visible */
+  .mobile-nav,
+  [class*="mobile-nav"],
+  nav.mobile {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 50 !important;
+    background: white !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding: 8px 0 !important;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Mobile navigation items */
+  .mobile-nav-item,
+  [class*="mobile-nav-item"] {
     min-height: 56px !important;
     min-width: 64px !important;
-    padding: 8px 12px;
+    padding: 8px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 !important;
+    touch-action: manipulation !important;
+    cursor: pointer !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
   }
-  
-  /* Side menu items */
-  .fixed.left-0 button,
-  [class*="drawer"] button,
-  [class*="menu"] button {
-    min-height: 48px;
-    width: 100%;
-    justify-content: flex-start;
-    padding: 12px 16px;
+
+  .mobile-nav-item:hover,
+  .mobile-nav-item:focus,
+  .mobile-nav-item.active {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    color: #3b82f6 !important;
+  }
+
+  /* Mobile header with menu button */
+  .mobile-header,
+  header.mobile {
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 40 !important;
+    background: white !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 12px 16px !important;
+    height: 60px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Hide desktop navigation on mobile */
+  nav.desktop,
+  .desktop-nav,
+  .hidden.lg\\:flex,
+  .hidden.lg\\:block {
+    display: none !important;
+  }
+
+  /* Show mobile-only elements */
+  .lg\\:hidden {
+    display: block !important;
+  }
+
+  .lg\\:hidden.flex {
+    display: flex !important;
   }
 }
 
 /* ========================================
-   4. FORM ENHANCEMENTS
+   3. LOGIN FLOW IMPROVEMENTS
+   Fix mobile login redirects and UX
    ======================================== */
 
 @media (max-width: 768px) {
-  /* Form groups spacing */
-  .space-y-4 > * {
-    margin-bottom: 16px;
+  /* Login form container */
+  .login-container,
+  .auth-container {
+    padding: 20px 16px !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
-  
-  /* Labels */
-  label {
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 8px;
-    display: block;
+
+  /* Login card styling */
+  .login-card,
+  .auth-card,
+  [class*="card"] {
+    width: 100% !important;
+    max-width: 400px !important;
+    margin: 0 auto !important;
+    padding: 24px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
   }
-  
-  /* Error messages */
-  .text-xs {
-    font-size: 12px;
-    line-height: 16px;
-  }
-  
-  /* Submit buttons */
-  button[type="submit"] {
+
+  /* Submit buttons on forms */
+  button[type="submit"],
+  .submit-button {
     min-height: 48px !important;
     font-size: 16px !important;
-    font-weight: 600;
-    width: 100%;
+    font-weight: 600 !important;
+    width: 100% !important;
+    border-radius: 8px !important;
+    margin-top: 16px !important;
+  }
+
+  /* Form spacing */
+  .form-group,
+  .space-y-4 > *,
+  .space-y-6 > * {
+    margin-bottom: 16px !important;
+  }
+
+  /* Loading states */
+  .loading,
+  [class*="loading"] {
+    pointer-events: none !important;
+    opacity: 0.7 !important;
   }
 }
 
 /* ========================================
-   5. TABLE RESPONSIVE FIXES
+   4. FIREFOX COMPATIBILITY FIXES
+   Cross-browser mobile support
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Firefox-specific fixes */
+  @-moz-document url-prefix() {
+    /* Fix button heights in Firefox */
+    button,
+    input[type="submit"],
+    input[type="button"] {
+      min-height: 44px !important;
+      line-height: 1.2 !important;
+      padding: 12px 16px !important;
+    }
+
+    /* Fix flex layouts */
+    .flex,
+    .mobile-nav,
+    .mobile-nav-item {
+      display: -moz-box !important;
+      display: flex !important;
+    }
+
+    /* Fix form inputs */
+    input,
+    textarea,
+    select {
+      -moz-appearance: none !important;
+      background: white !important;
+      border: 2px solid #e5e7eb !important;
+    }
+  }
+
+  /* Safari iOS fixes */
+  @supports (-webkit-touch-callout: none) {
+    /* Fix Safari zoom issues */
+    input,
+    textarea,
+    select {
+      -webkit-text-size-adjust: 100% !important;
+      transform: scale(1) !important;
+    }
+
+    /* Fix Safari safe areas */
+    .mobile-nav {
+      padding-bottom: env(safe-area-inset-bottom, 8px) !important;
+    }
+
+    body {
+      padding-top: env(safe-area-inset-top, 0px) !important;
+    }
+  }
+
+  /* Chrome/Webkit specific */
+  @supports (-webkit-appearance: none) {
+    input[type="search"] {
+      -webkit-appearance: none !important;
+    }
+
+    button {
+      -webkit-appearance: none !important;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+    }
+  }
+}
+
+/* ========================================
+   5. RESPONSIVE LAYOUT IMPROVEMENTS
+   Ensure proper mobile responsive behavior
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll */
+  html,
+  body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  /* Container responsive fixes */
+  .container,
+  .max-w-7xl,
+  .max-w-6xl,
+  .max-w-5xl,
+  .max-w-4xl {
+    max-width: 100% !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* Grid responsiveness */
+  .grid,
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Flex wrap for cards */
+  .flex-wrap {
+    flex-direction: column !important;
+  }
+
+  /* Typography scaling */
+  h1 {
+    font-size: 24px !important;
+    line-height: 1.3 !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
+    line-height: 1.3 !important;
+  }
+
+  h3 {
+    font-size: 18px !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Content spacing */
+  .space-y-8 > * {
+    margin-bottom: 24px !important;
+  }
+
+  .space-y-6 > * {
+    margin-bottom: 16px !important;
+  }
+
+  .space-y-4 > * {
+    margin-bottom: 12px !important;
+  }
+}
+
+/* ========================================
+   6. TABLE AND LIST RESPONSIVENESS
+   Mobile-friendly data display
    ======================================== */
 
 @media (max-width: 1023px) {
   /* Hide desktop tables */
-  table.hidden.lg\\:table,
-  .hidden.lg\\:block table {
+  table:not(.mobile-table),
+  .table-desktop,
+  .hidden.lg\\:table {
     display: none !important;
   }
-  
-  /* Show mobile cards */
+
+  /* Show mobile card layouts */
   .mobile-card,
-  .lg\\:hidden .card {
+  .lg\\:hidden .card,
+  .table-mobile {
     display: block !important;
   }
-  
-  /* Ensure table containers scroll */
+
+  /* Scrollable table container */
   .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch !important;
     overflow-x: auto !important;
+    max-width: 100vw !important;
+  }
+
+  /* Mobile-friendly table styling */
+  .mobile-table {
+    font-size: 14px !important;
+  }
+
+  .mobile-table td,
+  .mobile-table th {
+    padding: 12px 8px !important;
+    min-height: 44px !important;
   }
 }
 
 /* ========================================
-   6. MODAL AND DIALOG FIXES
+   7. MODAL AND DIALOG MOBILE OPTIMIZATION
    ======================================== */
 
 @media (max-width: 768px) {
@@ -214,87 +597,68 @@
     max-height: 100% !important;
     margin: 0 !important;
     border-radius: 0 !important;
+    z-index: 60 !important;
   }
-  
-  /* Modal content padding - but EXCLUDE MobileDialog components */
+
+  /* Modal content scrolling */
   [role="dialog"]:not([data-mobile-dialog]) > div,
   .modal-content:not([data-mobile-dialog]) {
-    padding: 20px;
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    padding: 20px !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
-  
-  /* Close buttons in modals - but EXCLUDE MobileDialog components */
+
+  /* Close buttons in modals */
   [role="dialog"]:not([data-mobile-dialog]) button[aria-label*="close"],
   [role="dialog"]:not([data-mobile-dialog]) button[aria-label*="Close"],
   .modal-close:not([data-mobile-dialog]) {
-    position: fixed;
-    top: 16px;
-    right: 16px;
+    position: fixed !important;
+    top: 16px !important;
+    right: 16px !important;
     min-width: 44px !important;
     min-height: 44px !important;
-    z-index: 10;
+    z-index: 70 !important;
+    background: white !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
   }
 }
 
 /* ========================================
-   7. PERFORMANCE OPTIMIZATIONS
+   8. PERFORMANCE AND ACCESSIBILITY
    ======================================== */
 
 @media (max-width: 768px) {
-  /* Disable hover effects on mobile */
+  /* Disable hover effects on touch devices */
   @media (hover: none) {
     *:hover {
       transform: none !important;
       box-shadow: none !important;
     }
   }
-  
-  /* Optimize animations */
+
+  /* Optimize animations for mobile */
   * {
     animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
   }
-  
-  /* Reduce motion for users who prefer it */
+
+  /* Reduce motion for accessibility */
   @media (prefers-reduced-motion: reduce) {
     * {
       animation: none !important;
       transition: none !important;
     }
   }
-}
 
-/* ========================================
-   8. SAFE AREA SUPPORT
-   ======================================== */
-
-@supports (padding: env(safe-area-inset-bottom)) {
-  .mobile-nav {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  
-  .fixed.bottom-0 {
-    bottom: env(safe-area-inset-bottom);
-  }
-  
-  body {
-    padding-top: env(safe-area-inset-top);
-  }
-}
-
-/* ========================================
-   9. CRITICAL ACCESSIBILITY FIXES
-   ======================================== */
-
-/* Ensure focus is always visible on mobile */
-@media (max-width: 768px) {
+  /* Focus visibility */
   *:focus {
     outline: 2px solid #3b82f6 !important;
     outline-offset: 2px !important;
   }
-  
-  /* Skip link always accessible */
+
+  /* Skip link accessibility */
   .skip-to-content:focus {
     position: fixed !important;
     top: 0 !important;
@@ -304,88 +668,131 @@
     background: #3b82f6 !important;
     color: white !important;
     text-decoration: none !important;
+    border-radius: 0 0 8px 0 !important;
   }
 }
 
 /* ========================================
-   10. GROCERY LIST MOBILE FIXES
+   9. LANDSCAPE ORIENTATION HANDLING
+   ======================================== */
+
+@media (max-width: 812px) and (orientation: landscape) {
+  /* Reduce header height in landscape */
+  .mobile-header,
+  header.mobile {
+    height: 48px !important;
+    padding: 8px 16px !important;
+  }
+
+  /* Adjust mobile nav for landscape */
+  .mobile-nav {
+    padding: 4px 0 !important;
+  }
+
+  .mobile-nav-item {
+    min-height: 44px !important;
+    padding: 4px 8px !important;
+  }
+
+  /* Reduce vertical spacing */
+  .space-y-8 > * {
+    margin-bottom: 16px !important;
+  }
+
+  .space-y-6 > * {
+    margin-bottom: 12px !important;
+  }
+
+  .space-y-4 > * {
+    margin-bottom: 8px !important;
+  }
+}
+
+/* ========================================
+   10. GROCERY LIST MOBILE ENHANCEMENTS
    ======================================== */
 
 @media (max-width: 768px) {
-  /* Grocery list specific touch targets */
-  .touch-target-checkbox {
-    min-width: 24px !important;
-    min-height: 24px !important;
-    touch-action: manipulation;
+  /* Grocery list specific improvements */
+  .grocery-list,
+  [class*="grocery"] {
+    padding: 16px !important;
   }
-  
-  /* Grocery list item text rendering */
-  .grocery-item-text {
+
+  .grocery-item,
+  [class*="grocery-item"] {
+    min-height: 48px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* Grocery item text */
+  .grocery-item-text,
+  .grocery-list-item {
     font-size: 16px !important;
     line-height: 1.4 !important;
-    word-break: break-word;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    word-break: break-word !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
   }
-  
-  /* Grocery list checkboxes */
-  input[type="checkbox"].touch-target-checkbox {
+
+  /* Grocery checkboxes */
+  .grocery-item input[type="checkbox"],
+  .touch-target-checkbox {
     width: 24px !important;
     height: 24px !important;
-    margin: 0 !important;
-    cursor: pointer;
-    touch-action: manipulation;
+    margin-right: 12px !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
   }
-  
-  /* Ensure proper checkbox container sizing */
+
+  /* Checked item styling */
+  .grocery-item.completed,
+  .line-through {
+    text-decoration-line: line-through !important;
+    text-decoration-thickness: 2px !important;
+    opacity: 0.6 !important;
+  }
+
+  /* Touch target containers */
   .touch-target[role="button"] {
     min-width: 44px !important;
     min-height: 44px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    touch-action: manipulation;
-  }
-  
-  /* Fix text rendering in grocery lists */
-  .grocery-list-item {
-    font-size: 16px !important;
-    line-height: 1.5 !important;
-  }
-  
-  /* Improve contrast for checked items */
-  .line-through {
-    text-decoration-thickness: 2px !important;
-    text-decoration-color: currentColor !important;
+    touch-action: manipulation !important;
+    border-radius: 8px !important;
   }
 }
 
 /* ========================================
-   11. LANDSCAPE ORIENTATION FIXES
+   11. SPACING CORRECTIONS FOR LOGGED-IN STATE
    ======================================== */
 
-@media (max-width: 812px) and (orientation: landscape) {
-  /* Reduce header height in landscape */
-  header {
-    padding: 8px 16px !important;
+@media (max-width: 1023px) {
+  /* When mobile nav is present, add bottom padding to content */
+  body:has(.mobile-nav) main,
+  body:has([class*="mobile-nav"]) main {
+    padding-bottom: 80px !important;
   }
-  
-  /* Adjust mobile nav for landscape */
-  .mobile-nav {
-    padding: 4px 0 !important;
+
+  /* When mobile header is present, add top padding to content */
+  body:has(.mobile-header) main,
+  body:has(header.mobile) main {
+    padding-top: 20px !important;
   }
-  
-  .mobile-nav-item {
-    min-height: 44px !important;
-    padding: 4px 8px !important;
-  }
-  
-  /* Reduce vertical spacing */
-  .space-y-4 > * {
-    margin-bottom: 8px !important;
-  }
-  
-  .space-y-6 > * {
-    margin-bottom: 12px !important;
+
+  /* Ensure content doesn't hide behind fixed elements */
+  .content-container,
+  main {
+    margin-top: 60px !important;
+    margin-bottom: 72px !important;
+    min-height: calc(100vh - 132px) !important;
   }
 }

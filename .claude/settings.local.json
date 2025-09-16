@@ -67,7 +67,14 @@
       "Bash(doctl apps update:*)",
       "Bash(doctl registry repository list-tags:*)",
       "Bash(git rev-parse:*)",
-      "Bash(git cherry-pick:*)"
+      "Bash(git cherry-pick:*)",
+      "Bash(timeout:*)",
+      "Bash(cat:*)",
+      "Bash(sed:*)",
+      "Bash(for i in {1..5})",
+      "Bash(do echo \"Attempt $i:\")",
+      "Bash(for i in {1..3})",
+      "Bash(do echo \"Test $i:\")"
     ],
     "deny": [],
     "ask": [],

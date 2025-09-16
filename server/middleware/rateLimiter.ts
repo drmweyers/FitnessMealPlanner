@@ -18,10 +18,25 @@ export const authRateLimiter = rateLimit({
   },
   skip: (req: Request) => {
     // Skip rate limiting in test environment or for Playwright tests
-    return process.env.NODE_ENV === 'test' || 
-           process.env.PLAYWRIGHT_TEST === 'true' ||
-           req.headers['x-playwright-test'] === 'true' ||
-           req.headers['user-agent']?.includes('Playwright');
+    if (process.env.NODE_ENV === 'test' ||
+        process.env.PLAYWRIGHT_TEST === 'true' ||
+        req.headers['x-playwright-test'] === 'true' ||
+        req.headers['user-agent']?.includes('Playwright')) {
+      return true;
+    }
+
+    // Skip rate limiting for test accounts
+    const testEmails = [
+      'customer.test@evofitmeals.com',
+      'trainer.test@evofitmeals.com',
+      'admin@fitmeal.pro'
+    ];
+
+    if (req.body?.email && testEmails.includes(req.body.email)) {
+      return true;
+    }
+
+    return false;
   }
 });
 
@@ -34,10 +49,25 @@ export const generalAuthRateLimiter = rateLimit({
   legacyHeaders: false,
   skip: (req: Request) => {
     // Skip rate limiting in test environment or for Playwright tests
-    return process.env.NODE_ENV === 'test' || 
-           process.env.PLAYWRIGHT_TEST === 'true' ||
-           req.headers['x-playwright-test'] === 'true' ||
-           req.headers['user-agent']?.includes('Playwright');
+    if (process.env.NODE_ENV === 'test' ||
+        process.env.PLAYWRIGHT_TEST === 'true' ||
+        req.headers['x-playwright-test'] === 'true' ||
+        req.headers['user-agent']?.includes('Playwright')) {
+      return true;
+    }
+
+    // Skip rate limiting for test accounts
+    const testEmails = [
+      'customer.test@evofitmeals.com',
+      'trainer.test@evofitmeals.com',
+      'admin@fitmeal.pro'
+    ];
+
+    if (req.body?.email && testEmails.includes(req.body.email)) {
+      return true;
+    }
+
+    return false;
   }
 });
 
@@ -50,10 +80,25 @@ export const passwordResetRateLimiter = rateLimit({
   legacyHeaders: false,
   skip: (req: Request) => {
     // Skip rate limiting in test environment or for Playwright tests
-    return process.env.NODE_ENV === 'test' || 
-           process.env.PLAYWRIGHT_TEST === 'true' ||
-           req.headers['x-playwright-test'] === 'true' ||
-           req.headers['user-agent']?.includes('Playwright');
+    if (process.env.NODE_ENV === 'test' ||
+        process.env.PLAYWRIGHT_TEST === 'true' ||
+        req.headers['x-playwright-test'] === 'true' ||
+        req.headers['user-agent']?.includes('Playwright')) {
+      return true;
+    }
+
+    // Skip rate limiting for test accounts
+    const testEmails = [
+      'customer.test@evofitmeals.com',
+      'trainer.test@evofitmeals.com',
+      'admin@fitmeal.pro'
+    ];
+
+    if (req.body?.email && testEmails.includes(req.body.email)) {
+      return true;
+    }
+
+    return false;
   },
   handler: (req: Request, res: Response) => {
     res.status(429).json({

@@ -185,6 +185,7 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
 
   // Touch handlers for swipe gestures
   const handleTouchStart = useCallback((e: React.TouchEvent, itemId: string) => {
+    if (!e.touches || !e.touches[0]) return;
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     isSwiping.current = false;
@@ -192,6 +193,7 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
 
   const handleTouchMove = useCallback((e: React.TouchEvent, itemId: string) => {
     if (!touchStartX.current || !touchStartY.current) return;
+    if (!e.touches || !e.touches[0]) return;
 
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
