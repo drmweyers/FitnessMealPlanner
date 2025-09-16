@@ -69,7 +69,7 @@ const Layout = ({ children }: LayoutProps) => {
       
       {/* Desktop Navigation Bar - Hidden on Mobile */}
       <header className="hidden lg:block bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="w-full xl:max-w-9xl 2xl:max-w-10xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16" style={{ maxWidth: '90%' }}>
           <div className="flex justify-between items-center h-14 sm:h-16">
             {/* Logo and Navigation */}
             <div className="flex items-center min-w-0 flex-1">
@@ -155,14 +155,14 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Main Content */}
       <main className="flex-grow w-full">
-        <div className="w-full xl:max-w-9xl 2xl:max-w-10xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-4 sm:py-6 md:py-8" style={{ maxWidth: '90%' }}>
           {children}
         </div>
       </main>
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="w-full xl:max-w-9xl 2xl:max-w-10xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-4 sm:py-6" style={{ maxWidth: '90%' }}>
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
             <p className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
               © {new Date().getFullYear()} EvoFitMeals. All rights reserved.
