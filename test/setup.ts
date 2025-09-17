@@ -496,6 +496,7 @@ vi.mock('lucide-react', () => {
     Barcode: createIcon('Barcode'),
     ScanLine: createIcon('ScanLine'),
     ChefHat: createIcon('ChefHat'),
+    Edit2: createIcon('Edit2'),
   };
 });
 
@@ -790,14 +791,46 @@ vi.mock('../client/src/components/ui/table', () => ({
 }));
 
 vi.mock('../client/src/components/ui/checkbox', () => ({
-  Checkbox: ({ checked, onCheckedChange, ...props }: any) => 
-    React.createElement('input', { 
-      type: 'checkbox', 
-      checked, 
+  Checkbox: ({ checked, onCheckedChange, ...props }: any) =>
+    React.createElement('input', {
+      type: 'checkbox',
+      checked,
       onChange: (e: any) => onCheckedChange?.(e.target.checked),
       'data-testid': 'checkbox',
-      ...props 
+      ...props
     }),
+}));
+
+vi.mock('../client/src/components/ui/radio-group', () => ({
+  RadioGroup: ({ children, value, onValueChange, ...props }: any) =>
+    React.createElement('div', {
+      'data-testid': 'radio-group',
+      'data-value': value,
+      onChange: (e: any) => onValueChange?.(e.target.value),
+      ...props
+    }, children),
+  RadioGroupItem: ({ value, id, ...props }: any) =>
+    React.createElement('input', {
+      type: 'radio',
+      value,
+      id,
+      'data-testid': 'radio-group-item',
+      ...props
+    }),
+}));
+
+vi.mock('../client/src/components/ui/alert', () => ({
+  Alert: ({ children, ...props }: any) =>
+    React.createElement('div', {
+      'data-testid': 'alert',
+      role: 'alert',
+      ...props
+    }, children),
+  AlertDescription: ({ children, ...props }: any) =>
+    React.createElement('div', {
+      'data-testid': 'alert-description',
+      ...props
+    }, children),
 }));
 
 // Mock API client
