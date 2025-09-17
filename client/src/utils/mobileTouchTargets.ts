@@ -215,30 +215,30 @@ export function setupTouchTargetObserver() {
   return observer;
 }
 
-// Auto-initialize on load
-if (typeof window !== 'undefined') {
-  // Run immediately
-  enforceTouchTargets();
+// Auto-initialize on load - DISABLED - causing visibility issues
+// if (typeof window !== 'undefined') {
+//   // Run immediately
+//   enforceTouchTargets();
 
-  // Run after DOM is loaded
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', enforceTouchTargets);
-  }
+//   // Run after DOM is loaded
+//   if (document.readyState === 'loading') {
+//     document.addEventListener('DOMContentLoaded', enforceTouchTargets);
+//   }
 
-  // Setup observer for dynamic content
-  setupTouchTargetObserver();
+//   // Setup observer for dynamic content
+//   setupTouchTargetObserver();
 
-  // Re-run on resize
-  window.addEventListener('resize', () => {
-    if (window.innerWidth <= 1023) {
-      setTimeout(enforceTouchTargets, 100);
-    }
-  });
+//   // Re-run on resize
+//   window.addEventListener('resize', () => {
+//     if (window.innerWidth <= 1023) {
+//       setTimeout(enforceTouchTargets, 100);
+//     }
+//   });
 
-  // Run when page becomes visible (for cases where styles haven't applied)
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && window.innerWidth <= 1023) {
-      setTimeout(enforceTouchTargets, 100);
-    }
-  });
-}
+//   // Run when page becomes visible (for cases where styles haven't applied)
+//   document.addEventListener('visibilitychange', () => {
+//     if (!document.hidden && window.innerWidth <= 1023) {
+//       setTimeout(enforceTouchTargets, 100);
+//     }
+//   });
+// }

@@ -3,21 +3,26 @@
  * Progressive enhancement without forcing mobile styles on desktop
  */
 
-/* Mobile styles ONLY for screens below 768px */
-@media (max-width: 767px) {
+/* Mobile styles for screens below 1024px (to match lg: breakpoint) */
+@media (max-width: 1023px) {
   /* Touch targets for mobile only */
   button, a, input, select, textarea {
     min-height: 44px;
     touch-action: manipulation;
   }
 
-  /* Mobile navigation visible */
-  [data-testid="mobile-navigation"] {
-    display: block;
+  /* Mobile navigation visible - MUST match component breakpoints */
+  [data-testid="mobile-navigation"],
+  .mobile-nav,
+  .mobile-header {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
-  /* Hide desktop header on mobile */
-  header.lg\:block {
+  /* Hide desktop header on mobile - use more specific selectors */
+  [data-testid="desktop-header"],
+  header[data-desktop-nav="true"] {
     display: none !important;
   }
 
@@ -38,16 +43,22 @@
   }
 }
 
-/* Tablet styles for 768px to 1023px */
+/* Remove tablet-specific rules that hide mobile navigation */
+/* Mobile navigation should be visible from 0px to 1023px */
+/* Desktop navigation should be visible from 1024px+ */
+
+/* Tablet styles for 768px to 1023px - KEEP mobile navigation */
 @media (min-width: 768px) and (max-width: 1023px) {
-  /* Hide mobile navigation */
-  [data-testid="mobile-navigation"] {
-    display: none;
+  /* Keep mobile navigation visible */
+  [data-testid="mobile-navigation"],
+  .mobile-nav,
+  .mobile-header {
+    display: flex !important;
   }
 
-  /* Show desktop header */
-  header {
-    display: block;
+  /* Hide desktop header on tablets */
+  [data-testid="desktop-header"] {
+    display: none !important;
   }
 
   /* 2-column grid on tablets */
@@ -70,13 +81,16 @@
 /* Desktop styles for 1024px and above */
 @media (min-width: 1024px) {
   /* Hide mobile navigation completely */
-  [data-testid="mobile-navigation"] {
+  [data-testid="mobile-navigation"],
+  .mobile-nav,
+  .mobile-header {
     display: none !important;
   }
 
   /* Show desktop header */
-  header {
-    display: block;
+  [data-testid="desktop-header"],
+  header[data-desktop-nav="true"] {
+    display: block !important;
   }
 
   /* Desktop doesn't need touch target enforcement */

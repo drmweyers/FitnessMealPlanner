@@ -1,9 +1,9 @@
 # FitnessMealPlanner - Task Tracking
 
-**Last Updated**: 2025-09-16 (Responsive Design Fix Complete)
-**BMAD Process**: Phase 9 COMPLETE - Progressive Web App Restored | Stories 1.1-1.9 COMPLETE (100% PRD Implementation)
-**Production Status**: SYSTEM FULLY OPERATIONAL - Responsive design fixed, pushed to GitHub
-**Current Session**: Responsive Design Fix COMPLETE - Desktop no longer shows mobile styles
+**Last Updated**: 2025-01-19 (Responsive Design Restoration In Progress)
+**BMAD Process**: Phase 11 IN PROGRESS - Restoring Responsive Design | Stories 1.1-1.9 COMPLETE (100% PRD Implementation)
+**Production Status**: RESTORATION PENDING - Reverting to working state from 2 days ago
+**Current Session**: Responsive Design Restoration - Fixing navigation visibility issues
 
 ## Task Management Guidelines
 - Mark tasks as `[x]` when completed with date
@@ -57,18 +57,29 @@
 - [x] Test all three accounts (admin, trainer, customer) (2025-09-15)
 - [x] Document changes in BMAD process files (2025-09-15)
 
-## Milestone 27: Responsive Design Fix ✅ COMPLETE (2025-09-16)
-- [x] Identify JavaScript forcing mobile styles on desktop (2025-09-16)
-- [x] Disable mobileTouchTargets.ts utility (2025-09-16)
-- [x] Remove max-w-7xl (1280px) constraints app-wide (2025-09-16)
-- [x] Fix double container nesting in page components (2025-09-16)
-- [x] Add responsive max-width utilities to Tailwind config (2025-09-16)
-- [x] Create comprehensive unit tests with Vitest (2025-09-16)
-- [x] Build Playwright E2E tests for full-width validation (2025-09-16)
-- [x] Verify desktop shows proper responsive layout (2025-09-16)
-- [x] Deploy fixes to GitHub main branch (2025-09-16)
-- [ ] Trigger production deployment to DigitalOcean (pending approval)
-- [x] Update all BMAD documentation files (2025-09-16)
+## Milestone 27: Responsive Design Fix ❌ REVERTED (2025-09-16)
+- [x] ~~Identify JavaScript forcing mobile styles on desktop~~ (2025-09-16) - REVERTED
+- [x] ~~Disable mobileTouchTargets.ts utility~~ (2025-09-16) - Already done
+- [x] ~~Remove max-w-7xl (1280px) constraints app-wide~~ (2025-09-16) - CAUSED ISSUES
+- [x] ~~Fix double container nesting in page components~~ (2025-09-16) - REVERTED
+- [x] ~~Add responsive max-width utilities to Tailwind config~~ (2025-09-16) - REVERTED
+- Note: This approach broke more than it fixed - reverted in Milestone 28
+
+## Milestone 28: Responsive Design Restoration 🔄 IN PROGRESS (2025-01-19)
+- [x] Review BMAD files to understand yesterday's changes (2025-01-19)
+- [x] Identify that 90% width approach broke responsive design (2025-01-19)
+- [x] Revert Layout.tsx to max-w-7xl container approach (2025-01-19)
+- [x] Delete 8 problematic CSS files (83KB cleanup) (2025-01-19)
+- [x] Clean up index.css to only import responsive.css (2025-01-19)
+- [x] Update responsive.css to use 1024px breakpoint consistently (2025-01-19)
+- [ ] Fix mobile navigation not visible on mobile viewports
+- [ ] Fix desktop header not visible on desktop viewports
+- [ ] Debug why data-testid attributes aren't being found
+- [ ] Run complete Playwright test validation
+- [ ] Test on actual production server for comparison
+- [ ] Deploy fixes to production once tests pass
+- [x] Update PLANNING.md with comprehensive TODO list (2025-01-19)
+- [x] Document restoration process in tasks.md (2025-01-19)
 
 ## Milestone 24: Branch Synchronization & Repository Management ✅
 - [x] Analyze all GitHub branches and their differences from main (2025-09-15)

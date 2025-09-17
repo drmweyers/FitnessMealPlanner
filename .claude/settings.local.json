@@ -78,7 +78,8 @@
       "mcp__github__list_issues",
       "Bash(doctl:*)",
       "Bash(dir \"C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\client\\src\\styles\" /b)",
-      "Bash(dir C:Usersdrmweclaude-workspaceFitnessMealPlanner)"
+      "Bash(dir C:Usersdrmweclaude-workspaceFitnessMealPlanner)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": [],

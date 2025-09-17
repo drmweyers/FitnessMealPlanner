@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
-import { enforceTouchTargets } from '../utils/mobileTouchTargets';
+// import { enforceTouchTargets } from '../utils/mobileTouchTargets'; // DISABLED - causing visibility issues
 import {
   Home,
   Search,
@@ -97,112 +97,27 @@ const MobileNavigation: React.FC = () => {
     setIsSideMenuOpen(false);
   }, [location]);
 
-  // Force mobile navigation visibility for logged-in users
+  // Ensure mobile navigation is properly set up
   useEffect(() => {
     if (user && typeof window !== 'undefined') {
       // Add a class to body to indicate mobile navigation is active
       document.body.classList.add('mobile-nav-active');
       document.body.setAttribute('data-mobile-nav-enabled', 'true');
 
-      // Apply forced styles to ensure visibility
-      const style = document.createElement('style');
-      style.id = 'mobile-nav-force-styles';
-      style.innerHTML = `
-        @media (max-width: 1023px) {
-          .mobile-nav-active .mobile-nav,
-          .mobile-nav-active [class*="mobile-nav"],
-          .mobile-nav-active nav.mobile,
-          .mobile-nav-active #mobile-bottom-navigation,
-          .mobile-nav-active [data-testid="mobile-navigation"] {
-            display: flex !important;
-            position: fixed !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 50 !important;
-            background: white !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            border-top: 1px solid #e5e7eb !important;
-            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1) !important;
-          }
+      // Light enforcement to ensure touch targets work properly
+      // const ensureNavigation = () => {
+      //   // Enforce touch targets after mobile nav is rendered
+      //   setTimeout(enforceTouchTargets, 100);
+      // };
 
-          .mobile-nav-active .mobile-header,
-          .mobile-nav-active [data-testid="mobile-header"] {
-            display: flex !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 40 !important;
-            background: white !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-          }
-
-          .mobile-nav-active main {
-            padding-bottom: 80px !important;
-            margin-bottom: 72px !important;
-            padding-top: 60px !important;
-          }
-
-          /* Force all nav items to be visible and touchable */
-          .mobile-nav-active .mobile-nav-item,
-          .mobile-nav-active [data-testid*="mobile-nav-"] {
-            display: flex !important;
-            min-height: 56px !important;
-            min-width: 64px !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-          }
-        }
-      `;
-
-      // Remove existing style if present
-      const existingStyle = document.getElementById('mobile-nav-force-styles');
-      if (existingStyle) {
-        existingStyle.remove();
-      }
-
-      document.head.appendChild(style);
-
-      // Ensure mobile navigation elements are visible with multiple passes
-      const ensureVisibility = () => {
-        const mobileNavElements = document.querySelectorAll(`
-          .mobile-nav,
-          [class*="mobile-nav"],
-          [data-testid="mobile-navigation"],
-          [data-testid="mobile-header"],
-          #mobile-bottom-navigation
-        `);
-
-        mobileNavElements.forEach(element => {
-          const htmlElement = element as HTMLElement;
-          htmlElement.style.display = 'flex';
-          htmlElement.style.visibility = 'visible';
-          htmlElement.style.opacity = '1';
-          htmlElement.setAttribute('data-mobile-nav-forced-visible', 'true');
-        });
-
-        // Enforce touch targets after mobile nav is rendered
-        setTimeout(enforceTouchTargets, 100);
-      };
-
-      // Run visibility enforcement multiple times to ensure it works
-      setTimeout(ensureVisibility, 50);
-      setTimeout(ensureVisibility, 100);
-      setTimeout(ensureVisibility, 200);
-      setTimeout(ensureVisibility, 500);
+      // Run once after component mounts
+      // setTimeout(ensureNavigation, 100); // DISABLED - causing visibility issues
     }
 
     return () => {
       if (typeof window !== 'undefined') {
         document.body.classList.remove('mobile-nav-active');
         document.body.removeAttribute('data-mobile-nav-enabled');
-        const style = document.getElementById('mobile-nav-force-styles');
-        if (style) {
-          style.remove();
-        }
       }
     };
   }, [user]);
@@ -263,14 +178,9 @@ const MobileNavigation: React.FC = () => {
       {/* Spacer for fixed header */}
       <div className="lg:hidden h-14" />
 
-      {/* Bottom Navigation Bar (Mobile Only) - Force Visibility */}
+      {/* Bottom Navigation Bar (Mobile Only) */}
       <nav
-        className="mobile-nav bottom-nav lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg"
-        style={{
-          display: 'flex !important',
-          visibility: 'visible !important',
-          opacity: '1 !important'
-        }}
+        className="mobile-nav bottom-nav lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg flex"
         data-testid="mobile-navigation"
         data-mobile-nav="true"
         data-mobile-nav-visible="true"

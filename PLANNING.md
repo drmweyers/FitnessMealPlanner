@@ -1,15 +1,15 @@
 # FitnessMealPlanner - Project Planning & Architecture
 
-**Last Updated**: 2025-01-18 (Responsive Design Critical Fix)
-**BMAD Process Status**: Phase 10 Complete - Responsive Design Fix | Stories 1.1-1.9 Complete (100% PRD) | Production Deployment Active
-**Current Session**: Critical responsive design fix - Desktop layout restoration
+**Last Updated**: 2025-01-19 (Responsive Design Restoration)
+**BMAD Process Status**: Phase 11 In Progress - Responsive Design Restoration | Stories 1.1-1.9 Complete (100% PRD) | Navigation Fixes Pending
+**Current Session**: Restoring responsive design to working state from 2 days ago
 
-## 🔧 RESPONSIVE DESIGN CRITICAL FIX - JANUARY 18, 2025
+## 🔧 RESPONSIVE DESIGN RESTORATION - JANUARY 19, 2025
 
-### Desktop Layout Restoration (COMPLETE)
-**Status**: ✅ FIXED & DEPLOYED - Desktop users no longer see mobile styles
-**Implementation Date**: January 18, 2025
-**Production Deployment**: Active (Deployment ID: 1a19a039-f50e-4627-af45-19af76b95535)
+### Desktop Layout Restoration (IN PROGRESS)
+**Status**: 🔄 RESTORING - Reverting to proven max-w-7xl container approach
+**Implementation Date**: January 19, 2025
+**Production Deployment**: Pending final navigation fixes
 
 **Problem Identified**:
 - Desktop users were seeing mobile-optimized layouts
@@ -17,22 +17,77 @@
 - Aggressive CSS with !important overrides were breaking responsive design
 - Mobile styles were being applied to screens up to 1023px (including desktop)
 
-**Solution Implemented**:
-1. ✅ Disabled mobileTouchTargets.ts JavaScript that forced mobile styles
-2. ✅ Removed problematic CSS imports with aggressive overrides
-3. ✅ Created clean responsive.css with proper media queries
-4. ✅ Restored Progressive Web App responsive behavior
-5. ✅ Added comprehensive unit and E2E tests for regression prevention
+**Solution Being Implemented**:
+1. ✅ Reverted Layout.tsx to max-w-7xl containers (proven approach)
+2. ✅ Deleted 8 problematic CSS files (83KB of conflicting styles)
+3. ✅ Cleaned up index.css to only import responsive.css
+4. 🔄 Fixing navigation visibility issues (mobile/desktop detection)
+5. 🔄 Running Playwright tests to validate all fixes
 
-**Test Results**:
-- Unit Tests: 18/18 passing (100%)
-- Desktop View: Confirmed proper desktop styles (48px button height, not forced 44px)
-- Mobile View: Maintains proper touch targets (44px minimum)
-- Responsive Breakpoints: Correctly applied at 768px and 1024px
+**Current Test Results**:
+- Desktop Container (max-w-7xl): ❌ FAILING - Not detected
+- Mobile Navigation on Mobile: ❌ FAILING - Not visible
+- Desktop Navigation on Desktop: ❌ FAILING - Not visible
+- No Horizontal Scroll: ✅ PASSING
+- Forms Accessible: ✅ PASSING
+- Content Centered: ✅ PASSING
 
-**Git Commit**: 4cbc5d2 - "fix(responsive): Fix desktop layout forced to mobile styles"
-**GitHub**: Successfully pushed to main branch
-**Production**: Deployment triggered via DigitalOcean
+**Files Reverted/Deleted**:
+- Layout.tsx: Reverted to max-w-7xl containers
+- Deleted: enhanced-responsive.css, comprehensive-responsive.css, mobile-utility-classes.css
+- Deleted: navigation-fixes.css, responsive-optimization.css, mobile-enhancements.css
+- Deleted: responsive-design-system.css, mobile-fixes.css
+- Total Cleanup: 83KB of problematic CSS removed
+
+### 📋 TODO LIST FOR NEXT SESSION - CRITICAL RESPONSIVE FIXES
+
+**Priority 1 - Fix Navigation Visibility Issues:**
+1. ❌ Debug why `[data-testid="mobile-navigation"]` is not being found by Playwright
+2. ❌ Fix mobile navigation not showing on mobile viewports (0-1023px)
+3. ❌ Fix desktop header not showing on desktop viewports (1024px+)
+4. ❌ Verify MobileNavigation.tsx component is rendering correctly
+5. ❌ Check if navigation elements are being hidden by CSS conflicts
+
+**Priority 2 - Container & Layout Verification:**
+1. ❌ Ensure max-w-7xl containers are properly applied throughout the app
+2. ❌ Verify Layout.tsx changes have taken effect
+3. ❌ Check for any remaining width constraints or overrides
+4. ❌ Test content centering on all viewport sizes
+
+**Priority 3 - Complete Testing & Validation:**
+1. ❌ Fix all Playwright test failures in verify-restoration.spec.ts
+2. ❌ Create debug tests to understand navigation rendering issues
+3. ❌ Test on actual production server to compare behavior
+4. ❌ Validate mobile responsiveness on actual mobile devices
+5. ❌ Ensure no horizontal scroll on any viewport
+
+**Priority 4 - Documentation & Deployment:**
+1. ❌ Update BMAD_WORKFLOW_STATUS.md with restoration details
+2. ❌ Update SESSION_STATUS.md with current session progress
+3. ❌ Commit all fixes with proper conventional commit messages
+4. ❌ Deploy to production once all tests pass
+5. ❌ Verify production deployment matches development
+
+**Investigation Notes from Previous Session:**
+- Yesterday's "fixes" actually broke the working functionality
+- The 90% width approach caused more issues than it solved
+- mobileTouchTargets.ts was already disabled in previous session
+- Navigation visibility is the main remaining issue
+- Tests show navigation elements exist but aren't being detected properly
+
+**Root Cause Analysis:**
+1. Multiple CSS files were creating conflicts and cascade issues
+2. The 90% width with inline styles broke Tailwind's responsive system
+3. Navigation breakpoints were inconsistent (768px vs 1024px)
+4. Too many !important rules were overriding each other
+5. Complex CSS made debugging nearly impossible
+
+**Solution Approach:**
+1. Keep it simple - use Tailwind's proven max-w-7xl approach
+2. Minimize custom CSS - rely on Tailwind utilities
+3. Consistent breakpoints - lg: (1024px) for mobile/desktop transition
+4. Test thoroughly - use Playwright to validate every change
+5. Review production - ensure development matches production behavior
 
 ## 📱 MOBILE EXPERIENCE EXCELLENCE CAMPAIGN - JANUARY 18, 2025
 

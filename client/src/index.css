@@ -1,7 +1,5 @@
-/* Clean responsive design */
+/* Clean responsive design - Minimal approach with Tailwind */
 @import './styles/responsive.css';
-/* Enhanced mobile-first responsive system */
-@import './styles/enhanced-responsive.css';
 
 @tailwind base;
 @tailwind components;

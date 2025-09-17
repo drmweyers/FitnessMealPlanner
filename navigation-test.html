@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Fix Test</title>
+    <style>
+        /* Test the fixed responsive CSS rules */
+
+        /* Mobile styles for screens below 1024px (to match lg: breakpoint) */
+        @media (max-width: 1023px) {
+          /* Mobile navigation visible - MUST match component breakpoints */
+          [data-testid="mobile-navigation"],
+          .mobile-nav,
+          .mobile-header {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+
+          /* Hide desktop header on mobile - use more specific selectors */
+          [data-testid="desktop-header"],
+          header[data-desktop-nav="true"] {
+            display: none !important;
+          }
+        }
+
+        /* Desktop styles for 1024px and above */
+        @media (min-width: 1024px) {
+          /* Hide mobile navigation completely */
+          [data-testid="mobile-navigation"],
+          .mobile-nav,
+          .mobile-header {
+            display: none !important;
+          }
+
+          /* Show desktop header */
+          [data-testid="desktop-header"],
+          header[data-desktop-nav="true"] {
+            display: block !important;
+          }
+        }
+
+        /* Base styles */
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f9fafb;
+        }
+
+        .viewport-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #111827;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        /* Mock navigation elements */
+        [data-testid="mobile-navigation"] {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 2px solid #3b82f6;
+            padding: 16px;
+            text-align: center;
+            z-index: 50;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-testid="desktop-header"] {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 2px solid #10b981;
+            padding: 16px;
+            text-align: center;
+            z-index: 50;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .content {
+            margin-top: 100px;
+            margin-bottom: 100px;
+            padding: 32px;
+            background: white;
+            border-radius: 12px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .test-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .test-pass {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .test-fail {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .breakpoint-indicator {
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="viewport-info">
+        <div><strong>Viewport:</strong> <span id="width"></span>px</div>
+        <div><strong>Breakpoint:</strong> <span id="breakpoint"></span></div>
+        <hr style="margin: 8px 0; border: 1px solid #374151;">
+        <div>Mobile Nav: <span id="mobile-visible"></span></div>
+        <div>Desktop Nav: <span id="desktop-visible"></span></div>
+    </div>
+
+    <!-- Test navigation elements -->
+    <nav data-testid="mobile-navigation" class="mobile-nav">
+        <div style="font-size: 18px; margin-bottom: 8px;">📱 MOBILE NAVIGATION</div>
+        <div>Should be visible: 0px - 1023px</div>
+    </nav>
+
+    <header data-testid="desktop-header" data-desktop-nav="true">
+        <div style="font-size: 18px; margin-bottom: 8px;">🖥️ DESKTOP HEADER</div>
+        <div>Should be visible: 1024px+</div>
+    </header>
+
+    <div class="content">
+        <h1>🧪 Navigation Visibility Fix Test</h1>
+        <div class="breakpoint-indicator" id="breakpoint-indicator"></div>
+
+        <p>This test verifies that the navigation visibility fixes are working correctly. Resize your browser window to test different breakpoints.</p>
+
+        <h2>Expected Behavior</h2>
+        <ul>
+            <li><strong>Mobile (0px - 767px):</strong> Mobile nav visible, desktop header hidden</li>
+            <li><strong>Tablet (768px - 1023px):</strong> Mobile nav still visible, desktop header hidden</li>
+            <li><strong>Desktop (1024px+):</strong> Desktop header visible, mobile nav hidden</li>
+        </ul>
+
+        <h2>🔍 Test Results</h2>
+        <div id="test-results" style="background: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <p><strong>Current viewport:</strong> <span id="current-width"></span>px</p>
+            <p><strong>Mobile navigation should be:</strong> <span id="expected-mobile"></span></p>
+            <p><strong>Desktop navigation should be:</strong> <span id="expected-desktop"></span></p>
+            <p><strong>Mobile navigation is:</strong> <span id="actual-mobile"></span></p>
+            <p><strong>Desktop navigation is:</strong> <span id="actual-desktop"></span></p>
+            <hr style="margin: 12px 0;">
+            <p id="overall-status" style="font-size: 18px; font-weight: bold;"></p>
+        </div>
+
+        <h2>🛠️ Fixes Applied</h2>
+        <ol>
+            <li><strong>Unified breakpoint:</strong> Changed tablet breakpoint to match component logic (1024px)</li>
+            <li><strong>Removed tablet override:</strong> Stopped hiding mobile navigation on tablets (768px-1023px)</li>
+            <li><strong>Specific selectors:</strong> Used more specific CSS selectors to target navigation elements</li>
+            <li><strong>Consistent !important rules:</strong> Applied !important consistently to override conflicts</li>
+            <li><strong>Reduced JavaScript forcing:</strong> Simplified JavaScript override logic</li>
+        </ol>
+    </div>
+
+    <script>
+        function getBreakpointName(width) {
+            if (width < 768) return 'Mobile';
+            if (width < 1024) return 'Tablet';
+            return 'Desktop';
+        }
+
+        function updateViewportInfo() {
+            const width = window.innerWidth;
+            const mobileNav = document.querySelector('[data-testid="mobile-navigation"]');
+            const desktopNav = document.querySelector('[data-testid="desktop-header"]');
+
+            const mobileVisible = window.getComputedStyle(mobileNav).display !== 'none';
+            const desktopVisible = window.getComputedStyle(desktopNav).display !== 'none';
+
+            // Update viewport info
+            document.getElementById('width').textContent = width;
+            document.getElementById('breakpoint').textContent = getBreakpointName(width);
+
+            // Expected behavior
+            const expectedMobile = width < 1024;
+            const expectedDesktop = width >= 1024;
+
+            // Update test results
+            document.getElementById('current-width').textContent = width;
+            document.getElementById('expected-mobile').textContent = expectedMobile ? 'Visible' : 'Hidden';
+            document.getElementById('expected-desktop').textContent = expectedDesktop ? 'Visible' : 'Hidden';
+            document.getElementById('actual-mobile').textContent = mobileVisible ? 'Visible' : 'Hidden';
+            document.getElementById('actual-desktop').textContent = desktopVisible ? 'Visible' : 'Hidden';
+
+            // Test status
+            const mobileCorrect = mobileVisible === expectedMobile;
+            const desktopCorrect = desktopVisible === expectedDesktop;
+            const allCorrect = mobileCorrect && desktopCorrect;
+
+            // Update status indicators
+            document.getElementById('mobile-visible').innerHTML =
+                mobileVisible ? 'Visible' : 'Hidden' +
+                `<span class="test-status ${mobileCorrect ? 'test-pass' : 'test-fail'}">
+                    ${mobileCorrect ? '✅ PASS' : '❌ FAIL'}
+                </span>`;
+
+            document.getElementById('desktop-visible').innerHTML =
+                desktopVisible ? 'Visible' : 'Hidden' +
+                `<span class="test-status ${desktopCorrect ? 'test-pass' : 'test-fail'}">
+                    ${desktopCorrect ? '✅ PASS' : '❌ FAIL'}
+                </span>`;
+
+            // Overall status
+            const overallStatus = document.getElementById('overall-status');
+            if (allCorrect) {
+                overallStatus.innerHTML = '✅ ALL TESTS PASSING - Navigation fixes are working!';
+                overallStatus.style.color = '#166534';
+            } else {
+                overallStatus.innerHTML = '❌ TESTS FAILING - Navigation visibility issues detected';
+                overallStatus.style.color = '#dc2626';
+            }
+
+            // Breakpoint indicator
+            const indicator = document.getElementById('breakpoint-indicator');
+            indicator.textContent = `Current: ${getBreakpointName(width)} (${width}px)`;
+
+            if (width < 768) {
+                indicator.style.background = '#8b5cf6'; // Purple for mobile
+            } else if (width < 1024) {
+                indicator.style.background = '#f59e0b'; // Orange for tablet
+            } else {
+                indicator.style.background = '#10b981'; // Green for desktop
+            }
+        }
+
+        window.addEventListener('resize', updateViewportInfo);
+        updateViewportInfo();
+
+        // Update frequently to catch dynamic changes
+        setInterval(updateViewportInfo, 100);
+    </script>
+</body>
+</html>
