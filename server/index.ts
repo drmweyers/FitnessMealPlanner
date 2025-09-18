@@ -205,6 +205,12 @@ if (process.env.NODE_ENV === 'production') {
   // Serve the built React app for app routes
   app.use('/app', express.static(path.join(__dirname, '../client/dist')));
 
+  // CRITICAL: Serve React app assets (JS, CSS files) from client/dist
+  app.use('/assets', express.static(path.join(__dirname, '../client/dist/assets')));
+
+  // Serve the React app's static files at root for compatibility
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+
   // Serve landing page assets
   app.use(express.static(path.join(__dirname, '../public')));
 
