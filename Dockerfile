@@ -68,6 +68,26 @@ COPY --from=builder /app/shared ./shared
 # Copy public static files (landing page, uploads, etc.)
 COPY --from=builder /app/public ./public
 
+# CRITICAL VERIFICATION: Ensure public static files were copied
+RUN echo "🔍 CRITICAL CHECK: Verifying public static files exist..." && \
+    if [ ! -d "public" ]; then \
+    echo "❌ FATAL ERROR: public directory NOT FOUND!" && \
+    echo "📁 Files in /app directory:" && \
+    ls -la && \
+    exit 1; \
+    elif [ ! -f "public/landing/index.html" ]; then \
+    echo "❌ FATAL ERROR: public/landing/index.html NOT FOUND!" && \
+    echo "📁 Contents of public directory:" && \
+    ls -la public/ && \
+    exit 1; \
+    else \
+    echo "✅ public static files successfully copied"; \
+    echo "📁 Public directory contents:" && \
+    ls -la public/ && \
+    echo "📄 Landing page verified:" && \
+    ls -la public/landing/index.html; \
+    fi
+
 # CRITICAL: Copy drizzle.config.ts with verification
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 
