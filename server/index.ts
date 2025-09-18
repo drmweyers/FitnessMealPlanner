@@ -260,8 +260,10 @@ if (process.env.NODE_ENV === 'production') {
 
   // Catch-all for other app routes
   app.get('*', (req, res) => {
-    // If it's not an API route and not a static file, serve the React app
-    if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+    // If it's not an API route, static file, or landing page asset, serve the React app
+    if (!req.path.startsWith('/api') &&
+        !req.path.startsWith('/uploads') &&
+        !req.path.startsWith('/landing')) {
       res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }
   });
