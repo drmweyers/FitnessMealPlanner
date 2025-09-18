@@ -65,6 +65,9 @@ COPY --from=builder /app/dist/index.js ./dist/index.js
 COPY --from=builder /app/dist/public ./client/dist
 COPY --from=builder /app/shared ./shared
 
+# Copy public static files (landing page, uploads, etc.)
+COPY --from=builder /app/public ./public
+
 # CRITICAL: Copy drizzle.config.ts with verification
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 
