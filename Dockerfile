@@ -68,6 +68,27 @@ COPY --from=builder /app/shared ./shared
 # Copy public static files (landing page, uploads, etc.)
 COPY --from=builder /app/public ./public
 
+# Copy server views directory (needed for PDF templates)
+COPY --from=builder /app/server/views ./server/views
+
+# CRITICAL VERIFICATION: Ensure server views were copied correctly
+RUN echo "🔍 CRITICAL CHECK: Verifying server views exist..." && \
+    if [ ! -d "server/views" ]; then \
+    echo "❌ FATAL ERROR: server/views directory NOT FOUND!" && \
+    echo "📁 Files in /app directory:" && \
+    ls -la && \
+    exit 1; \
+    elif [ ! -f "server/views/pdfTemplate.ejs" ]; then \
+    echo "❌ FATAL ERROR: server/views/pdfTemplate.ejs NOT FOUND!" && \
+    echo "📁 Contents of server/views directory:" && \
+    ls -la server/views/ 2>/dev/null || echo "Directory doesn't exist" && \
+    exit 1; \
+    else \
+    echo "✅ Server views successfully copied"; \
+    echo "📁 Views directory contents:" && \
+    ls -la server/views/; \
+    fi
+
 # CRITICAL VERIFICATION: Ensure React app was copied correctly
 RUN echo "🔍 CRITICAL CHECK: Verifying React app files exist..." && \
     if [ ! -d "dist/public" ]; then \

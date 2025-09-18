@@ -77,7 +77,13 @@ export interface MealPlanPdfData {
  */
 export async function compileHtmlTemplate(data: MealPlanPdfData): Promise<string> {
   try {
-    const templatePath = path.join(__dirname, '..', 'views', 'pdfTemplate.ejs');
+    // Handle different paths for development vs production
+    // In production, the compiled JS is at /app/dist/index.js
+    // and views are at /app/server/views
+    const isProduction = process.env.NODE_ENV === 'production';
+    const templatePath = isProduction
+      ? path.join(process.cwd(), 'server', 'views', 'pdfTemplate.ejs')
+      : path.join(__dirname, '..', 'views', 'pdfTemplate.ejs');
     
     // Enhance data with calculated values
     const enhancedData = {
