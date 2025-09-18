@@ -219,8 +219,12 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.join(__dirname, '../public/landing/index.html'));
   });
 
-  // Serve features page
+  // Serve features page (both /features and /features.html)
   app.get('/features', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/landing/features.html'));
+  });
+
+  app.get('/features.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/landing/features.html'));
   });
 

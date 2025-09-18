@@ -100,7 +100,8 @@
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0008_create_grocery_lists.sql)",
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0016_add_meal_plan_id_to_grocery_lists.sql)",
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0003_create_personalized_meal_plans.sql)",
-      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitmeal\" npm run migrate 0000_left_crusher_hogan.sql)"
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitmeal\" npm run migrate 0000_left_crusher_hogan.sql)",
+      "Bash(docker system:*)"
     ],
     "deny": [],
     "ask": [],
