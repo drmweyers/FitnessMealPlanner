@@ -397,7 +397,7 @@ const SharedMealPlanView: React.FC = () => {
 
         {/* Footer */}
         <div className="text-center py-8 text-sm text-muted-foreground">
-          <p>This meal plan was shared from FitnessMealPlanner</p>
+          <p>This meal plan was shared from EvoFitMeals</p>
           <Button asChild variant="link" className="mt-2">
             <Link to="/">Create Your Own Meal Plans</Link>
           </Button>

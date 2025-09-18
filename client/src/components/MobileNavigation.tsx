@@ -156,12 +156,15 @@ const MobileNavigation: React.FC = () => {
             <Menu className="w-6 h-6" />
           </button>
 
-          <h1
-            className="text-lg font-semibold text-gray-900"
-            data-testid="mobile-header-title"
-          >
-            FitMeal Pro
-          </h1>
+          <div className="flex items-center">
+            <Utensils className="w-5 h-5 text-purple-600 mr-1" />
+            <h1
+              className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent"
+              data-testid="mobile-header-title"
+            >
+              EvoFitMeals
+            </h1>
+          </div>
 
           <button
             onClick={() => setLocation('/profile')}
