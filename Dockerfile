@@ -68,6 +68,24 @@ COPY --from=builder /app/shared ./shared
 # Copy public static files (landing page, uploads, etc.)
 COPY --from=builder /app/public ./public
 
+# CRITICAL VERIFICATION: Ensure React app was copied correctly
+RUN echo "🔍 CRITICAL CHECK: Verifying React app files exist..." && \
+    if [ ! -d "client/dist" ]; then \
+    echo "❌ FATAL ERROR: client/dist directory NOT FOUND!" && \
+    echo "📁 Files in /app directory:" && \
+    ls -la && \
+    exit 1; \
+    elif [ ! -f "client/dist/index.html" ]; then \
+    echo "❌ FATAL ERROR: client/dist/index.html NOT FOUND!" && \
+    echo "📁 Contents of client/dist directory:" && \
+    ls -la client/dist/ 2>/dev/null || echo "Directory doesn't exist" && \
+    exit 1; \
+    else \
+    echo "✅ React app files successfully copied"; \
+    echo "📁 React app contents:" && \
+    ls -la client/dist/ | head -10; \
+    fi
+
 # CRITICAL VERIFICATION: Ensure public static files were copied
 RUN echo "🔍 CRITICAL CHECK: Verifying public static files exist..." && \
     if [ ! -d "public" ]; then \
