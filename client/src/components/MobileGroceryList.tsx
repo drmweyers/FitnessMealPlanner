@@ -14,11 +14,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  ShoppingCart, 
-  Plus, 
-  Search, 
-  Filter, 
+import {
+  useGroceryList,
+  useAddGroceryItem,
+  useUpdateGroceryItem,
+  useDeleteGroceryItem,
+  useGenerateFromMealPlan,
+} from '@/hooks/useGroceryLists';
+import {
+  ShoppingCart,
+  Plus,
+  Search,
+  Filter,
   MoreHorizontal,
   Check,
   X,
@@ -36,24 +43,14 @@ import {
   Milk,
   Coffee,
   Wheat,
-  Candy
+  Candy,
+  ChefHat
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { type GroceryListItem } from '@/utils/api';
 
-interface GroceryItem {
-  id: string;
-  name: string;
-  category: string;
-  quantity: number;
-  unit: string;
-  isChecked: boolean;
-  priority: 'low' | 'medium' | 'high';
-  notes?: string;
-  estimatedPrice?: number;
-  brand?: string;
-  recipeId?: string;
-  recipeName?: string;
-}
+// Type alias for backwards compatibility
+type GroceryItem = GroceryListItem;
 
 interface Category {
   id: string;
@@ -64,9 +61,9 @@ interface Category {
 }
 
 interface MobileGroceryListProps {
+  groceryListId: string;
   mealPlanId?: string;
-  items?: GroceryItem[];
-  onItemsChange?: (items: GroceryItem[]) => void;
+  activeMealPlan?: any; // EnhancedMealPlan from Customer.tsx
   className?: string;
 }
 
@@ -82,18 +79,25 @@ const CATEGORIES: Category[] = [
 const UNITS = ['pcs', 'lbs', 'oz', 'cups', 'tbsp', 'tsp', 'cloves', 'bunches', 'packages', 'cans', 'bottles'];
 
 const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
+  groceryListId,
   mealPlanId,
-  items: initialItems = [],
-  onItemsChange,
+  activeMealPlan,
   className = ''
 }) => {
-  const [items, setItems] = useState<GroceryItem[]>(initialItems);
+  // API hooks
+  const { data: groceryList, isLoading, error, refetch } = useGroceryList(groceryListId);
+  const addItemMutation = useAddGroceryItem();
+  const updateItemMutation = useUpdateGroceryItem();
+  const deleteItemMutation = useDeleteGroceryItem();
+  const generateFromMealPlanMutation = useGenerateFromMealPlan();
+
+  // Local state for UI
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'category'>('category');
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'priority'>('category');
   const [isAdding, setIsAdding] = useState(false);
-  const [newItem, setNewItem] = useState<Partial<GroceryItem>>({
+  const [newItem, setNewItem] = useState<Partial<GroceryListItem>>({
     name: '',
     category: 'produce',
     quantity: 1,
@@ -101,36 +105,15 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
     priority: 'medium'
   });
   const [swipeState, setSwipeState] = useState<{ itemId: string | null; direction: 'left' | 'right' | null }>({ itemId: null, direction: null });
-  
+
   const touchStartX = useRef<number>(0);
   const touchStartY = useRef<number>(0);
   const isSwiping = useRef<boolean>(false);
-  
+
   const { toast } = useToast();
 
-  // Generate sample data if no items provided
-  useEffect(() => {
-    if (initialItems.length === 0) {
-      const sampleItems: GroceryItem[] = [
-        { id: '1', name: 'Chicken Breast', category: 'meat', quantity: 2, unit: 'lbs', isChecked: false, priority: 'high', estimatedPrice: 12.99 },
-        { id: '2', name: 'Broccoli', category: 'produce', quantity: 2, unit: 'bunches', isChecked: true, priority: 'medium', estimatedPrice: 3.99 },
-        { id: '3', name: 'Brown Rice', category: 'pantry', quantity: 1, unit: 'packages', isChecked: false, priority: 'medium', estimatedPrice: 4.49 },
-        { id: '4', name: 'Greek Yogurt', category: 'dairy', quantity: 2, unit: 'cups', isChecked: false, priority: 'medium', estimatedPrice: 5.99 },
-        { id: '5', name: 'Spinach', category: 'produce', quantity: 1, unit: 'packages', isChecked: true, priority: 'medium', estimatedPrice: 2.99 },
-        { id: '6', name: 'Olive Oil', category: 'pantry', quantity: 1, unit: 'bottles', isChecked: false, priority: 'low', estimatedPrice: 8.99 },
-        { id: '7', name: 'Almonds', category: 'snacks', quantity: 1, unit: 'packages', isChecked: false, priority: 'low', estimatedPrice: 6.99 },
-        { id: '8', name: 'Eggs', category: 'dairy', quantity: 12, unit: 'pcs', isChecked: false, priority: 'high', estimatedPrice: 3.49 },
-      ];
-      setItems(sampleItems);
-    }
-  }, [initialItems]);
-
-  // Notify parent of changes
-  useEffect(() => {
-    if (onItemsChange) {
-      onItemsChange(items);
-    }
-  }, [items, onItemsChange]);
+  // Extract items from the grocery list, with fallback for loading state
+  const items = groceryList?.items || [];
 
   // Filter and sort items
   const filteredAndSortedItems = useMemo(() => {
@@ -235,7 +218,7 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
     touchStartY.current = 0;
   }, [swipeState]);
 
-  const addItem = () => {
+  const addItem = async () => {
     if (!newItem.name?.trim()) {
       toast({
         title: 'Error',
@@ -245,48 +228,110 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
       return;
     }
 
-    const item: GroceryItem = {
-      id: `item-${Date.now()}`,
-      name: newItem.name.trim(),
-      category: newItem.category || 'produce',
-      quantity: newItem.quantity || 1,
-      unit: newItem.unit || 'pcs',
-      isChecked: false,
-      priority: newItem.priority || 'medium',
-      notes: newItem.notes,
-      estimatedPrice: newItem.estimatedPrice
-    };
+    try {
+      await addItemMutation.mutateAsync({
+        listId: groceryListId,
+        item: {
+          name: newItem.name.trim(),
+          category: newItem.category || 'produce',
+          quantity: newItem.quantity || 1,
+          unit: newItem.unit || 'pcs',
+          priority: newItem.priority || 'medium',
+          notes: newItem.notes,
+          estimatedPrice: newItem.estimatedPrice
+        }
+      });
 
-    setItems(prev => [...prev, item]);
-    setNewItem({ name: '', category: 'produce', quantity: 1, unit: 'pcs', priority: 'medium' });
-    setIsAdding(false);
-
-    toast({
-      title: 'Success',
-      description: 'Item added to grocery list',
-    });
+      setNewItem({ name: '', category: 'produce', quantity: 1, unit: 'pcs', priority: 'medium' });
+      setIsAdding(false);
+    } catch (error) {
+      // Error handling is done by the mutation hook
+      console.error('Failed to add item:', error);
+    }
   };
 
-  const toggleItemChecked = (itemId: string) => {
-    setItems(prev => prev.map(item => 
-      item.id === itemId ? { ...item, isChecked: !item.isChecked } : item
-    ));
+  const toggleItemChecked = async (itemId: string) => {
+    // Find the current item to get its current checked state
+    const currentItem = items.find(item => item.id === itemId);
+    if (!currentItem) return;
+
+    try {
+      await updateItemMutation.mutateAsync({
+        listId: groceryListId,
+        itemId,
+        updates: { isChecked: !currentItem.isChecked }
+      });
+    } catch (error) {
+      // Error handling is done by the mutation hook
+      console.error('Failed to toggle item checked state:', error);
+    }
   };
 
-  const deleteItem = (itemId: string) => {
-    setItems(prev => prev.filter(item => item.id !== itemId));
-    toast({
-      title: 'Item removed',
-      description: 'Item deleted from grocery list',
-    });
+  const deleteItem = async (itemId: string) => {
+    try {
+      await deleteItemMutation.mutateAsync({
+        listId: groceryListId,
+        itemId
+      });
+    } catch (error) {
+      // Error handling is done by the mutation hook
+      console.error('Failed to delete item:', error);
+    }
   };
 
-  const clearCheckedItems = () => {
-    setItems(prev => prev.filter(item => !item.isChecked));
-    toast({
-      title: 'Checked items cleared',
-      description: 'All completed items have been removed',
-    });
+  const generateFromMealPlan = async () => {
+    if (!activeMealPlan) {
+      toast({
+        title: 'No Meal Plan',
+        description: 'You need an assigned meal plan to generate a grocery list',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const result = await generateFromMealPlanMutation.mutateAsync({
+        mealPlanId: activeMealPlan.id,
+        listName: `Grocery List - ${activeMealPlan.planName}`,
+      });
+
+      toast({
+        title: 'Success',
+        description: 'Grocery list generated from your meal plan',
+      });
+
+      // The mutation will update the cache and the new list will be available
+    } catch (error) {
+      // Error handling is done by the mutation hook
+      console.error('Failed to generate grocery list from meal plan:', error);
+    }
+  };
+
+  const clearCheckedItems = async () => {
+    const checkedItems = items.filter(item => item.isChecked);
+
+    try {
+      // Delete all checked items
+      await Promise.all(
+        checkedItems.map(item =>
+          deleteItemMutation.mutateAsync({
+            listId: groceryListId,
+            itemId: item.id
+          })
+        )
+      );
+
+      toast({
+        title: 'Checked items cleared',
+        description: 'All completed items have been removed',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to clear some items',
+        variant: 'destructive'
+      });
+    }
   };
 
   const exportList = () => {
@@ -343,6 +388,8 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
       >
         <div className={`flex items-center gap-3 p-4 border-b transition-opacity ${
           item.isChecked ? 'opacity-50' : ''
+        } ${
+          updateItemMutation.isPending || deleteItemMutation.isPending ? 'opacity-50 pointer-events-none' : ''
         }`}>
           <div 
             className="flex-shrink-0 cursor-pointer touch-target p-2 -m-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -361,10 +408,11 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
               }
             }}
           >
-            <Checkbox 
-              checked={item.isChecked} 
-              onChange={() => toggleItemChecked(item.id)} 
+            <Checkbox
+              checked={item.isChecked}
+              onChange={() => toggleItemChecked(item.id)}
               className="h-6 w-6 touch-target-checkbox"
+              disabled={updateItemMutation.isPending}
             />
           </div>
           
@@ -438,6 +486,36 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
     );
   };
 
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className={`min-h-screen bg-background ${className} flex items-center justify-center`}>
+        <div className="text-center">
+          <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50 animate-pulse" />
+          <h3 className="text-lg font-medium mb-2">Loading grocery list...</h3>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className={`min-h-screen bg-background ${className} flex items-center justify-center`}>
+        <div className="text-center px-4">
+          <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-destructive/50" />
+          <h3 className="text-lg font-medium mb-2 text-destructive">Failed to load grocery list</h3>
+          <p className="text-muted-foreground mb-4">
+            {error instanceof Error ? error.message : 'Something went wrong'}
+          </p>
+          <Button onClick={() => refetch()} variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-background ${className}`}>
       {/* Header */}
@@ -468,6 +546,18 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {activeMealPlan && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={generateFromMealPlan}
+                        disabled={generateFromMealPlanMutation.isPending}
+                      >
+                        <ChefHat className="mr-2 h-4 w-4" />
+                        Generate from Meal Plan
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem onClick={exportList}>
                     <Share className="mr-2 h-4 w-4" />
                     Share List
@@ -506,6 +596,22 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
                 className="pl-10 touch-target"
               />
             </div>
+
+            {/* Generate from Meal Plan Button */}
+            {activeMealPlan && !isAdding && (
+              <Button
+                onClick={generateFromMealPlan}
+                variant="outline"
+                className="w-full touch-target bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 border-purple-200 text-purple-700 hover:text-purple-800"
+                disabled={generateFromMealPlanMutation.isPending}
+              >
+                <ChefHat className="h-4 w-4 mr-2" />
+                {generateFromMealPlanMutation.isPending
+                  ? 'Generating...'
+                  : `Generate from ${activeMealPlan.planName}`
+                }
+              </Button>
+            )}
 
             {isAdding ? (
               <Card>
@@ -550,8 +656,13 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
                     </select>
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={addItem} size="sm" className="flex-1 touch-target">
-                      Add Item
+                    <Button
+                      onClick={addItem}
+                      size="sm"
+                      className="flex-1 touch-target"
+                      disabled={addItemMutation.isPending}
+                    >
+                      {addItemMutation.isPending ? 'Adding...' : 'Add Item'}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -664,14 +775,14 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
               )}
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={clearCheckedItems}
-                disabled={completedItems === 0}
+                disabled={completedItems === 0 || deleteItemMutation.isPending}
                 className="touch-target"
               >
-                Clear Done ({completedItems})
+                {deleteItemMutation.isPending ? 'Clearing...' : `Clear Done (${completedItems})`}
               </Button>
               <Button size="sm" onClick={exportList} className="touch-target">
                 <Share className="h-4 w-4 mr-2" />

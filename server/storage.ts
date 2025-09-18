@@ -26,6 +26,8 @@ import {
   recipeInteractions,
   recipeRecommendations,
   userActivitySessions,
+  groceryLists,
+  groceryListItems,
   type User,
   type InsertUser,
   type Recipe,
@@ -45,12 +47,18 @@ import {
   type RecipeInteraction,
   type RecipeRecommendation,
   type UserActivitySession,
+  type GroceryList,
+  type InsertGroceryList,
+  type GroceryListItem,
+  type InsertGroceryListItem,
+  type GroceryListWithItems,
   passwordResetTokens,
   refreshTokens,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
 import { inArray } from "drizzle-orm";
+import { handleMealPlanEvent, createMealPlanEvent, MealPlanEventType } from "./utils/mealPlanEvents";
 
 /**
  * Storage Interface
@@ -154,10 +162,23 @@ export interface IStorage {
   getTrendingRecipes(limit: number, category?: string): Promise<any[]>;
   getRecipeRecommendations(userId: string, type: string, limit: number): Promise<any[]>;
   getUserActivitySummary(userId: string, days: number): Promise<any>;
-  
+
+  // Grocery Lists Operations
+  getGroceryLists(customerId: string): Promise<GroceryList[]>;
+  getGroceryList(customerId: string, listId: string): Promise<GroceryListWithItems | undefined>;
+  createGroceryList(listData: InsertGroceryList): Promise<GroceryList>;
+  updateGroceryList(customerId: string, listId: string, updates: Partial<InsertGroceryList>): Promise<GroceryList | undefined>;
+  deleteGroceryList(customerId: string, listId: string): Promise<boolean>;
+
+  // Grocery List Items Operations
+  addGroceryListItem(listId: string, itemData: InsertGroceryListItem): Promise<GroceryListItem>;
+  updateGroceryListItem(listId: string, itemId: string, updates: Partial<InsertGroceryListItem>): Promise<GroceryListItem | undefined>;
+  deleteGroceryListItem(listId: string, itemId: string): Promise<boolean>;
+  getGroceryListItems(listId: string): Promise<GroceryListItem[]>;
+
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
-  
+
 }
 
 export class DatabaseStorage implements IStorage {
@@ -389,8 +410,35 @@ export class DatabaseStorage implements IStorage {
         trainerId,
         mealPlanData,
       }));
-      
-      await db.insert(personalizedMealPlans).values(assignments);
+
+      const insertedMealPlans = await db.insert(personalizedMealPlans).values(assignments).returning();
+
+      // Trigger automatic grocery list generation for each assigned meal plan
+      for (const mealPlan of insertedMealPlans) {
+        try {
+          const event = createMealPlanEvent(
+            MealPlanEventType.ASSIGNED,
+            mealPlan.id,
+            mealPlan.customerId,
+            mealPlan.mealPlanData,
+            {
+              assignedBy: trainerId,
+              planName: (mealPlan.mealPlanData as any)?.planName || 'Assigned Meal Plan',
+              fitnessGoal: (mealPlan.mealPlanData as any)?.fitnessGoal
+            }
+          );
+
+          const result = await handleMealPlanEvent(event);
+
+          if (result.success && result.action === 'created') {
+            console.log(`[Storage] Auto-generated grocery list for meal plan ${mealPlan.id} assigned to customer ${mealPlan.customerId}`);
+          } else if (!result.success) {
+            console.warn(`[Storage] Failed to auto-generate grocery list for meal plan ${mealPlan.id}: ${result.error}`);
+          }
+        } catch (error) {
+          console.error(`[Storage] Error during auto grocery list generation for meal plan ${mealPlan.id}:`, error);
+        }
+      }
     }
   }
 
@@ -630,6 +678,17 @@ export class DatabaseStorage implements IStorage {
         notes,
       })
       .returning();
+
+    // Trigger automatic grocery list generation after successful assignment
+    try {
+      const { onMealPlanAssigned } = await import('./utils/mealPlanEvents.js');
+      await onMealPlanAssigned(mealPlanId, customerId);
+      console.log(`[Storage] Triggered automatic grocery list generation for customer ${customerId} from meal plan ${mealPlanId}`);
+    } catch (error) {
+      // Log error but don't fail the assignment
+      console.error('[Storage] Failed to auto-generate grocery list:', error);
+    }
+
     return assignment;
   }
 
@@ -707,6 +766,18 @@ export class DatabaseStorage implements IStorage {
 
   async removeMealPlanAssignment(trainerId: string, assignmentId: string): Promise<boolean> {
     try {
+      // Get meal plan data before deletion for cleanup
+      const mealPlanToDelete = await db
+        .select()
+        .from(personalizedMealPlans)
+        .where(
+          and(
+            eq(personalizedMealPlans.id, assignmentId),
+            eq(personalizedMealPlans.trainerId, trainerId)
+          )
+        )
+        .limit(1);
+
       const result = await db.delete(personalizedMealPlans)
         .where(
           and(
@@ -714,6 +785,27 @@ export class DatabaseStorage implements IStorage {
             eq(personalizedMealPlans.trainerId, trainerId)
           )
         );
+
+      // Trigger automatic cleanup of orphaned grocery lists
+      if (mealPlanToDelete.length > 0) {
+        try {
+          const event = createMealPlanEvent(
+            MealPlanEventType.DELETED,
+            assignmentId,
+            mealPlanToDelete[0].customerId,
+            mealPlanToDelete[0].mealPlanData
+          );
+
+          const cleanupResult = await handleMealPlanEvent(event);
+
+          if (cleanupResult.success && cleanupResult.action === 'updated') {
+            console.log(`[Storage] Cleaned up ${cleanupResult.itemCount || 0} orphaned grocery lists for deleted meal plan ${assignmentId}`);
+          }
+        } catch (error) {
+          console.error(`[Storage] Error during grocery list cleanup for deleted meal plan ${assignmentId}:`, error);
+        }
+      }
+
       return true;
     } catch (error) {
       console.error('Error removing meal plan assignment:', error);
@@ -1068,6 +1160,127 @@ export class DatabaseStorage implements IStorage {
       );
 
     return activity;
+  }
+
+  // Grocery Lists Operations
+  async getGroceryLists(customerId: string): Promise<GroceryList[]> {
+    return await db
+      .select()
+      .from(groceryLists)
+      .where(eq(groceryLists.customerId, customerId))
+      .orderBy(desc(groceryLists.updatedAt));
+  }
+
+  async getGroceryList(customerId: string, listId: string): Promise<GroceryListWithItems | undefined> {
+    // Get grocery list
+    const [groceryList] = await db
+      .select()
+      .from(groceryLists)
+      .where(
+        and(
+          eq(groceryLists.id, listId),
+          eq(groceryLists.customerId, customerId)
+        )
+      )
+      .limit(1);
+
+    if (!groceryList) {
+      return undefined;
+    }
+
+    // Get grocery list items
+    const items = await db
+      .select()
+      .from(groceryListItems)
+      .where(eq(groceryListItems.groceryListId, listId))
+      .orderBy(
+        groceryListItems.isChecked,
+        groceryListItems.category,
+        groceryListItems.name
+      );
+
+    return {
+      ...groceryList,
+      items,
+    };
+  }
+
+  async createGroceryList(listData: InsertGroceryList): Promise<GroceryList> {
+    const [created] = await db.insert(groceryLists).values(listData).returning();
+    return created;
+  }
+
+  async updateGroceryList(customerId: string, listId: string, updates: Partial<InsertGroceryList>): Promise<GroceryList | undefined> {
+    const [updated] = await db
+      .update(groceryLists)
+      .set(updates)
+      .where(
+        and(
+          eq(groceryLists.id, listId),
+          eq(groceryLists.customerId, customerId)
+        )
+      )
+      .returning();
+    return updated;
+  }
+
+  async deleteGroceryList(customerId: string, listId: string): Promise<boolean> {
+    const result = await db
+      .delete(groceryLists)
+      .where(
+        and(
+          eq(groceryLists.id, listId),
+          eq(groceryLists.customerId, customerId)
+        )
+      );
+    return Number(result.rowCount) > 0;
+  }
+
+  // Grocery List Items Operations
+  async addGroceryListItem(listId: string, itemData: InsertGroceryListItem): Promise<GroceryListItem> {
+    const [created] = await db
+      .insert(groceryListItems)
+      .values({ ...itemData, groceryListId: listId })
+      .returning();
+    return created;
+  }
+
+  async updateGroceryListItem(listId: string, itemId: string, updates: Partial<InsertGroceryListItem>): Promise<GroceryListItem | undefined> {
+    const [updated] = await db
+      .update(groceryListItems)
+      .set(updates)
+      .where(
+        and(
+          eq(groceryListItems.id, itemId),
+          eq(groceryListItems.groceryListId, listId)
+        )
+      )
+      .returning();
+    return updated;
+  }
+
+  async deleteGroceryListItem(listId: string, itemId: string): Promise<boolean> {
+    const result = await db
+      .delete(groceryListItems)
+      .where(
+        and(
+          eq(groceryListItems.id, itemId),
+          eq(groceryListItems.groceryListId, listId)
+        )
+      );
+    return Number(result.rowCount) > 0;
+  }
+
+  async getGroceryListItems(listId: string): Promise<GroceryListItem[]> {
+    return await db
+      .select()
+      .from(groceryListItems)
+      .where(eq(groceryListItems.groceryListId, listId))
+      .orderBy(
+        groceryListItems.isChecked,
+        groceryListItems.category,
+        groceryListItems.name
+      );
   }
 
   // Transaction support

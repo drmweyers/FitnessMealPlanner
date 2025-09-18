@@ -22,7 +22,7 @@ import { OAuthCallback } from "./components/OAuthCallback";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import SharedMealPlanView from "./components/SharedMealPlanView";
 import MacroTrackingDashboard from "./components/MacroTrackingDashboard";
-import MobileGroceryList from "./components/MobileGroceryList";
+import GroceryListWrapper from "./components/GroceryListWrapper";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -120,6 +120,14 @@ export default function Router() {
           const Component = Customer;
           return <Component initialTab="progress" />;
         }} />
+
+        <Route path="/customer/grocery-list" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          const Component = Customer;
+          return <Component initialTab="grocery-list" />;
+        }} />
         
         <Route path="/my-meal-plans" component={() => {
           if (user.role !== 'customer') {
@@ -133,14 +141,14 @@ export default function Router() {
           if (user.role !== 'customer') {
             return <Redirect to="/" />;
           }
-          return <MacroTrackingDashboard />;
+          return <MacroTrackingDashboard userId={user.id} userRole={user.role} />;
         }} />
         
         <Route path="/grocery-list" component={() => {
           if (user.role !== 'customer') {
             return <Redirect to="/" />;
           }
-          return <MobileGroceryList />;
+          return <GroceryListWrapper />;
         }} />
         
         {/* Common Routes */}

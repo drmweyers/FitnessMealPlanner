@@ -24,6 +24,7 @@ import {
 } from '../components/ui/alert-dialog';
 import { useToast } from '../hooks/use-toast';
 import ProgressTracking from '../components/ProgressTracking';
+import GroceryListWrapper from '../components/GroceryListWrapper';
 
 // Enhanced MealPlan includes the flattened properties from the API
 interface EnhancedMealPlan extends MealPlan {
@@ -75,7 +76,10 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
   const [activeTab, setActiveTab] = useState(() => {
     if (initialTab) return initialTab;
     const params = new URLSearchParams(window.location.search);
-    return params.get('tab') === 'progress' ? 'progress' : 'meal-plans';
+    const tab = params.get('tab');
+    if (tab === 'progress') return 'progress';
+    if (tab === 'grocery-list') return 'grocery-list';
+    return 'meal-plans';
   });
   const [fitnessGoalFilter, setFitnessGoalFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
@@ -202,6 +206,11 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
     return { totalPlans, activePlans, totalDays, avgCalories, primaryGoal };
   }, [mealPlans, summary]);
 
+  // Get the active meal plan for grocery list generation
+  const activeMealPlan = useMemo(() => {
+    return mealPlans.find((plan: EnhancedMealPlan) => plan.isActive) || null;
+  }, [mealPlans]);
+
   const clearFilters = () => {
     setSearchTerm('');
     setFitnessGoalFilter('all');
@@ -228,6 +237,7 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
       deleteMealPlanMutation.mutate(mealPlanToDelete);
     }
   };
+
 
   // Early return if not authenticated or user data missing
   if (!isAuthenticated || !user) {
@@ -328,13 +338,15 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
             const url = new URL(window.location.href);
             if (value === 'progress') {
               url.searchParams.set('tab', 'progress');
+            } else if (value === 'grocery-list') {
+              url.searchParams.set('tab', 'grocery-list');
             } else {
               url.searchParams.delete('tab');
             }
             window.history.replaceState({}, '', url.toString());
           }} className="w-full">
             <div className="flex justify-center mb-8">
-              <TabsList className="grid w-full max-w-md grid-cols-2 bg-white/60 backdrop-blur-sm">
+              <TabsList className="grid w-full max-w-lg grid-cols-3 bg-white/60 backdrop-blur-sm">
                 <TabsTrigger value="meal-plans" className="flex items-center space-x-2">
                   <ChefHat className="w-4 h-4" />
                   <span>Meal Plans</span>
@@ -342,6 +354,10 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
                 <TabsTrigger value="progress" className="flex items-center space-x-2">
                   <Activity className="w-4 h-4" />
                   <span>Progress</span>
+                </TabsTrigger>
+                <TabsTrigger value="grocery-list" className="flex items-center space-x-2">
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Grocery</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -630,6 +646,13 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
 
             <TabsContent value="progress">
               <ProgressTracking />
+            </TabsContent>
+
+            <TabsContent value="grocery-list">
+              {/* Grocery list tab content */}
+              <GroceryListWrapper
+                activeMealPlan={activeMealPlan}
+              />
             </TabsContent>
           </Tabs>
         </div>

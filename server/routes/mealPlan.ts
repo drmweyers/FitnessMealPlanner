@@ -12,6 +12,7 @@ import { db } from '../db';
 import { personalizedMealPlans } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import type { MealPlanGeneration } from '@shared/schema';
+import { handleMealPlanEvent, createMealPlanEvent, MealPlanEventType } from '../utils/mealPlanEvents';
 
 const mealPlanRouter = express.Router();
 
@@ -536,10 +537,29 @@ mealPlanRouter.delete('/:id', requireAuth, async (req, res) => {
         )
       );
 
+    // Trigger automatic cleanup of orphaned grocery lists
+    try {
+      const event = createMealPlanEvent(
+        MealPlanEventType.DELETED,
+        mealPlanId,
+        userId,
+        mealPlanToDelete.mealPlanData
+      );
+
+      const cleanupResult = await handleMealPlanEvent(event);
+
+      if (cleanupResult.success && cleanupResult.action === 'updated') {
+        console.log(`[Meal Plan Delete] Cleaned up ${cleanupResult.itemCount || 0} orphaned grocery lists for customer ${userId} meal plan ${mealPlanId}`);
+      }
+    } catch (error) {
+      console.error(`[Meal Plan Delete] Error during grocery list cleanup for meal plan ${mealPlanId}:`, error);
+      // Don't fail the meal plan deletion if grocery list cleanup fails
+    }
+
     console.log(`[Meal Plan Delete] Customer ${userId} deleted meal plan ${mealPlanId}`);
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: 'Meal plan deleted successfully',
       deletedMealPlanId: mealPlanId
     });

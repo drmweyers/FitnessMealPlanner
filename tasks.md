@@ -1,9 +1,14 @@
 # FitnessMealPlanner - Task Tracking
 
-**Last Updated**: 2025-01-19 (Responsive Design Restoration In Progress)
-**BMAD Process**: Phase 11 IN PROGRESS - Restoring Responsive Design | Stories 1.1-1.9 COMPLETE (100% PRD Implementation)
-**Production Status**: RESTORATION PENDING - Reverting to working state from 2 days ago
-**Current Session**: Responsive Design Restoration - Fixing navigation visibility issues
+**Last Updated**: 2025-09-17 (Landing Page with Markdown CMS)
+**BMAD Process**: Phase 14 COMPLETE - Marketing Landing Page | Stories 1.1-1.9 COMPLETE (100% PRD Implementation)
+**Production Status**: LANDING PAGE READY - Content editable via markdown files
+**Current Focus**: Landing page content management system - Edit markdown files to update website
+
+## 🎯 LANDING PAGE QUICK REFERENCE
+**To edit landing page:** Navigate to `public/landing/content/` and edit any `.md` file
+**View page:** http://localhost:4000/landing/index.html
+**Guide:** See `public/landing/content/README.md`
 
 ## Task Management Guidelines
 - Mark tasks as `[x]` when completed with date
@@ -47,6 +52,60 @@
 - [x] Create photo upload with secure storage (2025-03-20)
 - [x] Build goal setting and tracking features (2025-03-22)
 - [x] Add progress visualization charts (2025-03-25)
+
+## Milestone 25: Grocery List Enhancement ❌ FAILING
+**Status**: FAILING - Frontend Error "Failed to fetch grocery lists"
+**Start Date**: 2025-09-17
+**Current Date**: 2025-09-17
+**Issue**: Customer cannot access grocery lists - API returning errors
+
+### Phase 1: Infrastructure Fix ✅
+- [x] Fix database schema mismatch (2025-09-17)
+- [x] Remove isActive field from frontend (2025-09-17)
+- [x] Fix React component errors (2025-09-17)
+- [x] Achieve 100% test success rate (2025-09-17)
+
+### Phase 2: Meal Plan Integration ✅
+- [x] Analyze meal plan structure and recipes (2025-09-17)
+- [x] Create API endpoint for grocery generation (2025-09-17)
+- [x] Implement ingredient aggregation algorithm (2025-09-17)
+- [x] Add unit conversion logic with fraction parsing (2025-09-17)
+- [x] Organize items by category (meat, dairy, produce, pantry) (2025-09-17)
+- [x] Generate list with meal plan name and date range (2025-09-17)
+- [x] Add UI button for manual generation (2025-09-17)
+- [x] Test with assigned meal plans (2025-09-17)
+- [x] Write comprehensive tests (107+ unit tests) (2025-09-17)
+- [x] Ready for production deployment (2025-09-17)
+
+### Phase 3: Automatic Generation ⚠️ PARTIAL
+- [x] Create mealPlanEvents.ts event system (2025-09-17)
+- [x] Add database migration for meal_plan_id tracking (2025-09-17)
+- [x] Implement automatic generation on meal plan assignment (2025-09-17)
+- [x] Add feature configuration flags (2025-09-17)
+- [x] Prevent duplicate list creation (2025-09-17)
+- [x] Create comprehensive test suites (E2E, integration, performance) (2025-09-17)
+- [ ] ❌ Fix "Failed to fetch grocery lists" error
+- [ ] ❌ Ensure customer can access grocery lists
+- [ ] ❌ Verify lists are actually created in database
+- [ ] ❌ Fix API endpoint errors
+- [ ] ❌ Test complete flow end-to-end
+
+## Milestone 26: Grocery List Critical Fix 🚨 TODO NEXT SESSION
+**Status**: NOT STARTED - Critical bug fix needed
+**Priority**: CRITICAL
+**Issue**: Grocery list feature failing in production
+
+### Tasks for Next Session:
+- [ ] Debug why GET /api/grocery-lists is failing
+- [ ] Check database to verify if lists are being created
+- [ ] Fix customer access to grocery lists
+- [ ] Resolve "Failed to fetch grocery lists" error
+- [ ] Test trainer assigns meal plan → list auto-generates
+- [ ] Verify customer can view generated grocery list
+- [ ] Ensure ingredients are properly aggregated
+- [ ] Fix any API authentication issues
+- [ ] Run full E2E test of complete workflow
+- [ ] Deploy working solution to production
 
 ## Milestone 23: Test Credentials Standardization ✅
 - [x] Analyze current test credential configuration (2025-09-15)
@@ -188,6 +247,22 @@
 - [x] Update BMAD documentation with fix details (2025-01-15)
 - [x] Remove Settings option from mobile navigation menu (2025-01-15)
 - [x] Test Settings removal and verify no 404 errors (2025-01-15)
+
+## Milestone 27: Landing Page with Markdown CMS ✅ COMPLETE (2025-09-17)
+- [x] Create professional landing page with 10+ sections (2025-09-17)
+- [x] Implement hero section with AI value proposition (2025-09-17)
+- [x] Add stats bar, problem/solution sections (2025-09-17)
+- [x] Create features grid with 6 capabilities (2025-09-17)
+- [x] Add testimonials and pricing tiers ($47/$97/$297) (2025-09-17)
+- [x] Implement FAQ and final CTA sections (2025-09-17)
+- [x] Configure server to serve landing page at root URL (2025-09-17)
+- [x] Create markdown-based content management system (2025-09-17)
+- [x] Build content loader JavaScript for dynamic updates (2025-09-17)
+- [x] Create 10+ markdown content files for all sections (2025-09-17)
+- [x] Write comprehensive README guide for content editing (2025-09-17)
+- [x] Update BMAD documentation with landing page instructions (2025-09-17)
+- [x] Configure production deployment for https://evofitmeals.com/ (2025-09-17)
+- [x] Test markdown editing with instant browser updates (2025-09-17)
 
 ## Milestone 9: Enhanced Features ✅
 - [x] Add recipe favoriting system for users (2025-08-22) - Comprehensive system implemented

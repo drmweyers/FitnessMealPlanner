@@ -32,6 +32,7 @@ import analyticsRouter from './routes/analytics';
 import { progressSummariesRouter } from './routes/progressSummaries';
 import { emailPreferencesRouter } from './routes/emailPreferences';
 import { emailAnalyticsRouter } from './routes/emailAnalytics';
+import { groceryListsRouter } from './routes/groceryLists';
 import { schedulerService } from './services/schedulerService';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -178,6 +179,7 @@ app.use('/api/meal-plans', mealPlanSharingRouter);
 app.use('/api/pdf', requireAuth, pdfRouter);
 app.use('/api/progress', requireAuth, progressRouter);
 app.use('/api/profile', requireAuth, profileRouter);
+app.use('/api/grocery-lists', requireAuth, groceryListsRouter);
 
 // New analytics and engagement routes
 app.use('/api/favorites', favoritesRouter);
@@ -195,14 +197,69 @@ app.use('/api', analyticsErrorHandler);
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
-// Serve static files from the React app
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
+// Serve landing page and static public files
+app.use('/landing', express.static(path.join(__dirname, '../public/landing')));
 
-  // The "catchall" handler: for any request that doesn't match one above,
-  // send back React's index.html file.
-  app.get('*', (req, res) => {
+// Serve static files from the React app and handle routing
+if (process.env.NODE_ENV === 'production') {
+  // Serve the built React app for app routes
+  app.use('/app', express.static(path.join(__dirname, '../client/dist')));
+
+  // Serve landing page assets
+  app.use(express.static(path.join(__dirname, '../public')));
+
+  // Route configuration
+  app.get('/', (req, res) => {
+    // Serve landing page as the homepage
+    res.sendFile(path.join(__dirname, '../public/landing/index.html'));
+  });
+
+  app.get('/login', (req, res) => {
+    // Serve the React app for login
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+
+  app.get('/signup', (req, res) => {
+    // Serve the React app for signup
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+
+  app.get('/dashboard*', (req, res) => {
+    // Serve the React app for all dashboard routes
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+
+  app.get('/admin*', (req, res) => {
+    // Serve the React app for admin routes
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+
+  app.get('/trainer*', (req, res) => {
+    // Serve the React app for trainer routes
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+
+  app.get('/customer*', (req, res) => {
+    // Serve the React app for customer routes
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+
+  // Catch-all for other app routes
+  app.get('*', (req, res) => {
+    // If it's not an API route and not a static file, serve the React app
+    if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    }
+  });
+} else {
+  // Development mode routing
+  app.get('/', (req, res, next) => {
+    // If this is an API request or asset request, skip
+    if (req.path.startsWith('/api') || req.path.startsWith('/assets')) {
+      return next();
+    }
+    // In development, redirect to landing page
+    res.redirect('/landing/index.html');
   });
 }
 

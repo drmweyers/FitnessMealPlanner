@@ -381,11 +381,35 @@ The project is using the **BMAD Method** (Agile AI-Driven Development) for syste
 - **Architect**: Technical documentation
 - **Analyst**: Requirements analysis
 
+## 🎯 LANDING PAGE CONTENT MANAGEMENT
+
+### QUICK REFERENCE: "I want to work on my landing page"
+
+**WHERE TO EDIT:** `public/landing/content/`
+
+**HOW TO EDIT:**
+1. Open any `.md` file in `public/landing/content/`
+2. Edit the text (keep the #, ##, ### structure)
+3. Save the file
+4. Refresh browser to see changes
+
+**WHAT YOU CAN EDIT:**
+- `hero.md` - Main headline and CTAs
+- `pricing.md` - All pricing tiers
+- `testimonials.md` - Customer quotes
+- `features.md` - Feature descriptions
+- `faq.md` - Questions and answers
+- `stats.md` - Numbers and metrics
+
+**VIEW LANDING PAGE:** http://localhost:4000/landing/index.html
+
+**COMPLETE GUIDE:** See `public/landing/content/README.md`
+
 ## Session Progress Tracking
-- **Last Major Update:** Test Credentials Standardization (September 15, 2025)
-- **Previous Update:** Production S3 Configuration Fix (January 12, 2025)
-- **Mission Status:** ✅ PRODUCTION FULLY OPERATIONAL - All Test Accounts Working
-- **Current Focus:** Test credentials standardized and verified
+- **Last Major Update:** Landing Page with Markdown CMS (September 17, 2025)
+- **Previous Update:** Test Credentials Standardization (September 15, 2025)
+- **Mission Status:** ✅ PRODUCTION FULLY OPERATIONAL - Landing Page Ready
+- **Current Focus:** Landing page content management via markdown files
   - **Test Accounts Fixed:** All three accounts (admin, trainer, customer) verified working
   - **Seed Scripts Updated:** Both JS and TypeScript seed scripts use correct passwords
   - **SQL Scripts Fixed:** Updated bcrypt hashes for direct SQL insertion

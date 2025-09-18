@@ -770,6 +770,62 @@ export type CreateGoal = z.infer<typeof createGoalSchema>;
 export type UploadProgressPhoto = z.infer<typeof uploadProgressPhotoSchema>;
 
 /**
+ * Grocery Lists Table
+ *
+ * Stores grocery lists that are automatically generated from meal plans.
+ * Each meal plan has exactly one grocery list that is created automatically.
+ * When a meal plan is deleted, its grocery list is automatically deleted (CASCADE).
+ */
+export const groceryLists = pgTable("grocery_lists", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  customerId: uuid("customer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  mealPlanId: uuid("meal_plan_id")
+    .references(() => personalizedMealPlans.id, { onDelete: "cascade" })
+    .notNull().unique(), // Required and unique - one list per meal plan
+  name: varchar("name", { length: 255 }).notNull().default("Meal Plan Grocery List"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  customerIdIdx: index("idx_grocery_lists_customer_id").on(table.customerId),
+  customerUpdatedIdx: index("idx_grocery_lists_customer_updated").on(table.customerId, table.updatedAt),
+  mealPlanIdIdx: index("idx_grocery_lists_meal_plan_id").on(table.mealPlanId),
+}));
+
+/**
+ * Grocery List Items Table
+ *
+ * Individual items within grocery lists with categorization,
+ * quantities, and shopping metadata.
+ */
+export const groceryListItems = pgTable("grocery_list_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  groceryListId: uuid("grocery_list_id")
+    .references(() => groceryLists.id, { onDelete: "cascade" })
+    .notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  category: varchar("category", { length: 50 }).notNull().default("produce"),
+  quantity: integer("quantity").notNull().default(1),
+  unit: varchar("unit", { length: 20 }).notNull().default("pcs"),
+  isChecked: boolean("is_checked").default(false).notNull(),
+  priority: varchar("priority", { length: 10 }).default("medium").notNull(),
+  notes: text("notes"),
+  estimatedPrice: decimal("estimated_price", { precision: 6, scale: 2 }),
+  brand: varchar("brand", { length: 100 }),
+  recipeId: uuid("recipe_id").references(() => recipes.id, { onDelete: "set null" }),
+  recipeName: varchar("recipe_name", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  listIdIdx: index("idx_grocery_list_items_list_id").on(table.groceryListId),
+  listCategoryIdx: index("idx_grocery_list_items_list_category").on(table.groceryListId, table.category),
+  listCheckedIdx: index("idx_grocery_list_items_list_checked").on(table.groceryListId, table.isChecked),
+  recipeIdIdx: index("idx_grocery_list_items_recipe_id").on(table.recipeId),
+}));
+
+/**
  * Recipe Favorites Table
  * 
  * Stores individual recipe favorites for each user.
@@ -1220,4 +1276,55 @@ export const updateEmailPreferencesSchema = emailPreferencesSchema.partial();
 
 export type EmailPreferencesInput = z.infer<typeof emailPreferencesSchema>;
 export type UpdateEmailPreferencesInput = z.infer<typeof updateEmailPreferencesSchema>;
+
+// Type exports for grocery lists
+export type InsertGroceryList = typeof groceryLists.$inferInsert;
+export type GroceryList = typeof groceryLists.$inferSelect;
+
+export type InsertGroceryListItem = typeof groceryListItems.$inferInsert;
+export type GroceryListItem = typeof groceryListItems.$inferSelect;
+
+// Extended type for grocery list with items
+export type GroceryListWithItems = GroceryList & {
+  items: GroceryListItem[];
+};
+
+// Validation schemas for grocery lists
+export const groceryListSchema = z.object({
+  name: z.string().min(1, "List name is required").max(255),
+});
+
+export const updateGroceryListSchema = groceryListSchema.partial();
+
+export const groceryListItemSchema = z.object({
+  name: z.string().min(1, "Item name is required").max(255),
+  category: z.enum(['produce', 'meat', 'dairy', 'pantry', 'beverages', 'snacks', 'other']).default('produce'),
+  quantity: z.number().int().min(1).default(1),
+  unit: z.string().max(20).default('pcs'),
+  priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  notes: z.string().optional(),
+  estimatedPrice: z.number().positive().optional(),
+  brand: z.string().max(100).optional(),
+  recipeId: z.string().uuid().optional(),
+  recipeName: z.string().max(255).optional(),
+});
+
+export const updateGroceryListItemSchema = groceryListItemSchema.partial().extend({
+  isChecked: z.boolean().optional(),
+});
+
+// Validation schema for generating grocery list from meal plan
+export const generateGroceryListFromMealPlanSchema = z.object({
+  mealPlanId: z.string().uuid("Invalid meal plan ID format"),
+  listName: z.string().min(1, "List name is required").max(255).optional().default("Meal Plan Grocery List"),
+  includeAllIngredients: z.boolean().default(true),
+  aggregateQuantities: z.boolean().default(true),
+  roundUpQuantities: z.boolean().default(true),
+});
+
+export type GroceryListInput = z.infer<typeof groceryListSchema>;
+export type UpdateGroceryListInput = z.infer<typeof updateGroceryListSchema>;
+export type GroceryListItemInput = z.infer<typeof groceryListItemSchema>;
+export type UpdateGroceryListItemInput = z.infer<typeof updateGroceryListItemSchema>;
+export type GenerateGroceryListFromMealPlanInput = z.infer<typeof generateGroceryListFromMealPlanSchema>;
 
