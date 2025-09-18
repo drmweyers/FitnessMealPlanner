@@ -62,7 +62,7 @@ RUN npm ci --only=production && \
 
 # Copy built application
 COPY --from=builder /app/dist/index.js ./dist/index.js
-COPY --from=builder /app/dist/public ./client/dist
+COPY --from=builder /app/dist/public ./dist/public
 COPY --from=builder /app/shared ./shared
 
 # Copy public static files (landing page, uploads, etc.)
@@ -70,20 +70,20 @@ COPY --from=builder /app/public ./public
 
 # CRITICAL VERIFICATION: Ensure React app was copied correctly
 RUN echo "🔍 CRITICAL CHECK: Verifying React app files exist..." && \
-    if [ ! -d "client/dist" ]; then \
-    echo "❌ FATAL ERROR: client/dist directory NOT FOUND!" && \
+    if [ ! -d "dist/public" ]; then \
+    echo "❌ FATAL ERROR: dist/public directory NOT FOUND!" && \
     echo "📁 Files in /app directory:" && \
     ls -la && \
     exit 1; \
-    elif [ ! -f "client/dist/index.html" ]; then \
-    echo "❌ FATAL ERROR: client/dist/index.html NOT FOUND!" && \
-    echo "📁 Contents of client/dist directory:" && \
-    ls -la client/dist/ 2>/dev/null || echo "Directory doesn't exist" && \
+    elif [ ! -f "dist/public/index.html" ]; then \
+    echo "❌ FATAL ERROR: dist/public/index.html NOT FOUND!" && \
+    echo "📁 Contents of dist/public directory:" && \
+    ls -la dist/public/ 2>/dev/null || echo "Directory doesn't exist" && \
     exit 1; \
     else \
     echo "✅ React app files successfully copied"; \
     echo "📁 React app contents:" && \
-    ls -la client/dist/ | head -10; \
+    ls -la dist/public/ | head -10; \
     fi
 
 # CRITICAL VERIFICATION: Ensure public static files were copied
