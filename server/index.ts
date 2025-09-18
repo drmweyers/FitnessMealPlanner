@@ -219,41 +219,46 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.join(__dirname, '../public/landing/index.html'));
   });
 
+  // Serve features page
+  app.get('/features', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/landing/features.html'));
+  });
+
   app.get('/login', (req, res) => {
-    // Serve the React app for login (from dist/public)
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+    // Serve the React app for login
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
   app.get('/signup', (req, res) => {
-    // Serve the React app for signup (from dist/public)
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+    // Serve the React app for signup
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
   app.get('/dashboard*', (req, res) => {
-    // Serve the React app for all dashboard routes (from dist/public)
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+    // Serve the React app for all dashboard routes
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
   app.get('/admin*', (req, res) => {
-    // Serve the React app for admin routes (from dist/public)
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+    // Serve the React app for admin routes
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
   app.get('/trainer*', (req, res) => {
-    // Serve the React app for trainer routes (from dist/public)
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+    // Serve the React app for trainer routes
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
   app.get('/customer*', (req, res) => {
-    // Serve the React app for customer routes (from dist/public)
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+    // Serve the React app for customer routes
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
   // Catch-all for other app routes
   app.get('*', (req, res) => {
     // If it's not an API route and not a static file, serve the React app
     if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
-      res.sendFile(path.join(__dirname, 'public/index.html'));
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }
   });
 } else {
