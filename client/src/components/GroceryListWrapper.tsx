@@ -93,6 +93,13 @@ const GroceryListWrapper: React.FC<GroceryListWrapperProps> = ({
 
   // Auto-select first list with items or create default if none exist
   useEffect(() => {
+    console.log('[GroceryListWrapper] Auto-selection effect:', {
+      listsLoading,
+      groceryListsLength: groceryLists?.length,
+      selectedListId,
+      groceryLists
+    });
+
     if (!listsLoading && Array.isArray(groceryLists) && groceryLists.length > 0 && !selectedListId) {
       // Prioritize lists with items
       const listsWithItems = groceryLists.filter(list =>
@@ -102,7 +109,13 @@ const GroceryListWrapper: React.FC<GroceryListWrapperProps> = ({
         list && list.id && list.name
       );
 
+      console.log('[GroceryListWrapper] Found lists:', {
+        listsWithItems: listsWithItems.length,
+        validLists: validLists.length
+      });
+
       if (listsWithItems.length > 0) {
+        console.log('[GroceryListWrapper] Auto-selecting list with items:', listsWithItems[0].id);
         setSelectedListId(listsWithItems[0].id);
       } else if (validLists.length > 0) {
         // Select special lists first
@@ -111,10 +124,13 @@ const GroceryListWrapper: React.FC<GroceryListWrapperProps> = ({
           list.name === 'Test Grocery List' ||
           list.name === 'API Test Grocery List'
         );
-        setSelectedListId(specialList ? specialList.id : validLists[0].id);
+        const listToSelect = specialList ? specialList.id : validLists[0].id;
+        console.log('[GroceryListWrapper] Auto-selecting valid list:', listToSelect);
+        setSelectedListId(listToSelect);
       }
     } else if (!listsLoading && Array.isArray(groceryLists) && groceryLists.length === 0 && !selectedListId) {
       // No lists exist, create a default one
+      console.log('[GroceryListWrapper] No lists exist, creating default');
       createDefaultList();
     }
   }, [groceryLists, listsLoading, selectedListId]);
@@ -210,7 +226,23 @@ const GroceryListWrapper: React.FC<GroceryListWrapperProps> = ({
     );
   }
 
-  // Show list selector/creator if no list is selected
+  // Show loading state while lists are being fetched
+  if (listsLoading) {
+    return (
+      <div className={`min-h-screen bg-background ${className}`}>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading your grocery lists...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show list selector/creator if no list is selected (but only after loading)
   if (!selectedListId || showListSelector || isCreatingList) {
     return (
       <div className={`min-h-screen bg-background ${className}`}>

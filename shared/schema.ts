@@ -782,10 +782,9 @@ export const groceryLists = pgTable("grocery_lists", {
     .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
   mealPlanId: uuid("meal_plan_id")
-    .references(() => personalizedMealPlans.id, { onDelete: "cascade" })
-    .notNull().unique(), // Required and unique - one list per meal plan
-  name: varchar("name", { length: 255 }).notNull().default("Meal Plan Grocery List"),
-  isActive: boolean("is_active").default(true).notNull(),
+    .references(() => personalizedMealPlans.id, { onDelete: "set null" }),
+    // Optional - NULL for standalone lists, UUID for meal plan-linked lists
+  name: varchar("name", { length: 255 }).notNull().default("My Grocery List"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

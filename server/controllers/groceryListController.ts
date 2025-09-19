@@ -227,26 +227,20 @@ export const getGroceryLists = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Only customers can access grocery lists' });
     }
 
-    // Get grocery lists with meal plan information
+    // Get grocery lists (without meal plan join for now to debug)
+    console.log('GROCERY DEBUG: About to execute query for user:', userId);
+    console.log('GROCERY DEBUG: Database connection string:', process.env.DATABASE_URL || 'NO DATABASE_URL');
+
+    // Test with a direct count query first
+    const totalCount = await db.select({ count: sql`count(*)` }).from(groceryLists);
+    console.log('GROCERY DEBUG: Total grocery lists in database:', totalCount[0]?.count);
+
     const customerGroceryLists = await db
-      .select({
-        id: groceryLists.id,
-        customerId: groceryLists.customerId,
-        name: groceryLists.name,
-        mealPlanId: groceryLists.mealPlanId,
-        isActive: groceryLists.isActive,
-        createdAt: groceryLists.createdAt,
-        updatedAt: groceryLists.updatedAt,
-        mealPlanData: personalizedMealPlans.mealPlanData,
-        assignedAt: personalizedMealPlans.assignedAt,
-      })
+      .select()
       .from(groceryLists)
-      .innerJoin(
-        personalizedMealPlans,
-        eq(groceryLists.mealPlanId, personalizedMealPlans.id)
-      )
       .where(eq(groceryLists.customerId, userId))
-      .orderBy(desc(personalizedMealPlans.assignedAt));
+      .orderBy(desc(groceryLists.updatedAt));
+    console.log('GROCERY DEBUG: Query returned', customerGroceryLists.length, 'results');
 
     // Get item counts for each list
     const listsWithCounts = await Promise.all(
@@ -266,20 +260,20 @@ export const getGroceryLists = async (req: Request, res: Response) => {
             )
           );
 
-        // Extract meal plan name from JSON data
-        const mealPlanName = (list.mealPlanData as any)?.planName || 'Unnamed Meal Plan';
-
+        // For now, just return the basic list info (no meal plan data)
         return {
           ...list,
-          name: list.name || `${mealPlanName} - Grocery List`,
-          mealPlanName,
+          mealPlanName: null, // Will add meal plan lookup later
           itemCount: itemCount[0]?.count || 0,
           checkedCount: checkedCount[0]?.count || 0,
+          isStandalone: !list.mealPlanId, // Flag to indicate if it's a standalone list
         };
       })
     );
 
     console.log(`Found ${listsWithCounts.length} grocery lists for customer ${userId}`);
+    console.log('Raw grocery lists:', JSON.stringify(customerGroceryLists, null, 2));
+    console.log('Lists with counts:', JSON.stringify(listsWithCounts, null, 2));
 
     res.json({
       groceryLists: listsWithCounts,
@@ -385,7 +379,6 @@ export const createGroceryList = async (req: Request, res: Response) => {
     const newList: InsertGroceryList = {
       customerId: userId,
       name,
-      isActive: true,
     };
 
     const [createdList] = await db

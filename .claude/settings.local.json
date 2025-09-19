@@ -101,7 +101,12 @@
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0016_add_meal_plan_id_to_grocery_lists.sql)",
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0003_create_personalized_meal_plans.sql)",
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitmeal\" npm run migrate 0000_left_crusher_hogan.sql)",
-      "Bash(docker system:*)"
+      "Bash(docker system:*)",
+      "Bash(docker container prune:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0018_allow_standalone_grocery_lists.sql)",
+      "Bash(PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d fitnessmealplanner -c \"ALTER TABLE grocery_lists ALTER COLUMN meal_plan_id DROP NOT NULL;\")",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npx drizzle-kit push)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npm run migrate 0004_create_customer_invitations.sql)"
     ],
     "deny": [],
     "ask": [],

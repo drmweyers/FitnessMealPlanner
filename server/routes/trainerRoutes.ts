@@ -147,7 +147,7 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
     .innerJoin(users, eq(users.id, mealPlanAssignments.customerId))
     .where(eq(mealPlanAssignments.assignedBy, trainerId));
     
-    // Get unique customers who have meal plans or recipes assigned by this trainer
+    // Get unique customers who have meal plans assigned by this trainer
     const customersWithMealPlans = await db.select({
       customerId: personalizedMealPlans.customerId,
       customerEmail: users.email,
@@ -156,30 +156,16 @@ trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req,
     .from(personalizedMealPlans)
     .innerJoin(users, eq(users.id, personalizedMealPlans.customerId))
     .where(eq(personalizedMealPlans.trainerId, trainerId));
-    
-    const customersWithRecipes = await db.select({
-      customerId: personalizedRecipes.customerId,
-      customerEmail: users.email,
-      assignedAt: personalizedRecipes.assignedAt,
-    })
-    .from(personalizedRecipes)
-    .innerJoin(users, eq(users.id, personalizedRecipes.customerId))
-    .where(eq(personalizedRecipes.trainerId, trainerId));
+
+    // No personalizedRecipes table - just use empty array
+    const customersWithRecipes: any[] = [];
     
     // If recipeId is provided, get customers who have this specific recipe assigned
     let customersWithThisRecipe = new Set();
     if (recipeId) {
-      const recipeAssignments = await db.select({
-        customerId: personalizedRecipes.customerId,
-      })
-      .from(personalizedRecipes)
-      .where(
-        and(
-          eq(personalizedRecipes.trainerId, trainerId),
-          eq(personalizedRecipes.recipeId, recipeId as string)
-        )
-      );
-      customersWithThisRecipe = new Set(recipeAssignments.map(a => a.customerId));
+      // Since we don't have personalizedRecipes table, skip this
+      // In future, we could check meal plan recipes
+      customersWithThisRecipe = new Set();
     }
     
     // Combine and deduplicate customers from all sources

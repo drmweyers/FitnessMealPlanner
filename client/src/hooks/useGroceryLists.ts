@@ -46,17 +46,24 @@ export function useGroceryLists() {
   return useQuery({
     queryKey: groceryListKeys.lists(),
     queryFn: async () => {
+      console.log('[useGroceryLists] Fetching grocery lists...');
       const response = await fetchGroceryLists();
-      // Backend returns { groceryLists: [...], total: ... }
-      // Extract just the groceryLists array for the component
-      if (response.data && response.data.groceryLists) {
-        return response.data.groceryLists;
+      console.log('[useGroceryLists] API Response:', response);
+
+      // The response IS the data object with groceryLists property
+      // apiRequest returns the JSON directly, not wrapped in { data: ... }
+      if (response && response.groceryLists) {
+        console.log('[useGroceryLists] Extracted lists:', response.groceryLists.length, 'items');
+        return response.groceryLists;
       }
+
       // Fallback for unexpected response structure
+      console.warn('[useGroceryLists] Unexpected response structure, returning empty array');
       return [];
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
+    retry: 3, // Add retry logic for robustness
   });
 }
 
@@ -79,7 +86,8 @@ export function useGroceryList(listId: string | null) {
         } as GroceryList;
       }
       const response = await fetchGroceryList(listId);
-      return response.data;
+      // apiRequest returns the data directly
+      return response;
     },
     enabled: !!listId,
     staleTime: 1000 * 60 * 2, // 2 minutes
@@ -99,7 +107,7 @@ export function useCreateGroceryList() {
     onSuccess: (response) => {
       // Add new list to cache
       queryClient.setQueryData(groceryListKeys.lists(), (old: GroceryList[] = []) => {
-        return [response.data, ...old];
+        return [response, ...old];
       });
 
       toast({

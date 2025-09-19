@@ -443,7 +443,14 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
           
           {item.estimatedPrice && (
             <div className="text-right">
-              <span className="text-sm font-medium grocery-item-text">${item.estimatedPrice.toFixed(2)}</span>
+              <span className="text-sm font-medium grocery-item-text">
+                ${(() => {
+                  const price = typeof item.estimatedPrice === 'number'
+                    ? item.estimatedPrice
+                    : parseFloat(item.estimatedPrice);
+                  return isNaN(price) ? '0.00' : price.toFixed(2);
+                })()}
+              </span>
             </div>
           )}
           
