@@ -7,6 +7,100 @@ import GroceryListWrapper from '@/components/GroceryListWrapper';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/components/ui/toast';
 
+// Mock UI components
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children }: any) => <div>{children}</div>,
+  CardContent: ({ children }: any) => <div>{children}</div>,
+  CardHeader: ({ children }: any) => <div>{children}</div>,
+  CardTitle: ({ children }: any) => <div>{children}</div>,
+  CardDescription: ({ children }: any) => <div>{children}</div>
+}))
+
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, onClick, disabled }: any) => (
+    <button onClick={onClick} disabled={disabled}>{children}</button>
+  )
+}))
+
+vi.mock('@/components/ui/input', () => ({
+  Input: ({ value, onChange, placeholder, type }: any) => (
+    <input type={type} value={value} onChange={onChange} placeholder={placeholder} />
+  )
+}))
+
+vi.mock('@/components/ui/checkbox', () => ({
+  Checkbox: ({ checked, onCheckedChange, disabled }: any) => (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={() => onCheckedChange(!checked)}
+      disabled={disabled}
+    />
+  )
+}))
+
+vi.mock('@/components/ui/select', () => ({
+  Select: ({ children }: any) => <div>{children}</div>,
+  SelectContent: ({ children }: any) => <div>{children}</div>,
+  SelectItem: ({ children }: any) => <div>{children}</div>,
+  SelectTrigger: ({ children }: any) => <div>{children}</div>,
+  SelectValue: ({ children }: any) => <div>{children}</div>
+}))
+
+vi.mock('@/components/ui/dropdown-menu', () => ({
+  DropdownMenu: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuItem: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
+  DropdownMenuLabel: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuSeparator: () => <hr />,
+  DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>
+}))
+
+vi.mock('@/components/ui/badge', () => ({
+  Badge: ({ children }: any) => <span>{children}</span>
+}))
+
+vi.mock('@/components/ui/separator', () => ({
+  Separator: () => <hr />
+}))
+
+vi.mock('@/components/ui/toast', () => ({
+  ToastProvider: ({ children }: any) => <>{children}</>
+}))
+
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  ShoppingCart: () => null,
+  Plus: () => null,
+  Search: () => null,
+  Filter: () => null,
+  MoreHorizontal: () => null,
+  Check: () => null,
+  X: () => null,
+  ChevronRight: () => null,
+  ChevronLeft: () => null,
+  ChevronDown: () => null,
+  Trash2: () => null,
+  Edit: () => null,
+  Download: () => null,
+  Share: () => null,
+  RotateCcw: () => null,
+  SortAsc: () => null,
+  Grid: () => null,
+  List: () => null,
+  Apple: () => null,
+  Beef: () => null,
+  Milk: () => null,
+  Coffee: () => null,
+  Wheat: () => null,
+  Candy: () => null,
+  ChefHat: () => null,
+  AlertCircle: () => null,
+  RefreshCw: () => null,
+  Settings: () => null,
+  Loader2: () => null
+}))
+
 // Mock API calls
 const mockGroceryListData = {
   id: 'test-list-1',

@@ -247,17 +247,11 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     mutationFn: async (
       naturalLanguageInput: string,
     ): Promise<MealPlanGeneration> => {
-      const response = await fetch("/api/meal-plan/parse-natural-language", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ naturalLanguageInput }),
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API Error: ${response.status} - ${errorText}`);
-      }
+      const response = await apiRequest(
+        "POST",
+        "/api/meal-plan/parse-natural-language",
+        { naturalLanguageInput }
+      );
 
       const result = await response.json();
       console.log("Raw API response:", result);

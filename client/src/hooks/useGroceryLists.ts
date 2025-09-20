@@ -50,8 +50,7 @@ export function useGroceryLists() {
       const response = await fetchGroceryLists();
       console.log('[useGroceryLists] API Response:', response);
 
-      // The response IS the data object with groceryLists property
-      // apiRequest returns the JSON directly, not wrapped in { data: ... }
+      // fetchGroceryLists now returns GroceryListsResponse directly
       if (response && response.groceryLists) {
         console.log('[useGroceryLists] Extracted lists:', response.groceryLists.length, 'items');
         return response.groceryLists;
@@ -86,7 +85,7 @@ export function useGroceryList(listId: string | null) {
         } as GroceryList;
       }
       const response = await fetchGroceryList(listId);
-      // apiRequest returns the data directly
+      // fetchGroceryList now returns GroceryList directly
       return response;
     },
     enabled: !!listId,
@@ -308,10 +307,13 @@ export function useAddGroceryItem() {
           ...currentList,
           items: [
             ...(currentList.items || []).filter(item => !item.id.startsWith('temp-')),
-            response.data,
+            response, // addGroceryItem now returns GroceryListItem directly
           ],
         });
       }
+
+      // Invalidate and refetch to ensure UI updates
+      queryClient.invalidateQueries({ queryKey: groceryListKeys.list(listId) });
 
       toast({
         title: 'Success',
@@ -379,10 +381,13 @@ export function useUpdateGroceryItem() {
         queryClient.setQueryData(groceryListKeys.list(listId), {
           ...currentList,
           items: currentList.items.map((item: GroceryListItem) =>
-            item.id === response.data.id ? response.data : item
+            item.id === response.id ? response : item // updateGroceryItem now returns GroceryListItem directly
           ),
         });
       }
+
+      // Invalidate and refetch to ensure UI updates
+      queryClient.invalidateQueries({ queryKey: groceryListKeys.list(listId) });
     },
   });
 }

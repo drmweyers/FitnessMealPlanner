@@ -292,9 +292,21 @@ export interface GenerateFromMealPlanInput {
 /**
  * Fetch all grocery lists for the authenticated customer
  */
-export async function fetchGroceryLists(): Promise<ApiResponse<GroceryListsResponse>> {
+export async function fetchGroceryLists(): Promise<GroceryListsResponse> {
   try {
-    return await apiRequest<GroceryListsResponse>('/grocery-lists');
+    const response = await fetch('/api/grocery-lists', {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data; // Backend returns { groceryLists: [...], total: number } directly
   } catch (error) {
     throw new Error('Failed to fetch grocery lists');
   }
@@ -303,11 +315,23 @@ export async function fetchGroceryLists(): Promise<ApiResponse<GroceryListsRespo
 /**
  * Fetch a specific grocery list with its items
  */
-export async function fetchGroceryList(listId: string): Promise<ApiResponse<GroceryList>> {
+export async function fetchGroceryList(listId: string): Promise<GroceryList> {
   validateRequired(listId, 'List ID');
 
   try {
-    return await apiRequest<GroceryList>(`/grocery-lists/${listId}`);
+    const response = await fetch(`/api/grocery-lists/${listId}`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data; // Backend returns GroceryList object directly
   } catch (error) {
     throw new Error('Failed to fetch grocery list');
   }
@@ -316,14 +340,25 @@ export async function fetchGroceryList(listId: string): Promise<ApiResponse<Groc
 /**
  * Create a new grocery list
  */
-export async function createGroceryList(data: GroceryListInput): Promise<ApiResponse<GroceryList>> {
+export async function createGroceryList(data: GroceryListInput): Promise<GroceryList> {
   validateRequired(data.name, 'List name');
 
   try {
-    return await apiRequest<GroceryList>('/grocery-lists', {
+    const response = await fetch('/api/grocery-lists', {
       method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(data),
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result; // Backend returns GroceryList object directly
   } catch (error) {
     throw new Error('Failed to create grocery list');
   }
@@ -369,15 +404,26 @@ export async function deleteGroceryList(listId: string): Promise<ApiResponse<voi
 export async function addGroceryItem(
   listId: string,
   item: GroceryListItemInput
-): Promise<ApiResponse<GroceryListItem>> {
+): Promise<GroceryListItem> {
   validateRequired(listId, 'List ID');
   validateRequired(item.name, 'Item name');
 
   try {
-    return await apiRequest<GroceryListItem>(`/grocery-lists/${listId}/items`, {
+    const response = await fetch(`/api/grocery-lists/${listId}/items`, {
       method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(item),
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result; // Backend returns GroceryListItem object directly
   } catch (error) {
     throw new Error('Failed to add grocery item');
   }
@@ -390,15 +436,26 @@ export async function updateGroceryItem(
   listId: string,
   itemId: string,
   updates: Partial<GroceryListItemInput>
-): Promise<ApiResponse<GroceryListItem>> {
+): Promise<GroceryListItem> {
   validateRequired(listId, 'List ID');
   validateRequired(itemId, 'Item ID');
 
   try {
-    return await apiRequest<GroceryListItem>(`/grocery-lists/${listId}/items/${itemId}`, {
-      method: 'PATCH',
+    const response = await fetch(`/api/grocery-lists/${listId}/items/${itemId}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(updates),
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result; // Backend returns GroceryListItem object directly
   } catch (error) {
     throw new Error('Failed to update grocery item');
   }

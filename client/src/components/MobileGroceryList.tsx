@@ -115,11 +115,11 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
   const { toast } = useToast();
 
   // Extract items from the grocery list, with fallback for loading state
-  const items = groceryList?.items || [];
+  const items: GroceryListItem[] = groceryList?.items || [];
 
   // Filter and sort items
   const filteredAndSortedItems = useMemo(() => {
-    let filtered = items.filter(item => {
+    let filtered = items.filter((item: GroceryListItem) => {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = !selectedCategory || item.category === selectedCategory;
       return matchesSearch && matchesCategory;
@@ -136,7 +136,7 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
         case 'name':
           return a.name.localeCompare(b.name);
         case 'priority':
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
           return priorityOrder[b.priority] - priorityOrder[a.priority];
         case 'category':
         default:
@@ -153,9 +153,9 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
 
   // Group items by category for category view
   const groupedItems = useMemo(() => {
-    const groups: Record<string, GroceryItem[]> = {};
-    
-    filteredAndSortedItems.forEach(item => {
+    const groups: Record<string, GroceryListItem[]> = {};
+
+    filteredAndSortedItems.forEach((item: GroceryListItem) => {
       if (!groups[item.category]) {
         groups[item.category] = [];
       }
@@ -254,7 +254,7 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
 
   const toggleItemChecked = async (itemId: string) => {
     // Find the current item to get its current checked state
-    const currentItem = items.find(item => item.id === itemId);
+    const currentItem = items.find((item: GroceryListItem) => item.id === itemId);
     if (!currentItem) return;
 
     try {
@@ -310,12 +310,12 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
   };
 
   const clearCheckedItems = async () => {
-    const checkedItems = items.filter(item => item.isChecked);
+    const checkedItems = items.filter((item: GroceryListItem) => item.isChecked);
 
     try {
       // Delete all checked items
       await Promise.all(
-        checkedItems.map(item =>
+        checkedItems.map((item: GroceryListItem) =>
           deleteItemMutation.mutateAsync({
             listId: groceryListId,
             itemId: item.id
@@ -338,8 +338,8 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
 
   const exportList = () => {
     const listText = items
-      .filter(item => !item.isChecked)
-      .map(item => `• ${item.quantity} ${item.unit} ${item.name}${item.notes ? ` (${item.notes})` : ''}`)
+      .filter((item: GroceryListItem) => !item.isChecked)
+      .map((item: GroceryListItem) => `• ${item.quantity} ${item.unit} ${item.name}${item.notes ? ` (${item.notes})` : ''}`)
       .join('\n');
     
     if (navigator.share) {
@@ -397,18 +397,18 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
     }
   };
 
-  const completedItems = items.filter(item => item.isChecked).length;
+  const completedItems = items.filter((item: GroceryListItem) => item.isChecked).length;
   const totalItems = items.length;
   const estimatedTotal = items
-    .filter(item => !item.isChecked && item.estimatedPrice)
-    .reduce((sum, item) => sum + (item.estimatedPrice || 0), 0);
+    .filter((item: GroceryListItem) => !item.isChecked && item.estimatedPrice)
+    .reduce((sum: number, item: GroceryListItem) => sum + (item.estimatedPrice || 0), 0);
 
   const CategoryIcon = ({ category }: { category: Category }) => {
     const Icon = category.icon;
     return <Icon className="h-5 w-5" />;
   };
 
-  const ItemRow: React.FC<{ item: GroceryItem; showCategory?: boolean }> = ({ item, showCategory = true }) => {
+  const ItemRow: React.FC<{ item: GroceryListItem; showCategory?: boolean }> = ({ item, showCategory = true }) => {
     const category = CATEGORIES.find(cat => cat.id === item.category);
     const isSwipingThis = swipeState.itemId === item.id;
     
@@ -430,28 +430,16 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
         } ${
           updateItemMutation.isPending || deleteItemMutation.isPending ? 'opacity-50 pointer-events-none' : ''
         }`}>
-          <div 
-            className="flex-shrink-0 cursor-pointer touch-target p-2 -m-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleItemChecked(item.id);
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label={`${item.isChecked ? 'Uncheck' : 'Check'} ${item.name}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                toggleItemChecked(item.id);
-              }
-            }}
-          >
+          <div className="flex-shrink-0 p-2 -m-1 min-w-[44px] min-h-[44px] flex items-center justify-center">
             <Checkbox
               checked={item.isChecked}
-              onCheckedChange={() => toggleItemChecked(item.id)}
-              className="h-6 w-6 touch-target-checkbox"
+              onCheckedChange={(checked) => {
+                console.log(`Checkbox ${item.id} changed to:`, checked);
+                toggleItemChecked(item.id);
+              }}
+              className="h-6 w-6 cursor-pointer"
               disabled={updateItemMutation.isPending}
+              aria-label={`${item.isChecked ? 'Uncheck' : 'Check'} ${item.name}`}
             />
           </div>
           
@@ -753,7 +741,7 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
               All ({totalItems})
             </Button>
             {CATEGORIES.map(category => {
-              const count = items.filter(item => item.category === category.id).length;
+              const count = items.filter((item: GroceryListItem) => item.category === category.id).length;
               return count > 0 ? (
                 <Button
                   key={category.id}
@@ -796,7 +784,7 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
           </div>
         ) : (
           <div>
-            {filteredAndSortedItems.map(item => (
+            {filteredAndSortedItems.map((item: GroceryListItem) => (
               <ItemRow key={item.id} item={item} />
             ))}
           </div>
