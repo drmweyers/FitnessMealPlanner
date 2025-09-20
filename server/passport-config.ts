@@ -44,12 +44,16 @@ passport.use(new LocalStrategy({
   }
 }));
 
-// Google Strategy
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID || '',
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-  callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback',
-  passReqToCallback: true
+// Google Strategy - only initialize if Google OAuth is configured
+const googleClientId = process.env.GOOGLE_CLIENT_ID || 'test-client-id';
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || 'test-client-secret';
+
+if (googleClientId && googleClientSecret && googleClientId !== 'test-client-id') {
+  passport.use(new GoogleStrategy({
+    clientID: googleClientId,
+    clientSecret: googleClientSecret,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback',
+    passReqToCallback: true
 }, async (req: any, accessToken, refreshToken, profile, done) => {
   try {
     // Check if user already exists with this Google ID
@@ -91,5 +95,8 @@ passport.use(new GoogleStrategy({
     return done(error, false);
   }
 }));
+} else {
+  console.log('Google OAuth not configured - skipping Google strategy initialization');
+}
 
 export default passport;

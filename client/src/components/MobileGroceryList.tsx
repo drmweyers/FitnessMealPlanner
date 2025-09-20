@@ -105,6 +105,8 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
     priority: 'medium'
   });
   const [swipeState, setSwipeState] = useState<{ itemId: string | null; direction: 'left' | 'right' | null }>({ itemId: null, direction: null });
+  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<GroceryListItem>>({});
 
   const touchStartX = useRef<number>(0);
   const touchStartY = useRef<number>(0);
@@ -358,6 +360,43 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
     }
   };
 
+  const updateItem = async () => {
+    if (!editingItem || !editForm.name?.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Item name is required',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      await updateItemMutation.mutateAsync({
+        listId: groceryListId,
+        itemId: editingItem,
+        updates: {
+          name: editForm.name.trim(),
+          quantity: editForm.quantity || 1,
+          unit: editForm.unit || 'pcs',
+          category: editForm.category || 'produce',
+          priority: editForm.priority || 'medium',
+          notes: editForm.notes,
+          estimatedPrice: editForm.estimatedPrice
+        }
+      });
+
+      setEditingItem(null);
+      setEditForm({});
+
+      toast({
+        title: 'Success',
+        description: 'Item updated successfully',
+      });
+    } catch (error) {
+      console.error('Failed to update item:', error);
+    }
+  };
+
   const completedItems = items.filter(item => item.isChecked).length;
   const totalItems = items.length;
   const estimatedTotal = items
@@ -410,7 +449,7 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
           >
             <Checkbox
               checked={item.isChecked}
-              onChange={() => toggleItemChecked(item.id)}
+              onCheckedChange={() => toggleItemChecked(item.id)}
               className="h-6 w-6 touch-target-checkbox"
               disabled={updateItemMutation.isPending}
             />
@@ -474,7 +513,20 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
                   </>
                 )}
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditingItem(item.id);
+                  setEditForm({
+                    name: item.name,
+                    quantity: item.quantity,
+                    unit: item.unit,
+                    category: item.category,
+                    priority: item.priority,
+                    notes: item.notes,
+                    estimatedPrice: item.estimatedPrice
+                  });
+                }}
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
@@ -797,6 +849,123 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Edit Item Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Edit Item</CardTitle>
+              <CardDescription>Update the details of your grocery item</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Item Name</label>
+                <Input
+                  value={editForm.name || ''}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Item name"
+                  className="touch-target"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Quantity</label>
+                  <Input
+                    type="number"
+                    value={editForm.quantity || 1}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                    placeholder="Qty"
+                    className="touch-target"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Unit</label>
+                  <select
+                    value={editForm.unit || 'pcs'}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, unit: e.target.value }))}
+                    className="w-full p-2 border rounded-md touch-target bg-background"
+                  >
+                    {UNITS.map(unit => (
+                      <option key={unit} value={unit}>{unit}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Category</label>
+                  <select
+                    value={editForm.category || 'produce'}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full p-2 border rounded-md touch-target bg-background"
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Priority</label>
+                  <select
+                    value={editForm.priority || 'medium'}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, priority: e.target.value as 'high' | 'medium' | 'low' }))}
+                    className="w-full p-2 border rounded-md touch-target bg-background"
+                  >
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Notes (Optional)</label>
+                <Input
+                  value={editForm.notes || ''}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Add notes..."
+                  className="touch-target"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Estimated Price (Optional)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editForm.estimatedPrice || ''}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, estimatedPrice: parseFloat(e.target.value) || undefined }))}
+                  placeholder="$0.00"
+                  className="touch-target"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  onClick={updateItem}
+                  className="flex-1 touch-target"
+                  disabled={updateItemMutation.isPending || !editForm.name?.trim()}
+                >
+                  {updateItemMutation.isPending ? 'Updating...' : 'Update Item'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setEditForm({});
+                  }}
+                  className="flex-1 touch-target"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

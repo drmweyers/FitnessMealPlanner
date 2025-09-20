@@ -145,9 +145,17 @@ router.get('/measurements', requireRole('customer'), async (req, res) => {
 
     const measurements = await query;
 
+
+    // Fix date serialization issue - manually convert dates to ISO strings
+    const serializedMeasurements = measurements.map(measurement => ({
+      ...measurement,
+      measurementDate: measurement.measurementDate ? new Date(measurement.measurementDate).toISOString() : null,
+      createdAt: measurement.createdAt ? new Date(measurement.createdAt).toISOString() : null,
+    }));
+
     res.json({
       status: 'success',
-      data: measurements,
+      data: serializedMeasurements,
     });
   } catch (error) {
     console.error('Error fetching measurements:', error);
