@@ -43,3 +43,4 @@ fitnessmealplanner-prod.tar
 # App spec files with secrets
 app-spec*.yaml
 token.txt
+.env.local
