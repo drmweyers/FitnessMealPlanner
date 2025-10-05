@@ -71,8 +71,10 @@ export class ProgressTracker extends EventEmitter {
     // Calculate percentage based on step and completion
     this.calculatePercentage(job);
 
-    // Calculate ETA if we have some progress
-    if (job.completed > 0 && job.currentStep !== 'complete') {
+    // Calculate ETA if we have some progress (including step progress)
+    const hasProgress = job.completed > 0 || job.failed > 0 ||
+                       (job.stepProgress && job.stepProgress.itemsProcessed > 0);
+    if (hasProgress && job.currentStep !== 'complete' && job.currentStep !== 'failed') {
       this.calculateETA(job);
     }
 
@@ -189,12 +191,20 @@ export class ProgressTracker extends EventEmitter {
   private calculateETA(job: GenerationProgress): void {
     const elapsed = Date.now() - job.startTime;
     const totalProcessed = job.completed + job.failed;
-    
-    if (totalProcessed === 0) return;
 
-    const avgTimePerRecipe = elapsed / totalProcessed;
-    const remaining = job.totalRecipes - totalProcessed;
-    
+    // Use step progress as partial completion for better ETA
+    let effectiveProgress = totalProcessed;
+    if (job.stepProgress && totalProcessed < job.totalRecipes) {
+      const stepCompletion = job.stepProgress.itemsProcessed / job.stepProgress.totalItems;
+      effectiveProgress += stepCompletion;
+    }
+
+    // Need at least some progress to calculate ETA
+    if (effectiveProgress === 0) return;
+
+    const avgTimePerRecipe = elapsed / effectiveProgress;
+    const remaining = job.totalRecipes - effectiveProgress;
+
     job.estimatedCompletion = Date.now() + (remaining * avgTimePerRecipe);
   }
 }

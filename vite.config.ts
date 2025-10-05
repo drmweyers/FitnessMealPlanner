@@ -52,12 +52,19 @@ export default defineConfig({
     minify: true
   },
   server: {
+    host: '0.0.0.0', // Required for Docker
+    port: 24678, // Vite dev server port
+    strictPort: false,
     fs: {
       strict: false,
       allow: [".."],
     },
     hmr: {
       overlay: false,
+      clientPort: 24678,
+    },
+    watch: {
+      usePolling: true, // Required for Docker file watching
     },
   },
 });

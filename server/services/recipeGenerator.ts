@@ -166,8 +166,19 @@ export class RecipeGeneratorService {
     }
     
     const imageUrl = await this.getOrGenerateImage(recipe);
-    // Use a placeholder if image generation fails
-    const finalImageUrl = imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80';
+    // Use meal-type-specific placeholder if image generation fails
+    const getFallbackImage = (recipe: GeneratedRecipe): string => {
+      const mealType = recipe.mealTypes[0]?.toLowerCase() || 'meal';
+      const fallbacks = {
+        breakfast: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=800&q=80',
+        lunch: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',
+        dinner: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80',
+        snack: 'https://images.unsplash.com/photo-1559054663-e6a7b3d90d63?w=800&q=80',
+        dessert: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&q=80',
+      };
+      return fallbacks[mealType] || fallbacks.lunch;
+    };
+    const finalImageUrl = imageUrl || getFallbackImage(recipe);
     
     // Storage step
     if (jobId) {
@@ -235,27 +246,47 @@ export class RecipeGeneratorService {
   }
 
   private async getOrGenerateImage(recipe: GeneratedRecipe): Promise<string | null> {
-    const cacheKey = `image_s3_${recipe.name.replace(/\s/g, '_')}`;
-    
+    // Generate a unique cache key that includes content hash to ensure uniqueness
+    const contentHash = Buffer.from(
+      `${recipe.name}:${recipe.description}:${JSON.stringify(recipe.ingredients)}:${Date.now()}`
+    ).toString('base64').substring(0, 16);
+    const cacheKey = `image_s3_${recipe.name.replace(/\s/g, '_')}_${contentHash}`;
+
     try {
       return await this.cache.getOrSet(cacheKey, async () => {
         console.log(`[Image Generation] Starting for recipe: ${recipe.name}`);
+
+        // Check if OpenAI API key is configured
+        if (!process.env.OPENAI_API_KEY) {
+          throw new Error("OPENAI_API_KEY environment variable is not set");
+        }
+
         const tempUrl = await generateImageForRecipe(recipe);
         if (!tempUrl) {
           throw new Error("Did not receive a temporary URL from OpenAI.");
         }
         console.log(`[Image Generation] Got temporary URL from OpenAI for: ${recipe.name}`);
-        
+
         const permanentUrl = await uploadImageToS3(tempUrl, recipe.name);
         console.log(`[Image Generation] Uploaded to S3, permanent URL: ${permanentUrl}`);
         return permanentUrl;
       });
     } catch (error) {
-      console.error(`[Image Generation] Failed for "${recipe.name}":`, error);
-      // Check if it's an API key issue
+      // Log the full error for debugging
+      console.error(`[Image Generation] CRITICAL FAILURE for "${recipe.name}":`, {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        recipeName: recipe.name,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Check for specific error types
       if (error.message?.includes('API key') || error.message?.includes('Incorrect API key')) {
-        console.error('[Image Generation] OpenAI API key issue detected');
+        console.error('[Image Generation] OpenAI API key issue detected - Check OPENAI_API_KEY env var');
+      } else if (error.message?.includes('S3') || error.message?.includes('bucket')) {
+        console.error('[Image Generation] S3 upload failure - Check AWS credentials and bucket permissions');
       }
+
       return null;
     }
   }

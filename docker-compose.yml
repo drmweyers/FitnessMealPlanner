@@ -86,8 +86,8 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    # Temporarily bypassing db:push to avoid customer_goals table deletion prompt
-    command: sh -c "npm run dev"
+    # Run in production mode for better stability in Docker
+    command: sh -c "npm run build && NODE_ENV=production node dist/index.js"
     profiles:
       - dev
 

@@ -69,6 +69,7 @@ attached_assets/
 local/
 .local/
 .config/
+.bmad-core/
 
 # 11. Miscellaneous
 *.log
