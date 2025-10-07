@@ -204,12 +204,13 @@ async function addTestMealPlanAssignments() {
       }
     }
     
-    // Clear existing test assignments for this customer
-    await db
-      .delete(personalizedMealPlans)
+    // Check existing assignments for this customer
+    const existingPlans = await db
+      .select()
+      .from(personalizedMealPlans)
       .where(eq(personalizedMealPlans.customerId, customer.id));
     
-    console.log('🧹 Cleared existing meal plan assignments');
+    console.log(`📋 Customer currently has ${existingPlans.length} existing meal plan(s)`);
     
     // Insert test meal plan assignments
     const assignments = testMealPlans.map(mealPlan => ({
@@ -221,10 +222,19 @@ async function addTestMealPlanAssignments() {
     
     await db.insert(personalizedMealPlans).values(assignments);
     
-    console.log(`✅ Successfully assigned ${testMealPlans.length} test meal plans to customer ${customer.email}`);
-    console.log('\n📊 Test meal plans added:');
-    testMealPlans.forEach((plan, index) => {
-      console.log(`  ${index + 1}. ${plan.planName} (${plan.fitnessGoal})`);
+    console.log(`✅ Successfully assigned ${testMealPlans.length} additional test meal plans to customer ${customer.email}`);
+    
+    // Verify multiple assignments
+    const finalPlans = await db
+      .select()
+      .from(personalizedMealPlans)
+      .where(eq(personalizedMealPlans.customerId, customer.id));
+      
+    console.log(`📊 Customer now has ${finalPlans.length} total meal plan(s)`);
+    console.log('\n📋 All assigned meal plans:');
+    finalPlans.forEach((assignment, index) => {
+      const planData = assignment.mealPlanData;
+      console.log(`  ${index + 1}. ${planData.planName} (${planData.fitnessGoal}) - ${planData.dailyCalorieTarget} cal/day`);
     });
     
     console.log('\n🎉 Test data setup complete! You can now:');

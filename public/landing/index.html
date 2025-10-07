@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvoFitMeals - AI-Powered Meal Planning for Fitness Professionals</title>
+    <meta name="description" content="Generate 500+ personalized recipes in 60 seconds. Join 10,000+ fitness professionals using AI to scale their nutrition business. Save 20+ hours per week.">
+    <meta property="og:title" content="EvoFitMeals - Scale Your Nutrition Business with AI">
+    <meta property="og:description" content="AI-powered meal planning platform for fitness professionals. Generate personalized nutrition plans in minutes, not hours.">
+    <meta property="og:image" content="/landing/assets/og-image.jpg">
+    <meta property="og:url" content="https://evofitmeals.com">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/landing/css/landing.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .pulse-button {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white shadow-sm z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas fa-utensils text-purple-600 text-2xl mr-2"></i>
+                    <span class="text-2xl font-bold gradient-text">EvoFitMeals</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="/features" class="text-gray-600 hover:text-gray-900 font-semibold">Features</a>
+                    <a href="#how-it-works" class="text-gray-600 hover:text-gray-900">How It Works</a>
+                    <a href="#testimonials" class="text-gray-600 hover:text-gray-900">Testimonials</a>
+                    <a href="#pricing" class="text-gray-600 hover:text-gray-900">Pricing</a>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/login" class="text-gray-600 hover:text-gray-900 px-4 py-2">Login</a>
+                    <a href="/signup" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition pulse-button">Start Free Trial</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 px-4">
+        <div class="container mx-auto text-center">
+            <div class="inline-block mb-4 px-4 py-2 bg-purple-100 rounded-full">
+                <span class="text-purple-700 font-semibold hero-badge">🚀 Used by 10,000+ Fitness Professionals</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight hero-headline">
+                Scale Your Nutrition Business<br>
+                <span class="gradient-text">with AI-Powered Meal Planning</span>
+            </h1>
+            <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto hero-subheadline">
+                Generate 500+ personalized recipes in 60 seconds. Save 20+ hours per week while managing 3X more clients. Transform how you deliver nutrition coaching.
+            </p>
+            <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
+                <a href="/signup" class="hero-gradient text-white px-8 py-4 rounded-lg text-lg font-semibold hover:opacity-90 transition hero-primary-btn">
+                    Start Your Free 14-Day Trial
+                </a>
+                <a href="#demo" class="bg-white border-2 border-purple-600 text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-purple-50 transition hero-secondary-btn">
+                    <i class="fas fa-play-circle mr-2"></i> Watch 2-Min Demo
+                </a>
+            </div>
+            <p class="mt-4 text-sm text-gray-500 hero-bottom-text">No credit card required • Setup in 60 seconds</p>
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="py-12 bg-white border-y">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <div class="text-3xl font-bold text-purple-600 stat-1-number">10,000+</div>
+                    <div class="text-gray-600 stat-1-label">Active Trainers</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-purple-600 stat-2-number">2M+</div>
+                    <div class="text-gray-600 stat-2-label">Recipes Generated</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-purple-600 stat-3-number">20hrs</div>
+                    <div class="text-gray-600 stat-3-label">Saved Weekly</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-bold text-purple-600 stat-4-number">92%</div>
+                    <div class="text-gray-600 stat-4-label">Client Retention</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="py-20 px-4">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Still Creating Meal Plans Manually?</h2>
+                <p class="text-xl text-gray-600">You're losing time, money, and clients.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="text-center">
+                    <div class="text-4xl mb-4">😫</div>
+                    <h3 class="text-xl font-semibold mb-2">20+ Hours Weekly</h3>
+                    <p class="text-gray-600">Spent on repetitive meal planning instead of growing your business</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4">📉</div>
+                    <h3 class="text-xl font-semibold mb-2">60% Client Drop-off</h3>
+                    <p class="text-gray-600">Clients abandon generic, boring meal plans after 2 weeks</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl mb-4">🚫</div>
+                    <h3 class="text-xl font-semibold mb-2">Limited Growth</h3>
+                    <p class="text-gray-600">Can't scale beyond 20-30 clients without burnout</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="py-20 px-4 bg-purple-50">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">The AI-Powered Solution</h2>
+                <p class="text-xl text-gray-600">Transform hours into minutes with intelligent automation</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+                <div>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center text-white">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold mb-2">AI Recipe Generation</h3>
+                                <p class="text-gray-600">Generate 500+ unique, nutritionally-balanced recipes instantly using GPT-4</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center text-white">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold mb-2">Automatic Macro Balancing</h3>
+                                <p class="text-gray-600">AI ensures perfect nutritional balance for any fitness goal</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center text-white">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-semibold mb-2">Unlimited Client Scaling</h3>
+                                <p class="text-gray-600">Manage 100+ clients without increasing workload</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-xl">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl font-bold gradient-text">3 Minutes</div>
+                        <p class="text-gray-600 mt-2">vs 3 Hours Traditional Method</p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Enter client preferences</span>
+                            <span class="font-semibold">30 sec</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Set fitness goals</span>
+                            <span class="font-semibold">30 sec</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">AI generates meal plan</span>
+                            <span class="font-semibold">60 sec</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Review & export PDF</span>
+                            <span class="font-semibold">60 sec</span>
+                        </div>
+                        <hr>
+                        <div class="flex justify-between items-center font-bold text-lg">
+                            <span>Total Time</span>
+                            <span class="gradient-text">3 minutes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section id="features" class="py-20 px-4 bg-white">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Everything You Need to Scale</h2>
+                <p class="text-xl text-gray-600">Professional tools that grow with your business</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="feature-card bg-gray-50 p-8 rounded-xl transition-all duration-300">
+                    <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-magic text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">AI Recipe Engine</h3>
+                    <p class="text-gray-600 mb-4">Generate unlimited recipes with perfect macros for any dietary restriction</p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>500+ recipes per batch</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>8+ dietary protocols</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Nutritional optimization</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card bg-gray-50 p-8 rounded-xl transition-all duration-300">
+                    <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-users text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Client Management</h3>
+                    <p class="text-gray-600 mb-4">Professional tools to manage and track unlimited clients efficiently</p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Progress tracking</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Photo uploads</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Goal monitoring</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card bg-gray-50 p-8 rounded-xl transition-all duration-300">
+                    <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-file-pdf text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Professional Export</h3>
+                    <p class="text-gray-600 mb-4">Branded PDFs that showcase your expertise and impress clients</p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Custom branding</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Shopping lists</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Meal prep guides</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card bg-gray-50 p-8 rounded-xl transition-all duration-300">
+                    <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-calendar text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Meal Planning</h3>
+                    <p class="text-gray-600 mb-4">Intelligent meal plan generation with automatic scheduling</p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>7-30 day plans</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Variety optimization</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Template library</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card bg-gray-50 p-8 rounded-xl transition-all duration-300">
+                    <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-chart-line text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Analytics Dashboard</h3>
+                    <p class="text-gray-600 mb-4">Track client progress and business growth with detailed insights</p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Progress metrics</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Client retention</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Revenue tracking</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card bg-gray-50 p-8 rounded-xl transition-all duration-300">
+                    <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-mobile-alt text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Mobile Optimized</h3>
+                    <p class="text-gray-600 mb-4">Full-featured mobile experience for you and your clients</p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Responsive design</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Offline access</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Push notifications</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-20 px-4 bg-gray-50">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">How It Works</h2>
+                <p class="text-xl text-gray-600">From signup to first client in under 5 minutes</p>
+            </div>
+            <div class="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-bold">1</div>
+                    <h3 class="text-xl font-semibold mb-2">Sign Up</h3>
+                    <p class="text-gray-600">Create your account in 60 seconds. No credit card required.</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-bold">2</div>
+                    <h3 class="text-xl font-semibold mb-2">Add Clients</h3>
+                    <p class="text-gray-600">Invite clients with a simple email link. They set up their profile.</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-bold">3</div>
+                    <h3 class="text-xl font-semibold mb-2">Generate Plans</h3>
+                    <p class="text-gray-600">AI creates personalized meal plans based on goals and preferences.</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-bold">4</div>
+                    <h3 class="text-xl font-semibold mb-2">Track Success</h3>
+                    <p class="text-gray-600">Monitor progress, adjust plans, and celebrate achievements.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="py-20 px-4 bg-white">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Trusted by 10,000+ Professionals</h2>
+                <p class="text-xl text-gray-600">Real results from real fitness professionals</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="flex mb-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-gray-700 mb-4 italic">"Tripled my client base in 6 months. The AI saves me 20+ hours every week that I can now spend on actually training clients."</p>
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-200 rounded-full mr-4"></div>
+                        <div>
+                            <div class="font-semibold">Sarah Mitchell</div>
+                            <div class="text-sm text-gray-600">Certified Personal Trainer</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="flex mb-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-gray-700 mb-4 italic">"My retention rate went from 60% to 92%. Clients love the variety and personalization. Best investment in my business."</p>
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-200 rounded-full mr-4"></div>
+                        <div>
+                            <div class="font-semibold">Mike Rodriguez</div>
+                            <div class="text-sm text-gray-600">Nutrition Coach</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="flex mb-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                    <p class="text-gray-700 mb-4 italic">"Now managing 85 clients working 30 hours/week instead of 60. Revenue increased to $15K/month. Game changer!"</p>
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-200 rounded-full mr-4"></div>
+                        <div>
+                            <div class="font-semibold">Jennifer Lee</div>
+                            <div class="text-sm text-gray-600">Gym Owner</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-20 px-4 bg-purple-50">
+        <div class="container mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Invest in Your Growth</h2>
+                <p class="text-xl text-gray-600">Choose the plan that fits your business</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Starter Plan -->
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold mb-2">Starter</h3>
+                        <div class="text-4xl font-bold mb-2">$47<span class="text-lg text-gray-600">/month</span></div>
+                        <p class="text-gray-600">Perfect for new trainers</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Up to 10 clients</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>100 recipes/month</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Basic meal plans</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>PDF exports</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Email support</li>
+                    </ul>
+                    <a href="/signup" class="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition text-center">
+                        Start Free Trial
+                    </a>
+                </div>
+
+                <!-- Professional Plan (Popular) -->
+                <div class="bg-white p-8 rounded-xl shadow-xl border-2 border-purple-600 relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-4 py-1 rounded-full text-sm">
+                        Most Popular
+                    </div>
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold mb-2">Professional</h3>
+                        <div class="text-4xl font-bold mb-2">$97<span class="text-lg text-gray-600">/month</span></div>
+                        <p class="text-gray-600">For growing practices</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Up to 50 clients</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>500 recipes/month</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Advanced AI plans</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Progress tracking</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Priority support</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Custom branding</li>
+                    </ul>
+                    <a href="/signup" class="block w-full hero-gradient text-white py-3 rounded-lg hover:opacity-90 transition text-center">
+                        Start Free Trial
+                    </a>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
+                        <div class="text-4xl font-bold mb-2">$297<span class="text-lg text-gray-600">/month</span></div>
+                        <p class="text-gray-600">For teams and gyms</p>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Unlimited clients</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Unlimited recipes</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Team accounts</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>API access</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>White label options</li>
+                        <li><i class="fas fa-check text-green-500 mr-2"></i>Dedicated support</li>
+                    </ul>
+                    <a href="mailto:sales@evofitmeals.com?subject=Enterprise Inquiry" class="block w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition text-center">
+                        Contact Sales
+                    </a>
+                </div>
+            </div>
+            <p class="text-center mt-8 text-gray-600">
+                All plans include 14-day free trial • Cancel anytime • No setup fees
+            </p>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-20 px-4 bg-white">
+        <div class="container mx-auto max-w-4xl">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+            </div>
+            <div class="space-y-6">
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-2">How quickly can I get started?</h3>
+                    <p class="text-gray-600">You can sign up and create your first meal plan in under 5 minutes. No technical knowledge required.</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-2">What makes your AI different?</h3>
+                    <p class="text-gray-600">We use OpenAI's GPT-4, the most advanced language model, specifically trained on nutrition science and fitness protocols. Every recipe is nutritionally balanced and verified.</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-2">Can I customize the meal plans?</h3>
+                    <p class="text-gray-600">Absolutely! You have full control over dietary restrictions, calorie targets, macro ratios, meal preferences, and can manually edit any generated plan.</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-2">Do clients need their own accounts?</h3>
+                    <p class="text-gray-600">Yes, clients get free accounts where they can view their meal plans, track progress, upload photos, and communicate with you.</p>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-2">Is there a contract or cancellation fee?</h3>
+                    <p class="text-gray-600">No contracts, no cancellation fees. You can upgrade, downgrade, or cancel your subscription anytime from your dashboard.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section id="cta" class="py-20 px-4 hero-gradient text-white">
+        <div class="container mx-auto text-center">
+            <h2 class="text-4xl font-bold mb-4">Ready to Transform Your Business?</h2>
+            <p class="text-xl mb-8 opacity-90">Join 10,000+ fitness professionals already using EvoFitMeals</p>
+            <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
+                <a href="/signup" class="bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition">
+                    Start Your Free 14-Day Trial
+                </a>
+                <a href="mailto:support@evofitmeals.com?subject=Demo Request" class="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-purple-600 transition">
+                    Schedule a Demo Call
+                </a>
+            </div>
+            <p class="mt-6 text-sm opacity-75">
+                No credit card required • Setup in 60 seconds • Cancel anytime
+            </p>
+            <div class="mt-8 flex justify-center space-x-8 text-sm">
+                <div><i class="fas fa-check mr-2"></i>14-day free trial</div>
+                <div><i class="fas fa-check mr-2"></i>No setup fees</div>
+                <div><i class="fas fa-check mr-2"></i>Cancel anytime</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-12 px-4">
+        <div class="container mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-2xl font-bold text-white mb-4">EvoFitMeals</div>
+                    <p class="text-sm">AI-powered meal planning platform for fitness professionals.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#features" class="hover:text-white">Features</a></li>
+                        <li><a href="#pricing" class="hover:text-white">Pricing</a></li>
+                        <li><a href="#" class="hover:text-white">API</a></li>
+                        <li><a href="#" class="hover:text-white">Integrations</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white">About</a></li>
+                        <li><a href="#" class="hover:text-white">Blog</a></li>
+                        <li><a href="#" class="hover:text-white">Careers</a></li>
+                        <li><a href="#" class="hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white">Terms of Service</a></li>
+                        <li><a href="#" class="hover:text-white">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-sm mb-4 md:mb-0">© 2025 EvoFitMeals. All rights reserved.</p>
+                <div class="flex space-x-6">
+                    <a href="#" class="hover:text-white"><i class="fab fa-facebook text-xl"></i></a>
+                    <a href="#" class="hover:text-white"><i class="fab fa-twitter text-xl"></i></a>
+                    <a href="#" class="hover:text-white"><i class="fab fa-instagram text-xl"></i></a>
+                    <a href="#" class="hover:text-white"><i class="fab fa-linkedin text-xl"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/content-loader.js"></script>
+    <script src="js/landing.js"></script>
+</body>
+</html>

@@ -214,6 +214,230 @@ describe('Database Operations', () => {
     });
   });
 
+  describe('Trainer Meal Plan Operations', () => {
+    let testTrainerId: string;
+    let testMealPlanId: string;
+    let testCustomerId: string;
+
+    const mockTrainer = {
+      id: 'trainer-test-123',
+      email: 'trainer@test.com',
+      firstName: 'Test',
+      lastName: 'Trainer',
+      role: 'trainer',
+      profileImageUrl: 'https://example.com/trainer.jpg'
+    };
+
+    const mockCustomer = {
+      id: 'customer-test-456',
+      email: 'customer@test.com',
+      firstName: 'Test',
+      lastName: 'Customer',
+      role: 'customer',
+      profileImageUrl: 'https://example.com/customer.jpg'
+    };
+
+    const mockMealPlanData = {
+      planName: 'Test Trainer Meal Plan',
+      days: 7,
+      mealsPerDay: 3,
+      dailyCalorieTarget: 2000,
+      fitnessGoal: 'weight_loss',
+      description: 'A test meal plan for trainer functionality',
+      clientName: 'Test Client',
+      meals: []
+    };
+
+    beforeEach(async () => {
+      // Create test trainer and customer
+      const trainer = await storage.createUser(mockTrainer);
+      const customer = await storage.createUser(mockCustomer);
+      testTrainerId = trainer.id;
+      testCustomerId = customer.id;
+    });
+
+    it('should save a meal plan to trainer library', async () => {
+      const mealPlanData = {
+        trainerId: testTrainerId,
+        mealPlanData: mockMealPlanData,
+        isTemplate: false,
+        tags: ['weight-loss', 'test'],
+        notes: 'Test meal plan notes'
+      };
+
+      const savedPlan = await storage.createTrainerMealPlan(mealPlanData);
+
+      expect(savedPlan).toBeDefined();
+      expect(savedPlan.id).toBeDefined();
+      expect(savedPlan.trainerId).toBe(testTrainerId);
+      expect(savedPlan.mealPlanData).toEqual(mockMealPlanData);
+      expect(savedPlan.isTemplate).toBe(false);
+      expect(savedPlan.tags).toEqual(['weight-loss', 'test']);
+      expect(savedPlan.notes).toBe('Test meal plan notes');
+      expect(savedPlan.createdAt).toBeDefined();
+      expect(savedPlan.updatedAt).toBeDefined();
+
+      testMealPlanId = savedPlan.id;
+    });
+
+    it('should retrieve trainer meal plans', async () => {
+      const mealPlans = await storage.getTrainerMealPlans(testTrainerId);
+
+      expect(Array.isArray(mealPlans)).toBe(true);
+      expect(mealPlans.length).toBeGreaterThan(0);
+      
+      const foundPlan = mealPlans.find(p => p.id === testMealPlanId);
+      expect(foundPlan).toBeDefined();
+      expect(foundPlan!.trainerId).toBe(testTrainerId);
+    });
+
+    it('should retrieve a specific trainer meal plan', async () => {
+      const mealPlan = await storage.getTrainerMealPlan(testMealPlanId);
+
+      expect(mealPlan).toBeDefined();
+      expect(mealPlan!.id).toBe(testMealPlanId);
+      expect(mealPlan!.trainerId).toBe(testTrainerId);
+      expect(mealPlan!.mealPlanData.planName).toBe(mockMealPlanData.planName);
+    });
+
+    it('should update trainer meal plan', async () => {
+      const updateData = {
+        notes: 'Updated notes',
+        tags: ['updated', 'weight-loss'],
+        isTemplate: true
+      };
+
+      const updatedPlan = await storage.updateTrainerMealPlan(testMealPlanId, updateData);
+
+      expect(updatedPlan).toBeDefined();
+      expect(updatedPlan!.notes).toBe('Updated notes');
+      expect(updatedPlan!.tags).toEqual(['updated', 'weight-loss']);
+      expect(updatedPlan!.isTemplate).toBe(true);
+      expect(updatedPlan!.updatedAt).toBeDefined();
+    });
+
+    it('should assign meal plan to customer', async () => {
+      const assignment = await storage.assignMealPlanToCustomer(testMealPlanId, testCustomerId, testTrainerId);
+
+      expect(assignment).toBeDefined();
+      expect(assignment.mealPlanId).toBe(testMealPlanId);
+      expect(assignment.customerId).toBe(testCustomerId);
+      expect(assignment.assignedAt).toBeDefined();
+    });
+
+    it('should get meal plan assignments', async () => {
+      const assignments = await storage.getMealPlanAssignments(testMealPlanId);
+
+      expect(Array.isArray(assignments)).toBe(true);
+      expect(assignments.length).toBeGreaterThan(0);
+      
+      const assignment = assignments[0];
+      expect(assignment.mealPlanId).toBe(testMealPlanId);
+      expect(assignment.customerId).toBe(testCustomerId);
+    });
+
+    it('should get trainer customers', async () => {
+      const customers = await storage.getTrainerCustomers(testTrainerId);
+
+      expect(Array.isArray(customers)).toBe(true);
+      expect(customers.length).toBeGreaterThan(0);
+      
+      const customer = customers.find(c => c.id === testCustomerId);
+      expect(customer).toBeDefined();
+      expect(customer!.email).toBe(mockCustomer.email);
+      expect(customer!.firstAssignedAt).toBeDefined();
+    });
+
+    it('should get customer meal plans for trainer', async () => {
+      const customerPlans = await storage.getCustomerMealPlans(testTrainerId, testCustomerId);
+
+      expect(Array.isArray(customerPlans)).toBe(true);
+      expect(customerPlans.length).toBeGreaterThan(0);
+      
+      const plan = customerPlans[0];
+      expect(plan.customerId).toBe(testCustomerId);
+    });
+
+    it('should remove meal plan assignment', async () => {
+      // Get the assignment ID
+      const assignments = await storage.getMealPlanAssignments(testMealPlanId);
+      const assignmentId = assignments[0].id;
+
+      const removed = await storage.removeMealPlanAssignment(testTrainerId, assignmentId);
+
+      expect(removed).toBe(true);
+
+      // Verify assignment is removed
+      const updatedAssignments = await storage.getMealPlanAssignments(testMealPlanId);
+      expect(updatedAssignments.length).toBe(0);
+    });
+
+    it('should delete trainer meal plan', async () => {
+      const deleted = await storage.deleteTrainerMealPlan(testMealPlanId);
+
+      expect(deleted).toBe(true);
+
+      // Verify meal plan is deleted
+      const mealPlan = await storage.getTrainerMealPlan(testMealPlanId);
+      expect(mealPlan).toBeUndefined();
+    });
+
+    it('should filter meal plans by template status', async () => {
+      // Create a template plan
+      const templateData = {
+        trainerId: testTrainerId,
+        mealPlanData: { ...mockMealPlanData, planName: 'Template Plan' },
+        isTemplate: true,
+        tags: ['template'],
+        notes: 'Template plan'
+      };
+
+      const templatePlan = await storage.saveTrainerMealPlan(templateData);
+
+      // Get only template plans
+      const templatePlans = await storage.getTrainerMealPlans(testTrainerId, { isTemplate: true });
+
+      expect(templatePlans.length).toBeGreaterThan(0);
+      expect(templatePlans.every(p => p.isTemplate)).toBe(true);
+
+      // Clean up
+      await storage.deleteTrainerMealPlan(templatePlan.id);
+    });
+
+    it('should handle meal plans with no assignments', async () => {
+      const mealPlanData = {
+        trainerId: testTrainerId,
+        mealPlanData: { ...mockMealPlanData, planName: 'Unassigned Plan' },
+        isTemplate: false,
+        tags: ['unassigned'],
+        notes: 'No assignments'
+      };
+
+      const savedPlan = await storage.createTrainerMealPlan(mealPlanData);
+      const assignments = await storage.getMealPlanAssignments(savedPlan.id);
+
+      expect(assignments).toEqual([]);
+
+      // Clean up
+      await storage.deleteTrainerMealPlan(savedPlan.id);
+    });
+
+    it('should return null for non-existent trainer meal plan', async () => {
+      const mealPlan = await storage.getTrainerMealPlan('non-existent-id');
+      expect(mealPlan).toBeUndefined();
+    });
+
+    it('should return false when deleting non-existent trainer meal plan', async () => {
+      const deleted = await storage.deleteTrainerMealPlan('non-existent-id');
+      expect(deleted).toBe(false);
+    });
+
+    it('should return false when removing non-existent assignment', async () => {
+      const removed = await storage.removeMealPlanAssignment(testTrainerId, 'non-existent-assignment');
+      expect(removed).toBe(false);
+    });
+  });
+
   describe('Edge Cases and Error Handling', () => {
     it('should handle empty search results', async () => {
       const filters = {

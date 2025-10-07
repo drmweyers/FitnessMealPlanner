@@ -8,7 +8,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     profiles:
       - dev
       - prod
@@ -17,6 +17,26 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: fitnessmealplanner-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:-redis_password}"
+    profiles:
+      - dev
+      - prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    environment:
+      - REDIS_REPLICATION_MODE=master
 
   app:
     build:
@@ -32,8 +52,11 @@ services:
       - NODE_ENV=production
       - PORT=5001
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/fitmeal
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_password}@redis:6379
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: unless-stopped
     profiles:
@@ -46,23 +69,28 @@ services:
       target: dev
     container_name: fitnessmealplanner-dev
     ports:
-      - "5001:5001"
-      - "24678:24678"
+      - "4000:4000"
+      - "24679:24678"
     env_file:
       - .env
     environment:
       - NODE_ENV=development
-      - PORT=5001
+      - PORT=4000
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/fitmeal
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_password}@redis:6379
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "npm run db:push && npm run build && npm run dev"
+    # Temporarily bypassing db:push to avoid customer_goals table deletion prompt
+    command: sh -c "npm run dev"
     profiles:
       - dev
 
 volumes:
   postgres_data:
+  redis_data:

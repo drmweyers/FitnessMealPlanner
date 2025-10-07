@@ -17,6 +17,17 @@ import {
   recipes,
   personalizedRecipes,
   personalizedMealPlans,
+  customerInvitations,
+  trainerMealPlans,
+  mealPlanAssignments,
+  recipeFavorites,
+  recipeCollections,
+  collectionRecipes,
+  recipeInteractions,
+  recipeRecommendations,
+  userActivitySessions,
+  groceryLists,
+  groceryListItems,
   type User,
   type InsertUser,
   type Recipe,
@@ -24,12 +35,30 @@ import {
   type UpdateRecipe,
   type RecipeFilter,
   type MealPlan,
+  type CustomerInvitation,
+  type InsertCustomerInvitation,
+  type TrainerMealPlan,
+  type InsertTrainerMealPlan,
+  type TrainerMealPlanWithAssignments,
+  type MealPlanAssignment,
+  type RecipeFavorite,
+  type RecipeCollection,
+  type CollectionRecipe,
+  type RecipeInteraction,
+  type RecipeRecommendation,
+  type UserActivitySession,
+  type GroceryList,
+  type InsertGroceryList,
+  type GroceryListItem,
+  type InsertGroceryListItem,
+  type GroceryListWithItems,
   passwordResetTokens,
   refreshTokens,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
 import { inArray } from "drizzle-orm";
+import { handleMealPlanEvent, createMealPlanEvent, MealPlanEventType } from "./utils/mealPlanEvents";
 
 /**
  * Storage Interface
@@ -41,9 +70,14 @@ import { inArray } from "drizzle-orm";
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  createGoogleUser(user: { email: string; googleId: string; name: string; profilePicture?: string; role: 'admin' | 'trainer' | 'customer' }): Promise<User>;
+  linkGoogleAccount(userId: string, googleId: string): Promise<void>;
   updateUserPassword(userId: string, password: string): Promise<void>;
+  updateUserEmail(userId: string, email: string): Promise<void>;
   getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]>;
   
   // Password Reset
@@ -55,6 +89,13 @@ export interface IStorage {
   createRefreshToken(userId: string, token: string, expiresAt: Date): Promise<void>;
   getRefreshToken(token: string): Promise<{ userId: string, expiresAt: Date } | undefined>;
   deleteRefreshToken(token: string): Promise<void>;
+  
+  // Customer Invitation Operations
+  createInvitation(invitation: InsertCustomerInvitation): Promise<CustomerInvitation>;
+  getInvitation(token: string): Promise<CustomerInvitation | undefined>;
+  getInvitationsByTrainer(trainerId: string): Promise<CustomerInvitation[]>;
+  markInvitationAsUsed(token: string): Promise<void>;
+  deleteExpiredInvitations(): Promise<number>;
   
   // Recipe CRUD operations
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
@@ -80,10 +121,64 @@ export interface IStorage {
   
   // Personalized meal plans
   assignMealPlanToCustomers(trainerId: string, mealPlanData: MealPlan, customerIds: string[]): Promise<void>;
-  getPersonalizedMealPlans(customerId: string): Promise<MealPlan[]>;
+  getPersonalizedMealPlans(customerId: string): Promise<any[]>;
   
+  // Trainer meal plans
+  createTrainerMealPlan(mealPlan: InsertTrainerMealPlan): Promise<TrainerMealPlan>;
+  getTrainerMealPlan(id: string): Promise<TrainerMealPlan | undefined>;
+  getTrainerMealPlans(trainerId: string): Promise<TrainerMealPlanWithAssignments[]>;
+  updateTrainerMealPlan(id: string, updates: Partial<InsertTrainerMealPlan>): Promise<TrainerMealPlan | undefined>;
+  deleteTrainerMealPlan(id: string): Promise<boolean>;
+  
+  // Meal plan assignments
+  assignMealPlanToCustomer(mealPlanId: string, customerId: string, assignedBy: string, notes?: string): Promise<MealPlanAssignment>;
+  unassignMealPlanFromCustomer(mealPlanId: string, customerId: string): Promise<boolean>;
+  getMealPlanAssignments(mealPlanId: string): Promise<MealPlanAssignment[]>;
+  
+  // Customer management
+  getTrainerCustomers(trainerId: string): Promise<{id: string; email: string; firstAssignedAt: string}[]>;
+  getCustomerMealPlans(trainerId: string, customerId: string): Promise<any[]>;
+  removeMealPlanAssignment(trainerId: string, assignmentId: string): Promise<boolean>;
+  
+  // Recipe Favorites
+  addRecipeToFavorites(userId: string, recipeId: string, notes?: string): Promise<any>;
+  removeRecipeFromFavorites(userId: string, recipeId: string): Promise<boolean>;
+  getUserFavorites(userId: string, options: { page?: number; limit?: number; search?: string }): Promise<{ favorites: any[]; total: number }>;
+  isRecipeFavorited(userId: string, recipeId: string): Promise<boolean>;
+  
+  // Recipe Collections
+  createRecipeCollection(userId: string, collectionData: any): Promise<any>;
+  getUserCollections(userId: string, options: { page?: number; limit?: number }): Promise<{ collections: any[]; total: number }>;
+  getCollectionWithRecipes(userId: string, collectionId: string): Promise<any>;
+  addRecipeToCollection(userId: string, collectionId: string, recipeId: string, notes?: string): Promise<void>;
+  removeRecipeFromCollection(userId: string, collectionId: string, recipeId: string): Promise<boolean>;
+  updateRecipeCollection(userId: string, collectionId: string, updates: any): Promise<any>;
+  deleteRecipeCollection(userId: string, collectionId: string): Promise<boolean>;
+  
+  // Recipe Interactions & Analytics
+  trackRecipeInteraction(userId: string, recipeId: string, interactionType: string, interactionValue?: number, sessionId?: string, metadata?: any): Promise<void>;
+  rateRecipe(userId: string, recipeId: string, rating: number): Promise<void>;
+  getPopularRecipes(timeframe: string, limit: number): Promise<any[]>;
+  getTrendingRecipes(limit: number, category?: string): Promise<any[]>;
+  getRecipeRecommendations(userId: string, type: string, limit: number): Promise<any[]>;
+  getUserActivitySummary(userId: string, days: number): Promise<any>;
+
+  // Grocery Lists Operations
+  getGroceryLists(customerId: string): Promise<GroceryList[]>;
+  getGroceryList(customerId: string, listId: string): Promise<GroceryListWithItems | undefined>;
+  createGroceryList(listData: InsertGroceryList): Promise<GroceryList>;
+  updateGroceryList(customerId: string, listId: string, updates: Partial<InsertGroceryList>): Promise<GroceryList | undefined>;
+  deleteGroceryList(customerId: string, listId: string): Promise<boolean>;
+
+  // Grocery List Items Operations
+  addGroceryListItem(listId: string, itemData: InsertGroceryListItem): Promise<GroceryListItem>;
+  updateGroceryListItem(listId: string, itemId: string, updates: Partial<InsertGroceryListItem>): Promise<GroceryListItem | undefined>;
+  deleteGroceryListItem(listId: string, itemId: string): Promise<boolean>;
+  getGroceryListItems(listId: string): Promise<GroceryListItem[]>;
+
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
+
 }
 
 export class DatabaseStorage implements IStorage {
@@ -93,8 +188,18 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
     return user;
   }
 
@@ -103,8 +208,28 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async createGoogleUser(userData: { email: string; googleId: string; name: string; profilePicture?: string; role: 'admin' | 'trainer' | 'customer' }): Promise<User> {
+    const [user] = await db.insert(users).values({
+      email: userData.email,
+      googleId: userData.googleId,
+      name: userData.name,
+      profilePicture: userData.profilePicture,
+      role: userData.role,
+      password: null, // No password for Google OAuth users
+    }).returning();
+    return user;
+  }
+
+  async linkGoogleAccount(userId: string, googleId: string): Promise<void> {
+    await db.update(users).set({ googleId }).where(eq(users.id, userId));
+  }
+
   async updateUserPassword(userId: string, password: string): Promise<void> {
     await db.update(users).set({ password }).where(eq(users.id, userId));
+  }
+
+  async updateUserEmail(userId: string, email: string): Promise<void> {
+    await db.update(users).set({ email }).where(eq(users.id, userId));
   }
 
   async getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]> {
@@ -277,27 +402,52 @@ export class DatabaseStorage implements IStorage {
   }
 
   async assignMealPlanToCustomers(trainerId: string, mealPlanData: MealPlan, customerIds: string[]): Promise<void> {
-    // Remove any existing meal plan assignments for these specific customers
-    // This prevents duplicate assignments and replaces existing ones
+    // Add new meal plan assignments without removing existing ones
+    // This allows customers to have multiple meal plans assigned
     if (customerIds.length > 0) {
-      await db
-        .delete(personalizedMealPlans)
-        .where(inArray(personalizedMealPlans.customerId, customerIds));
-      
-      // Add new assignments
       const assignments = customerIds.map(customerId => ({
         customerId,
         trainerId,
         mealPlanData,
       }));
-      
-      await db.insert(personalizedMealPlans).values(assignments);
+
+      const insertedMealPlans = await db.insert(personalizedMealPlans).values(assignments).returning();
+
+      // Trigger automatic grocery list generation for each assigned meal plan
+      for (const mealPlan of insertedMealPlans) {
+        try {
+          const event = createMealPlanEvent(
+            MealPlanEventType.ASSIGNED,
+            mealPlan.id,
+            mealPlan.customerId,
+            mealPlan.mealPlanData,
+            {
+              assignedBy: trainerId,
+              planName: (mealPlan.mealPlanData as any)?.planName || 'Assigned Meal Plan',
+              fitnessGoal: (mealPlan.mealPlanData as any)?.fitnessGoal
+            }
+          );
+
+          const result = await handleMealPlanEvent(event);
+
+          if (result.success && result.action === 'created') {
+            console.log(`[Storage] Auto-generated grocery list for meal plan ${mealPlan.id} assigned to customer ${mealPlan.customerId}`);
+          } else if (!result.success) {
+            console.warn(`[Storage] Failed to auto-generate grocery list for meal plan ${mealPlan.id}: ${result.error}`);
+          }
+        } catch (error) {
+          console.error(`[Storage] Error during auto grocery list generation for meal plan ${mealPlan.id}:`, error);
+        }
+      }
     }
   }
 
-  async getPersonalizedMealPlans(customerId: string): Promise<MealPlan[]> {
+  async getPersonalizedMealPlans(customerId: string): Promise<any[]> {
     const assignedMealPlans = await db
       .select({
+        id: personalizedMealPlans.id,
+        customerId: personalizedMealPlans.customerId,
+        trainerId: personalizedMealPlans.trainerId,
         mealPlanData: personalizedMealPlans.mealPlanData,
         assignedAt: personalizedMealPlans.assignedAt,
       })
@@ -305,7 +455,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(personalizedMealPlans.customerId, customerId))
       .orderBy(desc(personalizedMealPlans.assignedAt));
 
-    return assignedMealPlans.map(assignment => assignment.mealPlanData);
+    return assignedMealPlans;
   }
 
   async searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }> {
@@ -415,6 +565,724 @@ export class DatabaseStorage implements IStorage {
     };
   }
   
+  // Customer Invitation Operations
+  async createInvitation(invitationData: InsertCustomerInvitation): Promise<CustomerInvitation> {
+    const [invitation] = await db.insert(customerInvitations).values(invitationData).returning();
+    return invitation;
+  }
+
+  async getInvitation(token: string): Promise<CustomerInvitation | undefined> {
+    const [invitation] = await db.select().from(customerInvitations).where(eq(customerInvitations.token, token));
+    return invitation;
+  }
+
+  async getInvitationsByTrainer(trainerId: string): Promise<CustomerInvitation[]> {
+    return await db
+      .select()
+      .from(customerInvitations)
+      .where(eq(customerInvitations.trainerId, trainerId))
+      .orderBy(desc(customerInvitations.createdAt));
+  }
+
+  async markInvitationAsUsed(token: string): Promise<void> {
+    await db
+      .update(customerInvitations)
+      .set({ usedAt: new Date() })
+      .where(eq(customerInvitations.token, token));
+  }
+
+  async deleteExpiredInvitations(): Promise<number> {
+    try {
+      const result = await db
+        .delete(customerInvitations)
+        .where(lte(customerInvitations.expiresAt, new Date()));
+      return Number(result.rowCount) || 0;
+    } catch (error) {
+      console.error('Error deleting expired invitations:', error);
+      return 0;
+    }
+  }
+
+  // Trainer meal plans
+  async createTrainerMealPlan(mealPlan: InsertTrainerMealPlan): Promise<TrainerMealPlan> {
+    const [created] = await db.insert(trainerMealPlans).values(mealPlan).returning();
+    return created;
+  }
+
+  async getTrainerMealPlan(id: string): Promise<TrainerMealPlan | undefined> {
+    const [plan] = await db.select().from(trainerMealPlans).where(eq(trainerMealPlans.id, id));
+    return plan;
+  }
+
+  async getTrainerMealPlans(trainerId: string): Promise<TrainerMealPlanWithAssignments[]> {
+    // Get all meal plans for the trainer
+    const plans = await db
+      .select()
+      .from(trainerMealPlans)
+      .where(eq(trainerMealPlans.trainerId, trainerId))
+      .orderBy(desc(trainerMealPlans.createdAt));
+
+    // Get assignments for each plan
+    const plansWithAssignments = await Promise.all(
+      plans.map(async (plan) => {
+        const assignments = await db
+          .select({
+            customerId: mealPlanAssignments.customerId,
+            customerEmail: users.email,
+            assignedAt: mealPlanAssignments.assignedAt,
+          })
+          .from(mealPlanAssignments)
+          .leftJoin(users, eq(users.id, mealPlanAssignments.customerId))
+          .where(eq(mealPlanAssignments.mealPlanId, plan.id));
+
+        return {
+          ...plan,
+          assignments: assignments.map(a => ({
+            customerId: a.customerId,
+            customerEmail: a.customerEmail || '',
+            assignedAt: a.assignedAt || new Date(),
+          })),
+          assignmentCount: assignments.length,
+        };
+      })
+    );
+
+    return plansWithAssignments;
+  }
+
+  async updateTrainerMealPlan(id: string, updates: Partial<InsertTrainerMealPlan>): Promise<TrainerMealPlan | undefined> {
+    const [updated] = await db
+      .update(trainerMealPlans)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(trainerMealPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrainerMealPlan(id: string): Promise<boolean> {
+    const result = await db.delete(trainerMealPlans).where(eq(trainerMealPlans.id, id));
+    return Number(result.rowCount) > 0;
+  }
+
+  // Meal plan assignments
+  async assignMealPlanToCustomer(mealPlanId: string, customerId: string, assignedBy: string, notes?: string): Promise<MealPlanAssignment> {
+    const [assignment] = await db
+      .insert(mealPlanAssignments)
+      .values({
+        mealPlanId,
+        customerId,
+        assignedBy,
+        notes,
+      })
+      .returning();
+
+    // Trigger automatic grocery list generation after successful assignment
+    try {
+      const { onMealPlanAssigned } = await import('./utils/mealPlanEvents.js');
+      await onMealPlanAssigned(mealPlanId, customerId);
+      console.log(`[Storage] Triggered automatic grocery list generation for customer ${customerId} from meal plan ${mealPlanId}`);
+    } catch (error) {
+      // Log error but don't fail the assignment
+      console.error('[Storage] Failed to auto-generate grocery list:', error);
+    }
+
+    return assignment;
+  }
+
+  async unassignMealPlanFromCustomer(mealPlanId: string, customerId: string): Promise<boolean> {
+    const result = await db
+      .delete(mealPlanAssignments)
+      .where(
+        and(
+          eq(mealPlanAssignments.mealPlanId, mealPlanId),
+          eq(mealPlanAssignments.customerId, customerId)
+        )
+      );
+    return Number(result.rowCount) > 0;
+  }
+
+  async getMealPlanAssignments(mealPlanId: string): Promise<MealPlanAssignment[]> {
+    return await db
+      .select()
+      .from(mealPlanAssignments)
+      .where(eq(mealPlanAssignments.mealPlanId, mealPlanId));
+  }
+
+  // Customer management functions
+  async getTrainerCustomers(trainerId: string): Promise<{id: string; email: string; firstAssignedAt: string}[]> {
+    // Get unique customers who have meal plans assigned by this trainer
+    const customersWithMealPlans = await db.select({
+      customerId: personalizedMealPlans.customerId,
+      customerEmail: users.email,
+      assignedAt: personalizedMealPlans.assignedAt,
+    })
+    .from(personalizedMealPlans)
+    .innerJoin(users, eq(users.id, personalizedMealPlans.customerId))
+    .where(eq(personalizedMealPlans.trainerId, trainerId));
+    
+    const customersWithRecipes = await db.select({
+      customerId: personalizedRecipes.customerId,
+      customerEmail: users.email,
+      assignedAt: personalizedRecipes.assignedAt,
+    })
+    .from(personalizedRecipes)
+    .innerJoin(users, eq(users.id, personalizedRecipes.customerId))
+    .where(eq(personalizedRecipes.trainerId, trainerId));
+    
+    // Combine and deduplicate customers
+    const customerMap = new Map();
+    
+    [...customersWithMealPlans, ...customersWithRecipes].forEach(customer => {
+      if (!customerMap.has(customer.customerId)) {
+        customerMap.set(customer.customerId, {
+          id: customer.customerId,
+          email: customer.customerEmail,
+          firstAssignedAt: customer.assignedAt?.toISOString() || new Date().toISOString(),
+        });
+      } else {
+        const existing = customerMap.get(customer.customerId);
+        if (customer.assignedAt && existing.firstAssignedAt && customer.assignedAt < new Date(existing.firstAssignedAt)) {
+          existing.firstAssignedAt = customer.assignedAt.toISOString();
+        }
+      }
+    });
+    
+    return Array.from(customerMap.values());
+  }
+
+  async getCustomerMealPlans(trainerId: string, customerId: string): Promise<any[]> {
+    return await db.select()
+      .from(personalizedMealPlans)
+      .where(
+        and(
+          eq(personalizedMealPlans.trainerId, trainerId),
+          eq(personalizedMealPlans.customerId, customerId)
+        )
+      );
+  }
+
+  async removeMealPlanAssignment(trainerId: string, assignmentId: string): Promise<boolean> {
+    try {
+      // Get meal plan data before deletion for cleanup
+      const mealPlanToDelete = await db
+        .select()
+        .from(personalizedMealPlans)
+        .where(
+          and(
+            eq(personalizedMealPlans.id, assignmentId),
+            eq(personalizedMealPlans.trainerId, trainerId)
+          )
+        )
+        .limit(1);
+
+      const result = await db.delete(personalizedMealPlans)
+        .where(
+          and(
+            eq(personalizedMealPlans.id, assignmentId),
+            eq(personalizedMealPlans.trainerId, trainerId)
+          )
+        );
+
+      // Trigger automatic cleanup of orphaned grocery lists
+      if (mealPlanToDelete.length > 0) {
+        try {
+          const event = createMealPlanEvent(
+            MealPlanEventType.DELETED,
+            assignmentId,
+            mealPlanToDelete[0].customerId,
+            mealPlanToDelete[0].mealPlanData
+          );
+
+          const cleanupResult = await handleMealPlanEvent(event);
+
+          if (cleanupResult.success && cleanupResult.action === 'updated') {
+            console.log(`[Storage] Cleaned up ${cleanupResult.itemCount || 0} orphaned grocery lists for deleted meal plan ${assignmentId}`);
+          }
+        } catch (error) {
+          console.error(`[Storage] Error during grocery list cleanup for deleted meal plan ${assignmentId}:`, error);
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error removing meal plan assignment:', error);
+      return false;
+    }
+  }
+
+  // Recipe Favorites
+  async addRecipeToFavorites(userId: string, recipeId: string, notes?: string): Promise<RecipeFavorite> {
+    try {
+      const [favorite] = await db.insert(recipeFavorites).values({
+        userId,
+        recipeId,
+        notes,
+      }).returning();
+      return favorite;
+    } catch (error: any) {
+      if (error.code === '23505') { // Unique constraint violation
+        throw new Error('Recipe is already in favorites');
+      }
+      throw error;
+    }
+  }
+
+  async removeRecipeFromFavorites(userId: string, recipeId: string): Promise<boolean> {
+    const result = await db
+      .delete(recipeFavorites)
+      .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)));
+    return result.rowCount > 0;
+  }
+
+  async getUserFavorites(userId: string, options: { page?: number; limit?: number; search?: string }) {
+    const { page = 1, limit = 20, search } = options;
+    const offset = (page - 1) * limit;
+
+    // Build the query with recipe details
+    let query = db
+      .select({
+        favorite: recipeFavorites,
+        recipe: recipes,
+      })
+      .from(recipeFavorites)
+      .innerJoin(recipes, eq(recipeFavorites.recipeId, recipes.id))
+      .where(eq(recipeFavorites.userId, userId));
+
+    if (search) {
+      query = query.where(like(recipes.name, `%${search}%`));
+    }
+
+    const favorites = await query
+      .orderBy(desc(recipeFavorites.favoriteDate))
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count
+    const totalQuery = db
+      .select({ count: sql<number>`count(*)` })
+      .from(recipeFavorites)
+      .innerJoin(recipes, eq(recipeFavorites.recipeId, recipes.id))
+      .where(eq(recipeFavorites.userId, userId));
+
+    if (search) {
+      totalQuery.where(like(recipes.name, `%${search}%`));
+    }
+
+    const [{ count: total }] = await totalQuery;
+
+    return {
+      favorites: favorites.map(f => ({
+        ...f.recipe,
+        favoriteDate: f.favorite.favoriteDate,
+        notes: f.favorite.notes,
+      })),
+      total,
+    };
+  }
+
+  async isRecipeFavorited(userId: string, recipeId: string): Promise<boolean> {
+    const [result] = await db
+      .select({ id: recipeFavorites.id })
+      .from(recipeFavorites)
+      .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)))
+      .limit(1);
+    return !!result;
+  }
+
+  // Recipe Collections
+  async createRecipeCollection(userId: string, collectionData: any): Promise<RecipeCollection> {
+    const [collection] = await db.insert(recipeCollections).values({
+      userId,
+      ...collectionData,
+    }).returning();
+    return collection;
+  }
+
+  async getUserCollections(userId: string, options: { page?: number; limit?: number }) {
+    const { page = 1, limit = 20 } = options;
+    const offset = (page - 1) * limit;
+
+    // Get collections with recipe counts
+    const collections = await db
+      .select({
+        collection: recipeCollections,
+        recipeCount: sql<number>`count(${collectionRecipes.id})`,
+      })
+      .from(recipeCollections)
+      .leftJoin(collectionRecipes, eq(recipeCollections.id, collectionRecipes.collectionId))
+      .where(eq(recipeCollections.userId, userId))
+      .groupBy(recipeCollections.id)
+      .orderBy(desc(recipeCollections.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count
+    const [{ count: total }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(recipeCollections)
+      .where(eq(recipeCollections.userId, userId));
+
+    return {
+      collections: collections.map(c => ({
+        ...c.collection,
+        recipeCount: Number(c.recipeCount),
+      })),
+      total,
+    };
+  }
+
+  async getCollectionWithRecipes(userId: string, collectionId: string) {
+    // Get collection details
+    const [collection] = await db
+      .select()
+      .from(recipeCollections)
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+
+    if (!collection) {
+      return null;
+    }
+
+    // Get recipes in this collection
+    const recipes = await db
+      .select({
+        recipe: recipes,
+        collectionRecipe: collectionRecipes,
+      })
+      .from(collectionRecipes)
+      .innerJoin(recipes, eq(collectionRecipes.recipeId, recipes.id))
+      .where(eq(collectionRecipes.collectionId, collectionId))
+      .orderBy(collectionRecipes.orderIndex, collectionRecipes.addedDate);
+
+    return {
+      ...collection,
+      recipes: recipes.map(r => ({
+        ...r.recipe,
+        addedDate: r.collectionRecipe.addedDate,
+        notes: r.collectionRecipe.notes,
+        orderIndex: r.collectionRecipe.orderIndex,
+      })),
+    };
+  }
+
+  async addRecipeToCollection(userId: string, collectionId: string, recipeId: string, notes?: string): Promise<void> {
+    // Verify collection belongs to user
+    const [collection] = await db
+      .select({ id: recipeCollections.id })
+      .from(recipeCollections)
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+
+    if (!collection) {
+      throw new Error('Collection not found');
+    }
+
+    try {
+      await db.insert(collectionRecipes).values({
+        collectionId,
+        recipeId,
+        notes,
+      });
+    } catch (error: any) {
+      if (error.code === '23505') { // Unique constraint violation
+        throw new Error('Recipe is already in this collection');
+      }
+      throw error;
+    }
+  }
+
+  async removeRecipeFromCollection(userId: string, collectionId: string, recipeId: string): Promise<boolean> {
+    // Verify collection belongs to user
+    const [collection] = await db
+      .select({ id: recipeCollections.id })
+      .from(recipeCollections)
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+
+    if (!collection) {
+      return false;
+    }
+
+    const result = await db
+      .delete(collectionRecipes)
+      .where(and(eq(collectionRecipes.collectionId, collectionId), eq(collectionRecipes.recipeId, recipeId)));
+
+    return result.rowCount > 0;
+  }
+
+  async updateRecipeCollection(userId: string, collectionId: string, updates: any) {
+    const [collection] = await db
+      .update(recipeCollections)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)))
+      .returning();
+
+    return collection;
+  }
+
+  async deleteRecipeCollection(userId: string, collectionId: string): Promise<boolean> {
+    const result = await db
+      .delete(recipeCollections)
+      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+
+    return result.rowCount > 0;
+  }
+
+  // Recipe Interactions & Analytics
+  async trackRecipeInteraction(
+    userId: string,
+    recipeId: string,
+    interactionType: string,
+    interactionValue?: number,
+    sessionId?: string,
+    metadata?: any
+  ): Promise<void> {
+    await db.insert(recipeInteractions).values({
+      userId,
+      recipeId,
+      interactionType,
+      interactionValue,
+      sessionId,
+      metadata: metadata || {},
+    });
+  }
+
+  async rateRecipe(userId: string, recipeId: string, rating: number): Promise<void> {
+    await this.trackRecipeInteraction(userId, recipeId, 'rate', rating);
+  }
+
+  async getPopularRecipes(timeframe: string, limit: number) {
+    let dateFilter;
+    const now = new Date();
+
+    switch (timeframe) {
+      case 'day':
+        dateFilter = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case 'week':
+        dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'month':
+        dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        dateFilter = new Date(0); // All time
+    }
+
+    return await db
+      .select({
+        recipe: recipes,
+        viewCount: sql<number>`count(${recipeInteractions.id})`,
+        favoriteCount: sql<number>`count(${recipeFavorites.id})`,
+      })
+      .from(recipes)
+      .leftJoin(
+        recipeInteractions,
+        and(
+          eq(recipeInteractions.recipeId, recipes.id),
+          eq(recipeInteractions.interactionType, 'view'),
+          gte(recipeInteractions.interactionDate, dateFilter)
+        )
+      )
+      .leftJoin(
+        recipeFavorites,
+        and(
+          eq(recipeFavorites.recipeId, recipes.id),
+          gte(recipeFavorites.favoriteDate, dateFilter)
+        )
+      )
+      .where(eq(recipes.isApproved, true))
+      .groupBy(recipes.id)
+      .orderBy(desc(sql`count(${recipeInteractions.id}) + count(${recipeFavorites.id})`))
+      .limit(limit);
+  }
+
+  async getTrendingRecipes(limit: number, category?: string) {
+    const last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    let query = db
+      .select({
+        recipe: recipes,
+        recentViews: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${last7Days} then 1 end)`,
+        totalViews: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${last30Days} then 1 end)`,
+        favoriteCount: sql<number>`count(${recipeFavorites.id})`,
+      })
+      .from(recipes)
+      .leftJoin(recipeInteractions, eq(recipeInteractions.recipeId, recipes.id))
+      .leftJoin(recipeFavorites, eq(recipeFavorites.recipeId, recipes.id))
+      .where(eq(recipes.isApproved, true));
+
+    if (category) {
+      query = query.where(sql`${recipes.mealTypes} @> ${JSON.stringify([category])}`);
+    }
+
+    return await query
+      .groupBy(recipes.id)
+      .orderBy(desc(sql`count(case when ${recipeInteractions.interactionDate} >= ${last7Days} then 1 end)`))
+      .limit(limit);
+  }
+
+  async getRecipeRecommendations(userId: string, type: string, limit: number) {
+    // For now, return popular recipes based on user's activity
+    // In a real implementation, this would use ML algorithms
+    return await db
+      .select({
+        recipe: recipes,
+        score: sql<number>`random()`, // Placeholder scoring
+        reason: sql<string>`'Based on your recent activity'`,
+      })
+      .from(recipes)
+      .where(eq(recipes.isApproved, true))
+      .orderBy(sql`random()`)
+      .limit(limit);
+  }
+
+  async getUserActivitySummary(userId: string, days: number) {
+    const dateFilter = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const [activity] = await db
+      .select({
+        totalInteractions: sql<number>`count(${recipeInteractions.id})`,
+        recipesViewed: sql<number>`count(distinct case when ${recipeInteractions.interactionType} = 'view' then ${recipeInteractions.recipeId} end)`,
+        recipesRated: sql<number>`count(distinct case when ${recipeInteractions.interactionType} = 'rate' then ${recipeInteractions.recipeId} end)`,
+        totalFavorites: sql<number>`count(${recipeFavorites.id})`,
+        totalCollections: sql<number>`count(${recipeCollections.id})`,
+      })
+      .from(recipeInteractions)
+      .leftJoin(recipeFavorites, eq(recipeFavorites.userId, userId))
+      .leftJoin(recipeCollections, eq(recipeCollections.userId, userId))
+      .where(
+        and(
+          eq(recipeInteractions.userId, userId),
+          gte(recipeInteractions.interactionDate, dateFilter)
+        )
+      );
+
+    return activity;
+  }
+
+  // Grocery Lists Operations
+  async getGroceryLists(customerId: string): Promise<GroceryList[]> {
+    return await db
+      .select()
+      .from(groceryLists)
+      .where(eq(groceryLists.customerId, customerId))
+      .orderBy(desc(groceryLists.updatedAt));
+  }
+
+  async getGroceryList(customerId: string, listId: string): Promise<GroceryListWithItems | undefined> {
+    // Get grocery list
+    const [groceryList] = await db
+      .select()
+      .from(groceryLists)
+      .where(
+        and(
+          eq(groceryLists.id, listId),
+          eq(groceryLists.customerId, customerId)
+        )
+      )
+      .limit(1);
+
+    if (!groceryList) {
+      return undefined;
+    }
+
+    // Get grocery list items
+    const items = await db
+      .select()
+      .from(groceryListItems)
+      .where(eq(groceryListItems.groceryListId, listId))
+      .orderBy(
+        groceryListItems.isChecked,
+        groceryListItems.category,
+        groceryListItems.name
+      );
+
+    return {
+      ...groceryList,
+      items,
+    };
+  }
+
+  async createGroceryList(listData: InsertGroceryList): Promise<GroceryList> {
+    const [created] = await db.insert(groceryLists).values(listData).returning();
+    return created;
+  }
+
+  async updateGroceryList(customerId: string, listId: string, updates: Partial<InsertGroceryList>): Promise<GroceryList | undefined> {
+    const [updated] = await db
+      .update(groceryLists)
+      .set(updates)
+      .where(
+        and(
+          eq(groceryLists.id, listId),
+          eq(groceryLists.customerId, customerId)
+        )
+      )
+      .returning();
+    return updated;
+  }
+
+  async deleteGroceryList(customerId: string, listId: string): Promise<boolean> {
+    const result = await db
+      .delete(groceryLists)
+      .where(
+        and(
+          eq(groceryLists.id, listId),
+          eq(groceryLists.customerId, customerId)
+        )
+      );
+    return Number(result.rowCount) > 0;
+  }
+
+  // Grocery List Items Operations
+  async addGroceryListItem(listId: string, itemData: InsertGroceryListItem): Promise<GroceryListItem> {
+    const [created] = await db
+      .insert(groceryListItems)
+      .values({ ...itemData, groceryListId: listId })
+      .returning();
+    return created;
+  }
+
+  async updateGroceryListItem(listId: string, itemId: string, updates: Partial<InsertGroceryListItem>): Promise<GroceryListItem | undefined> {
+    const [updated] = await db
+      .update(groceryListItems)
+      .set(updates)
+      .where(
+        and(
+          eq(groceryListItems.id, itemId),
+          eq(groceryListItems.groceryListId, listId)
+        )
+      )
+      .returning();
+    return updated;
+  }
+
+  async deleteGroceryListItem(listId: string, itemId: string): Promise<boolean> {
+    const result = await db
+      .delete(groceryListItems)
+      .where(
+        and(
+          eq(groceryListItems.id, itemId),
+          eq(groceryListItems.groceryListId, listId)
+        )
+      );
+    return Number(result.rowCount) > 0;
+  }
+
+  async getGroceryListItems(listId: string): Promise<GroceryListItem[]> {
+    return await db
+      .select()
+      .from(groceryListItems)
+      .where(eq(groceryListItems.groceryListId, listId))
+      .orderBy(
+        groceryListItems.isChecked,
+        groceryListItems.category,
+        groceryListItems.name
+      );
+  }
+
   // Transaction support
   async transaction<T>(action: (trx: any) => Promise<T>): Promise<T> {
     return db.transaction(action);

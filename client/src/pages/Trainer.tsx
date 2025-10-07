@@ -1,18 +1,20 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/useAuth";
-import SearchFilters from "@/components/SearchFilters";
-import RecipeCard from "@/components/RecipeCard";
-import RecipeCardWithAssignment from "@/components/RecipeCardWithAssignment";
-import RecipeListItem from "@/components/RecipeListItem";
-import RecipeListItemWithAssignment from "@/components/RecipeListItemWithAssignment";
-import RecipeModal from "@/components/RecipeModal";
-import RecipeAssignment from "@/components/RecipeAssignment";
-import MealPlanGenerator from "@/components/MealPlanGenerator";
+import { Card, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { useAuth } from "../contexts/AuthContext";
+import SearchFilters from "../components/SearchFilters";
+import RecipeCard from "../components/RecipeCard";
+import RecipeCardWithAssignment from "../components/RecipeCardWithAssignment";
+import RecipeListItem from "../components/RecipeListItem";
+import RecipeListItemWithAssignment from "../components/RecipeListItemWithAssignment";
+import RecipeModal from "../components/RecipeModal";
+import RecipeAssignment from "../components/RecipeAssignment";
+import MealPlanGenerator from "../components/MealPlanGenerator";
+import CustomerManagement from "../components/CustomerManagement";
+import TrainerMealPlans from "../components/TrainerMealPlans";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Trainer() {
@@ -29,6 +31,8 @@ export default function Trainer() {
   // Determine active tab based on URL
   const getActiveTab = () => {
     if (location === '/meal-plan-generator') return 'meal-plan';
+    if (location === '/trainer/customers') return 'customers';
+    if (location === '/trainer/meal-plans') return 'saved-plans';
     return 'recipes';
   };
 
@@ -37,6 +41,12 @@ export default function Trainer() {
       case 'meal-plan':
         navigate('/meal-plan-generator');
         break;
+      case 'customers':
+        navigate('/trainer/customers');
+        break;
+      case 'saved-plans':
+        navigate('/trainer/meal-plans');
+        break;
       default:
         navigate('/trainer');
     }
@@ -44,6 +54,13 @@ export default function Trainer() {
 
   const { data: recipesData, isLoading } = useQuery({
     queryKey: ['/api/recipes', filters],
+    queryFn: async () => {
+      const response = await fetch('/api/recipes', {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch recipes');
+      return response.json();
+    },
     enabled: getActiveTab() === 'recipes',
   });
 
@@ -61,7 +78,7 @@ export default function Trainer() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+    <div className="w-full">
       {/* Header Section */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
@@ -73,22 +90,38 @@ export default function Trainer() {
       </div>
 
       <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6 sm:mb-8 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 sm:mb-8 h-auto p-1 gap-1">
           <TabsTrigger 
             value="recipes" 
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
             <i className="fas fa-book-open text-sm sm:text-base"></i>
-            <span className="hidden sm:inline">Browse Recipes</span>
-            <span className="sm:hidden">Recipes</span>
+            <span className="hidden lg:inline">Browse Recipes</span>
+            <span className="lg:hidden">Recipes</span>
           </TabsTrigger>
           <TabsTrigger 
             value="meal-plan"
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
             <i className="fas fa-utensils text-sm sm:text-base"></i>
-            <span className="hidden sm:inline">Meal Plan Generator</span>
-            <span className="sm:hidden">Plans</span>
+            <span className="hidden lg:inline">Generate Plans</span>
+            <span className="lg:hidden">Generate</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="saved-plans"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+          >
+            <i className="fas fa-save text-sm sm:text-base"></i>
+            <span className="hidden lg:inline">Saved Plans</span>
+            <span className="lg:hidden">Saved</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="customers"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+          >
+            <i className="fas fa-users text-sm sm:text-base"></i>
+            <span className="hidden lg:inline">Customers</span>
+            <span className="lg:hidden">Customers</span>
           </TabsTrigger>
         </TabsList>
 
@@ -174,6 +207,7 @@ export default function Trainer() {
                         key={recipe.id}
                         recipe={recipe}
                         onClick={() => setSelectedRecipe(recipe)}
+                        showFavoriteButton={true}
                       />
                     )
                   ))}
@@ -224,6 +258,15 @@ export default function Trainer() {
         <TabsContent value="meal-plan">
           <MealPlanGenerator />
         </TabsContent>
+
+        <TabsContent value="customers">
+          <CustomerManagement />
+        </TabsContent>
+
+        <TabsContent value="saved-plans">
+          <TrainerMealPlans />
+        </TabsContent>
+
       </Tabs>
 
       {/* Recipe Modal */}

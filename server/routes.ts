@@ -14,10 +14,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import authRouter, { requireAuth, requireRole } from "./authRoutes";
+import authRouter from "./authRoutes";
+import { requireAuth, requireRole } from "./middleware/auth";
 import passwordRouter from "./passwordRoutes";
 import recipeRouter from "./recipeRoutes";
+import invitationRouter from "./invitationRoutes";
 import adminRouter from "./routes/adminRoutes";
+import trainerRouter from "./routes/trainerRoutes";
+import pdfRouter from "./routes/pdf";
 import { recipeGenerator } from "./services/recipeGenerator";
 import { mealPlanGenerator } from "./services/mealPlanGenerator";
 import { recipeFilterSchema, insertRecipeSchema, updateRecipeSchema, mealPlanGenerationSchema } from "@shared/schema";
@@ -35,7 +39,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/auth', authRouter);
   app.use('/api/password', passwordRouter);
   app.use('/api/recipes', recipeRouter);
+  app.use('/api/invitations', invitationRouter);
   app.use('/api/admin', adminRouter);
+  app.use('/api/trainer', trainerRouter);
+  app.use('/api/pdf', pdfRouter);
 
   /**
    * Public Recipe Routes
@@ -144,6 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mealsPerDay: Number(mealsPerDay),
         clientName: req.body.clientName || "",
         description: req.body.description || "",
+        generateMealPrep: req.body.generateMealPrep || false,
         // Optional filters
         mealType: req.body.mealType || undefined,
         dietaryTag: req.body.dietaryTag || undefined,

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import RecipeModal from "@/components/RecipeModal";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { useToast } from "../hooks/use-toast";
+import { apiRequest } from "../lib/queryClient";
+import { isUnauthorizedError } from "../lib/authUtils";
+import RecipeModal from "./RecipeModal";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function PendingRecipesTable() {
@@ -20,6 +20,20 @@ export default function PendingRecipesTable() {
 
   const { data: pendingData, isLoading, refetch } = useQuery({
     queryKey: ['/api/admin/recipes', filters],
+    queryFn: async () => {
+      // Build query string with filters
+      const queryParams = new URLSearchParams({
+        approved: 'false', // Only fetch pending (not approved) recipes
+        page: filters.page.toString(),
+        limit: filters.limit.toString(),
+      });
+      
+      const response = await fetch(`/api/admin/recipes?${queryParams}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch recipes');
+      return response.json();
+    },
     enabled: true,
     staleTime: 0, // Always consider data stale
     refetchOnMount: true,
@@ -39,9 +53,10 @@ export default function PendingRecipesTable() {
       });
       // Force refetch with cache bypass
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      // Trigger immediate refetch of pending recipes
+      refetch();
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -51,7 +66,7 @@ export default function PendingRecipesTable() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -66,11 +81,16 @@ export default function PendingRecipesTable() {
   const approveAllMutation = useMutation({
     mutationFn: async () => {
       const recipeIds = pendingRecipes.map((recipe: Recipe) => recipe.id);
-      await Promise.all(
-        recipeIds.map((id: string) => 
-          apiRequest('PATCH', `/api/admin/recipes/${id}/approve`)
-        )
-      );
+      
+      if (recipeIds.length === 0) {
+        throw new Error('No recipes to approve');
+      }
+      
+      // Use the bulk approve endpoint for better performance
+      const response = await apiRequest('POST', '/api/admin/recipes/bulk-approve', {
+        recipeIds: recipeIds
+      });
+      
       return recipeIds.length;
     },
     onSuccess: (count: number) => {
@@ -80,9 +100,10 @@ export default function PendingRecipesTable() {
       });
       // Force refetch with cache bypass
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      // Trigger immediate refetch of pending recipes
+      refetch();
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -92,7 +113,7 @@ export default function PendingRecipesTable() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -115,9 +136,10 @@ export default function PendingRecipesTable() {
       });
       // Force refetch with cache bypass
       queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });
+      // Trigger immediate refetch of pending recipes
+      refetch();
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
@@ -127,7 +149,7 @@ export default function PendingRecipesTable() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -186,7 +208,7 @@ export default function PendingRecipesTable() {
                   // Force complete cache refresh
                   queryClient.removeQueries({ queryKey: ['/api/admin/recipes'] });
                   queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
-                  queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+                  queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
                   queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
                   refetch(); // Force immediate refetch
                   queryClient.refetchQueries({ queryKey: ['/api/admin/stats'] });

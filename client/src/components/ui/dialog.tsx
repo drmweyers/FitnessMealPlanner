@@ -4,7 +4,7 @@ import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 const Dialog = DialogPrimitive.Root
 
@@ -38,7 +38,23 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        // Base styles
+        "fixed z-50 gap-4 border bg-background shadow-lg duration-200",
+        // Mobile-first positioning - properly centered on all screen sizes
+        "left-[50%] top-[50%] -translate-x-[50%] -translate-y-[50%]",
+        // Size constraints
+        "w-[calc(100vw-2rem)] max-w-lg",
+        "sm:w-full sm:max-w-lg",
+        "max-h-[calc(100vh-2rem)]",
+        // Padding
+        "p-4 sm:p-6",
+        // Rounded corners
+        "rounded-lg",
+        // Overflow handling
+        "overflow-y-auto",
+        // Animation classes
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         className
       )}
       {...props}

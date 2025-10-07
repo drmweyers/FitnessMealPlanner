@@ -2,18 +2,19 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
+import { Badge } from "./ui/badge";
+import { Separator } from "./ui/separator";
+import { useToast } from "../hooks/use-toast";
+import { createCacheManager } from "../lib/cacheUtils";
 import { ChefHat, Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown, Wand2, CheckCircle, Circle } from "lucide-react";
 import { z } from "zod";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "./ui/textarea";
 
 const adminRecipeGenerationSchema = z.object({
   count: z.number().min(1).max(50).default(10),
@@ -50,6 +51,7 @@ interface GenerationResult {
 export default function AdminRecipeGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const cacheManager = createCacheManager(queryClient);
   const [lastGeneration, setLastGeneration] = useState<GenerationResult | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -102,8 +104,8 @@ export default function AdminRecipeGenerator() {
         description: `${data.message} - Generating ${data.count} recipes...`,
       });
 
-      // Immediate refresh to show generation started
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      // Use smart cache management for recipe generation
+      cacheManager.handleRecipeGeneration(data.count);
 
       // Simulate progress updates with more granular steps
       const updateStep = (index: number, progress: number) => {
@@ -186,16 +188,8 @@ export default function AdminRecipeGenerator() {
         description: data.message,
       });
 
-      // Refresh all recipe data after generation completes
-      setTimeout(() => {
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-        queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-
-        setTimeout(() => {
-          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/recipes' });
-          queryClient.refetchQueries({ predicate: (query) => query.queryKey[0] === '/api/admin/stats' });
-        }, 8000);
-      }, 15000);
+      // Use smart cache management for bulk generation
+      cacheManager.handleRecipeGeneration(data.count);
     },
     onError: (error: Error) => {
       toast({
@@ -803,7 +797,7 @@ export default function AdminRecipeGenerator() {
                 <div className="space-y-2">
                   {statusSteps.map((step, index) => (
                     <div 
-                      key={index} 
+                      key={`step-${index}-${step.text}`} 
                       className={`flex items-center gap-2 text-sm ${
                         step.completed ? 'text-blue-700' : 'text-slate-500'
                       }`}

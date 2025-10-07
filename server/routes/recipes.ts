@@ -1,7 +1,21 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { storage } from '../storage';
-import { requireAuth } from '../authRoutes'; 
+import { requireAuth } from '../middleware/auth';
+import { recipeSearchService } from '../services/recipeSearchService';
+import { db } from "../db";
+import { 
+  recipeRatings, 
+  recipeRatingSummary, 
+  ratingHelpfulness,
+  users,
+  recipes,
+  createRatingSchema,
+  updateRatingSchema,
+  voteHelpfulnessSchema,
+  type RecipeRatingWithUser 
+} from "@shared/schema";
+import { eq, and, desc, asc, sql, count } from "drizzle-orm"; 
 
 export const recipeRouter = Router();
 
@@ -53,5 +67,102 @@ recipeRouter.get('/:id', async (req, res) => {
   } catch (error) {
     console.error(`Failed to fetch recipe ${req.params.id}:`, error);
     res.status(500).json({ error: 'Failed to fetch recipe' });
+  }
+});
+
+// Enhanced recipe search with comprehensive filtering
+recipeRouter.get('/search', async (req, res) => {
+  try {
+    console.log('[Recipe Search API] Received search request:', req.query);
+    
+    const filters = {
+      search: req.query.search as string,
+      mealTypes: req.query.mealTypes ? (req.query.mealTypes as string).split(',') : undefined,
+      dietaryTags: req.query.dietaryTags ? (req.query.dietaryTags as string).split(',') : undefined,
+      calories: req.query.caloriesMin || req.query.caloriesMax ? {
+        min: req.query.caloriesMin ? Number(req.query.caloriesMin) : undefined,
+        max: req.query.caloriesMax ? Number(req.query.caloriesMax) : undefined
+      } : undefined,
+      protein: req.query.proteinMin || req.query.proteinMax ? {
+        min: req.query.proteinMin ? Number(req.query.proteinMin) : undefined,
+        max: req.query.proteinMax ? Number(req.query.proteinMax) : undefined
+      } : undefined,
+      carbs: req.query.carbsMin || req.query.carbsMax ? {
+        min: req.query.carbsMin ? Number(req.query.carbsMin) : undefined,
+        max: req.query.carbsMax ? Number(req.query.carbsMax) : undefined
+      } : undefined,
+      fat: req.query.fatMin || req.query.fatMax ? {
+        min: req.query.fatMin ? Number(req.query.fatMin) : undefined,
+        max: req.query.fatMax ? Number(req.query.fatMax) : undefined
+      } : undefined,
+      prepTime: req.query.prepTimeMin || req.query.prepTimeMax ? {
+        min: req.query.prepTimeMin ? Number(req.query.prepTimeMin) : undefined,
+        max: req.query.prepTimeMax ? Number(req.query.prepTimeMax) : undefined
+      } : undefined,
+      cookTime: req.query.cookTimeMin || req.query.cookTimeMax ? {
+        min: req.query.cookTimeMin ? Number(req.query.cookTimeMin) : undefined,
+        max: req.query.cookTimeMax ? Number(req.query.cookTimeMax) : undefined
+      } : undefined,
+      sortBy: req.query.sortBy as string,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc',
+      page: req.query.page ? Number(req.query.page) : 1,
+      limit: Math.min(Number(req.query.limit) || 20, 50) // Cap at 50 for performance
+    };
+
+    const results = await recipeSearchService.searchRecipes(filters);
+    
+    console.log(`[Recipe Search API] Returning ${results.recipes.length} recipes out of ${results.total} total`);
+    
+    res.json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    console.error('[Recipe Search API] Search failed:', error);
+    res.status(400).json({ 
+      success: false,
+      error: 'Invalid search parameters',
+      message: error.message 
+    });
+  }
+});
+
+// Get search metadata (available filters)
+recipeRouter.get('/search/metadata', async (req, res) => {
+  try {
+    console.log('[Recipe Search API] Fetching metadata...');
+    
+    const metadata = await recipeSearchService.getSearchMetadata();
+    
+    res.json({
+      success: true,
+      data: metadata
+    });
+  } catch (error) {
+    console.error('[Recipe Search API] Failed to get search metadata:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to get search metadata' 
+    });
+  }
+});
+
+// Get search statistics (for admin analytics)
+recipeRouter.get('/search/statistics', requireAuth, async (req, res) => {
+  try {
+    console.log('[Recipe Search API] Fetching statistics...');
+    
+    const statistics = await recipeSearchService.getSearchStatistics();
+    
+    res.json({
+      success: true,
+      data: statistics
+    });
+  } catch (error) {
+    console.error('[Recipe Search API] Failed to get search statistics:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to get search statistics' 
+    });
   }
 }); 

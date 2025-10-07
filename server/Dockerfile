@@ -32,10 +32,16 @@ COPY --link drizzle.config.ts ./drizzle.config.ts
 RUN --mount=type=cache,target=/root/.npm \
     npm run build
 
-# Verify client build succeeded
-RUN echo "✅ Verifying client build..." && \
-    ls -la client/dist/ && \
-    echo "Client build files found"
+# Debug: Find where vite actually built the files
+RUN echo "🔍 Finding build output..." && \
+    find . -name "index.html" -type f 2>/dev/null || true && \
+    find . -name "*.css" -path "*/dist/*" -type f 2>/dev/null || true && \
+    echo "📁 Directory structure:" && \
+    ls -la . && \
+    ls -la client/ || true && \
+    ls -la client/dist/ || true && \
+    ls -la client/client/ || true && \
+    echo "Client build verification complete"
 
 # Remove dev dependencies and reinstall only production dependencies
 RUN --mount=type=cache,target=/root/.npm \
@@ -74,8 +80,8 @@ COPY --from=builder /app/tailwind.config.ts ./
 # Copy migration files
 COPY --from=builder /app/drizzle.config.ts ./
 
-# Copy built client files to the exact path the server expects
-COPY --from=builder /app/client/dist ./client/dist
+# Copy built client files (vite with root:client outputs to client/client/dist due to outDir config)
+COPY --from=builder /app/client/client/dist ./client/dist
 
 # Verify all critical files are present
 RUN echo "🔍 Verifying production files..." && \

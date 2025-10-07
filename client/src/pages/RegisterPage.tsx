@@ -1,21 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { useToast } from '../hooks/use-toast';
 import { Link, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
-import styles from '@/styles/icons.module.css';
+import styles from '../styles/icons.module.css';
 
 const registerSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+  password: z.string()
+    .min(8, { message: 'Password must be at least 8 characters' })
+    .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
+    .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
+    .regex(/[0-9]/, { message: 'Password must contain at least one number' })
+    .regex(/[^A-Za-z0-9]/, { message: 'Password must contain at least one special character' }),
   confirmPassword: z.string(),
   role: z.enum(['customer', 'trainer']),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -25,10 +31,20 @@ const registerSchema = z.object({
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
+interface InvitationData {
+  customerEmail: string;
+  trainerEmail: string;
+  expiresAt: string;
+}
+
 const RegisterPage = () => {
   const { register } = useAuth();
   const { toast } = useToast();
   const [, redirect] = useLocation();
+  const [invitationData, setInvitationData] = useState<InvitationData | null>(null);
+  const [invitationToken, setInvitationToken] = useState<string | null>(null);
+  const [isVerifyingInvitation, setIsVerifyingInvitation] = useState(false);
+  
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -39,38 +55,124 @@ const RegisterPage = () => {
     },
   });
 
-  const onSubmit = async (values: RegisterFormData) => {
-    try {
-      // Only send the required fields to the register function
-      const { confirmPassword, ...registerData } = values;
-      const user = await register(registerData);
+  // Check for invitation token in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('invitation');
+    
+    if (token) {
+      setInvitationToken(token);
+      verifyInvitation(token);
+    }
+  }, []);
 
-      if (!user || !user.role) {
-        throw new Error('Invalid user data received');
+  const verifyInvitation = async (token: string) => {
+    setIsVerifyingInvitation(true);
+    try {
+      const response = await fetch(`/api/invitations/verify/${token}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Invalid invitation');
       }
       
+      const data = await response.json();
+      setInvitationData(data.data.invitation);
+      
+      // Pre-fill email and set role to customer
+      form.setValue('email', data.data.invitation.customerEmail);
+      form.setValue('role', 'customer');
+      
       toast({
-        title: 'Registration successful',
-        description: 'Welcome to FitMeal Pro!',
+        title: "Invitation Verified",
+        description: `You've been invited by ${data.data.invitation.trainerEmail}`,
       });
+      
+    } catch (error: any) {
+      toast({
+        title: "Invalid Invitation",
+        description: error.message,
+        variant: "destructive",
+      });
+      setInvitationToken(null);
+    } finally {
+      setIsVerifyingInvitation(false);
+    }
+  };
 
-      // Navigate based on role
-      switch (user.role) {
-        case 'customer':
-          redirect('/my-meal-plans');
-          break;
-        case 'trainer':
-          redirect('/');
-          break;
-        default:
-          console.warn('Unknown user role:', user.role);
-          redirect('/');
+  const onSubmit = async (values: RegisterFormData) => {
+    try {
+      if (invitationToken) {
+        // Register via invitation
+        const response = await fetch('/api/invitations/accept', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: invitationToken,
+            password: values.password,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to accept invitation');
+        }
+
+        const data = await response.json();
+        
+        toast({
+          title: 'Account Created Successfully',
+          description: 'You can now log in with your new account.',
+        });
+
+        // Redirect to login page
+        redirect('/login');
+      } else {
+        // Regular registration
+        const { confirmPassword, ...registerData } = values;
+        const user = await register(registerData);
+
+        if (!user || !user.role) {
+          throw new Error('Invalid user data received');
+        }
+        
+        toast({
+          title: 'Registration successful',
+          description: 'Welcome to EvoFitMeals!',
+        });
+
+        // Navigate based on role
+        switch (user.role) {
+          case 'customer':
+            redirect('/my-meal-plans');
+            break;
+          case 'trainer':
+            redirect('/');
+            break;
+          default:
+            console.warn('Unknown user role:', user.role);
+            redirect('/');
+        }
       }
     } catch (error: any) {
       console.error('Registration error:', error);
+      
+      // Handle specific error cases with user-friendly messages
+      let errorMessage = 'An error occurred during registration';
+      
+      if (error.message?.includes('User already exists')) {
+        errorMessage = 'An account with this email already exists. Please login or use a different email.';
+      } else if (error.message?.includes('Password must')) {
+        errorMessage = error.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Registration failed',
-        description: error.message || 'An error occurred during registration',
+        description: errorMessage,
         variant: 'destructive',
       });
     }
@@ -87,7 +189,7 @@ const RegisterPage = () => {
           className="hidden lg:flex flex-col space-y-4 p-4 sm:p-6"
         >
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">
-            Welcome to FitMeal Pro
+            Welcome to EvoFitMeals
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground">
             Join our community of health enthusiasts and fitness professionals.
@@ -142,7 +244,7 @@ const RegisterPage = () => {
           {/* Mobile header - only shown on small screens */}
           <div className="lg:hidden text-center mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2">
-              FitMeal Pro
+              EvoFitMeals
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               Join our fitness community
@@ -160,6 +262,28 @@ const RegisterPage = () => {
             </CardHeader>
             
             <CardContent className="px-4 sm:px-6">
+              {/* Invitation Info */}
+              {invitationData && (
+                <Alert className="mb-6 border-green-200 bg-green-50">
+                  <i className="fas fa-envelope text-green-600"></i>
+                  <AlertDescription className="text-green-800">
+                    <strong>Trainer Invitation</strong><br />
+                    You've been invited by <strong>{invitationData.trainerEmail}</strong> to join EvoFitMeals.
+                    Complete your registration below to get started.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Loading State for Invitation Verification */}
+              {isVerifyingInvitation && (
+                <Alert className="mb-6">
+                  <i className="fas fa-spinner fa-spin text-blue-600"></i>
+                  <AlertDescription>
+                    Verifying invitation...
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
                   <FormField
@@ -176,8 +300,9 @@ const RegisterPage = () => {
                               placeholder="your@email.com" 
                               type="email"
                               autoComplete="email"
+                              disabled={!!invitationData}
                               {...field} 
-                              className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                              className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg disabled:bg-gray-50 disabled:text-gray-500"
                             />
                             <i className={`fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 ${styles.iconMuted} text-sm`}></i>
                           </div>
@@ -200,13 +325,23 @@ const RegisterPage = () => {
                             <Input 
                               type="password" 
                               autoComplete="new-password"
-                              placeholder="Minimum 8 characters"
+                              placeholder="Strong password required"
                               {...field} 
                               className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                             />
                             <i className={`fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 ${styles.iconMuted} text-sm`}></i>
                           </div>
                         </FormControl>
+                        <div className="text-xs text-gray-600 mt-1 space-y-1">
+                          <p>Password must contain:</p>
+                          <ul className="list-disc list-inside space-y-0.5 ml-2">
+                            <li>At least 8 characters</li>
+                            <li>One uppercase letter</li>
+                            <li>One lowercase letter</li>
+                            <li>One number</li>
+                            <li>One special character (!@#$%^&*)</li>
+                          </ul>
+                        </div>
                         <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
@@ -246,8 +381,12 @@ const RegisterPage = () => {
                           Account Type
                         </FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <SelectTrigger className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg relative">
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                            disabled={!!invitationData}
+                          >
+                            <SelectTrigger className="h-11 sm:h-12 pl-10 pr-4 text-sm sm:text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg relative disabled:bg-gray-50 disabled:text-gray-500">
                               <i className={`fas fa-user absolute left-3 top-1/2 -translate-y-1/2 ${styles.iconMuted} text-sm`}></i>
                               <SelectValue placeholder="Select your account type" />
                             </SelectTrigger>
@@ -258,12 +397,14 @@ const RegisterPage = () => {
                                   <span>Customer - Looking for meal plans</span>
                                 </div>
                               </SelectItem>
-                              <SelectItem value="trainer">
-                                <div className="flex items-center space-x-2">
-                                  <i className={`fas fa-dumbbell ${styles.icon} text-sm`}></i>
-                                  <span>Trainer - Creating meal plans</span>
-                                </div>
-                              </SelectItem>
+                              {!invitationData && (
+                                <SelectItem value="trainer">
+                                  <div className="flex items-center space-x-2">
+                                    <i className={`fas fa-dumbbell ${styles.icon} text-sm`}></i>
+                                    <span>Trainer - Creating meal plans</span>
+                                  </div>
+                                </SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -291,6 +432,7 @@ const RegisterPage = () => {
                   </Button>
                 </form>
               </Form>
+
             </CardContent>
             
             <CardFooter className="flex flex-col items-center space-y-3 px-4 sm:px-6 pt-4 sm:pt-6 pb-6 sm:pb-8">

@@ -1,21 +1,14 @@
-import { createContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import type { User, UserRole } from '@/hooks/useAuth';
+import type { User, UserRole, LoginCredentials, RegisterCredentials, AuthContextValue } from '../types/auth';
 
 const API_BASE_URL = '/api';
 
 // Custom event for cross-tab auth state synchronization
 const AUTH_STATE_CHANGE_EVENT = 'authStateChange';
 
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-interface RegisterCredentials {
-  email: string;
-  password: string;
+interface LocalRegisterCredentials extends RegisterCredentials {
   role: 'customer' | 'trainer' | 'admin';
 }
 
@@ -27,23 +20,14 @@ interface AuthResponse {
       id: string;
       email: string;
       role: UserRole;
+      profilePicture?: string | null;
     };
   };
   message?: string;
   code?: string;
 }
 
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  error?: Error;
-  login: (credentials: LoginCredentials) => Promise<User>;
-  register: (credentials: RegisterCredentials) => Promise<User>;
-  logout: () => void;
-}
-
-export const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextValue | null>(null);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -231,7 +215,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const register = async (credentials: RegisterCredentials): Promise<User> => {
+  const register = async (credentials: LocalRegisterCredentials): Promise<User> => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
@@ -286,5 +270,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 }
 
-// Re-export the useAuth hook for backward compatibility
-export { useAuth } from '@/hooks/useAuth'; 
+// Export useAuth hook directly from this file to avoid circular dependencies
+export function useAuth(): AuthContextValue {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

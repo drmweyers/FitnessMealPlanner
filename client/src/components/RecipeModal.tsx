@@ -15,16 +15,81 @@
  * - Fallback image handling for missing recipe photos
  */
 
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import React, { useState } from "react";
+import { Button } from "./ui/button";
+import { X, Trash2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "./ui/alert-dialog";
+import { useToast } from "../hooks/use-toast";
 import type { Recipe } from "@shared/schema";
 
 interface RecipeModalProps {
   recipe: Recipe;
   onClose: () => void;
+  showDeleteButton?: boolean;
+  onDelete?: (recipeId: string) => void;
 }
 
-export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
+export default function RecipeModal({ recipe, onClose, showDeleteButton = false, onDelete }: RecipeModalProps) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (recipeId: string) => {
+      const response = await fetch(`/api/admin/recipes/${recipeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete recipe');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate and refetch admin recipes
+      queryClient.invalidateQueries({ queryKey: ["admin-recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      
+      toast({
+        title: "Recipe deleted",
+        description: `"${recipe.name}" has been successfully deleted.`,
+      });
+      
+      if (onDelete) {
+        onDelete(recipe.id);
+      }
+      onClose();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error deleting recipe",
+        description: error instanceof Error ? error.message : "Failed to delete recipe",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteMutation.mutate(recipe.id);
+    setShowDeleteDialog(false);
+  };
   /**
    * Instruction Text Handling
    * 
@@ -44,21 +109,37 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
         className="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header with recipe title and close button */}
+        {/* Header with recipe title and action buttons */}
         <div className="border-b border-gray-200 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 sticky top-0 bg-white z-10">
           <div className="flex justify-between items-start gap-3">
             <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 leading-tight pr-2">
               {recipe.name}
             </h1>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClose}
-              className="text-gray-600 border-gray-300 hover:bg-gray-50 flex-shrink-0 h-8 w-8 sm:h-10 sm:w-auto sm:px-3"
-            >
-              <X className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Close</span>
-            </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {showDeleteButton && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteClick}
+                  disabled={deleteMutation.isPending}
+                  className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 h-8 w-8 sm:h-10 sm:w-auto sm:px-3"
+                >
+                  <Trash2 className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">
+                    {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                  </span>
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+                className="text-gray-600 border-gray-300 hover:bg-gray-50 h-8 w-8 sm:h-10 sm:w-auto sm:px-3"
+              >
+                <X className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Close</span>
+              </Button>
+            </div>
           </div>
         </div>
         
@@ -198,6 +279,27 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Recipe</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{recipe.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Recipe
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

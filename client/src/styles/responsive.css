@@ -1,0 +1,144 @@
+/**
+ * Clean Responsive Design System
+ * Progressive enhancement without forcing mobile styles on desktop
+ */
+
+/* Mobile styles for screens below 1024px (to match lg: breakpoint) */
+@media (max-width: 1023px) {
+  /* Touch targets for mobile only */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Mobile navigation visible - MUST match component breakpoints */
+  [data-testid="mobile-navigation"],
+  .mobile-nav,
+  .mobile-header {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Hide desktop header on mobile - use more specific selectors */
+  [data-testid="desktop-header"],
+  header[data-desktop-nav="true"] {
+    display: none !important;
+  }
+
+  /* Stack content on mobile */
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Mobile typography */
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+
+  /* Mobile container padding */
+  .container, .max-w-7xl {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Remove tablet-specific rules that hide mobile navigation */
+/* Mobile navigation should be visible from 0px to 1023px */
+/* Desktop navigation should be visible from 1024px+ */
+
+/* Tablet styles for 768px to 1023px - KEEP mobile navigation */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Keep mobile navigation visible */
+  [data-testid="mobile-navigation"],
+  .mobile-nav,
+  .mobile-header {
+    display: flex !important;
+  }
+
+  /* Hide desktop header on tablets */
+  [data-testid="desktop-header"] {
+    display: none !important;
+  }
+
+  /* 2-column grid on tablets */
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Tablet typography */
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+
+  /* Tablet container padding */
+  .container, .max-w-7xl {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Desktop styles for 1024px and above */
+@media (min-width: 1024px) {
+  /* Hide mobile navigation completely */
+  [data-testid="mobile-navigation"],
+  .mobile-nav,
+  .mobile-header {
+    display: none !important;
+  }
+
+  /* Show desktop header */
+  [data-testid="desktop-header"],
+  header[data-desktop-nav="true"] {
+    display: block !important;
+  }
+
+  /* Desktop doesn't need touch target enforcement */
+  button, a, input, select, textarea {
+    /* Let natural sizes apply */
+    min-height: auto;
+  }
+
+  /* Multi-column grid on desktop */
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  /* Desktop typography */
+  h1 { font-size: 2.25rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.75rem; }
+
+  /* Desktop container - wider for larger screens */
+  .container, .max-w-7xl {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Enable hover effects only on desktop */
+  button:hover, a:hover {
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+}
+
+/* Large desktop styles for 1536px and above */
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
+  }
+}
+
+/* Extra large desktop styles for 1920px and above */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1920px;
+  }
+
+  /* Larger typography for bigger screens */
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 2.25rem; }
+  h3 { font-size: 2rem; }
+}

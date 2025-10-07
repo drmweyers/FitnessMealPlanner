@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mealplanner-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"  # Keep original port
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fitnessmeal_db
+    volumes:
+      - mealplanner-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app-dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      target: dev
+    container_name: mealplanner-dev
+    restart: unless-stopped
+    ports:
+      - "4000:4000"  # Keep original port
+      - "24678:24678"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/fitnessmeal_db
+      PORT: 4000
+      NODE_ENV: development
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-here}
+      PDF_EXPORT_ENABLED: true
+    volumes:
+      - ./client:/app/client
+      - ./server:/app/server
+      - ./drizzle.config.ts:/app/drizzle.config.ts
+      - /app/node_modules
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npm run db:push && npm run dev"
+
+  app-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      target: prod
+    container_name: mealplanner-prod
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: 4000
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      PDF_EXPORT_ENABLED: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  mealplanner-postgres-data:

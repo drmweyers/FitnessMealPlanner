@@ -1,7 +1,17 @@
 # FIXED Dockerfile - Ensuring drizzle.config.ts is properly copied
 FROM node:20-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache postgresql-client
+RUN apk add --no-cache postgresql-client \
+    && apk add --no-cache chromium \
+    && apk add --no-cache nss \
+    && apk add --no-cache freetype \
+    && apk add --no-cache harfbuzz \
+    && apk add --no-cache ca-certificates \
+    && apk add --no-cache ttf-freefont
+
+# Tell Puppeteer to skip downloading Chrome and use the installed version
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Development stage
 FROM base AS dev
@@ -52,8 +62,70 @@ RUN npm ci --only=production && \
 
 # Copy built application
 COPY --from=builder /app/dist/index.js ./dist/index.js
-COPY --from=builder /app/client/dist ./client/dist
+COPY --from=builder /app/dist/public ./dist/public
 COPY --from=builder /app/shared ./shared
+
+# Copy public static files (landing page, uploads, etc.)
+COPY --from=builder /app/public ./public
+
+# Copy server views directory (needed for PDF templates)
+COPY --from=builder /app/server/views ./server/views
+
+# CRITICAL VERIFICATION: Ensure server views were copied correctly
+RUN echo "🔍 CRITICAL CHECK: Verifying server views exist..." && \
+    if [ ! -d "server/views" ]; then \
+    echo "❌ FATAL ERROR: server/views directory NOT FOUND!" && \
+    echo "📁 Files in /app directory:" && \
+    ls -la && \
+    exit 1; \
+    elif [ ! -f "server/views/pdfTemplate.ejs" ]; then \
+    echo "❌ FATAL ERROR: server/views/pdfTemplate.ejs NOT FOUND!" && \
+    echo "📁 Contents of server/views directory:" && \
+    ls -la server/views/ 2>/dev/null || echo "Directory doesn't exist" && \
+    exit 1; \
+    else \
+    echo "✅ Server views successfully copied"; \
+    echo "📁 Views directory contents:" && \
+    ls -la server/views/; \
+    fi
+
+# CRITICAL VERIFICATION: Ensure React app was copied correctly
+RUN echo "🔍 CRITICAL CHECK: Verifying React app files exist..." && \
+    if [ ! -d "dist/public" ]; then \
+    echo "❌ FATAL ERROR: dist/public directory NOT FOUND!" && \
+    echo "📁 Files in /app directory:" && \
+    ls -la && \
+    exit 1; \
+    elif [ ! -f "dist/public/index.html" ]; then \
+    echo "❌ FATAL ERROR: dist/public/index.html NOT FOUND!" && \
+    echo "📁 Contents of dist/public directory:" && \
+    ls -la dist/public/ 2>/dev/null || echo "Directory doesn't exist" && \
+    exit 1; \
+    else \
+    echo "✅ React app files successfully copied"; \
+    echo "📁 React app contents:" && \
+    ls -la dist/public/ | head -10; \
+    fi
+
+# CRITICAL VERIFICATION: Ensure public static files were copied
+RUN echo "🔍 CRITICAL CHECK: Verifying public static files exist..." && \
+    if [ ! -d "public" ]; then \
+    echo "❌ FATAL ERROR: public directory NOT FOUND!" && \
+    echo "📁 Files in /app directory:" && \
+    ls -la && \
+    exit 1; \
+    elif [ ! -f "public/landing/index.html" ]; then \
+    echo "❌ FATAL ERROR: public/landing/index.html NOT FOUND!" && \
+    echo "📁 Contents of public directory:" && \
+    ls -la public/ && \
+    exit 1; \
+    else \
+    echo "✅ public static files successfully copied"; \
+    echo "📁 Public directory contents:" && \
+    ls -la public/ && \
+    echo "📄 Landing page verified:" && \
+    ls -la public/landing/index.html; \
+    fi
 
 # CRITICAL: Copy drizzle.config.ts with verification
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts

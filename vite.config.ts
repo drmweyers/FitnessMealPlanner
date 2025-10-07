@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { fileURLToPath, URL } from 'node:url';
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig({
@@ -17,25 +18,46 @@ export default defineConfig({
       : []),
   ],
   resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
-    },
+    alias: [
+      { find: "@", replacement: path.resolve(__dirname, "client/src") },
+      { find: "@shared", replacement: path.resolve(__dirname, "shared") },
+      { find: "@assets", replacement: path.resolve(__dirname, "attached_assets") },
+    ],
   },
-  root: path.resolve(import.meta.dirname, "client"),
+  root: "client",
   build: {
-    outDir: path.resolve(import.meta.dirname, "client/dist"),
+    outDir: "../dist/public",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunk for large external dependencies
+          vendor: ['react', 'react-dom'],
+          // UI components chunk
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-tabs', '@radix-ui/react-toast'],
+          // Chart and visualization chunk
+          charts: ['recharts'],
+          // PDF export chunk (includes html2canvas)
+          pdf: ['jspdf', 'html2canvas'],
+          // Form handling chunk
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          // Query and state management
+          query: ['@tanstack/react-query'],
+          // Icons and animations
+          icons: ['lucide-react', 'framer-motion']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
+    minify: true
   },
   server: {
     fs: {
-      strict: true,
-      deny: ["**/.*"],
+      strict: false,
+      allow: [".."],
     },
     hmr: {
-      port: 24678,
-      host: "0.0.0.0",
+      overlay: false,
     },
   },
 });

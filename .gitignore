@@ -8,3 +8,38 @@ vite.config.ts.*
 
 # Private and developer documentation files
 _md/*
+server/env
+
+# Test artifacts and temporary files
+test-*.js
+test-*.ts
+test-*.html
+test-*.bat
+test-*.pdf
+test-results/
+test-outputs/
+playwright-report/
+test-results.json
+*.png
+*.log
+
+# Temporary data scripts
+create-test-*.js
+populate-*.js
+cleanup-*.js
+verify-*.js
+simple-*.js
+check-*.js
+
+# Browser automation scripts
+*-workflow.cjs
+browser-*.js
+puppeteer-*.cjs
+
+# Profile image uploads (local development)
+public/uploads/profile-images/
+fitnessmealplanner-prod.tar
+
+# App spec files with secrets
+app-spec*.yaml
+token.txt

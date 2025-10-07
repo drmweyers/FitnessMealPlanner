@@ -1,20 +1,43 @@
 import React from "react";
 import { Route, Switch, Redirect } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
-import Landing from "@/pages/Landing";
-import Trainer from "@/pages/Trainer";
-import Admin from "@/pages/Admin";
-import Customer from "@/pages/Customer";
-import LoginPage from "@/pages/LoginPage";
-import RegisterPage from "@/pages/RegisterPage";
-import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
-import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import NotFound from "@/pages/NotFound";
-import FallbackUI from "@/components/FallbackUI";
-import Layout from "@/components/Layout";
+import { useAuth } from "./contexts/AuthContext";
+import { useOAuthToken } from "./hooks/useOAuthToken";
+import Landing from "./pages/Landing";
+import Trainer from "./pages/Trainer";
+import Admin from "./pages/Admin";
+import Customer from "./pages/Customer";
+import AdminProfile from "./pages/AdminProfile";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import TrainerProfile from "./pages/TrainerProfile";
+import CustomerProfile from "./pages/CustomerProfile";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import NotFound from "./pages/NotFound";
+import FallbackUI from "./components/FallbackUI";
+import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { OAuthCallback } from "./components/OAuthCallback";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
+import SharedMealPlanView from "./components/SharedMealPlanView";
+import MacroTrackingDashboard from "./components/MacroTrackingDashboard";
+import GroceryListWrapper from "./components/GroceryListWrapper";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
+  
+  // Check for OAuth token in URL
+  useOAuthToken();
+
+  // Check if this is an OAuth callback with a token
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasToken = urlParams.has('token');
+  
+  // If we have a token in the URL, show the OAuth callback page
+  if (hasToken) {
+    return <OAuthCallbackPage />;
+  }
 
   if (isLoading) {
     return (
@@ -22,6 +45,11 @@ export default function Router() {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Check if this is a shared meal plan route (public access)
+  if (window.location.pathname.startsWith('/shared/')) {
+    return <SharedMealPlanView />;
   }
 
   if (!user) {
@@ -58,12 +86,17 @@ export default function Router() {
         }} />
         
         {/* Admin Routes */}
-        <Route path="/admin" component={() => {
-          if (user.role !== 'admin') {
-            return <Redirect to="/" />;
-          }
-          return <Admin />;
-        }} />
+        <Route path="/admin" component={() => (
+          <ProtectedRoute requiredRole="admin">
+            <Admin />
+          </ProtectedRoute>
+        )} />
+        
+        <Route path="/admin/analytics" component={() => (
+          <ProtectedRoute requiredRole="admin">
+            <AdminAnalytics />
+          </ProtectedRoute>
+        )} />
         
         {/* Customer Routes */}
         <Route path="/customer" component={() => {
@@ -73,6 +106,29 @@ export default function Router() {
           return <Customer />;
         }} />
         
+        <Route path="/customer/meal-plans" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <Customer />;
+        }} />
+        
+        <Route path="/customer/progress" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          const Component = Customer;
+          return <Component initialTab="progress" />;
+        }} />
+
+        <Route path="/customer/grocery-list" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          const Component = Customer;
+          return <Component initialTab="grocery-list" />;
+        }} />
+        
         <Route path="/my-meal-plans" component={() => {
           if (user.role !== 'customer') {
             return <Redirect to="/" />;
@@ -80,13 +136,50 @@ export default function Router() {
           return <Customer />;
         }} />
         
-        {/* Trainer Routes */}
-        <Route path="/trainer" component={() => {
+        {/* New Milestone 9 Routes - Customer only */}
+        <Route path="/nutrition" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <MacroTrackingDashboard userId={user.id} userRole={user.role} />;
+        }} />
+        
+        <Route path="/grocery-list" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <GroceryListWrapper />;
+        }} />
+        
+        {/* Common Routes */}
+        <Route path="/recipes" component={() => {
+          // Recipes page accessible to all authenticated users
+          return <Trainer />;
+        }} />
+        
+        <Route path="/favorites" component={() => {
+          // Favorites page accessible to trainers and customers
+          if (user.role === 'admin') {
+            return <Redirect to="/" />;
+          }
+          return <Trainer />;
+        }} />
+        
+        {/* Trainer Routes - More specific routes first */}
+        <Route path="/trainer/customers" component={() => {
           if (user.role !== 'trainer') {
             return <Redirect to="/" />;
           }
           return <Trainer />;
         }} />
+        
+        <Route path="/trainer/meal-plans" component={() => {
+          if (user.role !== 'trainer') {
+            return <Redirect to="/" />;
+          }
+          return <Trainer />;
+        }} />
+        
         
         <Route path="/meal-plan-generator" component={() => {
           if (user.role !== 'trainer' && user.role !== 'admin') {
@@ -94,6 +187,49 @@ export default function Router() {
           }
           return <Trainer />;
         }} />
+        
+        <Route path="/trainer" component={() => {
+          if (user.role !== 'trainer') {
+            return <Redirect to="/" />;
+          }
+          return <Trainer />;
+        }} />
+        
+        {/* Profile Routes */}
+        <Route path="/profile" component={() => {
+          switch (user.role) {
+            case 'admin':
+              return <AdminProfile />;
+            case 'trainer':
+              return <TrainerProfile />;
+            case 'customer':
+              return <CustomerProfile />;
+            default:
+              return <Redirect to="/" />;
+          }
+        }} />
+        
+        <Route path="/admin/profile" component={() => {
+          if (user.role !== 'admin') {
+            return <Redirect to="/" />;
+          }
+          return <AdminProfile />;
+        }} />
+        
+        <Route path="/trainer/profile" component={() => {
+          if (user.role !== 'trainer') {
+            return <Redirect to="/" />;
+          }
+          return <TrainerProfile />;
+        }} />
+        
+        <Route path="/customer/profile" component={() => {
+          if (user.role !== 'customer') {
+            return <Redirect to="/" />;
+          }
+          return <CustomerProfile />;
+        }} />
+        
         
         <Route path="*" component={NotFound} />
       </Switch>

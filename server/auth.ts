@@ -1,11 +1,15 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { User } from '../shared/schema';
 
-console.log('JWT_SECRET in use:', process.env.JWT_SECRET);
+// Validate JWT_SECRET is present and strong
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('🚨 SECURITY ERROR: JWT_SECRET must be provided and at least 32 characters long');
+  process.exit(1);
+}
 
-// Use environment variables with strong defaults
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
 const BCRYPT_SALT_ROUNDS = process.env.BCRYPT_SALT_ROUNDS ? parseInt(process.env.BCRYPT_SALT_ROUNDS) : 12;
 const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || '15m';
 const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '30d';
@@ -41,24 +45,60 @@ export function generateToken(user: User, expiresIn: string): string {
     id: user.id,
     email: user.email,
     role: user.role,
+    iat: Math.floor(Date.now() / 1000), // issued at
   };
-  return jwt.sign(payload, JWT_SECRET, { 
-    expiresIn: expiresIn
-  });
+  
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn,
+    algorithm: 'HS256',
+    issuer: 'FitnessMealPlanner',
+    audience: 'FitnessMealPlanner-Client'
+  } as SignOptions);
 }
 
 export function generateTokens(user: User): { accessToken: string, refreshToken: string } {
     const accessToken = generateToken(user, ACCESS_TOKEN_EXPIRY);
-    const refreshToken = generateToken(user, REFRESH_TOKEN_EXPIRY);
+    
+    // Generate refresh token with different secret if available
+    const refreshPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      type: 'refresh',
+      iat: Math.floor(Date.now() / 1000),
+    };
+    
+    const refreshToken = jwt.sign(refreshPayload, JWT_REFRESH_SECRET, {
+      expiresIn: REFRESH_TOKEN_EXPIRY,
+      algorithm: 'HS256',
+      issuer: 'FitnessMealPlanner',
+      audience: 'FitnessMealPlanner-Refresh'
+    } as SignOptions);
+    
     return { accessToken, refreshToken };
 }
 
 export function verifyToken(token: string): any {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return jwt.verify(token, JWT_SECRET, {
+      algorithms: ['HS256'],
+      issuer: 'FitnessMealPlanner',
+      audience: 'FitnessMealPlanner-Client'
+    });
   } catch (error) {
-    console.error('Token verification failed:', error);
-    throw error;
+    throw new Error('Invalid token');
+  }
+}
+
+export function verifyRefreshToken(token: string): any {
+  try {
+    return jwt.verify(token, JWT_REFRESH_SECRET, {
+      algorithms: ['HS256'],
+      issuer: 'FitnessMealPlanner',
+      audience: 'FitnessMealPlanner-Refresh'
+    });
+  } catch (error) {
+    throw new Error('Invalid refresh token');
   }
 }
 

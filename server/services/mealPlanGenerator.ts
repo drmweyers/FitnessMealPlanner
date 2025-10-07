@@ -43,7 +43,9 @@ export class MealPlanGeneratorService {
       dailyCalorieTarget, 
       days, 
       mealsPerDay, 
-      clientName, 
+      clientName,
+      maxIngredients,
+      generateMealPrep,
       ...filterParams  // Extract all filtering parameters
     } = params;
 
@@ -156,21 +158,32 @@ export class MealPlanGeneratorService {
           calorieFilteredRecipes = availableRecipes;
         }
 
-        // Select a random recipe, avoiding recent duplicates for variety
-        const recentRecipeIds = mealPlan.meals
-          .slice(-Math.min(mealsPerDay * 2, mealPlan.meals.length))
-          .map(meal => meal.recipe.id);
+        // NEW FEATURE: Ingredient-aware recipe selection
+        let selectedRecipe;
+        if (maxIngredients && maxIngredients > 0) {
+          selectedRecipe = this.selectRecipeWithIngredientLimit(
+            calorieFilteredRecipes, 
+            mealPlan.meals, 
+            maxIngredients, 
+            mealsPerDay
+          );
+        } else {
+          // Original logic: Select a random recipe, avoiding recent duplicates for variety
+          const recentRecipeIds = mealPlan.meals
+            .slice(-Math.min(mealsPerDay * 2, mealPlan.meals.length))
+            .map(meal => meal.recipe.id);
 
-        let selectedRecipes = calorieFilteredRecipes.filter(
-          recipe => !recentRecipeIds.includes(recipe.id)
-        );
+          let selectedRecipes = calorieFilteredRecipes.filter(
+            recipe => !recentRecipeIds.includes(recipe.id)
+          );
 
-        if (selectedRecipes.length === 0) {
-          selectedRecipes = calorieFilteredRecipes;
+          if (selectedRecipes.length === 0) {
+            selectedRecipes = calorieFilteredRecipes;
+          }
+
+          const randomIndex = Math.floor(Math.random() * selectedRecipes.length);
+          selectedRecipe = selectedRecipes[randomIndex];
         }
-
-        const randomIndex = Math.floor(Math.random() * selectedRecipes.length);
-        const selectedRecipe = selectedRecipes[randomIndex];
 
         // Use existing recipe image or fallback to placeholder
         const recipeDescription = selectedRecipe.description || `Delicious ${mealType} meal`;
@@ -203,6 +216,11 @@ export class MealPlanGeneratorService {
           },
         });
       }
+    }
+
+    // NEW FEATURE: Generate meal prep instructions if requested
+    if (generateMealPrep !== false) {
+      mealPlan.startOfWeekMealPrep = this.generateMealPrepInstructions(mealPlan);
     }
 
     return mealPlan;
@@ -253,6 +271,275 @@ export class MealPlanGeneratorService {
         fat: Math.round(totalNutrition.fat / mealPlan.days),
       },
     };
+  }
+
+  /**
+   * NEW FEATURE: Select recipe while respecting ingredient limits
+   * 
+   * This method prioritizes recipes that reuse ingredients already selected
+   * for the meal plan, helping to keep the total ingredient count within
+   * the specified limit.
+   */
+  private selectRecipeWithIngredientLimit(
+    availableRecipes: any[],
+    currentMeals: any[],
+    maxIngredients: number,
+    mealsPerDay: number
+  ): any {
+    // Get all ingredients already used in the meal plan
+    const usedIngredients = new Set<string>();
+    currentMeals.forEach(meal => {
+      if (meal.recipe.ingredientsJson) {
+        meal.recipe.ingredientsJson.forEach((ingredient: any) => {
+          usedIngredients.add(ingredient.name.toLowerCase());
+        });
+      }
+    });
+
+    // Calculate how many new ingredients we can still add
+    const remainingIngredientSlots = maxIngredients - usedIngredients.size;
+
+    // Score recipes based on ingredient reuse
+    const scoredRecipes = availableRecipes.map(recipe => {
+      const recipeIngredients = recipe.ingredientsJson || [];
+      let newIngredientsCount = 0;
+      let reuseScore = 0;
+
+      recipeIngredients.forEach((ingredient: any) => {
+        const ingredientName = ingredient.name.toLowerCase();
+        if (usedIngredients.has(ingredientName)) {
+          reuseScore += 2; // Bonus for reusing ingredients
+        } else {
+          newIngredientsCount += 1;
+        }
+      });
+
+      // Penalize recipes that would exceed ingredient limit
+      let penalty = 0;
+      if (newIngredientsCount > remainingIngredientSlots) {
+        penalty = (newIngredientsCount - remainingIngredientSlots) * 10;
+      }
+
+      return {
+        recipe,
+        score: reuseScore - newIngredientsCount - penalty,
+        newIngredientsCount
+      };
+    });
+
+    // Filter out recipes that would exceed the ingredient limit (unless no other options)
+    let validRecipes = scoredRecipes.filter(item => 
+      item.newIngredientsCount <= remainingIngredientSlots
+    );
+
+    // If no recipes fit the constraint, use all recipes (fallback)
+    if (validRecipes.length === 0) {
+      validRecipes = scoredRecipes;
+    }
+
+    // Sort by score (highest first) and add some randomness
+    validRecipes.sort((a, b) => b.score - a.score);
+    
+    // Select from top 30% to maintain variety while respecting constraints
+    const topCount = Math.max(1, Math.ceil(validRecipes.length * 0.3));
+    const topRecipes = validRecipes.slice(0, topCount);
+    
+    const randomIndex = Math.floor(Math.random() * topRecipes.length);
+    return topRecipes[randomIndex].recipe;
+  }
+
+  /**
+   * NEW FEATURE: Generate comprehensive meal prep instructions
+   * 
+   * This method analyzes all recipes in the meal plan to create:
+   * - A consolidated shopping list with total quantities
+   * - Step-by-step prep instructions for the start of the week
+   * - Storage instructions for prepped ingredients
+   */
+  private generateMealPrepInstructions(mealPlan: any): any {
+    // Consolidate all ingredients across the meal plan
+    const ingredientMap = new Map<string, {
+      totalAmount: number;
+      unit: string;
+      usedInRecipes: string[];
+    }>();
+
+    // Collect all ingredients from all meals
+    mealPlan.meals.forEach((meal: any) => {
+      if (meal.recipe.ingredientsJson) {
+        meal.recipe.ingredientsJson.forEach((ingredient: any) => {
+          const name = ingredient.name.toLowerCase();
+          const amount = parseFloat(ingredient.amount) || 0;
+          const unit = ingredient.unit || '';
+
+          if (ingredientMap.has(name)) {
+            const existing = ingredientMap.get(name)!;
+            existing.totalAmount += amount;
+            if (!existing.usedInRecipes.includes(meal.recipe.name)) {
+              existing.usedInRecipes.push(meal.recipe.name);
+            }
+          } else {
+            ingredientMap.set(name, {
+              totalAmount: amount,
+              unit: unit,
+              usedInRecipes: [meal.recipe.name]
+            });
+          }
+        });
+      }
+    });
+
+    // Generate shopping list
+    const shoppingList = Array.from(ingredientMap.entries()).map(([ingredient, data]) => ({
+      ingredient: this.capitalizeFirst(ingredient),
+      totalAmount: data.totalAmount > 0 ? data.totalAmount.toString() : '1',
+      unit: data.unit,
+      usedInRecipes: data.usedInRecipes
+    }));
+
+    // Generate prep instructions based on ingredient types
+    const prepInstructions = this.generatePrepSteps(shoppingList);
+
+    // Generate storage instructions
+    const storageInstructions = this.generateStorageInstructions(shoppingList);
+
+    // Calculate total prep time estimate
+    const totalPrepTime = prepInstructions.reduce((total, step) => total + step.estimatedTime, 0);
+
+    return {
+      totalPrepTime,
+      shoppingList,
+      prepInstructions,
+      storageInstructions
+    };
+  }
+
+  /**
+   * Generate step-by-step prep instructions based on ingredients
+   */
+  private generatePrepSteps(shoppingList: any[]): any[] {
+    const steps: any[] = [];
+    let stepNumber = 1;
+
+    // Categorize ingredients for efficient prep
+    const vegetables = shoppingList.filter(item => 
+      this.isVegetable(item.ingredient.toLowerCase())
+    );
+    const proteins = shoppingList.filter(item => 
+      this.isProtein(item.ingredient.toLowerCase())
+    );
+    const grains = shoppingList.filter(item => 
+      this.isGrain(item.ingredient.toLowerCase())
+    );
+
+    // Vegetable prep
+    if (vegetables.length > 0) {
+      steps.push({
+        step: stepNumber++,
+        instruction: `Wash and prep vegetables: ${vegetables.map(v => v.ingredient).join(', ')}. Chop, dice, or slice as needed for recipes.`,
+        estimatedTime: Math.max(15, vegetables.length * 5),
+        ingredients: vegetables.map(v => v.ingredient)
+      });
+    }
+
+    // Protein prep
+    if (proteins.length > 0) {
+      steps.push({
+        step: stepNumber++,
+        instruction: `Prepare proteins: ${proteins.map(p => p.ingredient).join(', ')}. Trim, portion, and marinate if needed.`,
+        estimatedTime: Math.max(20, proteins.length * 8),
+        ingredients: proteins.map(p => p.ingredient)
+      });
+    }
+
+    // Grain/legume prep
+    if (grains.length > 0) {
+      steps.push({
+        step: stepNumber++,
+        instruction: `Cook grains and legumes: ${grains.map(g => g.ingredient).join(', ')}. Cook according to package directions and store in portions.`,
+        estimatedTime: Math.max(25, grains.length * 10),
+        ingredients: grains.map(g => g.ingredient)
+      });
+    }
+
+    // Final storage step
+    steps.push({
+      step: stepNumber++,
+      instruction: "Label and store all prepped ingredients according to storage instructions. Clean prep area and wash containers.",
+      estimatedTime: 10,
+      ingredients: []
+    });
+
+    return steps;
+  }
+
+  /**
+   * Generate storage instructions for prepped ingredients
+   */
+  private generateStorageInstructions(shoppingList: any[]): any[] {
+    return shoppingList.map(item => {
+      const ingredient = item.ingredient.toLowerCase();
+      
+      if (this.isVegetable(ingredient)) {
+        return {
+          ingredient: item.ingredient,
+          method: "Refrigerate in airtight containers",
+          duration: "3-5 days"
+        };
+      } else if (this.isProtein(ingredient)) {
+        return {
+          ingredient: item.ingredient,
+          method: "Refrigerate (cooked) or freeze (raw portions)",
+          duration: "3-4 days refrigerated, 3 months frozen"
+        };
+      } else if (this.isGrain(ingredient)) {
+        return {
+          ingredient: item.ingredient,
+          method: "Refrigerate in sealed containers",
+          duration: "5-7 days"
+        };
+      } else if (this.isDairy(ingredient)) {
+        return {
+          ingredient: item.ingredient,
+          method: "Refrigerate",
+          duration: "Use by expiration date"
+        };
+      } else {
+        return {
+          ingredient: item.ingredient,
+          method: "Store in pantry or refrigerate as appropriate",
+          duration: "Follow package instructions"
+        };
+      }
+    });
+  }
+
+  // Helper methods for ingredient categorization
+  private isVegetable(ingredient: string): boolean {
+    const vegetables = ['tomato', 'onion', 'garlic', 'carrot', 'celery', 'bell pepper', 
+      'broccoli', 'spinach', 'lettuce', 'cucumber', 'zucchini', 'asparagus', 'mushroom', 
+      'kale', 'cabbage', 'cauliflower'];
+    return vegetables.some(veg => ingredient.includes(veg));
+  }
+
+  private isProtein(ingredient: string): boolean {
+    const proteins = ['chicken', 'beef', 'pork', 'fish', 'salmon', 'tuna', 'turkey', 
+      'tofu', 'tempeh', 'eggs', 'beans', 'lentils', 'chickpeas'];
+    return proteins.some(protein => ingredient.includes(protein));
+  }
+
+  private isGrain(ingredient: string): boolean {
+    const grains = ['rice', 'quinoa', 'oats', 'pasta', 'bread', 'barley', 'bulgur', 'farro'];
+    return grains.some(grain => ingredient.includes(grain));
+  }
+
+  private isDairy(ingredient: string): boolean {
+    const dairy = ['milk', 'cheese', 'yogurt', 'butter', 'cream'];
+    return dairy.some(item => ingredient.includes(item));
+  }
+
+  private capitalizeFirst(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 }
 

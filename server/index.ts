@@ -6,16 +6,46 @@
  * both development (Vite) and production (static) environments.
  */
 
+import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import session from 'express-session';
 import { recipeRouter } from './routes/recipes';
 import { mealPlanRouter } from './routes/mealPlan';
+import { mealPlanSharingRouter } from './routes/mealPlanSharing';
 import authRouter from './authRoutes';
+import invitationRouter from './invitationRoutes';
 import adminRouter from './routes/adminRoutes';
+import trainerRouter from './routes/trainerRoutes';
+import customerRouter from './routes/customerRoutes';
+import pdfRouter from './routes/pdf';
+import progressRouter from './routes/progressRoutes';
+import profileRouter from './routes/profileRoutes';
+import { favoritesRouter } from './routes/favorites';
+// import { engagementRouter } from './routes/engagement';
+import { trendingRouter } from './routes/trending';
+// Meal plan rating feature removed
+import { adminAnalyticsRouter } from './routes/adminAnalytics';
+import analyticsRouter from './routes/analytics';
+// import ratingsRouter from './routes/ratings'; // REMOVED - rating feature deleted
+import { progressSummariesRouter } from './routes/progressSummaries';
+import { emailPreferencesRouter } from './routes/emailPreferences';
+import { emailAnalyticsRouter } from './routes/emailAnalytics';
+import { groceryListsRouter } from './routes/groceryLists';
+import { schedulerService } from './services/schedulerService';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
+import passport from './passport-config';
+import { requireAuth, requireAdmin, requireTrainerOrAdmin, requireRole } from './middleware/auth';
+import { 
+  securityAnalysis, 
+  requestMonitoring, 
+  sanitizeAnalyticsData,
+  privacyProtection,
+  analyticsErrorHandler 
+} from './middleware/analyticsMiddleware';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,8 +64,32 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+
+app.use(express.json({ 
+  limit: '500kb' // Standard payload limit
+}));
+app.use(express.urlencoded({ 
+  limit: '1mb', 
+  extended: true 
+}));
+
 app.use(cookieParser(process.env.COOKIE_SECRET || 'your-secret-key'));
+
+// Session configuration for OAuth
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Security headers
 app.use((req, res, next) => {
@@ -56,6 +110,17 @@ app.get('/health', (req, res) => {
 // Global error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Error:', err);
+
+  // Handle payload too large errors
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      status: 'error',
+      code: 'PAYLOAD_TOO_LARGE',
+      message: 'Request data is too large. Please reduce the size of your request.',
+      limit: err.limit,
+      received: err.length
+    });
+  }
 
   // Handle JWT and auth errors
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
@@ -85,66 +150,156 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// API Routes
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// API Routes - These must be defined BEFORE ViteExpress
+// Public routes (no authentication required)
 app.use('/api/auth', authRouter);
-app.use('/api/recipes', recipeRouter);
-app.use('/api/admin', adminRouter);
-app.use('/api/meal-plan', mealPlanRouter);
 
-// Serve static files from the React app
+// Apply analytics middleware to all API routes
+app.use('/api', securityAnalysis);
+app.use('/api', requestMonitoring);
+app.use('/api', sanitizeAnalyticsData);
+app.use('/api', privacyProtection);
+
+// Invitations routes (mixed auth requirements - handled internally)
+app.use('/api/invitations', invitationRouter);
+app.use('/api/recipes', recipeRouter); // Remove requireAuth to allow public access to approved recipes
+// app.use('/api/ratings', ratingsRouter); // Recipe rating endpoints REMOVED - feature deleted
+app.use('/api/admin', requireAdmin, adminRouter);
+app.use('/api/trainer', requireTrainerOrAdmin, trainerRouter);
+// Meal plan rating routes removed - feature deleted
+app.use('/api/customer', requireRole('customer'), customerRouter);
+app.use('/api/meal-plan', requireAuth, mealPlanRouter);
+// Add sharing routes with mixed auth (some public, some require auth)
+app.use('/api/meal-plans', mealPlanSharingRouter);
+app.use('/api/pdf', requireAuth, pdfRouter);
+app.use('/api/progress', requireAuth, progressRouter);
+app.use('/api/profile', requireAuth, profileRouter);
+app.use('/api/grocery-lists', requireAuth, groceryListsRouter);
+
+// New analytics and engagement routes
+app.use('/api/favorites', favoritesRouter);
+// app.use('/api/analytics', engagementRouter);
+app.use('/api/analytics', analyticsRouter);
+app.use('/api/trending', trendingRouter);
+app.use('/api/admin/analytics', adminAnalyticsRouter);
+app.use('/api/progress-summaries', progressSummariesRouter);
+app.use('/api/email-preferences', emailPreferencesRouter);
+app.use('/api/email-analytics', emailAnalyticsRouter);
+
+// Apply analytics error handler
+app.use('/api', analyticsErrorHandler);
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+
+// Serve landing page and static public files
+app.use('/landing', express.static(path.join(__dirname, '../public/landing')));
+
+// Serve static files from the React app and handle routing
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
+  // CRITICAL: Serve React app assets (JS, CSS files) - must come FIRST
+  // React build output is in dist/public from Vite build
+  app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 
-  // The "catchall" handler: for any request that doesn't match one above,
-  // send back React's index.html file.
+  // Serve other React app static files (for legacy compatibility)
+  app.use('/css', express.static(path.join(__dirname, 'public/css')));
+  app.use('/js', express.static(path.join(__dirname, 'public/js')));
+
+  // Serve landing page assets
+  app.use(express.static(path.join(__dirname, '../public')));
+
+  // Route configuration
+  app.get('/', (req, res) => {
+    // Serve landing page as the homepage
+    res.sendFile(path.join(__dirname, '../public/landing/index.html'));
+  });
+
+  // Serve features page (both /features and /features.html)
+  app.get('/features', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/landing/features.html'));
+  });
+
+  app.get('/features.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/landing/features.html'));
+  });
+
+  app.get('/login', (req, res) => {
+    // Serve the React app for login
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+
+  app.get('/signup', (req, res) => {
+    // Serve the React app for signup
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+
+  app.get('/dashboard*', (req, res) => {
+    // Serve the React app for all dashboard routes
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+
+  app.get('/admin*', (req, res) => {
+    // Serve the React app for admin routes
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+
+  app.get('/trainer*', (req, res) => {
+    // Serve the React app for trainer routes
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+
+  app.get('/customer*', (req, res) => {
+    // Serve the React app for customer routes
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+
+  // Catch-all for other app routes
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    // If it's not an API route, static file, or landing page asset, serve the React app
+    if (!req.path.startsWith('/api') &&
+        !req.path.startsWith('/uploads') &&
+        !req.path.startsWith('/landing')) {
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+  });
+} else {
+  // Development mode routing
+  app.get('/', (req, res, next) => {
+    // If this is an API request or asset request, skip
+    if (req.path.startsWith('/api') || req.path.startsWith('/assets')) {
+      return next();
+    }
+    // In development, redirect to landing page
+    res.redirect('/landing/index.html');
   });
 }
 
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5000;
 
-// Start server with error handling
-const server = ViteExpress.listen(app, Number(port), () => {
-  console.log(`✅ Server is listening on port ${port}...`);
-  console.log(`🌐 Health check: http://localhost:${port}/health`);
-  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
-
-// Handle server startup errors
-server.on('error', (error: NodeJS.ErrnoException) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`\n❌ ERROR: Port ${port} is already in use!`);
-    console.error(`\n💡 Solutions:`);
-    console.error(`   1. Kill the process using the port:`);
-    console.error(`      Windows: powershell -Command "Stop-Process -Id (Get-NetTCPConnection -LocalPort ${port}).OwningProcess -Force"`);
-    console.error(`      Linux/Mac: lsof -ti:${port} | xargs kill -9`);
-    console.error(`   2. Use a different port:`);
-    console.error(`      PORT=5002 npm run dev`);
-    console.error(`   3. Run the cleanup script:`);
-    console.error(`      npm run cleanup-port\n`);
-    process.exit(1);
-  } else {
-    console.error(`\n❌ Server error:`, error);
-    process.exit(1);
-  }
-});
-
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('\n🛑 SIGTERM received, shutting down gracefully...');
-  server.close(() => {
-    console.log('✅ Server closed');
-    process.exit(0);
+// In development, ViteExpress handles the frontend, but API routes should be handled by Express first
+if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+  // Configure ViteExpress to use the vite.config.ts file
+  ViteExpress.config({
+    mode: 'development',
+    viteConfigFile: path.join(__dirname, '../vite.config.ts')
   });
-});
-
-process.on('SIGINT', () => {
-  console.log('\n🛑 SIGINT received, shutting down gracefully...');
-  server.close(() => {
-    console.log('✅ Server closed');
-    process.exit(0);
+  
+  ViteExpress.listen(app, Number(port), () => {
+    console.log(`Server is listening on port ${port}...`);
+    // Initialize scheduler service
+    schedulerService.initialize();
   });
-});
+} else {
+  app.listen(Number(port), () => {
+    console.log(`Server is listening on port ${port}...`);
+    // Initialize scheduler service
+    schedulerService.initialize();
+  });
+}
 
-export { app, server };
+export { app };

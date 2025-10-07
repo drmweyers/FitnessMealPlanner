@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { requireAuth } from './authRoutes';
+import { requireAuth } from './middleware/auth';
 import { storage } from './storage';
 import { users, recipes, personalizedRecipes } from '../shared/schema';
 

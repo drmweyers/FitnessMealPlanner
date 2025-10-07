@@ -1,0 +1,150 @@
+# Redis Alerting Rules for FitnessMealPlanner
+groups:
+  - name: redis.rules
+    rules:
+      # Redis instance down
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis instance is down"
+          description: "Redis instance {{ $labels.instance }} has been down for more than 30 seconds"
+          
+      # High memory usage
+      - alert: RedisHighMemoryUsage
+        expr: (redis_memory_used_bytes / redis_memory_max_bytes) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis instance {{ $labels.instance }} memory usage is {{ $value }}% (threshold: 80%)"
+          
+      # Critical memory usage
+      - alert: RedisCriticalMemoryUsage
+        expr: (redis_memory_used_bytes / redis_memory_max_bytes) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis critical memory usage"
+          description: "Redis instance {{ $labels.instance }} memory usage is {{ $value }}% (threshold: 95%)"
+          
+      # Low cache hit ratio
+      - alert: RedisLowHitRatio
+        expr: (rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))) * 100 < 80
+        for: 10m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis low cache hit ratio"
+          description: "Redis instance {{ $labels.instance }} cache hit ratio is {{ $value }}% (threshold: 80%)"
+          
+      # High number of connected clients
+      - alert: RedisHighConnectedClients
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis high number of connected clients"
+          description: "Redis instance {{ $labels.instance }} has {{ $value }} connected clients (threshold: 100)"
+          
+      # High number of slow queries
+      - alert: RedisSlowQueries
+        expr: redis_slowlog_length > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis slow queries detected"
+          description: "Redis instance {{ $labels.instance }} has {{ $value }} slow queries in the slowlog"
+          
+      # High network I/O
+      - alert: RedisHighNetworkIO
+        expr: rate(redis_net_input_bytes_total[5m]) + rate(redis_net_output_bytes_total[5m]) > 50000000  # 50MB/s
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis high network I/O"
+          description: "Redis instance {{ $labels.instance }} network I/O is {{ $value | humanize }}B/s"
+          
+      # Redis disconnected from Sentinel
+      - alert: RedisDisconnectedFromSentinel
+        expr: redis_sentinel_masters < 1
+        for: 1m
+        labels:
+          severity: critical
+          service: redis-sentinel
+        annotations:
+          summary: "Redis disconnected from Sentinel"
+          description: "Redis Sentinel {{ $labels.instance }} is not monitoring any masters"
+          
+      # High key eviction rate
+      - alert: RedisHighEvictionRate
+        expr: rate(redis_evicted_keys_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis high key eviction rate"
+          description: "Redis instance {{ $labels.instance }} is evicting {{ $value }} keys per second"
+          
+      # Application-specific alerts
+      - alert: RedisSessionStoreDown
+        expr: redis_db_keys{db="1"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+          component: session-store
+        annotations:
+          summary: "Redis session store appears empty"
+          description: "No sessions found in Redis database 1 - users may be getting logged out"
+          
+      - alert: RedisApplicationCacheEmpty
+        expr: redis_db_keys{db="2"} == 0
+        for: 10m
+        labels:
+          severity: info
+          service: redis
+          component: cache
+        annotations:
+          summary: "Application cache is empty"
+          description: "No cached data found in Redis database 2 - performance may be impacted"
+
+  - name: application.rules
+    rules:
+      # Application-level Redis performance
+      - alert: ApplicationHighRedisLatency
+        expr: histogram_quantile(0.95, rate(redis_command_duration_seconds_bucket[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: application
+          component: redis-client
+        annotations:
+          summary: "High Redis command latency"
+          description: "95th percentile Redis command latency is {{ $value }}s (threshold: 0.1s)"
+          
+      - alert: ApplicationRedisConnectionErrors
+        expr: rate(redis_client_connection_errors_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: critical
+          service: application
+          component: redis-client
+        annotations:
+          summary: "Redis connection errors detected"
+          description: "Application is experiencing {{ $value }} Redis connection errors per second"

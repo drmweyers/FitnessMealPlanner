@@ -2,6 +2,7 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
+import { Readable } from 'stream';
 import { s3Config } from './S3Config'; // Import the new centralized config
 
 // Create a single, reusable S3 client instance
@@ -32,13 +33,17 @@ export async function uploadImageToS3(imageUrl: string, recipeName: string): Pro
         const uniqueId = uuidv4().split('-')[0];
         const key = `recipes/${sanitizedName}_${uniqueId}.png`;
 
+        // Convert the fetch response body to a buffer for compatibility
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
         // Use the high-level Upload utility for efficient streaming
         const upload = new Upload({
             client: s3Client,
             params: {
                 Bucket: s3Config.bucketName,
                 Key: key,
-                Body: response.body, // Stream the body directly, no buffering
+                Body: buffer,
                 ContentType: 'image/png',
                 ACL: s3Config.isPublicBucket ? 'public-read' : undefined,
             },
@@ -58,7 +63,19 @@ export async function uploadImageToS3(imageUrl: string, recipeName: string): Pro
         return location;
 
     } catch (error) {
-        console.error(`Error uploading image to S3 for "${recipeName}":`, error);
-        throw new Error('Failed to upload recipe image to S3.');
+        console.error(`[S3Upload] Error uploading image to S3 for "${recipeName}":`, error);
+
+        // Provide more specific error messages
+        if (error instanceof Error) {
+            if (error.message.includes('fetch')) {
+                throw new Error(`Failed to download image from OpenAI: ${error.message}`);
+            } else if (error.message.includes('credentials')) {
+                throw new Error('S3 credentials are invalid or expired');
+            } else if (error.message.includes('bucket')) {
+                throw new Error(`S3 bucket '${s3Config.bucketName}' not found or not accessible`);
+            }
+        }
+
+        throw new Error(`Failed to upload recipe image to S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }

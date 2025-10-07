@@ -15,18 +15,7 @@ vi.mock('@/hooks/use-toast', () => ({
   }),
 }));
 
-// Mock Lucide React icons
-vi.mock('lucide-react', () => ({
-  Search: () => <div data-testid="search-icon" />,
-  Filter: () => <div data-testid="filter-icon" />,
-  Clock: () => <div data-testid="clock-icon" />,
-  Users: () => <div data-testid="users-icon" />,
-  CheckCircle: () => <div data-testid="check-icon" />,
-  Trash2: () => <div data-testid="trash-icon" />,
-  Eye: () => <div data-testid="eye-icon" />,
-  Calendar: () => <div data-testid="calendar-icon" />,
-  ChefHat: () => <div data-testid="chef-hat-icon" />,
-}));
+// Lucide React icons are mocked globally in setup.ts
 
 const mockRecipe: Recipe = {
   id: 'test-recipe-1',

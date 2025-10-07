@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-09-16T02:03:37.653Z",
+  "totalChecks": 49,
+  "passedChecks": 35,
+  "coveragePercentage": 71,
+  "status": "NEEDS IMPROVEMENT",
+  "errors": [],
+  "warnings": [
+    "⚠️  Missing test in test/e2e/mobile-full-app.spec.ts: \"should render mobile header with menu button\"",
+    "⚠️  Missing test in test/e2e/mobile-full-app.spec.ts: \"should render bottom navigation\"",
+    "⚠️  Missing test in test/e2e/mobile-full-app.spec.ts: \"should open side menu\"",
+    "⚠️  Missing test in test/e2e/mobile-full-app.spec.ts: \"should handle navigation item clicks\"",
+    "⚠️  Missing test in test/e2e/mobile-full-app.spec.ts: \"should handle logout functionality\"",
+    "⚠️  Missing test in test/e2e/mobile-full-app.spec.ts: \"should render grocery list with items\"",
+    "⚠️  Missing test in test/e2e/mobile-full-app.spec.ts: \"should handle item search functionality\"",
+    "⚠️  Missing test in test/e2e/mobile-full-app.spec.ts: \"should handle category filtering\"",
+    "⚠️  Missing test in test/e2e/mobile-full-app.spec.ts: \"should toggle item checked state\"",
+    "⚠️  Missing test in test/unit/mobile-comprehensive.test.tsx: \"should detect mobile viewport\"",
+    "⚠️  Missing test in test/unit/mobile-comprehensive.test.tsx: \"should handle viewport changes\"",
+    "⚠️  Missing device coverage: iPhone Pro Max",
+    "⚠️  Missing accessibility test: touch target size",
+    "⚠️  Missing accessibility test: screen reader support"
+  ],
+  "components": [
+    "client/src/components/MobileNavigation.tsx",
+    "client/src/components/MobileGroceryList.tsx",
+    "client/src/hooks/use-mobile.tsx"
+  ],
+  "testFiles": [
+    "test/unit/mobile-comprehensive.test.tsx",
+    "test/e2e/mobile-full-app.spec.ts",
+    "test/e2e/mobile-cross-device.spec.ts",
+    "test/e2e/mobile-performance.spec.ts"
+  ],
+  "devices": [
+    "iPhone SE",
+    "Samsung Galaxy S20",
+    "iPad Mini",
+    "iPad Pro"
+  ],
+  "performanceProfiles": [
+    "Low-end Mobile",
+    "Mid-range Mobile",
+    "High-end Mobile"
+  ]
+}

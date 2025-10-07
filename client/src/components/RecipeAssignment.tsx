@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
+import { ScrollArea } from "./ui/scroll-area";
+import { Label } from "./ui/label";
+import { useToast } from "../hooks/use-toast";
+import { useAuth } from "../contexts/AuthContext";
+import { apiRequest } from "../lib/queryClient";
 import type { Recipe, User } from "@shared/schema";
 
 interface RecipeAssignmentProps {
@@ -19,16 +20,28 @@ interface Customer extends User {
   hasRecipe?: boolean;
 }
 
-const fetchCustomers = async (recipeId: string): Promise<Customer[]> => {
-  const response = await apiRequest('GET', `/api/admin/customers?recipeId=${recipeId}`);
+const fetchCustomers = async (recipeId: string, userRole: string): Promise<Customer[]> => {
+  // Use different endpoints based on user role
+  const endpoint = userRole === 'admin' 
+    ? `/api/admin/customers?recipeId=${recipeId}`
+    : `/api/trainer/customers?recipeId=${recipeId}`;
+    
+  const response = await apiRequest('GET', endpoint);
   if (!response.ok) {
     throw new Error('Failed to fetch customers');
   }
-  return response.json();
+  
+  // Handle different response formats
+  const data = await response.json();
+  return userRole === 'admin' ? data : data.customers || [];
 };
 
-const assignRecipe = async (data: { recipeId: string; customerIds: string[] }) => {
-  const response = await apiRequest('POST', '/api/admin/assign-recipe', data);
+const assignRecipe = async (data: { recipeId: string; customerIds: string[]; userRole: string }) => {
+  // Both admin and trainer use the same endpoint since it supports requireTrainerOrAdmin
+  const response = await apiRequest('POST', '/api/admin/assign-recipe', {
+    recipeId: data.recipeId,
+    customerIds: data.customerIds
+  });
   if (!response.ok) {
     throw new Error('Failed to assign recipe');
   }
@@ -38,11 +51,12 @@ const assignRecipe = async (data: { recipeId: string; customerIds: string[] }) =
 export default function RecipeAssignment({ recipe }: RecipeAssignmentProps) {
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
-    queryKey: ['customers', recipe.id],
-    queryFn: () => fetchCustomers(recipe.id),
+    queryKey: ['customers', recipe.id, user?.role],
+    queryFn: () => fetchCustomers(recipe.id, user?.role || 'admin'),
   });
 
   // Initialize selected customers with those who already have the recipe
@@ -64,7 +78,7 @@ export default function RecipeAssignment({ recipe }: RecipeAssignmentProps) {
         description: data.message,
         variant: "default",
       });
-      queryClient.invalidateQueries({ queryKey: ['customers', recipe.id] });
+      queryClient.invalidateQueries({ queryKey: ['customers', recipe.id, user?.role] });
       queryClient.invalidateQueries({ queryKey: ['personalizedRecipes'] });
     },
     onError: (error: any) => {
@@ -109,6 +123,7 @@ export default function RecipeAssignment({ recipe }: RecipeAssignmentProps) {
     assignMutation.mutate({
       recipeId: recipe.id,
       customerIds: selectedCustomers,
+      userRole: user?.role || 'admin',
     });
   };
 

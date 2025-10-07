@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
+import { Card, CardContent } from "./ui/card";
 import type { Recipe } from "@shared/schema";
 import RecipeDetailModal from "./RecipeDetailModal";
 

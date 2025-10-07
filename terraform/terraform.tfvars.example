@@ -1,0 +1,65 @@
+# Terraform Variables Configuration for FitnessMealPlanner Redis Infrastructure
+# Copy this file to terraform.tfvars and update with your actual values
+
+# DigitalOcean Authentication
+digitalocean_token = "dop_v1_your_digitalocean_api_token_here"
+
+# Project Configuration
+project_name = "fitnessmealplanner"
+environment  = "production"
+region      = "tor1"  # Toronto region
+
+# Redis Configuration
+redis_cluster_size      = "db-s-1vcpu-1gb"  # Start small, scale as needed
+redis_version          = "7"                # Latest stable Redis version
+redis_node_count       = 1                  # Single node for production start
+redis_maxmemory_policy = "allkeys-lru"      # LRU eviction for cache behavior
+redis_persistence      = "rdb"              # RDB snapshots for persistence
+redis_ssl_enabled      = true               # Always use SSL in production
+
+# PostgreSQL Configuration
+postgres_cluster_size = "db-s-1vcpu-1gb"    # Match current setup
+postgres_version     = "16"                 # Current PostgreSQL version
+
+# Application Configuration
+app_instance_size  = "basic-xxs"            # Start with smallest for cost efficiency
+app_instance_count = 1                      # Single instance initially
+domain_name       = "evofitmeals.com"       # Your production domain
+
+# Monitoring and Alerting
+enable_monitoring       = true
+alert_email            = "admin@evofitmeals.com"  # Replace with your email
+cpu_alert_threshold    = 80                       # 80% CPU threshold
+memory_alert_threshold = 85                       # 85% memory threshold
+
+# Backup Configuration
+backup_retention_days = 7         # Keep backups for 1 week
+maintenance_day      = "sunday"    # Sunday maintenance window
+maintenance_hour     = "02:00"     # 2 AM maintenance time
+
+# Security Configuration
+vpc_ip_range     = "10.10.0.0/16"  # Private network range
+enable_firewall  = true            # Enable firewall protection
+
+# Container Registry
+registry_subscription_tier = "basic"  # Basic tier for production
+
+# Application Environment
+node_env                = "production"
+session_store_type     = "redis"      # Use Redis for sessions
+cache_enabled          = true        # Enable application caching
+redis_sentinel_enabled = false       # Disable Sentinel for single node
+
+# Resource Tagging
+common_tags = {
+  "managed-by" = "terraform"
+  "project"    = "fitnessmealplanner"
+  "team"       = "devops"
+  "cost-center" = "engineering"
+}
+
+additional_tags = {
+  "backup-policy" = "daily"
+  "monitoring"    = "enabled"
+  "ssl"          = "required"
+}

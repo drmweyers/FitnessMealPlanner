@@ -278,6 +278,9 @@ export async function generateImageForRecipe(recipe: GeneratedRecipe): Promise<s
   return imageUrl;
 }
 
+// Alias for backwards compatibility with routes
+export const parseNaturalLanguageMealPlan = parseNaturalLanguageForMealPlan;
+
 export async function parseNaturalLanguageForMealPlan(
   naturalLanguageInput: string,
 ): Promise<Partial<MealPlanGeneration>> {
@@ -326,3 +329,55 @@ ${JSON.stringify(mealPlanGenerationSchema.shape, null, 2)}
     throw new Error(`Failed to parse natural language for meal plan: ${errorMessage}`);
   }
 }
+
+// Additional function for parsing recipe requirements
+export async function parseNaturalLanguageRecipeRequirements(
+  naturalLanguageInput: string,
+): Promise<any> {
+  const systemPrompt = `
+You are an intelligent assistant for a recipe management application.
+A user has provided a natural language request to create or find recipes.
+Your task is to parse this request and extract the key parameters into a structured JSON object.
+The JSON object should include fields like:
+- mealTypes: array of strings (e.g., ["breakfast", "lunch", "dinner", "snack"])
+- dietaryTags: array of strings (e.g., ["vegetarian", "gluten-free", "keto"])
+- mainIngredientTags: array of strings (e.g., ["chicken", "beef", "tofu"])
+- maxPrepTime: number (in minutes)
+- targetCalories: number
+- fitnessGoal: string
+- description: string
+
+If a value isn't mentioned, omit the key from the JSON object.
+The output MUST be a single, valid JSON object. Do not include any other text or explanations.
+`;
+
+  const userPrompt = `Parse the following recipe requirements: "${naturalLanguageInput}"`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+
+    const parsedJson = parsePartialJson(content);
+    return parsedJson;
+
+  } catch (error) {
+    console.error("Full error in parseNaturalLanguageRecipeRequirements:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    throw new Error(`Failed to parse natural language for recipe requirements: ${errorMessage}`);
+  }
+}
+
+// Alias for image generation (referenced in mealPlanGenerator but not implemented)
+export const generateMealImage = generateImageForRecipe;

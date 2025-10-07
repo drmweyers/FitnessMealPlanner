@@ -1,0 +1,640 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\playwright.config.ts",
+    "rootDir": "C:/Users/drmwe/claude-workspace/FitnessMealPlanner/test/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/Users/drmwe/claude-workspace/FitnessMealPlanner/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/drmwe/claude-workspace/FitnessMealPlanner/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/drmwe/claude-workspace/FitnessMealPlanner/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/Users/drmwe/claude-workspace/FitnessMealPlanner/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/drmwe/claude-workspace/FitnessMealPlanner/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "C:/Users/drmwe/claude-workspace/FitnessMealPlanner/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.54.2",
+    "workers": 1,
+    "webServer": {
+      "command": "echo \"Please ensure Docker dev server is running: docker-compose --profile dev up -d\"",
+      "url": "http://localhost:4000",
+      "reuseExistingServer": true,
+      "stdout": "ignore",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "verify-quick-actions-removed.spec.ts",
+      "file": "verify-quick-actions-removed.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Verify Quick Actions Removed",
+          "file": "verify-quick-actions-removed.spec.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Quick Actions section should not exist in Customer Profile",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 31658,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts",
+                            "column": 16,
+                            "line": 23
+                          },
+                          "message": "Error: page.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/profile\"]')\u001b[22m\n\n\n  21 |     \n  22 |     // Navigate to profile page\n> 23 |     await page.click('a[href=\"/profile\"]');\n     |                ^\n  24 |     await page.waitForURL('**/profile');\n  25 |     \n  26 |     // Verify we're on the profile page\n    at C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts:23:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-11T16:09:16.820Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-1f06f-t-exist-in-Customer-Profile-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-1f06f-t-exist-in-Customer-Profile-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-1f06f-t-exist-in-Customer-Profile-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d66b19a44c0f5e0cdd0-32d2bff952d1910a717f",
+              "file": "verify-quick-actions-removed.spec.ts",
+              "line": 18,
+              "column": 3
+            },
+            {
+              "title": "Verify no Quick Actions remnants in page source",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 31424,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts",
+                            "column": 16,
+                            "line": 56
+                          },
+                          "message": "Error: page.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/profile\"]')\u001b[22m\n\n\n  54 |     \n  55 |     // Navigate to profile page\n> 56 |     await page.click('a[href=\"/profile\"]');\n     |                ^\n  57 |     await page.waitForURL('**/profile');\n  58 |     \n  59 |     // Get the page content\n    at C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts:56:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-11T16:09:50.094Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-86445-ons-remnants-in-page-source-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-86445-ons-remnants-in-page-source-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-86445-ons-remnants-in-page-source-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d66b19a44c0f5e0cdd0-783f82df45da6277e669",
+              "file": "verify-quick-actions-removed.spec.ts",
+              "line": 51,
+              "column": 3
+            },
+            {
+              "title": "Verify profile page loads correctly without Quick Actions",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 31628,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts",
+                            "column": 16,
+                            "line": 82
+                          },
+                          "message": "Error: page.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/profile\"]')\u001b[22m\n\n\n  80 |     \n  81 |     // Navigate to profile page\n> 82 |     await page.click('a[href=\"/profile\"]');\n     |                ^\n  83 |     await page.waitForURL('**/profile');\n  84 |     \n  85 |     // Verify page loads without errors\n    at C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts:82:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-11T16:10:23.065Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-b6620-ectly-without-Quick-Actions-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-b6620-ectly-without-Quick-Actions-chromium\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-b6620-ectly-without-Quick-Actions-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d66b19a44c0f5e0cdd0-bc2f1fdb0c9765da7c9a",
+              "file": "verify-quick-actions-removed.spec.ts",
+              "line": 77,
+              "column": 3
+            },
+            {
+              "title": "Quick Actions section should not exist in Customer Profile",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 4,
+                      "error": {
+                        "message": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\drmwe\\AppData\\Local\\ms-playwright\\firefox-1489\\firefox\\firefox.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+                        "stack": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\drmwe\\AppData\\Local\\ms-playwright\\firefox-1489\\firefox\\firefox.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\drmwe\\AppData\\Local\\ms-playwright\\firefox-1489\\firefox\\firefox.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-11T16:10:56.586Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d66b19a44c0f5e0cdd0-1dc4aa2882232d8f397c",
+              "file": "verify-quick-actions-removed.spec.ts",
+              "line": 18,
+              "column": 3
+            },
+            {
+              "title": "Verify no Quick Actions remnants in page source",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 4,
+                      "error": {
+                        "message": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\drmwe\\AppData\\Local\\ms-playwright\\firefox-1489\\firefox\\firefox.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+                        "stack": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\drmwe\\AppData\\Local\\ms-playwright\\firefox-1489\\firefox\\firefox.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\drmwe\\AppData\\Local\\ms-playwright\\firefox-1489\\firefox\\firefox.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-11T16:10:57.848Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d66b19a44c0f5e0cdd0-f4b5d8ebcc1a8b7313ef",
+              "file": "verify-quick-actions-removed.spec.ts",
+              "line": 51,
+              "column": 3
+            },
+            {
+              "title": "Verify profile page loads correctly without Quick Actions",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 4,
+                      "error": {
+                        "message": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\drmwe\\AppData\\Local\\ms-playwright\\firefox-1489\\firefox\\firefox.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+                        "stack": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\drmwe\\AppData\\Local\\ms-playwright\\firefox-1489\\firefox\\firefox.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserType.launch: Executable doesn't exist at C:\\Users\\drmwe\\AppData\\Local\\ms-playwright\\firefox-1489\\firefox\\firefox.exe\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-11T16:10:59.061Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d66b19a44c0f5e0cdd0-2017b7930aa662fb32c2",
+              "file": "verify-quick-actions-removed.spec.ts",
+              "line": 77,
+              "column": 3
+            },
+            {
+              "title": "Quick Actions section should not exist in Customer Profile",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30414,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts",
+                            "column": 16,
+                            "line": 23
+                          },
+                          "message": "Error: page.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/profile\"]')\u001b[22m\n\n\n  21 |     \n  22 |     // Navigate to profile page\n> 23 |     await page.click('a[href=\"/profile\"]');\n     |                ^\n  24 |     await page.waitForURL('**/profile');\n  25 |     \n  26 |     // Verify we're on the profile page\n    at C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts:23:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-11T16:11:00.265Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-1f06f-t-exist-in-Customer-Profile-webkit\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-1f06f-t-exist-in-Customer-Profile-webkit\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-1f06f-t-exist-in-Customer-Profile-webkit\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d66b19a44c0f5e0cdd0-7c02dbc2a4e8f46f5fc1",
+              "file": "verify-quick-actions-removed.spec.ts",
+              "line": 18,
+              "column": 3
+            },
+            {
+              "title": "Verify no Quick Actions remnants in page source",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30409,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts",
+                            "column": 16,
+                            "line": 56
+                          },
+                          "message": "Error: page.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/profile\"]')\u001b[22m\n\n\n  54 |     \n  55 |     // Navigate to profile page\n> 56 |     await page.click('a[href=\"/profile\"]');\n     |                ^\n  57 |     await page.waitForURL('**/profile');\n  58 |     \n  59 |     // Get the page content\n    at C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts:56:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-11T16:11:32.129Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-86445-ons-remnants-in-page-source-webkit\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-86445-ons-remnants-in-page-source-webkit\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-86445-ons-remnants-in-page-source-webkit\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d66b19a44c0f5e0cdd0-7f77e8ed1a8316605beb",
+              "file": "verify-quick-actions-removed.spec.ts",
+              "line": 51,
+              "column": 3
+            },
+            {
+              "title": "Verify profile page loads correctly without Quick Actions",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 30432,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts",
+                            "column": 16,
+                            "line": 82
+                          },
+                          "message": "Error: page.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/profile\"]')\u001b[22m\n\n\n  80 |     \n  81 |     // Navigate to profile page\n> 82 |     await page.click('a[href=\"/profile\"]');\n     |                ^\n  83 |     await page.waitForURL('**/profile');\n  84 |     \n  85 |     // Verify page loads without errors\n    at C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test\\e2e\\verify-quick-actions-removed.spec.ts:82:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-11T16:12:03.806Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-b6620-ectly-without-Quick-Actions-webkit\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-b6620-ectly-without-Quick-Actions-webkit\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\drmwe\\claude-workspace\\FitnessMealPlanner\\test-results\\verify-quick-actions-remov-b6620-ectly-without-Quick-Actions-webkit\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7d66b19a44c0f5e0cdd0-1cd5ac2de3635f35225f",
+              "file": "verify-quick-actions-removed.spec.ts",
+              "line": 77,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-09-11T16:09:15.331Z",
+    "duration": 199079.484,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 9,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "fitness-meal-planner-app",
+  "version": "1.0.0",
+  "description": "Standalone Fitness Meal Planning System with Recipe Management",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "docker-compose --profile dev up -d",
+    "stop": "docker-compose --profile dev down",
+    "logs": "docker logs mealplanner-dev -f",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "tsc -p server/tsconfig.json",
+    "generate:test-data": "tsx scripts/generate-test-data.js",
+    "enhance:test-data": "tsx scripts/enhance-test-data.js"
+  },
+  "dependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.11.5",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.3.2",
+    "drizzle-orm": "^0.29.3",
+    "ejs": "^3.1.10",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "postgres": "^3.4.3",
+    "puppeteer": "^23.1.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vite-express": "^0.14.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.20.12"
+  }
+}

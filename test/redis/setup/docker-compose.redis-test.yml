@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  redis-test:
+    image: redis:7-alpine
+    container_name: fitnessmealplanner-redis-test
+    ports:
+      - "6380:6379"
+    command: >
+      redis-server 
+      --maxmemory 256mb 
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - redis-test-network
+
+  redis-sentinel:
+    image: redis:7-alpine
+    container_name: fitnessmealplanner-redis-sentinel
+    ports:
+      - "26379:26379"
+    command: >
+      redis-sentinel /usr/local/etc/redis/sentinel.conf
+    volumes:
+      - ./sentinel.conf:/usr/local/etc/redis/sentinel.conf
+    depends_on:
+      - redis-test
+    networks:
+      - redis-test-network
+
+  redis-cluster-node1:
+    image: redis:7-alpine
+    container_name: redis-cluster-node1
+    ports:
+      - "7001:7001"
+    command: >
+      redis-server 
+      --port 7001 
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000
+    networks:
+      - redis-test-network
+
+  redis-cluster-node2:
+    image: redis:7-alpine
+    container_name: redis-cluster-node2
+    ports:
+      - "7002:7002"
+    command: >
+      redis-server 
+      --port 7002 
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000
+    networks:
+      - redis-test-network
+
+  redis-cluster-node3:
+    image: redis:7-alpine
+    container_name: redis-cluster-node3
+    ports:
+      - "7003:7003"
+    command: >
+      redis-server 
+      --port 7003 
+      --cluster-enabled yes 
+      --cluster-config-file nodes.conf 
+      --cluster-node-timeout 5000
+    networks:
+      - redis-test-network
+
+networks:
+  redis-test-network:
+    driver: bridge

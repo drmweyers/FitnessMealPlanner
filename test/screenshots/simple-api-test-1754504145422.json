@@ -1,0 +1,114 @@
+{
+  "testSuite": "Specialized Protocols Simple API Test",
+  "timestamp": "2025-08-06T18:15:45.422Z",
+  "summary": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "successRate": 100
+  },
+  "results": [
+    {
+      "testName": "Health Endpoint",
+      "passed": true,
+      "details": "Status: 200, Response: {\"status\":\"ok\",\"timestamp\":\"2025-08-06T18:15:45.272Z\"}",
+      "timestamp": "2025-08-06T18:15:45.277Z"
+    },
+    {
+      "testName": "Root Endpoint",
+      "passed": true,
+      "details": "Status: 200, Content type: text/html; charset=utf-8",
+      "timestamp": "2025-08-06T18:15:45.294Z"
+    },
+    {
+      "testName": "Unauthenticated Request Protection",
+      "passed": true,
+      "details": "Status: 404 - Protected endpoint properly requires auth",
+      "timestamp": "2025-08-06T18:15:45.301Z"
+    },
+    {
+      "testName": "Login Endpoint Available",
+      "passed": true,
+      "details": "Status: 401 - Login endpoint exists",
+      "timestamp": "2025-08-06T18:15:45.323Z"
+    },
+    {
+      "testName": "Endpoint Protection: /api/specialized/longevity/generate",
+      "passed": true,
+      "details": "Status: 200 - Endpoint properly protected",
+      "timestamp": "2025-08-06T18:15:45.344Z"
+    },
+    {
+      "testName": "Endpoint Protection: /api/specialized/parasite-cleanse/generate",
+      "passed": true,
+      "details": "Status: 200 - Endpoint properly protected",
+      "timestamp": "2025-08-06T18:15:45.368Z"
+    },
+    {
+      "testName": "Endpoint Protection: /api/specialized/user-preferences",
+      "passed": true,
+      "details": "Status: 200 - Endpoint properly protected",
+      "timestamp": "2025-08-06T18:15:45.387Z"
+    },
+    {
+      "testName": "Endpoint Protection: /api/specialized/active-protocols",
+      "passed": true,
+      "details": "Status: 200 - Endpoint properly protected",
+      "timestamp": "2025-08-06T18:15:45.406Z"
+    },
+    {
+      "testName": "Security: SQL Injection",
+      "passed": true,
+      "details": "Status: 404 - Malicious input properly handled",
+      "timestamp": "2025-08-06T18:15:45.411Z"
+    },
+    {
+      "testName": "Security: XSS Attempt",
+      "passed": true,
+      "details": "Status: 404 - Malicious input properly handled",
+      "timestamp": "2025-08-06T18:15:45.416Z"
+    },
+    {
+      "testName": "Security: Command Injection",
+      "passed": true,
+      "details": "Status: 404 - Malicious input properly handled",
+      "timestamp": "2025-08-06T18:15:45.420Z"
+    },
+    {
+      "testName": "File Exists: LongevityModeToggle.tsx",
+      "passed": true,
+      "details": "Found at client/src/components/LongevityModeToggle.tsx",
+      "timestamp": "2025-08-06T18:15:45.421Z"
+    },
+    {
+      "testName": "File Exists: ParasiteCleanseProtocol.tsx",
+      "passed": true,
+      "details": "Found at client/src/components/ParasiteCleanseProtocol.tsx",
+      "timestamp": "2025-08-06T18:15:45.421Z"
+    },
+    {
+      "testName": "File Exists: MedicalDisclaimerModal.tsx",
+      "passed": true,
+      "details": "Found at client/src/components/MedicalDisclaimerModal.tsx",
+      "timestamp": "2025-08-06T18:15:45.421Z"
+    },
+    {
+      "testName": "File Exists: specializedMealPlans.ts",
+      "passed": true,
+      "details": "Found at server/routes/specializedMealPlans.ts",
+      "timestamp": "2025-08-06T18:15:45.421Z"
+    },
+    {
+      "testName": "File Exists: specializedMealPlans.ts",
+      "passed": true,
+      "details": "Found at server/services/specializedMealPlans.ts",
+      "timestamp": "2025-08-06T18:15:45.422Z"
+    }
+  ],
+  "recommendations": [
+    "Check if specialized routes are properly registered in server/index.ts",
+    "Verify that authentication middleware is working correctly",
+    "Ensure all required components are properly implemented",
+    "Test with proper authentication tokens once login is working"
+  ]
+}

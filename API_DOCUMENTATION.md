@@ -1,24 +1,55 @@
-# FitMeal Pro API Documentation
+# FitnessMealPlanner API Documentation
 
 ## Base URL
-All API endpoints are relative to: `https://your-domain.replit.app/api`
+All API endpoints are relative to: `http://localhost:4000/api` (development) or `https://your-domain.com/api` (production)
 
 ## Authentication
 
-FitMeal Pro uses Replit OIDC authentication with session-based security. Users must authenticate through Replit before accessing protected endpoints.
+FitnessMealPlanner uses JWT-based authentication with Google OAuth support. Users must authenticate before accessing protected endpoints.
 
 ### Authentication Flow
-1. User visits the application
-2. Redirected to Replit OIDC provider
-3. After successful authentication, user is redirected back
-4. Session is established and stored in PostgreSQL
-5. Subsequent requests include session cookie
+1. User registers/logs in with email/password or Google OAuth
+2. Server validates credentials and generates JWT token
+3. Client stores JWT token in localStorage
+4. Client includes token in Authorization header for protected requests
+5. Server validates token on each request
+
+**Authorization Header Format:**
+```
+Authorization: Bearer <jwt-token>
+```
+
+### User Roles
+- **Admin**: Full system access, user management
+- **Trainer**: Recipe management, meal plan creation, customer management
+- **Customer**: View assigned meal plans, track progress
 
 ### Protected Endpoints
 Endpoints marked with 🔒 require authentication. Unauthenticated requests will receive:
 ```json
 {
+  "status": "error",
   "message": "Unauthorized"
+}
+```
+
+### Response Format
+All API responses follow this consistent format:
+
+**Success Response:**
+```json
+{
+  "status": "success",
+  "data": { /* response data */ }
+}
+```
+
+**Error Response:**
+```json
+{
+  "status": "error",
+  "message": "Human-readable error message",
+  "errors": [] // Optional validation errors
 }
 ```
 
@@ -479,10 +510,89 @@ curl -X POST "https://your-domain.replit.app/api/meal-plans/generate" \
 - `429` - Too Many Requests (rate limited)
 - `500` - Internal Server Error
 
+## Progress Tracking API
+
+The Progress Tracking API allows customers to monitor their fitness journey through body measurements, goal setting, and progress photos.
+
+### Body Measurements
+
+#### Get Customer Measurements
+🔒 `GET /progress/measurements` (Customer role required)
+
+Retrieves all body measurements for the authenticated customer with optional date filtering.
+
+**Query Parameters:**
+- `startDate` (optional): ISO date string to filter from (inclusive)
+- `endDate` (optional): ISO date string to filter to (inclusive)
+
+**Example Request:**
+```
+GET /progress/measurements?startDate=2024-01-01&endDate=2024-01-31
+Authorization: Bearer <jwt-token>
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "customerId": "123e4567-e89b-12d3-a456-426614174000",
+      "measurementDate": "2024-01-15T00:00:00.000Z",
+      "weightLbs": "175.5",
+      "bodyFatPercentage": "18.2",
+      "waistCm": "85.0",
+      "chestCm": "100.0",
+      "notes": "Feeling strong today!",
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+#### Create New Measurement
+🔒 `POST /progress/measurements` (Customer role required)
+
+Creates a new body measurement record for the authenticated customer.
+
+**Request Body:**
+```json
+{
+  "measurementDate": "2024-01-15T00:00:00.000Z",
+  "weightLbs": 175.5,
+  "bodyFatPercentage": 18.2,
+  "waistCm": 85.0,
+  "chestCm": 100.0,
+  "notes": "Monthly measurement"
+}
+```
+
+#### Update Goal Progress
+🔒 `PATCH /progress/goals/:id/progress` (Customer role required)
+
+Updates the current progress value for a goal. Automatically calculates progress percentage.
+
+**Request Body:**
+```json
+{
+  "currentValue": 170
+}
+```
+
+### Progress Photos
+
+#### Upload Progress Photo
+🔒 `POST /progress/photos` (Customer role required)
+
+Uploads a new progress photo with automatic S3 storage and image processing.
+
+**Request:** Multipart form data with photo file and metadata.
+
 ## Support
 
 For API support and questions:
-- Check the Developer Guide for implementation details
-- Review inline code comments for specific functionality
+- Check the [BEGINNER_DEVELOPER_GUIDE.md](./BEGINNER_DEVELOPER_GUIDE.md) for implementation details
+- Review [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) for data structure
 - Test endpoints using the provided examples
 - Monitor response times and error rates in production
