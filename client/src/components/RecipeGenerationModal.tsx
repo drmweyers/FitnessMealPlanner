@@ -12,12 +12,13 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { X, Wand2, Target } from "lucide-react";
+import { X, Wand2, Target, CheckCircle, Circle, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 
 interface RecipeGenerationModalProps {
   isOpen: boolean;
@@ -53,6 +54,16 @@ export default function RecipeGenerationModal({
   const [isGenerating, setIsGenerating] = useState(false);
   const [initialRecipeCount, setInitialRecipeCount] = useState<number | null>(null);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ==========================================
+  // 🔒 CRITICAL: RECIPE GENERATION PROGRESS BAR
+  // DO NOT DELETE - Required for user feedback during recipe generation
+  // Last updated: October 6, 2025
+  // Reference: RECIPE_GENERATION_FIX_PLAN.md
+  // Tracks REAL recipe save progress, not fake timer-based progress
+  // ==========================================
+  const [progressPercentage, setProgressPercentage] = useState(0);
+  const [recipesSaved, setRecipesSaved] = useState(0);
   const [formData, setFormData] = useState({
     fitnessGoal: "all",
     dailyCalorieTarget: 2000,
@@ -80,27 +91,44 @@ export default function RecipeGenerationModal({
     refetchInterval: isGenerating ? 5000 : false, // Poll every 5 seconds while generating
   });
 
+  // ==========================================
+  // REAL PROGRESS TRACKING - Updates based on actual recipe saves
+  // Replaces fake timer-based progress that caused 80% hang perception
+  // ==========================================
+  useEffect(() => {
+    if (isGenerating && stats && initialRecipeCount !== null) {
+      const currentTotal = stats.total || 0;
+      const savedCount = Math.max(0, currentTotal - initialRecipeCount);
+      const progress = (savedCount / recipeCount) * 100;
+
+      setRecipesSaved(savedCount);
+      setProgressPercentage(Math.min(progress, 100));
+    }
+  }, [stats, isGenerating, initialRecipeCount, recipeCount]);
+
   // Check for completion when stats change
   useEffect(() => {
     if (isGenerating && stats && initialRecipeCount !== null) {
       const currentTotal = stats.total;
       const expectedTotal = initialRecipeCount + recipeCount;
-      
+
       if (currentTotal >= expectedTotal) {
         // Generation completed
+        setProgressPercentage(100);
+        setRecipesSaved(recipeCount);
         setIsGenerating(false);
         setInitialRecipeCount(null);
-        
+
         toast({
           title: "Recipe Generation Completed!",
           description: `Successfully generated ${recipeCount} new recipes. The page will refresh to show them.`,
         });
-        
+
         // Close modal and refresh page
         setTimeout(() => {
           onClose();
         }, 1000);
-        
+
         setTimeout(() => {
           window.location.reload();
         }, 3000);
@@ -125,14 +153,15 @@ export default function RecipeGenerationModal({
     },
     onSuccess: (data) => {
       // Store initial count and start monitoring
+      handleGenerationStart();
       setInitialRecipeCount(stats?.total || 0);
       setIsGenerating(true);
-      
+
       toast({
         title: "Recipe Generation Started",
         description: data.message,
       });
-      
+
       // Refresh recipe lists
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/recipes"] });
@@ -191,6 +220,12 @@ export default function RecipeGenerationModal({
   // Handle quick generation with basic count
   const handleQuickGeneration = () => {
     generateRecipesFromContext.mutate({ count: recipeCount });
+  };
+
+  // Reset progress state when starting new generation
+  const handleGenerationStart = () => {
+    setProgressPercentage(0);
+    setRecipesSaved(0);
   };
 
   if (!isOpen) return null;
@@ -273,10 +308,10 @@ export default function RecipeGenerationModal({
                 <p className="text-gray-600 flex-1">Generate random recipes without specific criteria</p>
                 <Button
                   onClick={handleQuickGeneration}
-                  disabled={generateRecipesFromContext.isPending}
+                  disabled={generateRecipesFromContext.isPending || isGenerating}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  {generateRecipesFromContext.isPending ? (
+                  {generateRecipesFromContext.isPending || isGenerating ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                       Generating...
@@ -511,11 +546,11 @@ export default function RecipeGenerationModal({
               <div className="flex gap-3 pt-4">
                 <Button
                   onClick={handleContextGeneration}
-                  disabled={generateRecipesFromContext.isPending}
+                  disabled={generateRecipesFromContext.isPending || isGenerating}
                   className="flex-1 bg-primary hover:bg-primary/90"
                   size="lg"
                 >
-                  {generateRecipesFromContext.isPending ? (
+                  {generateRecipesFromContext.isPending || isGenerating ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                       Generating Targeted Recipes...
@@ -530,6 +565,72 @@ export default function RecipeGenerationModal({
               </div>
             </CardContent>
           </Card>
+
+          {/* Progress Bar Section */}
+          {isGenerating && (
+            <Card className="border-2 border-blue-500 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-700">
+                  <Clock className="h-5 w-5 animate-pulse" />
+                  Recipe Generation in Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Progress Bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-blue-700 font-medium">
+                    <span>Progress: {Math.round(progressPercentage)}%</span>
+                    <span>{recipesSaved}/{recipeCount} recipes saved</span>
+                  </div>
+                  <Progress value={progressPercentage} className="h-3" />
+                </div>
+
+                {/* Status Messages */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    {recipesSaved === recipeCount ? (
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <Circle className="h-5 w-5 animate-pulse text-blue-500 flex-shrink-0" />
+                    )}
+                    <span className={recipesSaved === recipeCount ? 'text-green-700 font-medium' : 'text-blue-700'}>
+                      {recipesSaved === 0
+                        ? "Initializing recipe generation..."
+                        : recipesSaved === recipeCount
+                        ? "✅ All recipes saved successfully!"
+                        : `Saving recipes to database (${recipesSaved}/${recipeCount})...`
+                      }
+                    </span>
+                  </div>
+
+                  {recipesSaved > 0 && recipesSaved < recipeCount && (
+                    <div className="flex items-center gap-3 text-sm text-blue-600">
+                      <Circle className="h-5 w-5 animate-pulse text-blue-400 flex-shrink-0" />
+                      <span>🖼️ Images generating in background (non-blocking)</span>
+                    </div>
+                  )}
+
+                  {recipesSaved === recipeCount && (
+                    <div className="flex items-center gap-3 text-sm text-green-600">
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <span>🖼️ Background image generation continues after modal closes</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-blue-200">
+                  <p className="text-sm text-blue-600">
+                    {recipesSaved === 0
+                      ? "Please wait while we generate your recipes. Recipes save in ~5 seconds each."
+                      : recipesSaved < recipeCount
+                      ? "Recipes are being saved quickly with placeholder images. AI images will generate in the background."
+                      : "Generation complete! The page will refresh to show your new recipes."
+                    }
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

@@ -103,8 +103,48 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const port = process.env.PORT || 5001;
-ViteExpress.listen(app, Number(port), () =>
-  console.log(`Server is listening on port ${port}...`),
-);
 
-export { app };
+// Start server with error handling
+const server = ViteExpress.listen(app, Number(port), () => {
+  console.log(`✅ Server is listening on port ${port}...`);
+  console.log(`🌐 Health check: http://localhost:${port}/health`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Handle server startup errors
+server.on('error', (error: NodeJS.ErrnoException) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`\n❌ ERROR: Port ${port} is already in use!`);
+    console.error(`\n💡 Solutions:`);
+    console.error(`   1. Kill the process using the port:`);
+    console.error(`      Windows: powershell -Command "Stop-Process -Id (Get-NetTCPConnection -LocalPort ${port}).OwningProcess -Force"`);
+    console.error(`      Linux/Mac: lsof -ti:${port} | xargs kill -9`);
+    console.error(`   2. Use a different port:`);
+    console.error(`      PORT=5002 npm run dev`);
+    console.error(`   3. Run the cleanup script:`);
+    console.error(`      npm run cleanup-port\n`);
+    process.exit(1);
+  } else {
+    console.error(`\n❌ Server error:`, error);
+    process.exit(1);
+  }
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('\n🛑 SIGTERM received, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('\n🛑 SIGINT received, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
+});
+
+export { app, server };

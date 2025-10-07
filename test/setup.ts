@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import React from 'react';
+
+// Add React to global scope for tests
+(global as any).React = React;
 
 // Mock fetch for API calls
 global.fetch = vi.fn();

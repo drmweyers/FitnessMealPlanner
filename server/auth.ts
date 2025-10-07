@@ -60,4 +60,9 @@ export function verifyToken(token: string): any {
     console.error('Token verification failed:', error);
     throw error;
   }
+}
+
+export function verifyRefreshToken(token: string): any {
+  // Refresh tokens use the same verification logic as access tokens
+  return verifyToken(token);
 } 

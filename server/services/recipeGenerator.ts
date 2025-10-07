@@ -34,6 +34,13 @@ interface GenerationResult {
   };
 }
 
+// Placeholder image URL for recipes without generated images
+const PLACEHOLDER_IMAGE_URL = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=600&fit=crop';
+
+// Timeout configuration
+const IMAGE_GENERATION_TIMEOUT_MS = 30000; // 30 seconds
+const IMAGE_UPLOAD_TIMEOUT_MS = 15000; // 15 seconds
+
 export class RecipeGeneratorService {
   private rateLimiter = new OpenAIRateLimiter();
   private cache = new RecipeCache();
@@ -106,18 +113,55 @@ export class RecipeGeneratorService {
     }
   }
 
-  private async processSingleRecipe(recipe: GeneratedRecipe): Promise<{ success: boolean; error?: string }> {
+  /**
+   * ==========================================
+   * Timeout utility methods
+   * ==========================================
+   */
+  private async timeoutAfter(ms: number): Promise<never> {
+    return new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms);
+    });
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+    try {
+      return await Promise.race([promise, this.timeoutAfter(ms)]);
+    } catch {
+      return fallback;
+    }
+  }
+
+  /**
+   * ==========================================
+   * 🔒 CRITICAL FIX: Non-blocking Recipe Processing
+   * Last updated: October 6, 2025
+   * Issue: Recipe generation was hanging at 80% due to blocking image generation
+   * Solution: Save recipes with placeholder images, generate actual images in background
+   * ==========================================
+   */
+  private async processSingleRecipe(recipe: GeneratedRecipe): Promise<{ success: boolean; error?: string; recipeId?: number }> {
     const validation = await this.validateRecipe(recipe);
     if (!validation.success) {
       return { success: false, error: validation.error };
     }
 
-    const imageUrl = await this.getOrGenerateImage(recipe);
-    if (!imageUrl) {
-      return { success: false, error: `Image generation failed for recipe: ${recipe.name}` };
+    // ✅ Use placeholder image immediately - DON'T WAIT for image generation
+    // This allows recipe to be saved quickly (< 5 seconds)
+    const imageUrl = PLACEHOLDER_IMAGE_URL;
+
+    // ✅ Save recipe to database FIRST
+    const result = await this.storeRecipe({ ...recipe, imageUrl });
+
+    // ✅ Generate actual image in BACKGROUND (fire and forget)
+    if (result.success && result.recipeId) {
+      this.generateImageInBackground(result.recipeId, recipe).catch(error => {
+        console.error(`Background image generation failed for ${recipe.name}:`, error);
+        // Don't fail the recipe - it's already saved with placeholder
+      });
     }
-    
-    return this.storeRecipe({ ...recipe, imageUrl });
+
+    return result;
   }
 
   private async validateRecipe(recipe: GeneratedRecipe): Promise<{ success: boolean; error?: string }> {
@@ -144,7 +188,7 @@ export class RecipeGeneratorService {
 
   private async storeRecipe(
     recipe: GeneratedRecipe
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; recipeId?: number }> {
     try {
       const recipeData: InsertRecipe = {
         name: recipe.name,
@@ -169,30 +213,67 @@ export class RecipeGeneratorService {
         isApproved: false,
       };
 
-      await storage.createRecipe(recipeData);
-      return { success: true };
+      const createdRecipe = await storage.createRecipe(recipeData);
+      return { success: true, recipeId: Number(createdRecipe.id) };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { success: false, error: `Failed to store recipe "${recipe.name}": ${message}` };
     }
   }
 
-  private async getOrGenerateImage(recipe: GeneratedRecipe): Promise<string | null> {
+  private async getOrGenerateImage(recipe: GeneratedRecipe): Promise<string> {
     const cacheKey = `image_s3_${recipe.name.replace(/\s/g, '_')}`;
-    
+
     try {
       return await this.cache.getOrSet(cacheKey, async () => {
-        const tempUrl = await generateImageForRecipe(recipe);
+        // Generate temp URL with timeout
+        const tempUrl = await this.withTimeout(
+          generateImageForRecipe(recipe),
+          IMAGE_GENERATION_TIMEOUT_MS,
+          null
+        );
+
         if (!tempUrl) {
-          throw new Error("Did not receive a temporary URL from OpenAI.");
+          console.log(`⚠️  Image generation timeout/failed for "${recipe.name}"`);
+          return PLACEHOLDER_IMAGE_URL;
         }
-        
-        const permanentUrl = await uploadImageToS3(tempUrl, recipe.name);
-        return permanentUrl;
+
+        // Upload to S3 with timeout
+        const permanentUrl = await this.withTimeout(
+          uploadImageToS3(tempUrl, recipe.name),
+          IMAGE_UPLOAD_TIMEOUT_MS,
+          PLACEHOLDER_IMAGE_URL
+        );
+
+        return permanentUrl || PLACEHOLDER_IMAGE_URL;
       });
     } catch (error) {
-      console.error(`Failed to generate and store image for "${recipe.name}":`, error);
-      return null;
+      console.error(`Failed to generate/upload image for "${recipe.name}":`, error);
+      return PLACEHOLDER_IMAGE_URL;
+    }
+  }
+
+  private async generateImageInBackground(recipeId: number, recipe: GeneratedRecipe): Promise<void> {
+    try {
+      console.log(`⏳ Generating image in background for "${recipe.name}" (ID: ${recipeId})...`);
+
+      // Generate image with timeout
+      const imageUrl = await this.withTimeout(
+        this.getOrGenerateImage(recipe),
+        IMAGE_GENERATION_TIMEOUT_MS + IMAGE_UPLOAD_TIMEOUT_MS,
+        PLACEHOLDER_IMAGE_URL
+      );
+
+      // Only update if we got a real image (not placeholder)
+      if (imageUrl && imageUrl !== PLACEHOLDER_IMAGE_URL) {
+        await storage.updateRecipe(String(recipeId), { imageUrl });
+        console.log(`✅ Background image generated for "${recipe.name}"`);
+      } else {
+        console.log(`ℹ️  Using placeholder image for "${recipe.name}"`);
+      }
+    } catch (error) {
+      console.error(`❌ Background image generation error for "${recipe.name}":`, error);
+      // Don't throw - recipe is already saved
     }
   }
 

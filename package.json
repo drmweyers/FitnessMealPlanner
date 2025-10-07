@@ -4,14 +4,24 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development tsx server/index.ts",
+    "dev": "npm run cleanup-port && cross-env NODE_ENV=development tsx server/index.ts",
+    "dev:no-cleanup": "cross-env NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "test": "vitest run",
+    "test:server": "vitest run test/unit/server-startup.test.ts",
+    "test:env": "vitest run test/infrastructure/environment-validation.test.ts",
+    "test:credentials": "vitest run test/infrastructure/credentials-expiration.test.ts",
+    "verify:env": "node scripts/verify-env-credentials.js",
     "check": "tsc",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "create-admin": "tsx scripts/createFirstAdmin.ts"
+    "db:start": "node scripts/start-database.js",
+    "db:stop": "docker-compose --profile dev down",
+    "db:status": "docker-compose --profile dev ps",
+    "create-admin": "tsx scripts/createFirstAdmin.ts",
+    "seed-test-accounts": "npx tsx server/db/seeds/test-accounts.ts",
+    "cleanup-port": "node scripts/cleanup-port.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.583.0",
@@ -106,6 +116,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.1",
     "@replit/vite-plugin-cartographer": "^0.2.7",
     "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
     "@tailwindcss/typography": "^0.5.15",

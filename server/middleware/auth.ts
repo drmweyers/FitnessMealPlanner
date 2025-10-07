@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
-import { verifyToken, generateTokens } from '../auth';
+import { verifyToken, verifyRefreshToken, generateTokens } from '../auth';
 import jwt from 'jsonwebtoken';
 
 // Extend Express Request type to include user and tokens
@@ -31,8 +31,8 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     }
 
     if (!token) {
-      return res.status(401).json({ 
-        error: 'Authentication required',
+      return res.status(401).json({
+        error: 'Authentication required. Please provide a valid token.',
         code: 'NO_TOKEN'
       });
     }
@@ -70,7 +70,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 
         try {
           // Verify refresh token
-          const refreshDecoded = await verifyToken(refreshToken);
+          const refreshDecoded = await verifyRefreshToken(refreshToken);
 
           // Validate refresh token in storage
           const storedToken = await storage.getRefreshToken(refreshToken);
@@ -175,11 +175,31 @@ export const requireAdmin = async (req: Request, res: Response, next: NextFuncti
 export const requireTrainerOrAdmin = async (req: Request, res: Response, next: NextFunction) => {
   await requireAuth(req, res, () => {
     if (req.user?.role !== 'admin' && req.user?.role !== 'trainer') {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: 'Trainer or admin access required',
         code: 'TRAINER_OR_ADMIN_REQUIRED'
       });
     }
     next();
   });
+};
+
+/**
+ * Factory function to create role-specific middleware
+ * @param role - The role required to access the route
+ * @returns Middleware function that checks for the specified role
+ */
+export const requireRole = (role: 'admin' | 'trainer' | 'customer') => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    await requireAuth(req, res, () => {
+      if (req.user?.role !== role) {
+        const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
+        return res.status(403).json({
+          error: `${capitalizedRole} access required`,
+          code: 'ROLE_REQUIRED'
+        });
+      }
+      next();
+    });
+  };
 }; 

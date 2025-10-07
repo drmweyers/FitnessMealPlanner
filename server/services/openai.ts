@@ -25,7 +25,7 @@ export interface GeneratedRecipe {
     carbs: number;
     fat: number;
   };
-  imageUrl: string;
+  imageUrl?: string; // Optional - added later by image generation
 }
 
 interface GenerateOptions {
@@ -217,8 +217,8 @@ Respond with { "recipes": [ ... ] }`;
         r.name &&
         r.ingredients &&
         r.instructions &&
-        r.estimatedNutrition &&
-        typeof r.imageUrl === 'string'
+        r.estimatedNutrition
+        // imageUrl is optional - added later by image generation service
       ) {
         validRecipes.push(r as GeneratedRecipe);
       } else {
