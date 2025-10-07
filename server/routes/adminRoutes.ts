@@ -7,6 +7,7 @@ import { enhancedRecipeGenerator } from '../services/recipeGeneratorEnhanced';
 import { recipeQualityScorer } from '../services/recipeQualityScorer';
 import { apiCostTracker } from '../services/apiCostTracker';
 import { progressTracker } from '../services/progressTracker';
+import { bmadRecipeService } from '../services/BMADRecipeService';
 import { eq, sql } from 'drizzle-orm';
 import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
 import { db } from '../db';
@@ -238,21 +239,140 @@ adminRouter.post('/generate-enhanced', requireAdmin, async (req, res) => {
   }
 });
 
+// BMAD multi-agent bulk recipe generation endpoint
+adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
+  try {
+    const {
+      count,
+      mealTypes,
+      dietaryRestrictions,
+      targetCalories,
+      mainIngredient,
+      fitnessGoal,
+      naturalLanguagePrompt,
+      maxPrepTime,
+      maxCalories,
+      minProtein,
+      maxProtein,
+      minCarbs,
+      maxCarbs,
+      minFat,
+      maxFat,
+      enableImageGeneration = true,
+      enableS3Upload = true,
+      enableNutritionValidation = true
+    } = req.body;
+
+    // Validate required count parameter
+    if (!count || count < 1 || count > 100) {
+      return res.status(400).json({
+        message: "Count is required and must be between 1 and 100 for BMAD generation"
+      });
+    }
+
+    console.log('[BMAD] Starting multi-agent recipe generation:', {
+      count,
+      enableImageGeneration,
+      enableS3Upload,
+      enableNutritionValidation
+    });
+
+    // Start BMAD generation in background
+    bmadRecipeService.generateRecipes({
+      count,
+      mealTypes,
+      dietaryRestrictions,
+      targetCalories,
+      mainIngredient,
+      fitnessGoal,
+      naturalLanguagePrompt,
+      maxPrepTime,
+      maxCalories,
+      minProtein,
+      maxProtein,
+      minCarbs,
+      maxCarbs,
+      minFat,
+      maxFat,
+      enableImageGeneration,
+      enableS3Upload,
+      enableNutritionValidation
+    }).then((result) => {
+      console.log('[BMAD] Generation complete:', {
+        batchId: result.batchId,
+        totalRecipes: result.savedRecipes.length,
+        imagesGenerated: result.imagesGenerated,
+        imagesUploaded: result.imagesUploaded,
+        duration: result.totalTime
+      });
+    }).catch((error) => {
+      console.error('[BMAD] Generation failed:', error);
+    });
+
+    res.status(202).json({
+      message: `BMAD multi-agent recipe generation started for ${count} recipes`,
+      count,
+      started: true,
+      features: {
+        nutritionValidation: enableNutritionValidation,
+        imageGeneration: enableImageGeneration,
+        s3Upload: enableS3Upload
+      }
+    });
+  } catch (error) {
+    console.error('[BMAD] Error starting generation:', error);
+    res.status(500).json({ message: "Failed to start BMAD recipe generation" });
+  }
+});
+
+// Get BMAD generation progress
+adminRouter.get('/bmad-progress/:batchId', requireAdmin, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    if (!batchId) {
+      return res.status(400).json({ error: 'Batch ID is required' });
+    }
+
+    const progress = await bmadRecipeService.getProgress(batchId);
+
+    if (!progress) {
+      return res.status(404).json({ error: 'Batch not found or has expired' });
+    }
+
+    res.json(progress);
+  } catch (error) {
+    console.error('[BMAD] Failed to fetch progress:', error);
+    res.status(500).json({ error: 'Failed to fetch BMAD progress' });
+  }
+});
+
+// Get BMAD agent metrics
+adminRouter.get('/bmad-metrics', requireAdmin, async (req, res) => {
+  try {
+    const metrics = bmadRecipeService.getMetrics();
+    res.json(metrics);
+  } catch (error) {
+    console.error('[BMAD] Failed to fetch metrics:', error);
+    res.status(500).json({ error: 'Failed to fetch BMAD metrics' });
+  }
+});
+
 // API usage statistics endpoint
 adminRouter.get('/api-usage', requireAdmin, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    
+
     const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = endDate ? new Date(endDate as string) : new Date();
-    
+
     const [usageStats, budgetStatus, topConsumers, costByModel] = await Promise.all([
       apiCostTracker.getUsageStats(start, end),
       apiCostTracker.getMonthlyBudgetStatus(),
       apiCostTracker.getTopConsumers(),
       apiCostTracker.getCostByModel(start)
     ]);
-    
+
     res.json({
       usageStats,
       budgetStatus,

@@ -13,7 +13,8 @@ export type AgentType =
   | 'validator'    // Nutritional Validator Agent
   | 'artist'       // Image Generation Agent
   | 'coordinator'  // Database Orchestrator Agent
-  | 'monitor';     // Progress Monitor Agent
+  | 'monitor'      // Progress Monitor Agent
+  | 'storage';     // Image Storage Agent (S3 Upload)
 
 /**
  * Agent status states
@@ -150,6 +151,7 @@ export interface ProgressState {
     artist: AgentStatus;
     coordinator: AgentStatus;
     monitor: AgentStatus;
+    storage: AgentStatus;
   };
 }
 
@@ -159,7 +161,7 @@ export interface ProgressState {
 export interface ErrorRecoveryStrategy {
   retryLimit: number;
   backoffMs: number;
-  fallbackBehavior: 'placeholder' | 'skip' | 'queue_manual_review';
+  fallbackBehavior: 'placeholder' | 'skip' | 'queue_manual_review' | 'preserve-original';
   notifyUser: boolean;
 }
 
