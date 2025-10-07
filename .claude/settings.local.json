@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx playwright:*)",
+      "Bash(chmod:*)",
+      "Bash(docker:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm run test:server:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(npm run cleanup-port:*)",
+      "Bash(tsx:*)",
+      "Bash(npx tsx:*)",
+      "Bash(node:*)",
+      "Bash(powershell:*)",
+      "Bash(docker-compose:*)",
+      "Bash(npm run seed-test-accounts:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(if [ -f .env ])",
+      "Bash(then grep -E \"AWS_|S3_\" .env)",
+      "Bash(else echo \"No .env file found\")",
+      "Bash(fi)",
+      "Bash(git log:*)",
+      "Bash(npx tsc:*)",
+      "Bash(cat:*)",
+      "Bash(git add:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
