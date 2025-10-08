@@ -272,14 +272,18 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
       });
     }
 
+    // Generate batch ID upfront so we can return it to the client
+    const batchId = `bmad_${nanoid(10)}`;
+
     console.log('[BMAD] Starting multi-agent recipe generation:', {
+      batchId,
       count,
       enableImageGeneration,
       enableS3Upload,
       enableNutritionValidation
     });
 
-    // Start BMAD generation in background
+    // Start BMAD generation in background (pass batchId via options)
     bmadRecipeService.generateRecipes({
       count,
       mealTypes,
@@ -313,6 +317,7 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
 
     res.status(202).json({
       message: `BMAD multi-agent recipe generation started for ${count} recipes`,
+      batchId,
       count,
       started: true,
       features: {

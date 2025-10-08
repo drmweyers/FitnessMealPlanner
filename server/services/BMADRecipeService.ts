@@ -21,6 +21,7 @@ interface BMADGenerationOptions extends GenerationOptions {
   enableS3Upload?: boolean;
   enableNutritionValidation?: boolean;
   progressCallback?: (progress: ProgressState) => void;
+  batchId?: string; // Optional: Allow passing batch ID from API
 }
 
 interface BMADGenerationResult extends ChunkedGenerationResult {
@@ -54,7 +55,8 @@ export class BMADRecipeService {
    * Generate recipes using BMAD multi-agent workflow
    */
   async generateRecipes(options: BMADGenerationOptions): Promise<BMADGenerationResult> {
-    const batchId = `bmad_${nanoid(10)}`;
+    // Use provided batchId or generate a new one
+    const batchId = options.batchId || `bmad_${nanoid(10)}`;
     const startTime = Date.now();
 
     try {

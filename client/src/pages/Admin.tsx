@@ -28,6 +28,7 @@ import PendingRecipesTable from "../components/PendingRecipesTable";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import BulkDeleteToolbar from "../components/BulkDeleteToolbar";
 import ExportJSONModal from "../components/ExportJSONModal";
+import BMADRecipeGenerator from "../components/BMADRecipeGenerator";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Admin() {
@@ -247,7 +248,7 @@ export default function Admin() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 sm:space-y-8">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4 sm:grid-cols-4">
           <TabsTrigger value="recipes" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-recipes">
             <i className="fas fa-utensils text-sm sm:text-base"></i>
             <span className="hidden sm:inline">Recipes</span>
@@ -257,6 +258,11 @@ export default function Admin() {
             <i className="fas fa-utensils text-sm sm:text-base"></i>
             <span className="hidden sm:inline">Meal Plan Generator</span>
             <span className="sm:hidden">Plans</span>
+          </TabsTrigger>
+          <TabsTrigger value="bmad" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-bmad">
+            <i className="fas fa-robot text-sm sm:text-base"></i>
+            <span className="hidden sm:inline">BMAD Generator</span>
+            <span className="sm:hidden">BMAD</span>
           </TabsTrigger>
           <TabsTrigger value="admin" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-admin">
             <i className="fas fa-cog text-sm sm:text-base"></i>
@@ -528,6 +534,10 @@ export default function Admin() {
 
         <TabsContent value="meal-plans">
           <MealPlanGenerator />
+        </TabsContent>
+
+        <TabsContent value="bmad">
+          <BMADRecipeGenerator />
         </TabsContent>
 
         <TabsContent value="admin">
