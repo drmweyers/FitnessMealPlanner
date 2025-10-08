@@ -8,6 +8,8 @@ import { recipeQualityScorer } from '../services/recipeQualityScorer';
 import { apiCostTracker } from '../services/apiCostTracker';
 import { progressTracker } from '../services/progressTracker';
 import { bmadRecipeService } from '../services/BMADRecipeService';
+import { sseManager } from '../services/utils/SSEManager';
+import { nanoid } from 'nanoid';
 import { eq, sql } from 'drizzle-orm';
 import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
 import { db } from '../db';
@@ -355,6 +357,46 @@ adminRouter.get('/bmad-metrics', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('[BMAD] Failed to fetch metrics:', error);
     res.status(500).json({ error: 'Failed to fetch BMAD metrics' });
+  }
+});
+
+// SSE endpoint for real-time BMAD progress updates
+adminRouter.get('/bmad-progress-stream/:batchId', requireAdmin, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    if (!batchId) {
+      return res.status(400).json({ error: 'Batch ID is required' });
+    }
+
+    // Generate unique client ID
+    const clientId = nanoid(10);
+
+    console.log(`[SSE] Client ${clientId} connecting for batch ${batchId}`);
+
+    // Register SSE client
+    sseManager.addClient(batchId, clientId, res);
+
+    // Send initial progress state if available
+    const currentProgress = await bmadRecipeService.getProgress(batchId);
+    if (currentProgress) {
+      sseManager.broadcastProgress(batchId, currentProgress);
+    }
+
+  } catch (error) {
+    console.error('[SSE] Failed to establish stream:', error);
+    res.status(500).json({ error: 'Failed to establish progress stream' });
+  }
+});
+
+// Get SSE connection statistics
+adminRouter.get('/bmad-sse-stats', requireAdmin, async (req, res) => {
+  try {
+    const stats = sseManager.getStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('[SSE] Failed to fetch SSE stats:', error);
+    res.status(500).json({ error: 'Failed to fetch SSE statistics' });
   }
 });
 

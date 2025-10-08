@@ -14,6 +14,7 @@ import { generateRecipeBatch, type GeneratedRecipe } from './openai';
 import type { GenerationOptions, ChunkedGenerationResult, ProgressState } from './agents/types';
 import { nanoid } from 'nanoid';
 import { storage } from '../storage';
+import { sseManager } from './utils/SSEManager';
 
 interface BMADGenerationOptions extends GenerationOptions {
   enableImageGeneration?: boolean;
@@ -106,9 +107,12 @@ export class BMADRecipeService {
           totalRecipes: strategy.totalRecipes
         });
 
-        if (options.progressCallback) {
-          const progress = await this.progressAgent.getProgress(batchId);
-          if (progress.success && progress.data) {
+        // Broadcast progress via SSE
+        const progress = await this.progressAgent.getProgress(batchId);
+        if (progress.success && progress.data) {
+          sseManager.broadcastProgress(batchId, progress.data);
+
+          if (options.progressCallback) {
             options.progressCallback(progress.data);
           }
         }
@@ -126,6 +130,12 @@ export class BMADRecipeService {
           let validatedRecipes = generatedRecipes;
           if (options.enableNutritionValidation !== false) {
             await this.progressAgent.updateProgress(batchId, { phase: 'validating' });
+
+            // Broadcast validation phase via SSE
+            const validationProgress = await this.progressAgent.getProgress(batchId);
+            if (validationProgress.success && validationProgress.data) {
+              sseManager.broadcastProgress(batchId, validationProgress.data);
+            }
 
             const validationResponse = await this.validatorAgent.process({
               recipes: generatedRecipes.map(r => ({
@@ -162,6 +172,12 @@ export class BMADRecipeService {
           // Step 3: Save to database
           await this.progressAgent.updateProgress(batchId, { phase: 'saving' });
 
+          // Broadcast saving phase via SSE
+          const savingProgress = await this.progressAgent.getProgress(batchId);
+          if (savingProgress.success && savingProgress.data) {
+            sseManager.broadcastProgress(batchId, savingProgress.data);
+          }
+
           const saveResponse = await this.databaseAgent.process({
             recipes: generatedRecipes.map(r => ({
               ...r,
@@ -181,6 +197,12 @@ export class BMADRecipeService {
           // Step 4: Image Generation (if enabled)
           if (options.enableImageGeneration !== false) {
             await this.progressAgent.updateProgress(batchId, { phase: 'imaging' });
+
+            // Broadcast imaging phase via SSE
+            const imagingProgress = await this.progressAgent.getProgress(batchId);
+            if (imagingProgress.success && imagingProgress.data) {
+              sseManager.broadcastProgress(batchId, imagingProgress.data);
+            }
 
             const imageResponse = await this.imageAgent.generateBatchImages(
               savedRecipes.map(r => ({
@@ -249,6 +271,11 @@ export class BMADRecipeService {
 
       const finalProgress = await this.progressAgent.getProgress(batchId);
 
+      // Broadcast completion via SSE
+      if (finalProgress.success && finalProgress.data) {
+        sseManager.broadcastProgress(batchId, finalProgress.data);
+      }
+
       const totalTime = Date.now() - startTime;
 
       const result: BMADGenerationResult = {
@@ -274,10 +301,21 @@ export class BMADRecipeService {
       console.log(`[BMAD] Images: ${imagesGenerated} generated, ${imagesUploaded} uploaded to S3`);
       console.log(`[BMAD] Nutrition: ${nutritionStats.validated} validated, ${nutritionStats.autoFixed} auto-fixed`);
 
+      // Broadcast final completion via SSE
+      sseManager.broadcastCompletion(batchId, result);
+
       return result;
 
     } catch (error) {
       console.error('[BMAD] Fatal error:', error);
+
+      // Broadcast error via SSE
+      sseManager.broadcastError(batchId, {
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        phase: 'error',
+        batchId
+      });
+
       throw error;
     } finally {
       // Shutdown agents
