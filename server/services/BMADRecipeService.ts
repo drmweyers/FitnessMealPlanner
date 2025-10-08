@@ -69,13 +69,16 @@ export class BMADRecipeService {
 
       // Phase 1: Strategy & Concept Generation
       console.log(`[BMAD] Phase 1: Generating strategy for ${options.count} recipes...`);
-      const strategyResponse = await this.conceptAgent.generateStrategy(options.count, batchId);
+      const conceptResponse = await this.conceptAgent.process({
+        options: { ...options, count: options.count },
+        batchId
+      }, batchId);
 
-      if (!strategyResponse.success || !strategyResponse.data) {
-        throw new Error(`Strategy generation failed: ${strategyResponse.error}`);
+      if (!conceptResponse.success || !conceptResponse.data) {
+        throw new Error(`Strategy generation failed: ${conceptResponse.error}`);
       }
 
-      const strategy = strategyResponse.data;
+      const strategy = conceptResponse.data.strategy;
 
       // Initialize progress tracking
       await this.progressAgent.initializeProgress(batchId, strategy.totalRecipes, strategy.chunks);
