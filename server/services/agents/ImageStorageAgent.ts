@@ -197,7 +197,7 @@ export class ImageStorageAgent extends BaseAgent {
     const metrics = this.getMetrics();
     return {
       totalUploaded: metrics.successCount,
-      averageUploadTime: metrics.averageOperationDuration,
+      averageUploadTime: metrics.averageDuration,
       successRate: metrics.successCount / (metrics.successCount + metrics.errorCount) || 0
     };
   }
