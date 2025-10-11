@@ -59,9 +59,12 @@ export class BMADCoordinator {
       // Phase 1: Concept Planning
       const { strategy, concepts } = await this.planGeneration(options, batchId, correlationId);
 
-      // Initialize progress tracking
+      // Initialize progress tracking (must be done before any progress updates)
       await this.progressMonitor.initializeProgress(strategy);
       this.activeBatches.add(batchId);
+
+      // Update agent status after initialization
+      await this.progressMonitor.updateAgentStatus(batchId, 'concept', 'complete');
 
       // For Phase 1, we return the strategy and concepts
       // Future phases will handle validation, image generation, and database persistence
@@ -108,17 +111,14 @@ export class BMADCoordinator {
 
   /**
    * Phase 1: Plan generation using Recipe Concept Agent
+   * Note: Progress updates are done in generateBulkRecipes after initialization
    */
   private async planGeneration(
     options: GenerationOptions,
     batchId: string,
     correlationId: string
   ): Promise<{ strategy: ChunkStrategy; concepts: RecipeConcept[] }> {
-    // Update progress
-    await this.progressMonitor.updatePhase(batchId, 'planning');
-    await this.progressMonitor.updateAgentStatus(batchId, 'concept', 'working');
-
-    // Generate concepts
+    // Generate concepts (progress will be updated after initialization in main method)
     const response = await this.conceptAgent.process(
       { options, batchId },
       correlationId
@@ -127,9 +127,6 @@ export class BMADCoordinator {
     if (!response.success || !response.data) {
       throw new Error(response.error || 'Concept generation failed');
     }
-
-    // Update progress
-    await this.progressMonitor.updateAgentStatus(batchId, 'concept', 'complete');
 
     return response.data as any;
   }

@@ -42,7 +42,7 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
     correlationId: string
   ): Promise<AgentResponse<DatabaseOutput>> {
     return this.executeWithMetrics(async () => {
-      const { validatedRecipes, batchId, imageUrl } = input as any;
+      const { recipes, validatedRecipes, batchId, imageUrl } = input as any;
       const defaultImageUrl = imageUrl || this.PLACEHOLDER_IMAGE_URL;
 
       const savedRecipes: SavedRecipeResult[] = [];
@@ -50,18 +50,32 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
       let totalSaved = 0;
       let totalFailed = 0;
 
-      // Process validated recipes only
-      const recipesToSave = validatedRecipes.filter(
-        (vr: ValidatedRecipe) => vr.validationPassed
-      );
+      // Process validated recipes if available, otherwise use all recipes
+      let recipesToSave = recipes || [];
+
+      if (validatedRecipes && Array.isArray(validatedRecipes)) {
+        // Filter valid recipes and track invalid ones as failures
+        const invalidRecipes = validatedRecipes.filter(
+          (vr: ValidatedRecipe) => !vr.validationPassed
+        );
+        recipesToSave = validatedRecipes.filter(
+          (vr: ValidatedRecipe) => vr.validationPassed
+        );
+
+        // Count invalid recipes as failures
+        totalFailed = invalidRecipes.length;
+        invalidRecipes.forEach(vr => {
+          errors.push(`Skipped invalid recipe: ${vr.recipe.name}`);
+        });
+      }
 
       if (recipesToSave.length === 0) {
         return {
           savedRecipes: [],
           batchId,
           totalSaved: 0,
-          totalFailed: validatedRecipes.length,
-          errors: ['No validated recipes to save']
+          totalFailed,
+          errors: errors.length > 0 ? errors : ['No validated recipes to save']
         } as DatabaseOutput;
       }
 

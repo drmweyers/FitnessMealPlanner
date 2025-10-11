@@ -112,8 +112,8 @@ export abstract class BaseAgent {
   ): Promise<AgentResponse<T>> {
     console.error(`[${this.agentType}] Error on attempt ${attempt + 1}:`, error.message);
 
-    // Check if we should retry
-    if (attempt < this.errorRecoveryStrategy.retryLimit) {
+    // Check if we should retry (retryLimit=2 means allow attempts 0,1,2 = 3 total)
+    if (attempt <= this.errorRecoveryStrategy.retryLimit) {
       // Wait with exponential backoff
       const backoffTime = this.errorRecoveryStrategy.backoffMs * Math.pow(2, attempt);
       await this.sleep(backoffTime);

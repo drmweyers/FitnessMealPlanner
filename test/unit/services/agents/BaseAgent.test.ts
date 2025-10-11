@@ -192,7 +192,7 @@ describe('BaseAgent', () => {
         0
       );
 
-      expect(operation).toHaveBeenCalledTimes(2); // 2 retries (retryLimit = 2)
+      expect(operation).toHaveBeenCalledTimes(3); // Initial + 2 retries (retryLimit = 2)
       expect(response.success).toBe(false);
     });
 
