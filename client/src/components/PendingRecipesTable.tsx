@@ -51,8 +51,8 @@ export default function PendingRecipesTable() {
         title: "Recipe Approved",
         description: "Recipe has been approved and is now visible to users.",
       });
-      // Force refetch with cache bypass
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      // Force refetch with cache bypass - invalidate ALL admin-recipes queries regardless of filters
+      queryClient.invalidateQueries({ queryKey: ["admin-recipes"] });
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
       // Trigger immediate refetch of pending recipes
@@ -98,8 +98,8 @@ export default function PendingRecipesTable() {
         title: "All Recipes Approved",
         description: `Successfully approved ${count} recipes. They are now visible to users.`,
       });
-      // Force refetch with cache bypass
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/recipes'] });
+      // Force refetch with cache bypass - invalidate ALL admin-recipes queries regardless of filters
+      queryClient.invalidateQueries({ queryKey: ["admin-recipes"] });
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
       // Trigger immediate refetch of pending recipes
