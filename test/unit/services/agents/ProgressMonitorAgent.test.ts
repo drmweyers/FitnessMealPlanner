@@ -285,6 +285,9 @@ describe('ProgressMonitorAgent', () => {
       await agent.initializeProgress(strategy);
       await agent.markComplete('old-batch');
 
+      // Wait 10ms to ensure batch age > 0ms
+      await new Promise(resolve => setTimeout(resolve, 10));
+
       // Cleanup batches older than 0ms (should cleanup immediately)
       const cleaned = await agent.cleanupOldBatches(0);
 
