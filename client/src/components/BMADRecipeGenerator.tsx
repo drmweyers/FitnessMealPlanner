@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
@@ -21,17 +22,57 @@ import {
   Image as ImageIcon,
   Database,
   Shield,
-  Activity
+  Activity,
+  Wand2,
+  ChefHat,
+  Target,
+  Users,
+  FileText,
+  Calendar,
+  Utensils,
+  Clock
 } from "lucide-react";
 import { z } from "zod";
 
 const bmadGenerationSchema = z.object({
+  // Recipe Generation
   count: z.number().min(1).max(100).default(10),
-  mealTypes: z.array(z.string()).optional(),
+
+  // Basic Information
+  planName: z.string().optional(),
+  clientName: z.string().optional(),
+  description: z.string().optional(),
+
+  // Meal Plan Parameters
   fitnessGoal: z.string().optional(),
-  targetCalories: z.number().optional(),
-  dietaryRestrictions: z.array(z.string()).optional(),
-  mainIngredient: z.string().optional(),
+  dailyCalorieTarget: z.number().optional(),
+  days: z.number().optional(),
+  mealsPerDay: z.number().optional(),
+  maxIngredients: z.number().optional(),
+  generateMealPrep: z.boolean().default(false),
+
+  // Meal Types (checkboxes for multiple selection)
+  mealTypes: z.array(z.string()).optional(),
+
+  // Filter Preferences
+  dietaryTag: z.string().optional(),
+  maxPrepTime: z.number().optional(),
+
+  // Daily total calorie goal for entire meal plan
+  dailyCalorieTarget: z.number().optional(),
+
+  // Maximum calories allowed per individual recipe
+  maxCalories: z.number().optional(),
+
+  // Nutrition Ranges
+  minProtein: z.number().optional(),
+  maxProtein: z.number().optional(),
+  minCarbs: z.number().optional(),
+  maxCarbs: z.number().optional(),
+  minFat: z.number().optional(),
+  maxFat: z.number().optional(),
+
+  // BMAD Features
   enableImageGeneration: z.boolean().default(true),
   enableS3Upload: z.boolean().default(true),
   enableNutritionValidation: z.boolean().default(true),
@@ -89,6 +130,8 @@ export default function BMADRecipeGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState<ProgressState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
+  const [showAdvancedForm, setShowAdvancedForm] = useState(true);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const form = useForm<BMADGeneration>({
@@ -101,13 +144,31 @@ export default function BMADRecipeGenerator() {
     },
   });
 
-  // Cleanup EventSource on unmount
+  // Check for active batch on mount and reconnect if found
+  useEffect(() => {
+    const activeBatchId = localStorage.getItem('bmad-active-batch');
+    if (activeBatchId) {
+      console.log('[BMAD] Found active batch on mount:', activeBatchId);
+      setIsGenerating(true);
+      connectToSSE(activeBatchId);
+
+      toast({
+        title: "Reconnecting to Generation",
+        description: "Resuming progress tracking for ongoing batch",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // connectToSSE and toast are stable, safe to omit from deps
+
+  // Cleanup EventSource on unmount (but DON'T clear localStorage)
   useEffect(() => {
     return () => {
       if (eventSourceRef.current) {
+        console.log('[BMAD] Component unmounting, closing SSE (server continues)');
         eventSourceRef.current.close();
         eventSourceRef.current = null;
       }
+      // Note: We DON'T clear localStorage here - batch may still be running
     };
   }, []);
 
@@ -115,6 +176,10 @@ export default function BMADRecipeGenerator() {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
+
+    // Store active batchId in localStorage for reconnection
+    localStorage.setItem('bmad-active-batch', batchId);
+    console.log('[BMAD] Stored active batch in localStorage:', batchId);
 
     const eventSource = new EventSource(
       `/api/admin/bmad-progress-stream/${batchId}`
@@ -137,6 +202,10 @@ export default function BMADRecipeGenerator() {
       console.log('[BMAD SSE] Complete:', result);
 
       setIsGenerating(false);
+
+      // Clear active batch from localStorage
+      localStorage.removeItem('bmad-active-batch');
+      console.log('[BMAD] Cleared active batch from localStorage');
 
       toast({
         title: "Generation Complete!",
@@ -162,6 +231,11 @@ export default function BMADRecipeGenerator() {
       }
 
       setIsGenerating(false);
+
+      // Clear active batch from localStorage on error
+      localStorage.removeItem('bmad-active-batch');
+      console.log('[BMAD] Cleared active batch from localStorage (error)');
+
       eventSource.close();
       eventSourceRef.current = null;
     });
@@ -170,6 +244,11 @@ export default function BMADRecipeGenerator() {
       console.error('[BMAD SSE] Connection error:', error);
       setError("SSE connection lost");
       setIsGenerating(false);
+
+      // Clear active batch from localStorage on connection error
+      localStorage.removeItem('bmad-active-batch');
+      console.log('[BMAD] Cleared active batch from localStorage (connection error)');
+
       eventSource.close();
       eventSourceRef.current = null;
     };
@@ -216,6 +295,80 @@ export default function BMADRecipeGenerator() {
         title: "Failed to Start Generation",
         description: error instanceof Error ? error.message : 'Unknown error',
       });
+    }
+  };
+
+  const handleQuickGenerate = (count: number) => {
+    // Auto-fill form with default fitness values and submit
+    form.setValue("count", count);
+    form.setValue("enableImageGeneration", true);
+    form.setValue("enableNutritionValidation", true);
+    form.setValue("enableS3Upload", true);
+
+    // Submit form immediately with current values
+    form.handleSubmit(onSubmit)();
+
+    toast({
+      title: "Quick Generation Started",
+      description: `Generating ${count} recipes with default fitness parameters`,
+    });
+  };
+
+  const handleDirectGeneration = async () => {
+    // Validate input
+    if (!naturalLanguageInput || naturalLanguageInput.trim().length === 0) {
+      toast({
+        title: "Input Required",
+        description: "Please enter a recipe generation prompt in natural language",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      setProgress(null);
+      setError(null);
+
+      // Call natural language generation endpoint
+      const response = await fetch('/api/admin/generate-from-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ prompt: naturalLanguageInput }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to start natural language generation');
+      }
+
+      const result = await response.json();
+
+      // Connect to SSE stream with returned batchId
+      connectToSSE(result.batchId);
+
+      toast({
+        title: "Natural Language Generation Started",
+        description: `Generating ${result.parsedParameters?.count || 10} recipes from your prompt`,
+      });
+
+      console.log('[Natural Language Generation] Started BMAD batch:', result);
+      console.log('[Natural Language Generation] Parsed parameters:', result.parsedParameters);
+
+    } catch (error) {
+      setIsGenerating(false);
+      setError(error instanceof Error ? error.message : 'Unknown error');
+
+      toast({
+        variant: "destructive",
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      console.error('[Natural Language Generation] Error:', error);
     }
   };
 
@@ -270,32 +423,142 @@ export default function BMADRecipeGenerator() {
       </CardHeader>
 
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Recipe Count */}
-            <FormField
-              control={form.control}
-              name="count"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of Recipes</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={100}
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                      disabled={isGenerating}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Generate 1-100 recipes in a single batch
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* AI Natural Language Interface */}
+        <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-blue-800">
+              <Wand2 className="h-5 w-5" />
+              AI-Powered Natural Language Generator
+            </CardTitle>
+            <CardDescription className="text-blue-600">
+              Describe your recipe requirements in plain English and let AI automatically fill the form below.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <Label htmlFor="natural-language" className="text-blue-700 font-medium">
+                Describe Your Recipe Requirements
+              </Label>
+              <Textarea
+                id="natural-language"
+                placeholder="Example: Generate 20 weight loss recipes with chicken, salmon, and vegetables. Target 400-500 calories each, high protein, low carb. Include breakfast, lunch, and dinner options..."
+                value={naturalLanguageInput}
+                onChange={(e) => setNaturalLanguageInput(e.target.value)}
+                className="min-h-[100px] border-blue-200 focus:border-blue-400 resize-none"
+                disabled={isGenerating}
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    toast({
+                      title: "Feature Coming Soon",
+                      description: "AI parsing will be available in a future update",
+                    });
+                  }}
+                  disabled={!naturalLanguageInput.trim() || isGenerating}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Parse with AI
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleDirectGeneration}
+                  disabled={!naturalLanguageInput.trim() || isGenerating}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  Generate Directly
+                </Button>
+              </div>
+              <div className="flex gap-3">
+                {showAdvancedForm && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAdvancedForm(false)}
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                  >
+                    Hide Advanced Form
+                  </Button>
+                )}
+                {!showAdvancedForm && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAdvancedForm(true)}
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                  >
+                    Show Advanced Form
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Bulk Generation */}
+        <Card className="mb-6 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-purple-800">
+              <Zap className="h-5 w-5" />
+              Quick Bulk Generation
+            </CardTitle>
+            <CardDescription className="text-purple-600">
+              Generate multiple recipes quickly with default fitness-focused parameters.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[10, 20, 30, 50].map((count) => (
+                <Button
+                  key={count}
+                  variant="outline"
+                  onClick={() => handleQuickGenerate(count)}
+                  disabled={isGenerating}
+                  className="h-20 flex flex-col items-center justify-center border-purple-300 hover:bg-purple-100 hover:border-purple-400 transition-all"
+                >
+                  <span className="text-2xl font-bold text-purple-700">{count}</span>
+                  <span className="text-xs text-purple-600">recipes</span>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {showAdvancedForm && (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Recipe Count */}
+              <FormField
+                control={form.control}
+                name="count"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      Number of Recipes
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={100}
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        disabled={isGenerating}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Generate 1-100 recipes in a single batch
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
             {/* Meal Types */}
             <FormField
@@ -303,7 +566,10 @@ export default function BMADRecipeGenerator() {
               name="mealTypes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Meal Types</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    <Utensils className="h-4 w-4" />
+                    Recipe Types to Generate
+                  </FormLabel>
                   <div className="grid grid-cols-2 gap-2">
                     {mealTypeOptions.map((option) => (
                       <div key={option.value} className="flex items-center space-x-2">
@@ -323,61 +589,502 @@ export default function BMADRecipeGenerator() {
                       </div>
                     ))}
                   </div>
+                  <FormDescription>
+                    Select one or more meal categories for recipe generation
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Fitness Goal */}
-            <FormField
-              control={form.control}
-              name="fitnessGoal"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fitness Goal (Optional)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isGenerating}
-                  >
+              {/* Plan Name */}
+              <FormField
+                control={form.control}
+                name="planName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Plan Name (Optional)
+                    </FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select fitness goal" />
-                      </SelectTrigger>
+                      <Input
+                        placeholder="e.g., Weight Loss Spring 2025"
+                        {...field}
+                        disabled={isGenerating}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {fitnessGoalOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Target Calories */}
-            <FormField
-              control={form.control}
-              name="targetCalories"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Target Calories (Optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="e.g., 500"
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+              {/* Fitness Goal */}
+              <FormField
+                control={form.control}
+                name="fitnessGoal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Fitness Goal (Optional)
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
                       disabled={isGenerating}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select fitness goal" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {fitnessGoalOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Daily Calorie Target */}
+              <FormField
+                control={form.control}
+                name="dailyCalorieTarget"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      Daily Calorie Goal (Optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="e.g., 2000"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                        disabled={isGenerating}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Total daily calorie target for complete meal plan (not per recipe)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Client Name */}
+              <FormField
+                control={form.control}
+                name="clientName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Client Name (Optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Sarah Johnson"
+                        {...field}
+                        disabled={isGenerating}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Description */}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Description (Optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Additional notes or requirements..."
+                        {...field}
+                        disabled={isGenerating}
+                        className="min-h-[80px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Number of Days */}
+              <FormField
+                control={form.control}
+                name="days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Number of Days (Optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="e.g., 7"
+                        min={1}
+                        max={30}
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                        disabled={isGenerating}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Meals Per Day */}
+              <FormField
+                control={form.control}
+                name="mealsPerDay"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Utensils className="h-4 w-4" />
+                      Meals Per Day (Optional)
+                    </FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      value={field.value?.toString()}
+                      disabled={isGenerating}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select meals per day" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {[2, 3, 4, 5, 6].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} meals
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Max Ingredients */}
+              <FormField
+                control={form.control}
+                name="maxIngredients"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <ChefHat className="h-4 w-4" />
+                      Max Ingredients (Optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="e.g., 20"
+                        min={5}
+                        max={50}
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                        disabled={isGenerating}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Limit total ingredient variety to simplify shopping
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Meal Prep Options */}
+              <FormField
+                control={form.control}
+                name="generateMealPrep"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isGenerating}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Generate Start-of-Week Meal Prep Instructions
+                      </FormLabel>
+                      <FormDescription>
+                        Include bulk preparation and storage guidance
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <Separator />
+
+              {/* Filter Preferences Section */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Filter Preferences</Label>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {/* Dietary Filter */}
+                  <FormField
+                    control={form.control}
+                    name="dietaryTag"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dietary</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={isGenerating}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Any" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="any">Any</SelectItem>
+                            <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                            <SelectItem value="vegan">Vegan</SelectItem>
+                            <SelectItem value="gluten_free">Gluten Free</SelectItem>
+                            <SelectItem value="dairy_free">Dairy Free</SelectItem>
+                            <SelectItem value="keto">Keto</SelectItem>
+                            <SelectItem value="paleo">Paleo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Max Prep Time */}
+                  <FormField
+                    control={form.control}
+                    name="maxPrepTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          Max Prep Time
+                        </FormLabel>
+                        <Select
+                          onValueChange={(value) => field.onChange(value === "any" ? undefined : parseInt(value))}
+                          value={field.value?.toString() || "any"}
+                          disabled={isGenerating}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Any" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="any">Any</SelectItem>
+                            <SelectItem value="15">15 min</SelectItem>
+                            <SelectItem value="30">30 min</SelectItem>
+                            <SelectItem value="45">45 min</SelectItem>
+                            <SelectItem value="60">60 min</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Max Calories */}
+                  <FormField
+                    control={form.control}
+                    name="maxCalories"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Activity className="h-4 w-4" />
+                          Max Calories
+                        </FormLabel>
+                        <Select
+                          onValueChange={(value) => field.onChange(value === "any" ? undefined : parseInt(value))}
+                          value={field.value?.toString() || "any"}
+                          disabled={isGenerating}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Any" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="any">Any</SelectItem>
+                            <SelectItem value="300">300 cal</SelectItem>
+                            <SelectItem value="500">500 cal</SelectItem>
+                            <SelectItem value="700">700 cal</SelectItem>
+                            <SelectItem value="1000">1000 cal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Nutrition Ranges Section */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Nutrition Ranges (Optional)</Label>
+
+                {/* Protein Range */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Protein (g)</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="minProtein"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Min</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 20"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              disabled={isGenerating}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormField
+                      control={form.control}
+                      name="maxProtein"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Max</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 40"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              disabled={isGenerating}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Carbs Range */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Carbohydrates (g)</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="minCarbs"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Min</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 30"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              disabled={isGenerating}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="maxCarbs"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Max</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 60"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              disabled={isGenerating}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Fat Range */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Fat (g)</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="minFat"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Min</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 10"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              disabled={isGenerating}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="maxFat"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Max</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 25"
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              disabled={isGenerating}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
 
             <Separator />
 
@@ -458,25 +1165,26 @@ export default function BMADRecipeGenerator() {
               />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating Recipes...
-                </>
-              ) : (
-                <>
-                  <Zap className="mr-2 h-4 w-4" />
-                  Start BMAD Generation
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Recipes...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="mr-2 h-4 w-4" />
+                    Start BMAD Generation
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+        )}
 
         {/* Progress Display */}
         {(isGenerating || progress) && (

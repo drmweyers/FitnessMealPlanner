@@ -180,6 +180,100 @@ git checkout main
 4. Test all user roles (Admin, Trainer, Customer)
 5. Verify responsive design on different screen sizes
 
+## 🤖 Continuous Testing Framework (NEW - January 2025)
+
+### Overview
+FitnessMealPlanner now includes a **Claude-powered autonomous testing agent** that continuously monitors and tests the Meal Plan Generator system without requiring external API calls.
+
+### Quick Start
+
+```bash
+# Verify setup
+npm run test:continuous:verify
+
+# Start continuous testing (5-minute intervals)
+npm run test:continuous
+
+# Start with auto-fix enabled
+npm run test:continuous:auto-fix
+```
+
+### Features
+- ✅ **Continuous Monitoring**: Runs tests at regular intervals (default: 5 minutes)
+- ✅ **Autonomous Bug Detection**: Automatically identifies failing tests
+- ✅ **Auto-Fix Integration**: Integrates with Autonomous Bug Fixer to fix issues automatically
+- ✅ **Comprehensive Reports**: Generates JSON reports saved to `test-results/continuous-testing/`
+- ✅ **No External APIs**: Runs entirely within Claude Code
+
+### Available Commands
+
+```bash
+# Basic continuous testing
+npm run test:continuous              # Default 5-minute interval
+npm run test:continuous 10           # Custom 10-minute interval
+
+# With auto-fix
+npm run test:continuous:auto-fix     # Enable autonomous bug fixing
+
+# Test specific categories
+npm run test:continuous:unit         # Unit tests only
+npm run test:continuous:integration  # Integration tests only
+npm run test:continuous:e2e          # E2E tests only
+npm run test:continuous:all          # All tests (not just meal plan)
+
+# Verify setup
+npm run test:continuous:verify       # Check prerequisites
+```
+
+### Test Coverage
+
+**Meal Plan Generator Tests:**
+- **Unit Tests** (55 planned): Service logic, AI parsing, nutrition optimization
+- **Integration Tests** (38 planned): API endpoints, workflows, assignments
+- **E2E Tests** (44 planned): Complete user flows, visual regression
+
+### Documentation
+
+- **Quick Start**: `test/continuous-testing/QUICK_START.md`
+- **Full Guide**: `test/continuous-testing/README.md`
+- **Technical Spec**: `test/continuous-testing/CLAUDE_SUBAGENT_SPEC.md`
+
+### Success Metrics
+
+**Target Metrics:**
+- ✅ Test Coverage: 95%+ for meal plan services
+- ✅ Success Rate: 98%+ tests passing
+- ✅ Auto-Fix Rate: 70%+ of failures fixed automatically
+- ✅ Detection Time: <5 minutes to detect new failures
+- ✅ Fix Time: <10 minutes from detection to verified fix
+
+### Integration with Autonomous Bug Fixer
+
+The continuous testing agent seamlessly integrates with the existing Autonomous Bug Fixer (`test/autonomous-fix/`):
+
+```bash
+# Auto-fix enabled: Tests → Detect → Fix → Verify → Repeat
+npm run test:continuous:auto-fix
+```
+
+**Fix Levels:**
+- **Level 1** (Auto-fix, no approval): Selector updates, import fixes, type errors
+- **Level 2** (Auto-fix after verification): UI bugs, API fixes, performance
+- **Level 3** (Requires approval): Auth logic, business logic, schema changes
+
+### Viewing Reports
+
+```bash
+# View latest report
+cat test-results/continuous-testing/latest.json | jq .
+
+# View summary only
+cat test-results/continuous-testing/latest.json | jq '.summary'
+
+# View recent failures
+cat test-results/continuous-testing/latest.json | jq '.testRuns[].failures[]'
+```
+
 ## Common Issues & Solutions
 - **Import errors**: Check Vite alias configuration is working
 - **Database connection**: Ensure PostgreSQL container is running

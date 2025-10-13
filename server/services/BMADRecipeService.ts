@@ -81,10 +81,17 @@ export class BMADRecipeService {
         throw new Error(`Strategy generation failed: ${conceptResponse.error}`);
       }
 
-      const strategy = conceptResponse.data.strategy;
+      const conceptData = conceptResponse.data as { strategy: any; concepts: any[] };
+      const strategy = conceptData.strategy;
 
       // Initialize progress tracking
-      await this.progressAgent.initializeProgress(batchId, strategy.totalRecipes, strategy.chunks);
+      await this.progressAgent.initializeProgress({
+        batchId,
+        totalRecipes: strategy.totalRecipes,
+        chunks: strategy.chunks,
+        chunkSize: strategy.chunkSize,
+        estimatedTime: strategy.estimatedTime
+      });
 
       // Phase 2: Generate recipes chunk by chunk
       console.log(`[BMAD] Phase 2: Generating ${strategy.totalRecipes} recipes in ${strategy.chunks} chunks...`);
@@ -104,18 +111,16 @@ export class BMADRecipeService {
         await this.progressAgent.updateProgress(batchId, {
           phase: 'generating',
           currentChunk: chunkIndex + 1,
-          totalChunks: strategy.chunks,
-          recipesCompleted: allSavedRecipes.length,
-          totalRecipes: strategy.totalRecipes
+          recipesCompleted: allSavedRecipes.length
         });
 
         // Broadcast progress via SSE
-        const progress = await this.progressAgent.getProgress(batchId);
-        if (progress.success && progress.data) {
-          sseManager.broadcastProgress(batchId, progress.data);
+        const progress = this.progressAgent.getProgress(batchId);
+        if (progress) {
+          sseManager.broadcastProgress(batchId, progress);
 
           if (options.progressCallback) {
-            options.progressCallback(progress.data);
+            options.progressCallback(progress);
           }
         }
 
@@ -134,9 +139,9 @@ export class BMADRecipeService {
             await this.progressAgent.updateProgress(batchId, { phase: 'validating' });
 
             // Broadcast validation phase via SSE
-            const validationProgress = await this.progressAgent.getProgress(batchId);
-            if (validationProgress.success && validationProgress.data) {
-              sseManager.broadcastProgress(batchId, validationProgress.data);
+            const validationProgress = this.progressAgent.getProgress(batchId);
+            if (validationProgress) {
+              sseManager.broadcastProgress(batchId, validationProgress);
             }
 
             const validationResponse = await this.validatorAgent.process({
@@ -165,9 +170,10 @@ export class BMADRecipeService {
             }, batchId);
 
             if (validationResponse.success && validationResponse.data) {
-              nutritionStats.validated += validationResponse.data.totalValidated;
-              nutritionStats.autoFixed += validationResponse.data.totalAutoFixed;
-              nutritionStats.failed += validationResponse.data.totalFailed;
+              const validationData = validationResponse.data as { totalValidated: number; totalAutoFixed: number; totalFailed: number };
+              nutritionStats.validated += validationData.totalValidated;
+              nutritionStats.autoFixed += validationData.totalAutoFixed;
+              nutritionStats.failed += validationData.totalFailed;
             }
           }
 
@@ -175,9 +181,9 @@ export class BMADRecipeService {
           await this.progressAgent.updateProgress(batchId, { phase: 'saving' });
 
           // Broadcast saving phase via SSE
-          const savingProgress = await this.progressAgent.getProgress(batchId);
-          if (savingProgress.success && savingProgress.data) {
-            sseManager.broadcastProgress(batchId, savingProgress.data);
+          const savingProgress = this.progressAgent.getProgress(batchId);
+          if (savingProgress) {
+            sseManager.broadcastProgress(batchId, savingProgress);
           }
 
           const saveResponse = await this.databaseAgent.process({
@@ -193,7 +199,8 @@ export class BMADRecipeService {
             continue;
           }
 
-          const savedRecipes = saveResponse.data.savedRecipes;
+          const saveData = saveResponse.data as { savedRecipes: any[] };
+          const savedRecipes = saveData.savedRecipes;
           allSavedRecipes.push(...savedRecipes);
 
           // Step 4: Image Generation (if enabled)
@@ -201,13 +208,13 @@ export class BMADRecipeService {
             await this.progressAgent.updateProgress(batchId, { phase: 'imaging' });
 
             // Broadcast imaging phase via SSE
-            const imagingProgress = await this.progressAgent.getProgress(batchId);
-            if (imagingProgress.success && imagingProgress.data) {
-              sseManager.broadcastProgress(batchId, imagingProgress.data);
+            const imagingProgress = this.progressAgent.getProgress(batchId);
+            if (imagingProgress) {
+              sseManager.broadcastProgress(batchId, imagingProgress);
             }
 
             const imageResponse = await this.imageAgent.generateBatchImages(
-              savedRecipes.map(r => ({
+              savedRecipes.map((r: any) => ({
                 recipeId: r.recipeId,
                 recipeName: r.recipeName,
                 recipeDescription: r.recipeDescription || '',
@@ -255,9 +262,9 @@ export class BMADRecipeService {
           });
 
           if (options.progressCallback) {
-            const progress = await this.progressAgent.getProgress(batchId);
-            if (progress.success && progress.data) {
-              options.progressCallback(progress.data);
+            const progress = this.progressAgent.getProgress(batchId);
+            if (progress) {
+              options.progressCallback(progress);
             }
           }
 
@@ -271,11 +278,11 @@ export class BMADRecipeService {
       // Phase 3: Finalize
       await this.progressAgent.updateProgress(batchId, { phase: 'complete' });
 
-      const finalProgress = await this.progressAgent.getProgress(batchId);
+      const finalProgress = this.progressAgent.getProgress(batchId);
 
       // Broadcast completion via SSE
-      if (finalProgress.success && finalProgress.data) {
-        sseManager.broadcastProgress(batchId, finalProgress.data);
+      if (finalProgress) {
+        sseManager.broadcastProgress(batchId, finalProgress);
       }
 
       const totalTime = Date.now() - startTime;
@@ -290,7 +297,7 @@ export class BMADRecipeService {
           recipe: r as any,
           imageMetadata: undefined
         })),
-        progressState: finalProgress.success ? finalProgress.data! : {} as ProgressState,
+        progressState: finalProgress || {} as ProgressState,
         totalTime,
         success: allSavedRecipes.length > 0,
         errors: allErrors,
@@ -336,8 +343,8 @@ export class BMADRecipeService {
    * Get progress for a batch
    */
   async getProgress(batchId: string): Promise<ProgressState | null> {
-    const response = await this.progressAgent.getProgress(batchId);
-    return response.success ? response.data || null : null;
+    const progress = this.progressAgent.getProgress(batchId);
+    return progress || null;
   }
 
   /**

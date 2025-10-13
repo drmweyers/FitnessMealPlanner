@@ -61,12 +61,12 @@ export class NutritionalValidatorAgent extends BaseAgent {
 
       for (let i = 0; i < recipes.length; i++) {
         const recipe = recipes[i];
-        const concept = concepts[i];
+        const concept = concepts[i];  // ✅ Get concept from concepts array by index
 
         if (!concept) {
           issues.push({
             recipeIndex: i,
-            recipeName: recipe.name,
+            recipeName: recipe.recipeName || recipe.name,
             field: 'concept',
             expected: 1,
             actual: 0,

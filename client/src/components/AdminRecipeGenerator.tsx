@@ -53,7 +53,7 @@ export default function AdminRecipeGenerator() {
   const queryClient = useQueryClient();
   const cacheManager = createCacheManager(queryClient);
   const [lastGeneration, setLastGeneration] = useState<GenerationResult | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false); // Always start expanded
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState<string>("");
   const [naturalLanguageInput, setNaturalLanguageInput] = useState<string>("");
@@ -241,13 +241,62 @@ export default function AdminRecipeGenerator() {
         parseNaturalLanguage.mutate(naturalLanguageInput);
     };
 
-    const handleDirectGeneration = () => {
-        // Basic direct generation logic - needs real AI integration
-        const data = {
-            count: 10, // Default count
-            ...parseNaturalLanguage.data, // Apply parsed data if available
-        };
-        generateRecipes.mutate(data);
+    const handleDirectGeneration = async () => {
+        // Validate input
+        if (!naturalLanguageInput || naturalLanguageInput.trim().length === 0) {
+            toast({
+                title: "Input Required",
+                description: "Please enter a recipe generation prompt in natural language",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        try {
+            setIsGenerating(true);
+            setProgressPercentage(0);
+            setGenerationProgress("Parsing natural language prompt...");
+
+            // Call new natural language generation endpoint
+            const response = await fetch('/api/admin/generate-from-prompt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ prompt: naturalLanguageInput }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to start natural language generation');
+            }
+
+            const result = await response.json();
+
+            toast({
+                title: "Natural Language Generation Started",
+                description: `Generating ${result.parsedParameters.count || 10} recipes from your prompt. Check the BMAD Generator tab for progress.`,
+            });
+
+            setGenerationProgress(`BMAD generation started: batchId ${result.batchId}`);
+
+            // Optionally redirect user to BMAD tab or show a link
+            console.log('[Natural Language Generation] Started BMAD batch:', result);
+            console.log('[Natural Language Generation] Parsed parameters:', result.parsedParameters);
+            console.log('[Natural Language Generation] Generation options:', result.generationOptions);
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            toast({
+                title: "Generation Failed",
+                description: errorMessage,
+                variant: "destructive",
+            });
+            console.error('[Natural Language Generation] Error:', error);
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
   const onSubmit = (data: AdminRecipeGeneration) => {

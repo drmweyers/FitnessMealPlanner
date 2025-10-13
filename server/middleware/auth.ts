@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
-import { verifyToken, generateTokens } from '../auth';
+import { verifyToken, verifyRefreshToken, generateTokens } from '../auth';
 import jwt from 'jsonwebtoken';
 
 /**
@@ -137,8 +137,8 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
         }
 
         try {
-          // Verify refresh token
-          const refreshDecoded = await verifyToken(refreshToken);
+          // Verify refresh token using the refresh token verification function
+          const refreshDecoded = await verifyRefreshToken(refreshToken);
 
           // Validate refresh token in storage
           const storedToken = await storage.getRefreshToken(refreshToken);
@@ -146,8 +146,8 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
             // Clear invalid cookies
             res.clearCookie('token');
             res.clearCookie('refreshToken');
-            
-            return res.status(401).json({ 
+
+            return res.status(401).json({
               error: 'Session expired. Please login again.',
               code: 'REFRESH_TOKEN_EXPIRED'
             });
@@ -155,7 +155,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 
           const user = await storage.getUser(refreshDecoded.id);
           if (!user) {
-            return res.status(401).json({ 
+            return res.status(401).json({
               error: 'Invalid user session',
               code: 'INVALID_SESSION'
             });

@@ -55,7 +55,7 @@ export class ProgressMonitorAgent extends BaseAgent {
   ): Promise<AgentResponse<ProgressState>> {
     return this.executeWithMetrics(async () => {
       const update = input as any;
-      const state = await this.updateProgress(update);
+      const state = await this.updateProgressInternal(update);
       return state as ProgressState;
     });
   }
@@ -80,7 +80,8 @@ export class ProgressMonitorAgent extends BaseAgent {
         validator: 'idle',
         artist: 'idle',
         coordinator: 'idle',
-        monitor: 'working'
+        monitor: 'working',
+        storage: 'idle'
       }
     };
 
@@ -91,9 +92,20 @@ export class ProgressMonitorAgent extends BaseAgent {
   }
 
   /**
-   * Update progress based on agent activities
+   * Public method to update progress (called by BMADRecipeService)
    */
-  private async updateProgress(update: ProgressUpdate): Promise<ProgressState> {
+  async updateProgress(batchId: string, updates: Partial<Omit<ProgressUpdate, 'batchId'>>): Promise<ProgressState> {
+    const update: ProgressUpdate = {
+      batchId,
+      ...updates
+    };
+    return this.updateProgressInternal(update);
+  }
+
+  /**
+   * Update progress based on agent activities (internal)
+   */
+  private async updateProgressInternal(update: ProgressUpdate): Promise<ProgressState> {
     const { batchId } = update;
     const currentState = this.progressStates.get(batchId);
 
@@ -185,7 +197,7 @@ export class ProgressMonitorAgent extends BaseAgent {
       recipesCompleted: (this.progressStates.get(batchId)?.recipesCompleted || 0) + recipesInChunk
     };
 
-    return this.updateProgress(update);
+    return this.updateProgressInternal(update);
   }
 
   /**
@@ -200,7 +212,7 @@ export class ProgressMonitorAgent extends BaseAgent {
       phase
     };
 
-    return this.updateProgress(update);
+    return this.updateProgressInternal(update);
   }
 
   /**
@@ -216,7 +228,7 @@ export class ProgressMonitorAgent extends BaseAgent {
       agentStatusUpdate: { agentType, status }
     };
 
-    return this.updateProgress(update);
+    return this.updateProgressInternal(update);
   }
 
   /**
@@ -229,7 +241,7 @@ export class ProgressMonitorAgent extends BaseAgent {
       phase: 'error'
     };
 
-    return this.updateProgress(update);
+    return this.updateProgressInternal(update);
   }
 
   /**
@@ -249,7 +261,8 @@ export class ProgressMonitorAgent extends BaseAgent {
       validator: 'complete',
       artist: 'complete',
       coordinator: 'complete',
-      monitor: 'complete'
+      monitor: 'complete',
+      storage: 'complete'
     };
 
     this.progressStates.set(batchId, state);

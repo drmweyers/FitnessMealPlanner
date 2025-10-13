@@ -100,9 +100,4 @@ export function verifyRefreshToken(token: string): any {
   } catch (error) {
     throw new Error('Invalid refresh token');
   }
-}
-
-export function verifyRefreshToken(token: string): any {
-  // Refresh tokens use the same verification logic as access tokens
-  return verifyToken(token);
 } 

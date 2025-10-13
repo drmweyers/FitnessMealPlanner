@@ -137,7 +137,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     null,
   );
   const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
-  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
+  const [showAdvancedForm, setShowAdvancedForm] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [forceRender, setForceRender] = useState(0);
