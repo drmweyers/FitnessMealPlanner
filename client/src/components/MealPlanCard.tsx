@@ -14,6 +14,19 @@ interface MealPlanCardProps {
 }
 
 function MealPlanCard({ mealPlan, onClick, onDelete }: MealPlanCardProps) {
+  // Early null check
+  if (!mealPlan) {
+    return (
+      <Card className="border-red-200 bg-red-50">
+        <CardContent className="p-4">
+          <div className="text-red-600">
+            <h3 className="font-semibold">Error: Invalid meal plan data</h3>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const { user } = useAuth();
   const {
     isValid,
@@ -25,11 +38,11 @@ function MealPlanCard({ mealPlan, onClick, onDelete }: MealPlanCardProps) {
     mealTypes,
     hasMeals
   } = useSafeMealPlan(mealPlan);
-  
+
   // Memoized date formatting
   const formattedAssignedDate = useMemo(() => {
-    return mealPlan.assignedAt ? new Date(mealPlan.assignedAt).toLocaleDateString() : null;
-  }, [mealPlan.assignedAt]);
+    return mealPlan?.assignedAt ? new Date(mealPlan.assignedAt).toLocaleDateString() : null;
+  }, [mealPlan?.assignedAt]);
 
   // Memoized calculations
   const mealStats = useMemo(() => {

@@ -9,9 +9,11 @@ import React from 'react';
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthContext } from '../../client/src/contexts/AuthContext';
 import MealPlanCard from '../../client/src/components/MealPlanCard';
 import MealPlanModal from '../../client/src/components/MealPlanModal';
 import type { CustomerMealPlan } from '@shared/schema';
+import type { AuthContextValue } from '../../client/src/types/auth';
 
 // Mock the UI components
 vi.mock('../../client/src/components/ui/card', () => ({
@@ -117,6 +119,22 @@ const createMealPlan = (overrides = {}): CustomerMealPlan => ({
   ...overrides,
 });
 
+// Mock auth context value
+const mockAuthValue: AuthContextValue = {
+  user: {
+    id: 'test-user-id',
+    email: 'test@example.com',
+    role: 'customer',
+    profilePicture: null,
+  },
+  isAuthenticated: true,
+  isLoading: false,
+  login: vi.fn(),
+  register: vi.fn(),
+  logout: vi.fn(),
+  updateProfile: vi.fn(),
+};
+
 const renderWithQuery = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -126,9 +144,11 @@ const renderWithQuery = (component: React.ReactElement) => {
   });
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
+    <AuthContext.Provider value={mockAuthValue}>
+      <QueryClientProvider client={queryClient}>
+        {component}
+      </QueryClientProvider>
+    </AuthContext.Provider>
   );
 };
 
