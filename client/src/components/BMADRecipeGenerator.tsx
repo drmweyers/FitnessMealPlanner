@@ -262,13 +262,24 @@ export default function BMADRecipeGenerator() {
     setError(null);
 
     try {
+      // Map frontend fields to backend's expected legacy field names for compatibility
+      const backendPayload = {
+        ...data,
+        // Backend expects dietaryRestrictions (array), we send dietaryTag (string)
+        dietaryRestrictions: data.dietaryTag ? [data.dietaryTag] : undefined,
+        // Backend expects targetCalories, we send dailyCalorieTarget
+        targetCalories: data.dailyCalorieTarget,
+        // Backend expects mainIngredient (we don't collect this anymore, so undefined)
+        mainIngredient: undefined,
+      };
+
       const response = await fetch('/api/admin/generate-bmad', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(data),
+        body: JSON.stringify(backendPayload),
       });
 
       if (!response.ok) {
@@ -917,7 +928,7 @@ export default function BMADRecipeGenerator() {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
                           <Activity className="h-4 w-4" />
-                          Max Calories
+                          Max Calories Per Recipe
                         </FormLabel>
                         <Select
                           onValueChange={(value) => field.onChange(value === "any" ? undefined : parseInt(value))}
@@ -937,6 +948,9 @@ export default function BMADRecipeGenerator() {
                             <SelectItem value="1000">1000 cal</SelectItem>
                           </SelectContent>
                         </Select>
+                        <FormDescription>
+                          Maximum allowed calories for each individual recipe
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
