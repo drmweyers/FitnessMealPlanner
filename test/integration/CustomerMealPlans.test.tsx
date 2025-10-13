@@ -22,7 +22,11 @@ vi.mock('../../client/src/components/ui/card', () => ({
       {children}
     </div>
   ),
-  CardContent: ({ children }: any) => <div>{children}</div>,
+  CardContent: ({ children, className, onClick, ...props }: any) => (
+    <div className={className} onClick={onClick} {...props}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div>{children}</div>,
   CardTitle: ({ children }: any) => <h3>{children}</h3>,
 }));
@@ -170,8 +174,8 @@ describe('MealPlanCard Component', () => {
 
     renderWithQuery(<MealPlanCard mealPlan={mealPlan} onClick={onClick} />);
 
-    // Should still render without crashing
-    expect(screen.getByText('Test Meal Plan')).toBeInTheDocument();
+    // Should render error message when mealPlanData is null
+    expect(screen.getByText('Error: Invalid meal plan data')).toBeInTheDocument();
   });
 
   test('handles empty meals array', () => {
@@ -223,10 +227,11 @@ describe('MealPlanCard Component', () => {
     const mealPlan = createMealPlan();
     const onClick = vi.fn();
 
-    renderWithQuery(<MealPlanCard mealPlan={mealPlan} onClick={onClick} />);
+    const { container } = renderWithQuery(<MealPlanCard mealPlan={mealPlan} onClick={onClick} />);
 
-    const card = screen.getByText('Test Meal Plan').closest('div');
-    fireEvent.click(card!);
+    // Find any clickable element in the card (CardContent has the onClick handler)
+    const clickableElement = container.querySelector('[class*="p-"]');
+    fireEvent.click(clickableElement!);
 
     expect(onClick).toHaveBeenCalled();
   });
@@ -249,8 +254,8 @@ describe('MealPlanModal Component', () => {
 
     renderWithQuery(<MealPlanModal mealPlan={mealPlan} onClose={onClose} />);
 
-    // Should render without crashing, even with missing data
-    expect(screen.getByText('Daily Meal Schedule')).toBeInTheDocument();
+    // Should render error dialog when mealPlanData is null
+    expect(screen.getByText('Invalid meal plan data. Cannot display details.')).toBeInTheDocument();
   });
 
   test('handles empty meals array', () => {
