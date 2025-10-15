@@ -110,7 +110,8 @@
       "Bash(docker cp:*)",
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" npx tsx server/scripts/seed-test-measurements.ts)",
       "Bash(PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d fitnessmealplanner -f server/scripts/insert-test-measurements.sql)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": [],
