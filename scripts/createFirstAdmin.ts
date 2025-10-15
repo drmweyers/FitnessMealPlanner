@@ -25,8 +25,12 @@ if (existsSync(certPath)) {
   }
 }
 
+/**
+ * Official Test Admin Credentials
+ * NEVER CHANGE - Must match test-accounts.ts
+ */
 const ADMIN_EMAIL = "admin@fitmeal.pro";
-const ADMIN_PASSWORD = "Admin123!@#";
+const ADMIN_PASSWORD = "AdminPass123";
 
 async function createFirstAdmin() {
   console.log("--- FitMeal Pro Admin Setup ---");

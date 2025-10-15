@@ -44,3 +44,4 @@ fitnessmealplanner-prod.tar
 app-spec*.yaml
 token.txt
 .env.local
+coverage/

@@ -23,6 +23,22 @@ interface MealPlanModalProps {
 export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps) {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
 
+  // Early null check
+  if (!mealPlan) {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Error</DialogTitle>
+          </DialogHeader>
+          <div className="text-red-600 p-4">
+            <p>Invalid meal plan data. Cannot display details.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const {
     isValid,
     validMeals,

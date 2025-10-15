@@ -6,20 +6,19 @@
  * instead of random recipe generation.
  */
 
-import React, { useState, useEffect, useRef } from "react";
-import { Button } from "./ui/button";
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { useToast } from "../hooks/use-toast";
-import { apiRequest } from "../lib/queryClient";
-import { isUnauthorizedError } from "../lib/authUtils";
-import { X, Wand2, Target } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import RecipeGenerationProgress from "./RecipeGenerationProgress";
-import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { X, Wand2, Target, CheckCircle, Circle, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 
 interface RecipeGenerationModalProps {
   isOpen: boolean;
@@ -50,11 +49,21 @@ export default function RecipeGenerationModal({
 }: RecipeGenerationModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, setLocation] = useLocation();
   const [recipeCount, setRecipeCount] = useState(10);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+  const [initialRecipeCount, setInitialRecipeCount] = useState<number | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ==========================================
+  // 🔒 CRITICAL: RECIPE GENERATION PROGRESS BAR
+  // DO NOT DELETE - Required for user feedback during recipe generation
+  // Last updated: October 6, 2025
+  // Reference: RECIPE_GENERATION_FIX_PLAN.md
+  // Tracks REAL recipe save progress, not fake timer-based progress
+  // ==========================================
+  const [progressPercentage, setProgressPercentage] = useState(0);
+  const [recipesSaved, setRecipesSaved] = useState(0);
   const [formData, setFormData] = useState({
     fitnessGoal: "all",
     dailyCalorieTarget: 2000,
@@ -71,43 +80,70 @@ export default function RecipeGenerationModal({
     maxFat: undefined as number | undefined,
   });
 
-  // Handle generation completion
-  const handleGenerationComplete = (results: any) => {
-    setIsGenerating(false);
-    setCurrentJobId(null);
-    
-    toast({
-      title: "Recipe Generation Completed!",
-      description: `Successfully generated ${results.success} recipes${results.failed > 0 ? ` (${results.failed} failed)` : ''}. Refreshing page to show new recipes.`,
-    });
-    
-    // Invalidate queries to refresh data
-    queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
-    queryClient.invalidateQueries({ queryKey: ["admin-recipes"] });
-    
-    // Close modal and refresh after a short delay
-    setTimeout(() => {
-      onClose();
-    }, 1500);
-    
-    // Refresh handled by queryClient invalidation - no need for full page reload
-    setTimeout(() => {
-      // Optional: Could redirect to admin recipes tab to show new recipes
-      // setLocation("/admin");
-    }, 3000);
-  };
+  // Query to get current recipe stats
+  const { data: stats } = useQuery({
+    queryKey: ['adminStats'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/admin/stats');
+      return res.json();
+    },
+    enabled: isOpen,
+    refetchInterval: isGenerating ? 5000 : false, // Poll every 5 seconds while generating
+  });
 
-  // Handle generation error
-  const handleGenerationError = (error: string) => {
-    setIsGenerating(false);
-    setCurrentJobId(null);
-    
-    toast({
-      title: "Recipe Generation Failed",
-      description: error,
-      variant: "destructive",
-    });
-  };
+  // ==========================================
+  // REAL PROGRESS TRACKING - Updates based on actual recipe saves
+  // Replaces fake timer-based progress that caused 80% hang perception
+  // ==========================================
+  useEffect(() => {
+    if (isGenerating && stats && initialRecipeCount !== null) {
+      const currentTotal = stats.total || 0;
+      const savedCount = Math.max(0, currentTotal - initialRecipeCount);
+      const progress = (savedCount / recipeCount) * 100;
+
+      setRecipesSaved(savedCount);
+      setProgressPercentage(Math.min(progress, 100));
+    }
+  }, [stats, isGenerating, initialRecipeCount, recipeCount]);
+
+  // Check for completion when stats change
+  useEffect(() => {
+    if (isGenerating && stats && initialRecipeCount !== null) {
+      const currentTotal = stats.total;
+      const expectedTotal = initialRecipeCount + recipeCount;
+
+      if (currentTotal >= expectedTotal) {
+        // Generation completed
+        setProgressPercentage(100);
+        setRecipesSaved(recipeCount);
+        setIsGenerating(false);
+        setInitialRecipeCount(null);
+
+        toast({
+          title: "Recipe Generation Completed!",
+          description: `Successfully generated ${recipeCount} new recipes. The page will refresh to show them.`,
+        });
+
+        // Close modal and refresh page
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      }
+    }
+  }, [stats, isGenerating, initialRecipeCount, recipeCount, toast, onClose]);
+
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Extract meal plan context for recipe generation
   const generateRecipesFromContext = useMutation({
@@ -116,35 +152,35 @@ export default function RecipeGenerationModal({
       return response.json();
     },
     onSuccess: (data) => {
-      // Start progress tracking
+      // Store initial count and start monitoring
+      handleGenerationStart();
+      setInitialRecipeCount(stats?.total || 0);
       setIsGenerating(true);
-      setCurrentJobId(data.jobId);
-      
+
       toast({
         title: "Recipe Generation Started",
         description: data.message,
       });
+
+      // Refresh recipe lists
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/recipes"] });
     },
     onError: (error) => {
-      console.error("Recipe generation error:", error);
-      
-      if (isUnauthorizedError(error) || error.message.includes("401") || error.message.includes("jwt expired") || error.message.includes("Authentication required")) {
+      if (isUnauthorizedError(error)) {
         toast({
-          title: "Session Expired",
-          description: "Your session has expired. Please log in again to continue.",
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
           variant: "destructive",
         });
-        // Clear expired tokens
-        localStorage.removeItem('token');
-        // Redirect to login using React Router
         setTimeout(() => {
-          setLocation("/login");
-        }, 1000);
+          window.location.href = "/api/login";
+        }, 500);
         return;
       }
       toast({
-        title: "Recipe Generation Failed",
-        description: error.message || "Failed to start recipe generation. Please try again.",
+        title: "Error",
+        description: "Failed to start recipe generation",
         variant: "destructive",
       });
     },
@@ -152,8 +188,6 @@ export default function RecipeGenerationModal({
 
   // Handle context-based generation
   const handleContextGeneration = () => {
-    if (!checkAuthentication()) return;
-    
     const context: RecipeGenerationContext = {
       count: recipeCount,
       naturalLanguagePrompt: naturalLanguageInput.trim() || undefined,
@@ -183,27 +217,15 @@ export default function RecipeGenerationModal({
     generateRecipesFromContext.mutate(context);
   };
 
-  // Check if user has valid authentication
-  const checkAuthentication = () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to generate recipes.",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        setLocation("/login");
-      }, 1000);
-      return false;
-    }
-    return true;
-  };
-
   // Handle quick generation with basic count
   const handleQuickGeneration = () => {
-    if (!checkAuthentication()) return;
     generateRecipesFromContext.mutate({ count: recipeCount });
+  };
+
+  // Reset progress state when starting new generation
+  const handleGenerationStart = () => {
+    setProgressPercentage(0);
+    setRecipesSaved(0);
   };
 
   if (!isOpen) return null;
@@ -267,14 +289,6 @@ export default function RecipeGenerationModal({
                     <SelectItem value="20">20 recipes</SelectItem>
                     <SelectItem value="30">30 recipes</SelectItem>
                     <SelectItem value="50">50 recipes</SelectItem>
-                    <SelectItem value="75">75 recipes</SelectItem>
-                    <SelectItem value="100">100 recipes</SelectItem>
-                    <SelectItem value="150">150 recipes</SelectItem>
-                    <SelectItem value="200">200 recipes</SelectItem>
-                    <SelectItem value="250">250 recipes</SelectItem>
-                    <SelectItem value="300">300 recipes</SelectItem>
-                    <SelectItem value="400">400 recipes</SelectItem>
-                    <SelectItem value="500">500 recipes</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -297,7 +311,7 @@ export default function RecipeGenerationModal({
                   disabled={generateRecipesFromContext.isPending || isGenerating}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  {generateRecipesFromContext.isPending ? (
+                  {generateRecipesFromContext.isPending || isGenerating ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                       Generating...
@@ -536,7 +550,7 @@ export default function RecipeGenerationModal({
                   className="flex-1 bg-primary hover:bg-primary/90"
                   size="lg"
                 >
-                  {generateRecipesFromContext.isPending ? (
+                  {generateRecipesFromContext.isPending || isGenerating ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                       Generating Targeted Recipes...
@@ -552,14 +566,70 @@ export default function RecipeGenerationModal({
             </CardContent>
           </Card>
 
-          {/* Progress Tracking */}
-          {isGenerating && currentJobId && (
-            <RecipeGenerationProgress
-              jobId={currentJobId}
-              totalRecipes={recipeCount}
-              onComplete={handleGenerationComplete}
-              onError={handleGenerationError}
-            />
+          {/* Progress Bar Section */}
+          {isGenerating && (
+            <Card className="border-2 border-blue-500 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-700">
+                  <Clock className="h-5 w-5 animate-pulse" />
+                  Recipe Generation in Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Progress Bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-blue-700 font-medium">
+                    <span>Progress: {Math.round(progressPercentage)}%</span>
+                    <span>{recipesSaved}/{recipeCount} recipes saved</span>
+                  </div>
+                  <Progress value={progressPercentage} className="h-3" />
+                </div>
+
+                {/* Status Messages */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    {recipesSaved === recipeCount ? (
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <Circle className="h-5 w-5 animate-pulse text-blue-500 flex-shrink-0" />
+                    )}
+                    <span className={recipesSaved === recipeCount ? 'text-green-700 font-medium' : 'text-blue-700'}>
+                      {recipesSaved === 0
+                        ? "Initializing recipe generation..."
+                        : recipesSaved === recipeCount
+                        ? "✅ All recipes saved successfully!"
+                        : `Saving recipes to database (${recipesSaved}/${recipeCount})...`
+                      }
+                    </span>
+                  </div>
+
+                  {recipesSaved > 0 && recipesSaved < recipeCount && (
+                    <div className="flex items-center gap-3 text-sm text-blue-600">
+                      <Circle className="h-5 w-5 animate-pulse text-blue-400 flex-shrink-0" />
+                      <span>🖼️ Images generating in background (non-blocking)</span>
+                    </div>
+                  )}
+
+                  {recipesSaved === recipeCount && (
+                    <div className="flex items-center gap-3 text-sm text-green-600">
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <span>🖼️ Background image generation continues after modal closes</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-blue-200">
+                  <p className="text-sm text-blue-600">
+                    {recipesSaved === 0
+                      ? "Please wait while we generate your recipes. Recipes save in ~5 seconds each."
+                      : recipesSaved < recipeCount
+                      ? "Recipes are being saved quickly with placeholder images. AI images will generate in the background."
+                      : "Generation complete! The page will refresh to show your new recipes."
+                    }
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

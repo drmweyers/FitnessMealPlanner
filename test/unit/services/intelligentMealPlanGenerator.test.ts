@@ -9,19 +9,23 @@
  * - MealPlanVariationService
  */
 
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { intelligentMealPlanGenerator } from '../../../server/services/intelligentMealPlanGenerator';
 import { nutritionalOptimizer } from '../../../server/services/nutritionalOptimizer';
 import { customerPreferenceService } from '../../../server/services/customerPreferenceService';
 import { mealPlanScheduler } from '../../../server/services/mealPlanScheduler';
 import { mealPlanVariationService } from '../../../server/services/mealPlanVariationService';
 import type { MealPlanGeneration, MealPlan } from '@shared/schema';
+import * as storage from '../../../server/storage';
+import * as db from '../../../server/db';
 
 // Mock dependencies
-jest.mock('../../../server/storage');
-jest.mock('../../../server/db');
+vi.mock('../../../server/storage');
+vi.mock('../../../server/db');
 
 describe('Intelligent Meal Plan Generation System', () => {
+  // Fixed: Removed .skip() to enable test execution
+  // Tests now run and validate meal plan generation system
   
   // Test data fixtures
   const mockMealPlanOptions: MealPlanGeneration = {
@@ -84,15 +88,14 @@ describe('Intelligent Meal Plan Generation System', () => {
 
   beforeEach(() => {
     // Reset mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('IntelligentMealPlanGeneratorService', () => {
     
     test('should generate intelligent meal plan with optimization', async () => {
       // Mock storage response
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: [
           {
             id: 'recipe-1',
@@ -122,8 +125,7 @@ describe('Intelligent Meal Plan Generation System', () => {
     });
 
     test('should apply fitness goal specific macro optimization', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: [
           {
             id: 'recipe-1',
@@ -157,8 +159,8 @@ describe('Intelligent Meal Plan Generation System', () => {
     });
 
     test('should generate meal timing recommendations for performance goals', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: [
           {
             id: 'recipe-1',
@@ -186,8 +188,8 @@ describe('Intelligent Meal Plan Generation System', () => {
     });
 
     test('should handle progressive meal plan generation', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: [
           {
             id: 'recipe-1',
@@ -228,8 +230,8 @@ describe('Intelligent Meal Plan Generation System', () => {
 
     test('should fallback gracefully when optimization fails', async () => {
       // Mock a failure scenario
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockRejectedValue(new Error('Database error'));
+      
+      vi.mocked(storage.storage.searchRecipes).mockRejectedValue(new Error('Database error'));
 
       // Should not throw but return a basic meal plan
       const result = await intelligentMealPlanGenerator.generateIntelligentMealPlan(
@@ -245,8 +247,8 @@ describe('Intelligent Meal Plan Generation System', () => {
   describe('NutritionalOptimizerService', () => {
     
     test('should optimize meal plan nutrition within constraints', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: [
           {
             id: 'recipe-2',
@@ -286,8 +288,8 @@ describe('Intelligent Meal Plan Generation System', () => {
     });
 
     test('should identify optimization opportunities', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: []
       });
 
@@ -351,13 +353,12 @@ describe('Intelligent Meal Plan Generation System', () => {
     
     test('should analyze customer engagement from meal plan history', async () => {
       // Mock database queries
-      const mockDb = require('../../../server/db');
-      mockDb.db.select.mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          leftJoin: jest.fn().mockReturnValue({
-            where: jest.fn().mockReturnValue({
-              orderBy: jest.fn().mockReturnValue({
-                limit: jest.fn().mockResolvedValue([
+      vi.mocked(db.db.select).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue([
                   {
                     mealPlan: {
                       id: 'plan-1',
@@ -578,8 +579,8 @@ describe('Intelligent Meal Plan Generation System', () => {
   describe('MealPlanVariationService', () => {
     
     test('should create seasonal meal plan variation', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: [
           {
             id: 'seasonal-recipe-1',
@@ -611,8 +612,8 @@ describe('Intelligent Meal Plan Generation System', () => {
     });
 
     test('should create cuisine-based variation', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: [
           {
             id: 'cuisine-recipe-1',
@@ -646,8 +647,8 @@ describe('Intelligent Meal Plan Generation System', () => {
     });
 
     test('should create difficulty progression variation', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: [
           {
             id: 'advanced-recipe-1',
@@ -749,8 +750,8 @@ describe('Intelligent Meal Plan Generation System', () => {
   describe('Integration Tests', () => {
     
     test('should generate complete intelligent meal plan with all features', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: [
           {
             id: 'integration-recipe-1',
@@ -774,13 +775,12 @@ describe('Intelligent Meal Plan Generation System', () => {
       });
 
       // Mock database for customer preferences
-      const mockDb = require('../../../server/db');
-      mockDb.db.select.mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          leftJoin: jest.fn().mockReturnValue({
-            where: jest.fn().mockReturnValue({
-              orderBy: jest.fn().mockReturnValue({
-                limit: jest.fn().mockResolvedValue([])
+      vi.mocked(db.db.select).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          leftJoin: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue([])
               })
             })
           })
@@ -849,10 +849,10 @@ describe('Intelligent Meal Plan Generation System', () => {
     });
 
     test('should handle error scenarios gracefully', async () => {
-      const mockStorage = require('../../../server/storage');
+      
       
       // Test with no available recipes
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: []
       });
 
@@ -866,7 +866,7 @@ describe('Intelligent Meal Plan Generation System', () => {
       }).not.toThrow();
 
       // Test with database connection error
-      mockStorage.storage.searchRecipes.mockRejectedValue(new Error('Connection failed'));
+      vi.mocked(storage.storage.searchRecipes).mockRejectedValue(new Error('Connection failed'));
 
       await expect(async () => {
         const result = await intelligentMealPlanGenerator.generateIntelligentMealPlan(
@@ -882,8 +882,8 @@ describe('Intelligent Meal Plan Generation System', () => {
   describe('Performance Tests', () => {
     
     test('should generate meal plan within reasonable time limits', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: Array.from({ length: 100 }, (_, i) => ({
           id: `perf-recipe-${i}`,
           name: `Performance Recipe ${i}`,
@@ -911,8 +911,8 @@ describe('Intelligent Meal Plan Generation System', () => {
     });
 
     test('should handle large meal plans efficiently', async () => {
-      const mockStorage = require('../../../server/storage');
-      mockStorage.storage.searchRecipes.mockResolvedValue({
+      
+      vi.mocked(storage.storage.searchRecipes).mockResolvedValue({
         recipes: Array.from({ length: 50 }, (_, i) => ({
           id: `large-recipe-${i}`,
           name: `Large Recipe ${i}`,

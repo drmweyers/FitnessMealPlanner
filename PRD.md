@@ -47,6 +47,16 @@ Fitness trainers struggle to efficiently create and manage personalized meal pla
 3. As an admin, I want to manage user accounts and roles so that appropriate access levels are maintained.
 4. As an admin, I want to generate new recipe batches using AI so that the platform maintains fresh, diverse content.
 
+## Canonical 3-Tier & AI Policy Alignment (October 2025)
+- API versioning: All application endpoints are under /api/v1
+- Analytics exports by tier:
+  - Tier 2: CSV-only exports
+  - Tier 3: CSV, Excel, and PDF exports, plus programmatic Analytics API access
+- Trial policy: 14-day, tier-limited trial (no full-platform access). All gating and limits apply during trial
+- AI subscriptions (monthly add-on): Starter (100 generations/month), Professional (500/month), Enterprise (unlimited; fair use)
+- AI cancellation policy: Cancelling the AI add-on disables only AI features; purchased trainer tiers remain unchanged
+- Data isolation and security: Adopt the canonical PostgreSQL schema at docs/CANONICAL_DATABASE_SCHEMA.sql including RLS policies per trainer and secure payment logging
+
 ## Success Criteria
 
 ### Activation Metrics

@@ -10,7 +10,7 @@ import { requireAuth } from '../middleware/auth';
 import { storage } from '../storage';
 import { db } from '../db';
 import { personalizedMealPlans } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import type { MealPlanGeneration } from '@shared/schema';
 import { handleMealPlanEvent, createMealPlanEvent, MealPlanEventType } from '../utils/mealPlanEvents';
 
@@ -465,34 +465,65 @@ mealPlanRouter.get('/progressive/:customerId/:weekNumber', requireAuth, async (r
 mealPlanRouter.get('/personalized', requireAuth, async (req, res) => {
   try {
     const userId = req.user?.id;
-    
+
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const mealPlans = await storage.getPersonalizedMealPlans(userId);
-    
+    // Import required tables
+    const { mealPlanAssignments, trainerMealPlans, users } = await import('@shared/schema');
+
+    // Get assigned meal plans by joining with trainer_meal_plans (single source of truth)
+    const assignedPlans = await db
+      .select({
+        // Use trainer plan ID (not a duplicate)
+        id: trainerMealPlans.id,
+        trainerId: trainerMealPlans.trainerId,
+        mealPlanData: trainerMealPlans.mealPlanData,
+        notes: trainerMealPlans.notes,
+        tags: trainerMealPlans.tags,
+        isTemplate: trainerMealPlans.isTemplate,
+        createdAt: trainerMealPlans.createdAt,
+        updatedAt: trainerMealPlans.updatedAt,
+        // Assignment metadata
+        assignedAt: mealPlanAssignments.assignedAt,
+        assignmentNotes: mealPlanAssignments.notes,
+        assignedBy: mealPlanAssignments.assignedBy,
+        trainerEmail: users.email,
+      })
+      .from(mealPlanAssignments)
+      .innerJoin(trainerMealPlans, eq(trainerMealPlans.id, mealPlanAssignments.mealPlanId))
+      .leftJoin(users, eq(users.id, mealPlanAssignments.assignedBy))
+      .where(eq(mealPlanAssignments.customerId, userId))
+      .orderBy(desc(mealPlanAssignments.assignedAt));
+
     // Enhance meal plans with additional metadata for better display
-    const enhancedMealPlans = mealPlans.map(plan => ({
-      ...plan,
+    const enhancedMealPlans = assignedPlans.map(plan => ({
+      id: plan.id, // Trainer's original plan ID (single source of truth)
+      trainerId: plan.trainerId,
+      mealPlanData: plan.mealPlanData,
       planName: plan.mealPlanData?.planName || 'Unnamed Plan',
       fitnessGoal: plan.mealPlanData?.fitnessGoal || 'General Fitness',
       dailyCalorieTarget: plan.mealPlanData?.dailyCalorieTarget || 0,
       totalDays: plan.mealPlanData?.days || 0,
       mealsPerDay: plan.mealPlanData?.mealsPerDay || 0,
       assignedAt: plan.assignedAt || new Date().toISOString(),
+      assignedBy: plan.assignedBy,
+      trainerEmail: plan.trainerEmail,
+      notes: plan.assignmentNotes || plan.notes,
+      tags: plan.tags,
       isActive: true, // Could be enhanced with actual status tracking
       description: plan.mealPlanData?.description,
     }));
-    
-    res.json({ 
-      mealPlans: enhancedMealPlans, 
+
+    res.json({
+      mealPlans: enhancedMealPlans,
       total: enhancedMealPlans.length,
       summary: {
         totalPlans: enhancedMealPlans.length,
         activePlans: enhancedMealPlans.filter(p => p.isActive).length,
         totalCalorieTargets: enhancedMealPlans.reduce((sum, p) => sum + (p.dailyCalorieTarget || 0), 0),
-        avgCaloriesPerDay: enhancedMealPlans.length > 0 
+        avgCaloriesPerDay: enhancedMealPlans.length > 0
           ? Math.round(enhancedMealPlans.reduce((sum, p) => sum + (p.dailyCalorieTarget || 0), 0) / enhancedMealPlans.length)
           : 0
       }

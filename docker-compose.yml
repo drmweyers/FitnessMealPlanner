@@ -1,22 +1,26 @@
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: fitnessmealplanner-postgres
     environment:
       - POSTGRES_DB=fitmeal
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
     ports:
       - "5433:5432"
     profiles:
       - dev
       - prod
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d fitmeal"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fitmeal && psql -U postgres -d fitmeal -c 'SELECT 1' > /dev/null 2>&1"]
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
 
   redis:
     image: redis:7.2-alpine
@@ -33,8 +37,9 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
-      timeout: 3s
-      retries: 5
+      timeout: 5s
+      retries: 8
+      start_period: 20s
     environment:
       - REDIS_REPLICATION_MODE=master
 

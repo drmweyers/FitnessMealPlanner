@@ -7,6 +7,10 @@ import { enhancedRecipeGenerator } from '../services/recipeGeneratorEnhanced';
 import { recipeQualityScorer } from '../services/recipeQualityScorer';
 import { apiCostTracker } from '../services/apiCostTracker';
 import { progressTracker } from '../services/progressTracker';
+import { bmadRecipeService } from '../services/BMADRecipeService';
+import { sseManager } from '../services/utils/SSEManager';
+import { parseNaturalLanguageRecipeRequirements } from '../services/openai';
+import { nanoid } from 'nanoid';
 import { eq, sql } from 'drizzle-orm';
 import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
 import { db } from '../db';
@@ -173,6 +177,75 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
   }
 });
 
+// Natural language recipe generation endpoint
+adminRouter.post('/generate-from-prompt', requireAdmin, async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    console.log('[Natural Language Generation] Received prompt:', prompt);
+
+    // Validate prompt
+    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+      return res.status(400).json({
+        message: "Natural language prompt is required"
+      });
+    }
+
+    // Parse natural language into structured parameters
+    const parsedParams = await parseNaturalLanguageRecipeRequirements(prompt);
+    console.log('[Natural Language Generation] Parsed parameters:', parsedParams);
+
+    // Map parsed parameters to BMAD generation options
+    const generationOptions: any = {
+      count: parsedParams.count || 10,
+      mealTypes: parsedParams.mealTypes || [],
+      dietaryTags: parsedParams.dietaryTags || [],
+      mainIngredientTags: parsedParams.mainIngredientTags || [],
+      focusIngredient: parsedParams.focusIngredient,
+      maxPrepTime: parsedParams.maxPrepTime,
+      minCalories: parsedParams.minCalories,
+      maxCalories: parsedParams.maxCalories,
+      minProtein: parsedParams.minProtein,
+      maxProtein: parsedParams.maxProtein,
+      minCarbs: parsedParams.minCarbs,
+      maxCarbs: parsedParams.maxCarbs,
+      minFat: parsedParams.minFat,
+      maxFat: parsedParams.maxFat,
+      difficulty: parsedParams.difficulty,
+      fitnessGoal: parsedParams.fitnessGoal,
+    };
+
+    // Remove undefined values
+    Object.keys(generationOptions).forEach(key => {
+      if (generationOptions[key] === undefined) {
+        delete generationOptions[key];
+      }
+    });
+
+    console.log('[Natural Language Generation] Generation options:', generationOptions);
+
+    // Start BMAD generation
+    const batchId = await bmadRecipeService.startGeneration(generationOptions);
+
+    console.log('[Natural Language Generation] Started BMAD generation, batchId:', batchId);
+
+    // Return 202 Accepted with batchId for SSE tracking
+    res.status(202).json({
+      message: "Recipe generation started from natural language prompt",
+      batchId,
+      parsedParameters: parsedParams,
+      generationOptions,
+    });
+  } catch (error) {
+    console.error("[Natural Language Generation] Error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    res.status(500).json({
+      message: "Failed to generate recipes from natural language prompt",
+      error: errorMessage
+    });
+  }
+});
+
 // Enhanced recipe generation with retry logic and quality scoring
 adminRouter.post('/generate-enhanced', requireAdmin, async (req, res) => {
   try {
@@ -238,21 +311,186 @@ adminRouter.post('/generate-enhanced', requireAdmin, async (req, res) => {
   }
 });
 
+// BMAD multi-agent bulk recipe generation endpoint
+adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
+  try {
+    const {
+      count,
+      mealTypes,
+      dietaryRestrictions,
+      targetCalories,
+      mainIngredient,
+      fitnessGoal,
+      naturalLanguagePrompt,
+      maxPrepTime,
+      maxCalories,
+      minProtein,
+      maxProtein,
+      minCarbs,
+      maxCarbs,
+      minFat,
+      maxFat,
+      enableImageGeneration = true,
+      enableS3Upload = true,
+      enableNutritionValidation = true
+    } = req.body;
+
+    // Validate required count parameter
+    if (!count || count < 1 || count > 100) {
+      return res.status(400).json({
+        message: "Count is required and must be between 1 and 100 for BMAD generation"
+      });
+    }
+
+    // Generate batch ID upfront so we can return it to the client
+    const batchId = `bmad_${nanoid(10)}`;
+
+    console.log('[BMAD] Starting multi-agent recipe generation:', {
+      batchId,
+      count,
+      enableImageGeneration,
+      enableS3Upload,
+      enableNutritionValidation
+    });
+
+    // Start BMAD generation in background (pass batchId via options)
+    bmadRecipeService.generateRecipes({
+      batchId,
+      count,
+      mealTypes,
+      dietaryRestrictions,
+      targetCalories,
+      mainIngredient,
+      fitnessGoal,
+      naturalLanguagePrompt,
+      maxPrepTime,
+      maxCalories,
+      minProtein,
+      maxProtein,
+      minCarbs,
+      maxCarbs,
+      minFat,
+      maxFat,
+      enableImageGeneration,
+      enableS3Upload,
+      enableNutritionValidation
+    }).then((result) => {
+      console.log('[BMAD] Generation complete:', {
+        batchId: result.batchId,
+        totalRecipes: result.savedRecipes.length,
+        imagesGenerated: result.imagesGenerated,
+        imagesUploaded: result.imagesUploaded,
+        duration: result.totalTime
+      });
+    }).catch((error) => {
+      console.error('[BMAD] Generation failed:', error);
+    });
+
+    res.status(202).json({
+      message: `BMAD multi-agent recipe generation started for ${count} recipes`,
+      batchId,
+      count,
+      started: true,
+      features: {
+        nutritionValidation: enableNutritionValidation,
+        imageGeneration: enableImageGeneration,
+        s3Upload: enableS3Upload
+      }
+    });
+  } catch (error) {
+    console.error('[BMAD] Error starting generation:', error);
+    res.status(500).json({ message: "Failed to start BMAD recipe generation" });
+  }
+});
+
+// Get BMAD generation progress
+adminRouter.get('/bmad-progress/:batchId', requireAdmin, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    if (!batchId) {
+      return res.status(400).json({ error: 'Batch ID is required' });
+    }
+
+    const progress = await bmadRecipeService.getProgress(batchId);
+
+    if (!progress) {
+      return res.status(404).json({ error: 'Batch not found or has expired' });
+    }
+
+    res.json(progress);
+  } catch (error) {
+    console.error('[BMAD] Failed to fetch progress:', error);
+    res.status(500).json({ error: 'Failed to fetch BMAD progress' });
+  }
+});
+
+// Get BMAD agent metrics
+adminRouter.get('/bmad-metrics', requireAdmin, async (req, res) => {
+  try {
+    const metrics = bmadRecipeService.getMetrics();
+    res.json(metrics);
+  } catch (error) {
+    console.error('[BMAD] Failed to fetch metrics:', error);
+    res.status(500).json({ error: 'Failed to fetch BMAD metrics' });
+  }
+});
+
+// SSE endpoint for real-time BMAD progress updates
+adminRouter.get('/bmad-progress-stream/:batchId', requireAdmin, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    if (!batchId) {
+      return res.status(400).json({ error: 'Batch ID is required' });
+    }
+
+    // Generate unique client ID
+    const clientId = nanoid(10);
+
+    console.log(`[SSE] Client ${clientId} connecting for batch ${batchId}`);
+
+    // Register SSE client
+    sseManager.addClient(batchId, clientId, res);
+
+    // Send initial progress state if available
+    const currentProgress = await bmadRecipeService.getProgress(batchId);
+    if (currentProgress) {
+      sseManager.broadcastProgress(batchId, currentProgress);
+    }
+
+  } catch (error) {
+    console.error('[SSE] Failed to establish stream:', error);
+    res.status(500).json({ error: 'Failed to establish progress stream' });
+  }
+});
+
+// Get SSE connection statistics
+adminRouter.get('/bmad-sse-stats', requireAdmin, async (req, res) => {
+  try {
+    const stats = sseManager.getStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('[SSE] Failed to fetch SSE stats:', error);
+    res.status(500).json({ error: 'Failed to fetch SSE statistics' });
+  }
+});
+
 // API usage statistics endpoint
 adminRouter.get('/api-usage', requireAdmin, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    
+
     const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = endDate ? new Date(endDate as string) : new Date();
-    
+
     const [usageStats, budgetStatus, topConsumers, costByModel] = await Promise.all([
       apiCostTracker.getUsageStats(start, end),
       apiCostTracker.getMonthlyBudgetStatus(),
       apiCostTracker.getTopConsumers(),
       apiCostTracker.getCostByModel(start)
     ]);
-    
+
     res.json({
       usageStats,
       budgetStatus,
@@ -508,6 +746,45 @@ adminRouter.post('/recipes/bulk-unapprove', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Failed to bulk unapprove recipes:', error);
     res.status(500).json({ error: 'Failed to bulk unapprove recipes' });
+  }
+});
+
+// Cleanup endpoint: Approve ALL pending recipes
+adminRouter.post('/recipes/approve-all-pending', requireAdmin, async (req, res) => {
+  try {
+    console.log('[Cleanup] Approving all pending recipes...');
+
+    // Get all unapproved recipe IDs
+    const unapprovedRecipes = await db
+      .select({ id: recipes.id })
+      .from(recipes)
+      .where(sql`is_approved = false`);
+
+    const count = unapprovedRecipes.length;
+    console.log(`[Cleanup] Found ${count} unapproved recipes`);
+
+    if (count === 0) {
+      return res.json({
+        message: 'No pending recipes to approve',
+        approved: 0
+      });
+    }
+
+    // Approve all in batch
+    await db
+      .update(recipes)
+      .set({ isApproved: true })
+      .where(sql`is_approved = false`);
+
+    console.log(`[Cleanup] Successfully approved ${count} recipes`);
+
+    res.json({
+      message: `Successfully approved all ${count} pending recipes`,
+      approved: count
+    });
+  } catch (error) {
+    console.error('[Cleanup] Failed to approve all pending recipes:', error);
+    res.status(500).json({ error: 'Failed to approve all pending recipes' });
   }
 });
 

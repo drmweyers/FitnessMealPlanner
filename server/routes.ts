@@ -96,16 +96,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/recipes/:id', async (req, res) => {
     try {
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(req.params.id)) {
+        return res.status(404).json({ message: "Recipe not found" });
+      }
+
       const recipe = await storage.getRecipe(req.params.id);
       if (!recipe) {
         return res.status(404).json({ message: "Recipe not found" });
       }
-      
+
       // Only show approved recipes to public unless admin
       if (!recipe.isApproved) {
         return res.status(404).json({ message: "Recipe not found" });
       }
-      
+
       res.json(recipe);
     } catch (error) {
       console.error("Error fetching recipe:", error);
@@ -220,19 +226,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/admin/parse-recipe-requirements', requireAuth, requireRole('admin'), async (req, res) => {
     try {
       const { naturalLanguageInput } = req.body;
-      
+
       if (!naturalLanguageInput || typeof naturalLanguageInput !== 'string') {
         return res.status(400).json({ message: "Natural language input is required" });
       }
 
       const { parseNaturalLanguageRecipeRequirements } = await import('./services/openai');
       const parsedRequirements = await parseNaturalLanguageRecipeRequirements(naturalLanguageInput);
-      
+
       res.json(parsedRequirements);
     } catch (error) {
       console.error("Error parsing natural language recipe requirements:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to parse natural language input",
+        error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      });
+    }
+  });
+
+  // Admin-only recipe generation endpoint
+  app.post('/api/admin/generate-recipes', requireAuth, requireRole('admin'), async (req, res) => {
+    try {
+      const { count = 5 } = req.body;
+
+      if (typeof count !== 'number' || count < 1 || count > 100) {
+        return res.status(400).json({ message: "Count must be a number between 1 and 100" });
+      }
+
+      // Import recipe generator service
+      const { generateRecipeBatch } = await import('./services/recipeGenerator');
+      const recipes = await generateRecipeBatch(count);
+
+      res.json({
+        message: `Successfully generated ${recipes.length} recipes`,
+        recipes
+      });
+    } catch (error) {
+      console.error("Error generating recipes:", error);
+      res.status(500).json({
+        message: "Failed to generate recipes",
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }

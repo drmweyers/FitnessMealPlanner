@@ -1,6 +1,6 @@
 // Load test environment variables before any other imports
 process.env.NODE_ENV = 'development';
-process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/fitmeal';
+process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5433/fitmeal';
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
 process.env.DB_SSL_MODE = 'disable';

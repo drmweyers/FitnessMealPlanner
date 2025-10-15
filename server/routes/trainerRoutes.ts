@@ -17,16 +17,17 @@ import { Router } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { storage } from '../storage';
 import { eq, sql, and, desc, inArray } from 'drizzle-orm';
-import { 
-  personalizedRecipes, 
-  personalizedMealPlans, 
-  users, 
-  progressMeasurements, 
-  customerGoals, 
-  type MealPlan 
+import {
+  personalizedRecipes,
+  personalizedMealPlans,
+  users,
+  progressMeasurements,
+  customerGoals,
+  type MealPlan
 } from '@shared/schema';
 import { db } from '../db';
 import { z } from 'zod';
+import { manualMealPlanService, type ManualMealEntry } from '../services/manualMealPlanService';
 
 const trainerRouter = Router();
 
@@ -659,12 +660,9 @@ trainerRouter.post('/meal-plans/:planId/assign', requireAuth, requireRole('train
       });
     }
     
-    // Create assignment
+    // Create assignment (single source of truth - no duplication)
     const assignment = await storage.assignMealPlanToCustomer(planId, customerId, trainerId, notes);
-    
-    // Also create a personalized meal plan record for backward compatibility
-    await storage.assignMealPlanToCustomers(trainerId, plan.mealPlanData as MealPlan, [customerId]);
-    
+
     res.status(201).json({ 
       assignment,
       message: 'Meal plan assigned successfully'
@@ -1036,6 +1034,165 @@ trainerRouter.put('/customers/:customerId/status', requireAuth, requireRole('tra
     res.status(500).json({
       status: 'error',
       message: 'Failed to update customer status',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// =============================================================================
+// MANUAL MEAL PLAN CREATION (Story 1.0 - URGENT P0)
+// =============================================================================
+
+/**
+ * Parse Manual Meal Entries
+ *
+ * Parses free-form meal entry text into structured meals with auto-detected categories
+ *
+ * @route POST /api/trainer/parse-manual-meals
+ * @access Private (Trainer only)
+ * @body {string} text - Free-form meal entry text (one meal per line)
+ * @returns {Object} Parsed meals with auto-detected categories
+ */
+const parseMealSchema = z.object({
+  text: z.string().min(1, 'Meal text is required').max(10000, 'Text too long')
+});
+
+trainerRouter.post('/parse-manual-meals', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const { text } = parseMealSchema.parse(req.body);
+
+    const meals = manualMealPlanService.parseMealEntries(text);
+
+    if (meals.length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No valid meals found in text',
+        code: 'NO_MEALS_FOUND'
+      });
+    }
+
+    res.json({
+      status: 'success',
+      data: {
+        meals,
+        count: meals.length
+      }
+    });
+  } catch (error) {
+    console.error('Failed to parse meals:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid request data',
+        details: error.errors
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to parse meals',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+/**
+ * Create Manual Meal Plan
+ *
+ * Creates a manual meal plan with category-based images (zero AI costs)
+ *
+ * @route POST /api/trainer/manual-meal-plan
+ * @access Private (Trainer only)
+ * @body {string} planName - Name of the meal plan
+ * @body {Array} meals - Array of manual meal entries with categories
+ * @body {string} notes - Optional notes for the meal plan
+ * @body {Array<string>} tags - Optional tags for organization
+ * @body {boolean} isTemplate - Whether this is a reusable template
+ * @returns {Object} Created meal plan with images
+ */
+const manualMealPlanSchema = z.object({
+  planName: z.string().min(1, 'Plan name is required').max(100, 'Plan name too long'),
+  meals: z.array(z.object({
+    mealName: z.string().min(1).max(200),
+    category: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+    description: z.string().optional(),
+    ingredients: z.array(z.object({
+      ingredient: z.string(),
+      amount: z.string(),
+      unit: z.string()
+    })).optional(),
+    instructions: z.string().optional()
+  })).min(1, 'At least one meal is required').max(50, 'Maximum 50 meals per plan'),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  isTemplate: z.boolean().optional().default(false)
+});
+
+trainerRouter.post('/manual-meal-plan', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { planName, meals, notes, tags, isTemplate } = manualMealPlanSchema.parse(req.body);
+
+    // Create manual meal plan with category images
+    const mealPlan = await manualMealPlanService.createManualMealPlan(
+      meals,
+      trainerId,
+      planName
+    );
+
+    // Save to database
+    const savedPlan = await storage.createTrainerMealPlan({
+      trainerId,
+      mealPlanData: mealPlan as any,
+      notes: notes || 'Manual meal plan created by trainer',
+      tags: tags || [],
+      isTemplate: isTemplate || false
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: savedPlan,
+      message: 'Manual meal plan created successfully'
+    });
+  } catch (error) {
+    console.error('Failed to create manual meal plan:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid request data',
+        details: error.errors
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to create manual meal plan',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+/**
+ * Get Category Image Pool Health
+ *
+ * Returns health statistics for the category image pools
+ * Useful for monitoring and admin dashboard
+ *
+ * @route GET /api/trainer/category-image-pool-health
+ * @access Private (Trainer only)
+ * @returns {Object} Image pool health statistics
+ */
+trainerRouter.get('/category-image-pool-health', requireAuth, requireRole('trainer'), async (req, res) => {
+  try {
+    const health = await manualMealPlanService.validateCategoryImagePool();
+
+    res.json({
+      status: 'success',
+      data: health
+    });
+  } catch (error) {
+    console.error('Failed to check image pool health:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to check image pool health',
       code: 'SERVER_ERROR'
     });
   }

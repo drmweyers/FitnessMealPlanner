@@ -31,6 +31,8 @@ A comprehensive meal planning application for fitness professionals and their cl
 
 ## 🚀 Quick Start
 
+The easiest way to get started is with our automated development startup:
+
 ```bash
 # 1. Clone the repository
 git clone <repository-url>
@@ -39,16 +41,40 @@ cd FitnessMealPlanner
 # 2. Copy environment variables
 cp .env.example .env
 
-# 3. Check your setup
-npm run setup:check
-
-# 4. Start the development environment
-npm run docker:dev
-
-# 5. Access the application
-# Frontend: http://localhost:4000
-# API: http://localhost:4000/api
+# 3. Start everything with one command!
+npm run start:dev
 ```
+
+This single command will:
+- ✅ Check if Docker is running
+- ✅ Start PostgreSQL and Redis containers
+- ✅ Wait for databases to be healthy
+- ✅ Run database migrations
+- ✅ Seed test accounts automatically
+- ✅ Start the development server
+
+### Test Credentials (Auto-Seeded)
+
+The following test accounts are automatically created:
+
+**Admin Account:**
+- Email: `admin@fitmeal.pro`
+- Password: `AdminPass123`
+
+**Trainer Account:**
+- Email: `trainer.test@evofitmeals.com`
+- Password: `TestTrainer123!`
+
+**Customer Account:**
+- Email: `customer.test@evofitmeals.com`
+- Password: `TestCustomer123!`
+
+### Access Points
+
+- **Frontend/Backend:** http://localhost:4000
+- **API:** http://localhost:4000/api
+- **PostgreSQL:** localhost:5433
+- **Redis:** localhost:6379
 
 ## Running the Project with Docker
 
@@ -61,6 +87,13 @@ This project uses Docker for consistent development and production environments.
 
 ### Quick Start - Development Environment
 
+**Recommended: Use the automated startup script**
+```sh
+npm run start:dev
+```
+
+This handles everything automatically! Alternatively, for manual control:
+
 1. **Ensure Docker is running:**
    ```sh
    docker ps
@@ -71,10 +104,16 @@ This project uses Docker for consistent development and production environments.
    docker-compose --profile dev up -d
    ```
 
-3. **Access the application:**
+3. **Run migrations and seed data:**
+   ```sh
+   npm run db:push
+   npm run seed:test-accounts
+   ```
+
+4. **Access the application:**
    - Frontend: http://localhost:4000
    - Backend API: http://localhost:4000/api
-   - PostgreSQL: localhost:5432
+   - PostgreSQL: localhost:5433
 
 ### Development Environment Details
 
@@ -96,23 +135,26 @@ The development setup includes:
 ### Common Docker Commands
 
 ```sh
-# Start development environment
-docker-compose --profile dev up -d
+# Automated startup (RECOMMENDED)
+npm run start:dev
 
 # Stop development environment
-docker-compose --profile dev down
+npm run docker:dev:stop
 
 # View logs
-docker logs fitnessmealplanner-dev -f
+npm run docker:dev:logs
 
 # Restart containers
-docker-compose --profile dev restart
+npm run docker:dev:restart
 
 # Rebuild after dependency changes
-docker-compose --profile dev up -d --build
+npm run docker:dev:rebuild
 
-# Start production environment
-docker-compose --profile prod up -d
+# Manual Docker commands (if needed)
+docker-compose --profile dev up -d        # Start containers
+docker-compose --profile dev down         # Stop containers
+docker logs fitnessmealplanner-postgres   # View PostgreSQL logs
+docker logs fitnessmealplanner-redis      # View Redis logs
 ```
 
 ### Environment Variables

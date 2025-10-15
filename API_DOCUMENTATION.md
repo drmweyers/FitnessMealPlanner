@@ -1,7 +1,7 @@
 # FitnessMealPlanner API Documentation
 
 ## Base URL
-All API endpoints are relative to: `http://localhost:4000/api` (development) or `https://your-domain.com/api` (production)
+All API endpoints are relative to: `http://localhost:4000/api/v1` (development) or `https://your-domain.com/api/v1` (production)
 
 ## Authentication
 
@@ -23,6 +23,16 @@ Authorization: Bearer <jwt-token>
 - **Admin**: Full system access, user management
 - **Trainer**: Recipe management, meal plan creation, customer management
 - **Customer**: View assigned meal plans, track progress
+
+### Subscriptions and Tiers (Canonical Alignment)
+- API versioning: All endpoints are under /api/v1
+- Trainer tiers (one-time purchases): Tier 1 (Basic), Tier 2 (Analytics), Tier 3 (Advanced)
+- Analytics export capabilities by tier:
+  - Tier 2: CSV-only exports
+  - Tier 3: CSV, Excel, and PDF exports + programmatic Analytics API access
+- Trial policy: 14-day, tier-limited trial (no full platform trial). All gating and limits apply during trial
+- AI subscriptions (monthly add-on): Starter (100 generations/month), Professional (500/month), Enterprise (unlimited; fair use)
+- AI cancellation policy: Cancelling the AI subscription disables only AI features; purchased trainer tiers remain unchanged
 
 ### Protected Endpoints
 Endpoints marked with 🔒 require authentication. Unauthenticated requests will receive:
@@ -58,7 +68,7 @@ All API responses follow this consistent format:
 ### Authentication
 
 #### Get Current User
-🔒 `GET /auth/user`
+🔒 `GET /api/v1/auth/user`
 
 Returns the authenticated user's profile information.
 
@@ -78,7 +88,7 @@ Returns the authenticated user's profile information.
 ### Recipes
 
 #### Search Recipes
-`GET /recipes`
+`GET /api/v1/recipes`
 
 Search and filter recipes with comprehensive query parameters.
 
@@ -100,7 +110,7 @@ Search and filter recipes with comprehensive query parameters.
 
 **Example Request:**
 ```
-GET /recipes?mealType=breakfast&dietaryTag=vegan&maxPrepTime=30&page=1&limit=12
+GET /api/v1/recipes?mealType=breakfast&dietaryTag=vegan&maxPrepTime=30&page=1&limit=12
 ```
 
 **Response:**
@@ -139,7 +149,7 @@ GET /recipes?mealType=breakfast&dietaryTag=vegan&maxPrepTime=30&page=1&limit=12
 ```
 
 #### Get Single Recipe
-`GET /recipes/:id`
+`GET /api/v1/recipes/:id`
 
 Retrieve detailed information for a specific recipe.
 
@@ -179,7 +189,7 @@ Retrieve detailed information for a specific recipe.
 ### Meal Plans
 
 #### Generate Meal Plan
-🔒 `POST /meal-plans/generate`
+🔒 `POST /api/v1/meal-plans/generate`
 
 Generate a personalized meal plan based on user requirements.
 
@@ -261,7 +271,7 @@ Generate a personalized meal plan based on user requirements.
 ```
 
 #### Parse Natural Language
-🔒 `POST /meal-plans/parse-natural-language`
+🔒 `POST /api/v1/meal-plans/parse-natural-language`
 
 Parse natural language input into structured meal plan parameters.
 
@@ -288,7 +298,7 @@ Parse natural language input into structured meal plan parameters.
 ### Admin Operations
 
 #### Generate Recipes (Admin)
-🔒 `POST /admin/generate-recipes`
+🔒 `POST /api/v1/admin/generate-recipes`
 
 Batch generate recipes using AI for database seeding.
 
@@ -311,7 +321,7 @@ Batch generate recipes using AI for database seeding.
 ```
 
 #### Get Recipe Statistics
-🔒 `GET /admin/stats`
+🔒 `GET /api/v1/admin/stats`
 
 Get comprehensive statistics about the recipe database.
 
@@ -326,7 +336,7 @@ Get comprehensive statistics about the recipe database.
 ```
 
 #### Approve Recipe
-🔒 `PATCH /recipes/:id/approve`
+🔒 `PATCH /api/v1/recipes/:id/approve`
 
 Approve a pending recipe for public visibility.
 
@@ -346,7 +356,7 @@ Approve a pending recipe for public visibility.
 ### Utilities
 
 #### Placeholder Image
-`GET /placeholder/:width/:height`
+`GET /api/v1/placeholder/:width/:height`
 
 Generate placeholder images for recipes without photos.
 

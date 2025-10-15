@@ -25,13 +25,13 @@ Story 1.9 has been successfully implemented, providing administrators with a com
 ### 2. API Routes (`/server/routes/analytics.ts`)
 - ✅ Admin-only access control
 - ✅ RESTful endpoints:
-  - `GET /api/analytics/metrics` - System metrics
-  - `GET /api/analytics/users` - User activity
-  - `GET /api/analytics/content` - Content metrics
-  - `GET /api/analytics/security` - Security metrics
-  - `GET /api/analytics/health` - System health
-  - `GET /api/analytics/export` - Export data (JSON/CSV)
-  - `POST /api/analytics/cache/clear` - Clear cache
+- `GET /api/v1/analytics/metrics` - System metrics
+- `GET /api/v1/analytics/users` - User activity
+- `GET /api/v1/analytics/content` - Content metrics
+- `GET /api/v1/analytics/security` - Security metrics
+- `GET /api/v1/analytics/health` - System health
+- `GET /api/v1/analytics/export` - Export data (JSON/CSV). Note: Trainer analytics exports follow tier policy (Tier 2 CSV-only; Tier 3 CSV/Excel/PDF).
+- `POST /api/v1/analytics/cache/clear` - Clear cache
 
 ### 3. Admin Analytics Dashboard UI (`/client/src/pages/AdminAnalytics.tsx`)
 - ✅ Modern, responsive dashboard interface

@@ -9,9 +9,11 @@ import React from 'react';
 import { describe, test, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthContext } from '../../client/src/contexts/AuthContext';
 import MealPlanCard from '../../client/src/components/MealPlanCard';
 import MealPlanModal from '../../client/src/components/MealPlanModal';
 import type { CustomerMealPlan } from '@shared/schema';
+import type { AuthContextValue } from '../../client/src/types/auth';
 
 // Mock the UI components
 vi.mock('../../client/src/components/ui/card', () => ({
@@ -20,7 +22,11 @@ vi.mock('../../client/src/components/ui/card', () => ({
       {children}
     </div>
   ),
-  CardContent: ({ children }: any) => <div>{children}</div>,
+  CardContent: ({ children, className, onClick, ...props }: any) => (
+    <div className={className} onClick={onClick} {...props}>
+      {children}
+    </div>
+  ),
   CardHeader: ({ children }: any) => <div>{children}</div>,
   CardTitle: ({ children }: any) => <h3>{children}</h3>,
 }));
@@ -117,6 +123,22 @@ const createMealPlan = (overrides = {}): CustomerMealPlan => ({
   ...overrides,
 });
 
+// Mock auth context value
+const mockAuthValue: AuthContextValue = {
+  user: {
+    id: 'test-user-id',
+    email: 'test@example.com',
+    role: 'customer',
+    profilePicture: null,
+  },
+  isAuthenticated: true,
+  isLoading: false,
+  login: vi.fn(),
+  register: vi.fn(),
+  logout: vi.fn(),
+  updateProfile: vi.fn(),
+};
+
 const renderWithQuery = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -126,9 +148,11 @@ const renderWithQuery = (component: React.ReactElement) => {
   });
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
+    <AuthContext.Provider value={mockAuthValue}>
+      <QueryClientProvider client={queryClient}>
+        {component}
+      </QueryClientProvider>
+    </AuthContext.Provider>
   );
 };
 
@@ -150,8 +174,8 @@ describe('MealPlanCard Component', () => {
 
     renderWithQuery(<MealPlanCard mealPlan={mealPlan} onClick={onClick} />);
 
-    // Should still render without crashing
-    expect(screen.getByText('Test Meal Plan')).toBeInTheDocument();
+    // Should render error message when mealPlanData is null
+    expect(screen.getByText('Error: Invalid meal plan data')).toBeInTheDocument();
   });
 
   test('handles empty meals array', () => {
@@ -203,10 +227,11 @@ describe('MealPlanCard Component', () => {
     const mealPlan = createMealPlan();
     const onClick = vi.fn();
 
-    renderWithQuery(<MealPlanCard mealPlan={mealPlan} onClick={onClick} />);
+    const { container } = renderWithQuery(<MealPlanCard mealPlan={mealPlan} onClick={onClick} />);
 
-    const card = screen.getByText('Test Meal Plan').closest('div');
-    fireEvent.click(card!);
+    // Find any clickable element in the card (CardContent has the onClick handler)
+    const clickableElement = container.querySelector('[class*="p-"]');
+    fireEvent.click(clickableElement!);
 
     expect(onClick).toHaveBeenCalled();
   });
@@ -229,8 +254,8 @@ describe('MealPlanModal Component', () => {
 
     renderWithQuery(<MealPlanModal mealPlan={mealPlan} onClose={onClose} />);
 
-    // Should render without crashing, even with missing data
-    expect(screen.getByText('Daily Meal Schedule')).toBeInTheDocument();
+    // Should render error dialog when mealPlanData is null
+    expect(screen.getByText('Invalid meal plan data. Cannot display details.')).toBeInTheDocument();
   });
 
   test('handles empty meals array', () => {

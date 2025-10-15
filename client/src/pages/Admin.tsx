@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Check, X, BarChart3 } from "lucide-react";
+import { Check, X, BarChart3, Eye, Download, ChefHat, Utensils, Calendar, Bot, Settings } from "lucide-react";
 import { Link } from "wouter";
 import { 
   Pagination, 
@@ -28,6 +28,7 @@ import PendingRecipesTable from "../components/PendingRecipesTable";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import BulkDeleteToolbar from "../components/BulkDeleteToolbar";
 import ExportJSONModal from "../components/ExportJSONModal";
+import BMADRecipeGenerator from "../components/BMADRecipeGenerator";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Admin() {
@@ -249,24 +250,57 @@ export default function Admin() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 sm:space-y-8">
         <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3">
           <TabsTrigger value="recipes" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-recipes">
-            <i className="fas fa-utensils text-sm sm:text-base"></i>
-            <span className="hidden sm:inline">Recipes</span>
+            <Utensils className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">Recipe Library</span>
             <span className="sm:hidden">Recipes</span>
           </TabsTrigger>
           <TabsTrigger value="meal-plans" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-meal-plans">
-            <i className="fas fa-utensils text-sm sm:text-base"></i>
-            <span className="hidden sm:inline">Meal Plan Generator</span>
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">Meal Plan Builder</span>
             <span className="sm:hidden">Plans</span>
           </TabsTrigger>
-          <TabsTrigger value="admin" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-admin">
-            <i className="fas fa-cog text-sm sm:text-base"></i>
-            <span className="hidden sm:inline">Admin</span>
-            <span className="sm:hidden">Admin</span>
+          <TabsTrigger value="bmad" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-bmad">
+            <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">BMAD Generator</span>
+            <span className="sm:hidden">BMAD</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="recipes">
           <div className="space-y-6">
+            {/* Recipe Library Header with Action Buttons */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b">
+              <h2 className="text-2xl font-bold text-slate-900">Recipe Library</h2>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  onClick={() => setShowRecipeGenerationModal(true)}
+                  className="bg-primary hover:bg-primary/90"
+                  data-testid="admin-generate-recipes"
+                >
+                  <ChefHat className="mr-2 h-4 w-4" />
+                  Generate Recipes
+                </Button>
+                <Button
+                  onClick={() => setShowPendingModal(true)}
+                  variant="outline"
+                  className="border-secondary text-secondary hover:bg-secondary hover:text-white"
+                  data-testid="admin-view-pending"
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Review Queue ({stats?.pending || 0})
+                </Button>
+                <Button
+                  onClick={() => setShowExportModal(true)}
+                  variant="outline"
+                  className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                  data-testid="admin-export-data"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Data
+                </Button>
+              </div>
+            </div>
+
             {/* Search and Filters */}
             <div className="space-y-4">
               <div className="flex flex-col gap-4">
@@ -275,8 +309,8 @@ export default function Admin() {
                     <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
                   </div>
                   <div className="flex items-center gap-2">
-                    <ViewToggle 
-                      viewType={viewType} 
+                    <ViewToggle
+                      viewType={viewType}
                       onViewTypeChange={handleViewTypeChange}
                     />
                     <Button
@@ -530,77 +564,8 @@ export default function Admin() {
           <MealPlanGenerator />
         </TabsContent>
 
-        <TabsContent value="admin">
-          {/* Admin Action Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
-            <Card>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
-                    <i className="fas fa-plus-circle text-primary text-lg sm:text-xl"></i>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Generate Recipes</h3>
-                </div>
-                <p className="text-sm sm:text-base text-slate-600 mb-4">Create new recipes using AI integration</p>
-                <Button 
-                  className="w-full bg-primary hover:bg-primary/90" 
-                  onClick={() => setShowRecipeGenerationModal(true)}
-                  data-testid="admin-generate-recipes"
-                >
-                  <span className="flex items-center justify-center">
-                    <i className="fas fa-magic mr-2"></i>
-                    Generate New Batch
-                  </span>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-secondary/10 rounded-lg flex-shrink-0">
-                    <i className="fas fa-eye text-secondary text-lg sm:text-xl"></i>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Review Queue</h3>
-                </div>
-                <p className="text-sm sm:text-base text-slate-600 mb-4">Review and approve pending recipes</p>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-secondary text-secondary hover:bg-secondary hover:text-white"
-                  onClick={handleViewPendingClick}
-                  data-testid="admin-view-pending"
-                >
-                  <span className="flex items-center justify-center">
-                    <i className="fas fa-list mr-2"></i>
-                    View Pending ({stats?.pending || "0"})
-                  </span>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
-                    <i className="fas fa-download text-green-600 text-lg sm:text-xl"></i>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">Export JSON</h3>
-                </div>
-                <p className="text-sm sm:text-base text-slate-600 mb-4">Export data as JSON files for backup or analysis</p>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
-                  onClick={() => setShowExportModal(true)}
-                  data-testid="admin-export-data"
-                >
-                  <span className="flex items-center justify-center">
-                    <i className="fas fa-database mr-2"></i>
-                    Export Data
-                  </span>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="bmad">
+          <BMADRecipeGenerator />
         </TabsContent>
       </Tabs>
 

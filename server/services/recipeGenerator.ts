@@ -5,7 +5,6 @@ import { OpenAIRateLimiter } from "./utils/RateLimiter";
 import { RecipeCache } from "./utils/RecipeCache";
 import { RecipeGenerationMetrics } from "./utils/Metrics";
 import { uploadImageToS3 } from "./utils/S3Uploader";
-import { progressTracker } from "./progressTracker";
 
 interface GenerationOptions {
   count: number;
@@ -23,7 +22,6 @@ interface GenerationOptions {
   maxCarbs?: number;
   minFat?: number;
   maxFat?: number;
-  jobId?: string; // Optional job ID for progress tracking
 }
 
 interface GenerationResult {
@@ -36,6 +34,13 @@ interface GenerationResult {
   };
 }
 
+// Placeholder image URL for recipes without generated images
+const PLACEHOLDER_IMAGE_URL = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=600&fit=crop';
+
+// Timeout configuration
+const IMAGE_GENERATION_TIMEOUT_MS = 30000; // 30 seconds
+const IMAGE_UPLOAD_TIMEOUT_MS = 15000; // 15 seconds
+
 export class RecipeGeneratorService {
   private rateLimiter = new OpenAIRateLimiter();
   private cache = new RecipeCache();
@@ -43,14 +48,7 @@ export class RecipeGeneratorService {
 
   async generateAndStoreRecipes(options: GenerationOptions): Promise<GenerationResult> {
     const startTime = Date.now();
-    const jobId = options.jobId;
-    
     try {
-      // Update progress to generating step
-      if (jobId) {
-        progressTracker.updateProgress(jobId, { currentStep: 'generating' });
-      }
-
       const generatedRecipes = await this.rateLimiter.execute(() =>
         generateRecipeBatch(options.count, {
           mealTypes: options.mealTypes,
@@ -71,52 +69,28 @@ export class RecipeGeneratorService {
       );
       
       if (!generatedRecipes || generatedRecipes.length === 0) {
-        if (jobId) {
-          progressTracker.markJobFailed(jobId, "No recipes were generated in the batch.");
-        }
         throw new Error("No recipes were generated in the batch.");
       }
 
-      // Update progress to validation/processing step
-      if (jobId) {
-        progressTracker.updateProgress(jobId, { currentStep: 'validating' });
-      }
-
-      // Process recipes one by one with progress tracking
-      const finalResult: GenerationResult = { success: 0, failed: 0, errors: [] };
+      const results = await Promise.allSettled(
+        generatedRecipes.map(recipe => this.processSingleRecipe(recipe))
+      );
       
-      for (let i = 0; i < generatedRecipes.length; i++) {
-        const recipe = generatedRecipes[i];
-        
-        try {
-          // Update step progress
-          if (jobId) {
-            progressTracker.recordStepProgress(jobId, i + 1, 'Processing Recipe', i + 1, generatedRecipes.length);
-          }
-          
-          const result = await this.processSingleRecipe(recipe, jobId);
-          
-          if (result.success) {
-            finalResult.success++;
-            if (jobId) {
-              progressTracker.recordSuccess(jobId, recipe.name);
-            }
+      const finalResult = results.reduce<GenerationResult>(
+        (acc, result) => {
+          if (result.status === 'fulfilled' && result.value.success) {
+            acc.success++;
           } else {
-            finalResult.failed++;
-            finalResult.errors.push(result.error || 'Unknown processing error');
-            if (jobId) {
-              progressTracker.recordFailure(jobId, result.error || 'Unknown processing error', recipe.name);
-            }
+            acc.failed++;
+            const reason = result.status === 'rejected' 
+              ? result.reason 
+              : (result.value as { error: string }).error;
+            acc.errors.push(String(reason));
           }
-        } catch (error) {
-          finalResult.failed++;
-          const errorMsg = `Failed to process recipe "${recipe.name}": ${error}`;
-          finalResult.errors.push(errorMsg);
-          if (jobId) {
-            progressTracker.recordFailure(jobId, errorMsg, recipe.name);
-          }
-        }
-      }
+          return acc;
+        },
+        { success: 0, failed: 0, errors: [] }
+      );
 
       const totalDuration = Date.now() - startTime;
       finalResult.metrics = {
@@ -125,21 +99,11 @@ export class RecipeGeneratorService {
       };
       this.metrics.recordGeneration(totalDuration, finalResult.success === options.count);
 
-      // Mark job as complete
-      if (jobId) {
-        progressTracker.updateProgress(jobId, { currentStep: 'complete' });
-      }
-
       return finalResult;
 
     } catch (error) {
       const errorMsg = `Recipe generation service failed: ${error}`;
       console.error(errorMsg);
-      
-      if (jobId) {
-        progressTracker.markJobFailed(jobId, errorMsg);
-      }
-      
       this.metrics.recordGeneration(
         Date.now() - startTime,
         false,
@@ -149,32 +113,55 @@ export class RecipeGeneratorService {
     }
   }
 
-  private async processSingleRecipe(recipe: GeneratedRecipe, jobId?: string): Promise<{ success: boolean; error?: string }> {
-    // Validation step
-    if (jobId) {
-      progressTracker.updateProgress(jobId, { currentStep: 'validating' });
+  /**
+   * ==========================================
+   * Timeout utility methods
+   * ==========================================
+   */
+  private async timeoutAfter(ms: number): Promise<never> {
+    return new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms);
+    });
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+    try {
+      return await Promise.race([promise, this.timeoutAfter(ms)]);
+    } catch {
+      return fallback;
     }
-    
+  }
+
+  /**
+   * ==========================================
+   * 🔒 CRITICAL FIX: Non-blocking Recipe Processing
+   * Last updated: October 6, 2025
+   * Issue: Recipe generation was hanging at 80% due to blocking image generation
+   * Solution: Save recipes with placeholder images, generate actual images in background
+   * ==========================================
+   */
+  private async processSingleRecipe(recipe: GeneratedRecipe): Promise<{ success: boolean; error?: string; recipeId?: number }> {
     const validation = await this.validateRecipe(recipe);
     if (!validation.success) {
       return { success: false, error: validation.error };
     }
 
-    // Image generation step
-    if (jobId) {
-      progressTracker.updateProgress(jobId, { currentStep: 'images' });
+    // ✅ Use placeholder image immediately - DON'T WAIT for image generation
+    // This allows recipe to be saved quickly (< 5 seconds)
+    const imageUrl = PLACEHOLDER_IMAGE_URL;
+
+    // ✅ Save recipe to database FIRST
+    const result = await this.storeRecipe({ ...recipe, imageUrl });
+
+    // ✅ Generate actual image in BACKGROUND (fire and forget)
+    if (result.success && result.recipeId) {
+      this.generateImageInBackground(result.recipeId, recipe).catch(error => {
+        console.error(`Background image generation failed for ${recipe.name}:`, error);
+        // Don't fail the recipe - it's already saved with placeholder
+      });
     }
-    
-    const imageUrl = await this.getOrGenerateImage(recipe);
-    // Use a placeholder if image generation fails
-    const finalImageUrl = imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80';
-    
-    // Storage step
-    if (jobId) {
-      progressTracker.updateProgress(jobId, { currentStep: 'storing' });
-    }
-    
-    return this.storeRecipe({ ...recipe, imageUrl: finalImageUrl });
+
+    return result;
   }
 
   private async validateRecipe(recipe: GeneratedRecipe): Promise<{ success: boolean; error?: string }> {
@@ -201,7 +188,7 @@ export class RecipeGeneratorService {
 
   private async storeRecipe(
     recipe: GeneratedRecipe
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; recipeId?: number }> {
     try {
       const recipeData: InsertRecipe = {
         name: recipe.name,
@@ -223,40 +210,70 @@ export class RecipeGeneratorService {
         fatGrams: Number(recipe.estimatedNutrition.fat).toFixed(2),
         imageUrl: recipe.imageUrl,
         sourceReference: 'AI Generated',
-        isApproved: true,
+        isApproved: false,
       };
 
-      await storage.createRecipe(recipeData);
-      return { success: true };
+      const createdRecipe = await storage.createRecipe(recipeData);
+      return { success: true, recipeId: Number(createdRecipe.id) };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { success: false, error: `Failed to store recipe "${recipe.name}": ${message}` };
     }
   }
 
-  private async getOrGenerateImage(recipe: GeneratedRecipe): Promise<string | null> {
+  private async getOrGenerateImage(recipe: GeneratedRecipe): Promise<string> {
     const cacheKey = `image_s3_${recipe.name.replace(/\s/g, '_')}`;
-    
+
     try {
       return await this.cache.getOrSet(cacheKey, async () => {
-        console.log(`[Image Generation] Starting for recipe: ${recipe.name}`);
-        const tempUrl = await generateImageForRecipe(recipe);
+        // Generate temp URL with timeout
+        const tempUrl = await this.withTimeout(
+          generateImageForRecipe(recipe),
+          IMAGE_GENERATION_TIMEOUT_MS,
+          null
+        );
+
         if (!tempUrl) {
-          throw new Error("Did not receive a temporary URL from OpenAI.");
+          console.log(`⚠️  Image generation timeout/failed for "${recipe.name}"`);
+          return PLACEHOLDER_IMAGE_URL;
         }
-        console.log(`[Image Generation] Got temporary URL from OpenAI for: ${recipe.name}`);
-        
-        const permanentUrl = await uploadImageToS3(tempUrl, recipe.name);
-        console.log(`[Image Generation] Uploaded to S3, permanent URL: ${permanentUrl}`);
-        return permanentUrl;
+
+        // Upload to S3 with timeout
+        const permanentUrl = await this.withTimeout(
+          uploadImageToS3(tempUrl, recipe.name),
+          IMAGE_UPLOAD_TIMEOUT_MS,
+          PLACEHOLDER_IMAGE_URL
+        );
+
+        return permanentUrl || PLACEHOLDER_IMAGE_URL;
       });
     } catch (error) {
-      console.error(`[Image Generation] Failed for "${recipe.name}":`, error);
-      // Check if it's an API key issue
-      if (error.message?.includes('API key') || error.message?.includes('Incorrect API key')) {
-        console.error('[Image Generation] OpenAI API key issue detected');
+      console.error(`Failed to generate/upload image for "${recipe.name}":`, error);
+      return PLACEHOLDER_IMAGE_URL;
+    }
+  }
+
+  private async generateImageInBackground(recipeId: number, recipe: GeneratedRecipe): Promise<void> {
+    try {
+      console.log(`⏳ Generating image in background for "${recipe.name}" (ID: ${recipeId})...`);
+
+      // Generate image with timeout
+      const imageUrl = await this.withTimeout(
+        this.getOrGenerateImage(recipe),
+        IMAGE_GENERATION_TIMEOUT_MS + IMAGE_UPLOAD_TIMEOUT_MS,
+        PLACEHOLDER_IMAGE_URL
+      );
+
+      // Only update if we got a real image (not placeholder)
+      if (imageUrl && imageUrl !== PLACEHOLDER_IMAGE_URL) {
+        await storage.updateRecipe(String(recipeId), { imageUrl });
+        console.log(`✅ Background image generated for "${recipe.name}"`);
+      } else {
+        console.log(`ℹ️  Using placeholder image for "${recipe.name}"`);
       }
-      return null;
+    } catch (error) {
+      console.error(`❌ Background image generation error for "${recipe.name}":`, error);
+      // Don't throw - recipe is already saved
     }
   }
 

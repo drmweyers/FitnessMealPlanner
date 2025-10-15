@@ -6,6 +6,8 @@ import {
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  timeout: 120000, // 2 minutes timeout for all API calls
+  maxRetries: 2, // Retry failed requests twice
 });
 
 export interface GeneratedRecipe {
@@ -25,7 +27,7 @@ export interface GeneratedRecipe {
     carbs: number;
     fat: number;
   };
-  imageUrl: string;
+  imageUrl?: string; // Optional - added later by image generation
 }
 
 interface GenerateOptions {
@@ -95,12 +97,59 @@ function parsePartialJson(jsonString: string): any {
 }
 
 /**
- * Enhanced recipe batch generation with detailed system prompts
+ * Optimal chunk size for batch recipe generation
+ * Batches larger than this will be split into multiple API calls
+ */
+const OPTIMAL_CHUNK_SIZE = 5;
+
+/**
+ * Public API: Generate recipes in batch, automatically chunking large requests
  */
 export async function generateRecipeBatch(
   count: number,
   options: GenerateOptions = {}
 ): Promise<GeneratedRecipe[]> {
+  if (count > OPTIMAL_CHUNK_SIZE) {
+    console.log(`Large batch detected (${count} recipes). Splitting into chunks of ${OPTIMAL_CHUNK_SIZE}...`);
+    return await generateRecipeBatchChunked(count, options);
+  }
+  return await generateRecipeBatchSingle(count, options);
+}
+
+/**
+ * Process large batches by splitting into optimal chunks
+ */
+async function generateRecipeBatchChunked(
+  totalCount: number,
+  options: GenerateOptions
+): Promise<GeneratedRecipe[]> {
+  const allRecipes: GeneratedRecipe[] = [];
+  const chunks = Math.ceil(totalCount / OPTIMAL_CHUNK_SIZE);
+
+  for (let i = 0; i < chunks; i++) {
+    const chunkSize = Math.min(OPTIMAL_CHUNK_SIZE, totalCount - allRecipes.length);
+    console.log(`📦 Generating chunk ${i + 1}/${chunks} (${chunkSize} recipes)...`);
+
+    const chunkRecipes = await generateRecipeBatchSingle(chunkSize, options);
+    allRecipes.push(...chunkRecipes);
+
+    console.log(`✅ Chunk ${i + 1}/${chunks} complete. Progress: ${allRecipes.length}/${totalCount} recipes generated`);
+  }
+
+  console.log(`🎉 All ${totalCount} recipes generated successfully!`);
+  return allRecipes;
+}
+
+/**
+ * Generate a single batch of recipes (internal implementation)
+ */
+async function generateRecipeBatchSingle(
+  count: number,
+  options: GenerateOptions = {}
+): Promise<GeneratedRecipe[]> {
+  console.log(`[generateRecipeBatchSingle] CALLED with count=${count}, options=`, Object.keys(options));
+  console.log(`[generateRecipeBatchSingle] OPENAI_API_KEY exists: ${!!process.env.OPENAI_API_KEY}`);
+
   const systemPrompt = `You are an expert nutritionist and professional chef.
 Generate a batch of ${count} diverse and healthy recipes.
 ${options.fitnessGoal ? `Focus on recipes that support this fitness goal: ${options.fitnessGoal}.` : ''}
@@ -181,6 +230,10 @@ ${contextLines.length > 0 ? contextLines.join('\n') : 'No specific requirements 
 Respond with { "recipes": [ ... ] }`;
 
   try {
+    console.log(`[generateRecipeBatchSingle] About to call OpenAI API...`);
+    console.log(`[generateRecipeBatchSingle] System prompt length: ${systemPrompt.length}`);
+    console.log(`[generateRecipeBatchSingle] User prompt length: ${userPrompt.length}`);
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -191,40 +244,62 @@ Respond with { "recipes": [ ... ] }`;
       temperature: 0.8,
     });
 
+    console.log(`[generateRecipeBatchSingle] OpenAI API call completed successfully`);
+
     const content = response.choices[0].message.content;
     if (!content) {
       throw new Error("No content received from OpenAI");
     }
 
+    console.log(`[generateRecipeBatchSingle] Raw content length: ${content.length} characters`);
+    console.log(`[generateRecipeBatchSingle] First 500 chars of content:`, content.substring(0, 500));
+
     // Use the robust JSON parser
     const parsedJson = parsePartialJson(content);
+    console.log(`[generateRecipeBatchSingle] Parsed JSON keys:`, Object.keys(parsedJson));
+    console.log(`[generateRecipeBatchSingle] parsedJson.recipes exists:`, !!parsedJson.recipes);
+    console.log(`[generateRecipeBatchSingle] parsedJson.recipes type:`, typeof parsedJson.recipes);
+    console.log(`[generateRecipeBatchSingle] parsedJson.recipes length:`, parsedJson.recipes?.length);
 
     // Extract recipes array, which might be at the top level or nested
     const recipes = parsedJson.recipes || (Array.isArray(parsedJson) ? parsedJson : []);
+    console.log(`[generateRecipeBatchSingle] Extracted recipes array length:`, recipes.length);
 
     if (!Array.isArray(recipes) || recipes.length === 0) {
       console.error("Parsed content that was not a valid recipe array:", recipes);
       throw new Error("Invalid or empty recipe array received from OpenAI.");
     }
-    
+
     // Full validation on each recipe object
     const validRecipes: GeneratedRecipe[] = [];
     const invalidRecipes: any[] = [];
 
     for (const r of recipes) {
+      console.log(`[generateRecipeBatchSingle] Validating recipe:`, {
+        hasName: !!r?.name,
+        hasIngredients: !!r?.ingredients,
+        hasInstructions: !!r?.instructions,
+        hasNutrition: !!r?.estimatedNutrition,
+        recipeName: r?.name
+      });
+
       if (
         r &&
         r.name &&
         r.ingredients &&
         r.instructions &&
-        r.estimatedNutrition &&
-        typeof r.imageUrl === 'string'
+        r.estimatedNutrition
+        // imageUrl is optional - added later by image generation service
       ) {
         validRecipes.push(r as GeneratedRecipe);
+        console.log(`[generateRecipeBatchSingle] ✅ Recipe "${r.name}" passed validation`);
       } else {
         invalidRecipes.push(r);
+        console.warn(`[generateRecipeBatchSingle] ❌ Recipe failed validation:`, JSON.stringify(r, null, 2));
       }
     }
+
+    console.log(`[generateRecipeBatchSingle] Validation complete: ${validRecipes.length} valid, ${invalidRecipes.length} invalid`);
 
     if (invalidRecipes.length > 0) {
       console.warn(`Filtered out ${invalidRecipes.length} invalid recipe objects.`);
@@ -232,6 +307,7 @@ Respond with { "recipes": [ ... ] }`;
       console.debug('Example invalid recipe:', JSON.stringify(invalidRecipes[0], null, 2));
     }
 
+    console.log(`[generateRecipeBatchSingle] Returning ${validRecipes.length} valid recipes`);
     return validRecipes;
 
   } catch (error) {
@@ -338,14 +414,32 @@ export async function parseNaturalLanguageRecipeRequirements(
 You are an intelligent assistant for a recipe management application.
 A user has provided a natural language request to create or find recipes.
 Your task is to parse this request and extract the key parameters into a structured JSON object.
-The JSON object should include fields like:
+
+The JSON object should include these fields when mentioned in the input:
+- count: number (how many recipes to generate, e.g., 10, 15, 30)
 - mealTypes: array of strings (e.g., ["breakfast", "lunch", "dinner", "snack"])
-- dietaryTags: array of strings (e.g., ["vegetarian", "gluten-free", "keto"])
-- mainIngredientTags: array of strings (e.g., ["chicken", "beef", "tofu"])
-- maxPrepTime: number (in minutes)
-- targetCalories: number
-- fitnessGoal: string
-- description: string
+- dietaryTags: array of strings (e.g., ["vegetarian", "gluten-free", "keto", "paleo", "dairy-free", "nut-free"])
+- mainIngredientTags: array of strings (e.g., ["chicken", "beef", "tofu", "fish", "eggs"])
+- focusIngredient: string (primary ingredient to feature, e.g., "eggs", "Greek yogurt", "chicken breast")
+- maxPrepTime: number (maximum preparation time in minutes)
+- minCalories: number (minimum calories per serving)
+- maxCalories: number (maximum calories per serving)
+- minProtein: number (minimum protein in grams)
+- maxProtein: number (maximum protein in grams)
+- minCarbs: number (minimum carbohydrates in grams)
+- maxCarbs: number (maximum carbohydrates in grams)
+- minFat: number (minimum fat in grams)
+- maxFat: number (maximum fat in grams)
+- difficulty: string (e.g., "easy", "medium", "hard")
+- fitnessGoal: string (e.g., "muscle gain", "weight loss", "maintenance")
+- description: string (any additional context or requirements)
+
+Examples:
+Input: "Generate 15 high-protein breakfast recipes under 20 minutes prep time, focusing on eggs and Greek yogurt, suitable for keto diet, with 400-600 calories"
+Output: {"count": 15, "mealTypes": ["breakfast"], "dietaryTags": ["keto"], "maxPrepTime": 20, "focusIngredient": "eggs, Greek yogurt", "minCalories": 400, "maxCalories": 600, "minProtein": 40}
+
+Input: "Create 10 easy vegetarian dinner recipes with 500-700 calories and at least 25g protein"
+Output: {"count": 10, "mealTypes": ["dinner"], "dietaryTags": ["vegetarian"], "difficulty": "easy", "minCalories": 500, "maxCalories": 700, "minProtein": 25}
 
 If a value isn't mentioned, omit the key from the JSON object.
 The output MUST be a single, valid JSON object. Do not include any other text or explanations.

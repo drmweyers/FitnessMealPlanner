@@ -5,21 +5,25 @@ import { registerRoutes } from '../server/routes';
 import { storage } from '../server/storage';
 import { hashPassword } from '../server/auth';
 
-describe('API Tests', () => {
-    let app: Express;
-    let server: any;
-    let agent: request.SuperTest<request.Test>;
+// Global test setup - agent available to all describe blocks
+let app: Express;
+let server: any;
+let agent: request.SuperTest<request.Test>;
 
-    beforeAll(async () => {
-        app = express();
-        app.use(express.json());
-        server = await registerRoutes(app);
-        agent = request(app);
-    });
+beforeAll(async () => {
+    app = express();
+    app.use(express.json());
+    server = await registerRoutes(app);
+    agent = request(app);
+});
 
-    afterAll(() => {
+afterAll(() => {
+    if (server) {
         server.close();
-    });
+    }
+});
+
+describe('API Tests', () => {
 
     describe('Public API Routes', () => {
         it('should return 404 for an unknown route', async () => {
