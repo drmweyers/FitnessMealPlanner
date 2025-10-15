@@ -180,6 +180,151 @@ git checkout main
 4. Test all user roles (Admin, Trainer, Customer)
 5. Verify responsive design on different screen sizes
 
+## 🚀 Awesome Testing Protocol (Production Validation)
+
+**Purpose:** Final validation before every production deployment
+**Trigger Phrase:** "run Awesome Testing Protocol" or "run awesome testing"
+**Status:** ✅ Production-Ready | 100% Pass Rate Required
+
+### What It Does
+
+The Awesome Testing Protocol is a comprehensive test suite that validates **100% of critical user flows** before deployment:
+
+- ✅ **Authentication** (6 tests) - All roles login/logout
+- ✅ **RBAC** (9 tests) - Permission boundaries enforced
+- ✅ **Admin Features** (5 tests) - Recipe management, User management
+- ✅ **Trainer Features** (5 tests) - Customer management, Meal plans
+- ✅ **Customer Features** (5 tests) - Meal plans, Grocery lists, Progress
+- ✅ **Cross-Browser** (3 browsers) - Chromium, Firefox, WebKit
+
+**Total:** 30 tests × 3 browsers = 90 test executions in ~5 minutes
+
+### Quick Commands
+
+```bash
+# Run the full protocol (recommended before deployment)
+npm run test:awesome
+
+# View comprehensive documentation
+cat test/AWESOME_TESTING_PROTOCOL.md
+
+# Run with UI mode
+npx playwright test test/e2e/awesome-testing-protocol.spec.ts --ui
+```
+
+### When To Run
+
+**ALWAYS run before:**
+- Production deployments
+- Merging to main branch
+- Creating releases
+- Major feature additions
+
+**Expected Output:**
+```
+✅ 30 passed across all browsers
+✅ 100% SUCCESS - READY FOR PRODUCTION! 🚀
+```
+
+**If any test fails:** ❌ **DO NOT DEPLOY** - Fix issues first
+
+### Documentation
+
+- **Full Guide:** `test/AWESOME_TESTING_PROTOCOL.md`
+- **Test File:** `test/e2e/awesome-testing-protocol.spec.ts`
+- **100% Success Report:** `test/100_PERCENT_SUCCESS.md`
+
+---
+
+## 🔄 Role Interaction Testing Protocol (NEW - January 2025)
+
+**Purpose:** Comprehensive testing of interactions between Admin, Trainer, and Customer roles
+**Trigger Phrase:** "run interaction testing protocol" or "run role interaction tests"
+**Status:** ✅ Ready for Execution | 139 Total Tests
+
+### What It Does
+
+The Role Interaction Testing Protocol validates **ALL collaborations between the three user roles** - the core business value of the application:
+
+- ✅ **Admin ↔ Trainer** (38 tests) - Recipe approval, trainer management, system oversight
+- ✅ **Trainer ↔ Customer** (52 tests) - Invitations, meal plans, progress tracking
+- ✅ **Admin ↔ Customer** (23 tests) - Customer support, data access
+- ✅ **Multi-Role Workflows** (26 tests) - Complete system lifecycle validation
+
+**Total:** 139 tests (30 unit + 100 integration + 9 E2E)
+
+### Quick Commands
+
+```bash
+# Run all role interaction tests
+npm run test -- test/unit/services/roleInteractions.test.ts
+npx playwright test test/e2e/role-collaboration-workflows.spec.ts
+
+# Run with Playwright UI (recommended)
+npx playwright test test/e2e/role-collaboration-workflows.spec.ts --ui
+
+# Run across all browsers
+npx playwright test test/e2e/role-collaboration-workflows.spec.ts --project=chromium --project=firefox --project=webkit
+
+# Run specific workflow
+npx playwright test test/e2e/role-collaboration-workflows.spec.ts -g "Complete Recipe Workflow"
+```
+
+### What This Validates
+
+**Critical Role Interactions:**
+- ✅ Admin creates recipes → Trainers use them → Customers see them
+- ✅ Trainers invite customers → Customers accept → Relationship established
+- ✅ Trainers create meal plans → Assign to customers → Customers view
+- ✅ Customers update progress → Trainers review → Trainers adjust plans
+- ✅ Multiple meal plans per customer
+- ✅ Data isolation between roles
+- ✅ Permission boundaries enforced
+- ✅ Complete system workflows validated
+
+### When To Run
+
+**Run before:**
+- Production deployments (alongside Awesome Testing Protocol)
+- Major feature additions affecting multiple roles
+- Permission/security changes
+- Database schema changes affecting role relationships
+
+**Run after:**
+- Changes to user management
+- Changes to meal plan assignment logic
+- Changes to invitation system
+- Changes to progress tracking
+
+### Expected Output
+
+```
+✅ 30 unit tests passed
+✅ 8 E2E workflows passed across all browsers
+✅ 100% role collaboration coverage
+✅ READY FOR PRODUCTION! 🚀
+```
+
+**If any test fails:** ❌ **DO NOT DEPLOY** - Fix role interaction issues first
+
+### Documentation
+
+- **Protocol**: `docs/qa/role-interaction-testing-protocol.md`
+- **Execution Guide**: `test/ROLE_INTERACTION_TESTING_EXECUTION_GUIDE.md`
+- **QA Gate**: `docs/qa/gates/role-interaction-testing-protocol-qa-gate.yml`
+- **Unit Tests**: `test/unit/services/roleInteractions.test.ts`
+- **E2E Tests**: `test/e2e/role-collaboration-workflows.spec.ts`
+
+### BMAD Integration
+
+This protocol was created using **BMAD multi-agent workflow methodology**:
+- QA Agent (Quinn) for test strategy and risk assessment
+- Test architecture following BMAD principles
+- Comprehensive documentation and quality gates
+- **QA Gate Decision**: PASS (9.6/10 quality score)
+
+---
+
 ## 🤖 Continuous Testing Framework (NEW - January 2025)
 
 ### Overview
@@ -830,3 +975,620 @@ Then use these commands within Claude Code:
 - **"change to local qwen"**: `/model ollama,qwen2.5-coder:latest`
 - **"change to gemini"**: `/model openrouter,google/gemini-2.5-pro-preview`
 - **"change to deepseek"**: `/model openrouter,deepseek/deepseek-chat`
+
+
+---
+
+## 🤖 BMAD-METHOD INTEGRATION
+
+**Status:** ✅ BMAD v4.44.0 Installed
+**Last Updated:** October 13, 2025
+**Global CTO Guidance:** C:\Users\drmwe\Claude\CLAUDE.md
+
+### Quick Reference
+
+**For comprehensive BMAD protocol and strategic guidance, refer to:**
+```
+C:\Users\drmwe\Claude\CLAUDE.md
+```
+
+This section provides **FitnessMealPlanner-specific** BMAD guidance.
+
+---
+
+### 🏗️ BMAD Installation (This Project)
+
+**Installed Instances:** 3
+
+1. **`.bmad-core`** - Core framework with 10 agents
+2. **`.bmad-creative-writing`** - Creative writing & documentation agents
+3. **`.bmad-infrastructure-devops`** - DevOps & infrastructure agents
+
+**Version:** 4.44.0
+**Master Source:** C:\Users\drmwe\Claude\BMAD-METHOD-MASTER
+
+---
+
+### 👥 Available Agents
+
+#### Core Agents (10) - `.bmad-core/`
+- `@analyst` - Business and market analysis
+- `@pm` - Product requirements and PRDs
+- `@architect` - System architecture design
+- `@ux-expert` - UI/UX specifications
+- `@po` - Document validation and sharding
+- `@sm` - Story creation from epics
+- `@dev` - Implementation and coding
+- `@qa` - Test architect (risk, design, review, nfr, trace, gate)
+- `@bmad-master` - Multi-purpose agent
+- `@bmad-orchestrator` - Web UI orchestration (not for IDE)
+
+#### Creative Writing Pack - `.bmad-creative-writing/`
+**Agents:** Character Psychologist, Plot Architect, World Builder, Dialog Specialist, Editor, Narrative Designer, Genre Specialist, Beta Reader, Book Critic, Cover Designer
+
+**Use Cases for FitnessMealPlanner:**
+- User-facing documentation (help guides, tooltips)
+- Marketing copy for landing pages
+- Recipe descriptions and meal plan narratives
+- Email templates and notifications
+- Blog content about nutrition and fitness
+
+#### Infrastructure DevOps Pack - `.bmad-infrastructure-devops/`
+**Agent:** Infrastructure/DevOps Platform Specialist
+
+**Use Cases for FitnessMealPlanner:**
+- Docker compose configuration
+- DigitalOcean deployment automation
+- CI/CD pipeline design
+- Database migration strategies
+- Production monitoring setup
+
+---
+
+### 🎯 When to Use BMAD (FitnessMealPlanner Context)
+
+#### ✅ USE BMAD For:
+
+**Recipe System Features:**
+- New recipe generation improvements
+- Recipe search/filter enhancements
+- Recipe categorization features
+- Nutrition calculation changes
+
+**Meal Planning Features:**
+- Meal plan generation algorithm updates
+- Multi-plan management features
+- Meal plan assignment workflows
+- PDF export enhancements
+
+**User Management:**
+- Authentication improvements
+- Role-based access control changes
+- Customer invitation system updates
+- Trainer-customer relationship features
+
+**Progress Tracking:**
+- Measurements tracking enhancements
+- Photo progress features
+- Goals and milestones system
+- Analytics dashboard additions
+
+**Infrastructure:**
+- Database schema changes
+- API architecture updates
+- Deployment automation
+- Performance optimization projects
+
+#### ❌ Use Traditional Development For:
+
+- Bug fixes (typos, broken links, style issues)
+- One-line code changes
+- Urgent production hotfixes
+- Simple UI text updates
+- Minor styling adjustments
+
+---
+
+### 🔄 Recommended BMAD Workflows
+
+#### Workflow 1: New Feature (Medium-High Complexity)
+
+**Example:** Add meal plan sharing feature
+
+```bash
+# Planning Phase
+@pm Create PRD for meal plan sharing feature
+@architect Design architecture (reference: docs/architecture.md + PRD)
+@po Validate alignment and shard into stories
+
+# Development Phase (for each story)
+@qa *risk docs/stories/[story].md          # Assess risks
+@qa *design docs/stories/[story].md        # Create test strategy
+@dev Implement docs/stories/[story].md     # Code + tests
+@qa *review docs/stories/[story].md        # Final review + gate
+```
+
+**Time Investment:** 2-4 hours planning, saves 10-20 hours in rework
+
+#### Workflow 2: Recipe System Enhancement
+
+**Example:** Improve recipe image generation
+
+```bash
+# Quick Architecture Review
+@architect Review current recipe image architecture
+
+# Create Story
+@sm Create story for recipe image enhancement (reference: architecture)
+
+# Implement with QA
+@qa *risk docs/stories/[story].md
+@dev Implement with comprehensive tests
+@qa *nfr docs/stories/[story].md           # Check performance
+@qa *review docs/stories/[story].md
+```
+
+#### Workflow 3: Infrastructure/DevOps Task
+
+**Example:** Optimize Docker startup
+
+```bash
+# Use Infrastructure DevOps agent
+@infra-devops-platform Analyze Docker startup performance
+@infra-devops-platform Design optimization strategy
+@dev Implement Docker compose improvements
+@infra-devops-platform Validate infrastructure changes
+```
+
+---
+
+### 💡 Project-Specific BMAD Best Practices
+
+#### 1. Recipe Generation (AI-Powered)
+
+**Current System:** BMAD Multi-Agent Recipe Generation
+- Uses 8 specialized agents
+- Server-Sent Events (SSE) for real-time progress
+- Generates 1-100 recipes with AI images
+
+**When Modifying:**
+```bash
+# Always assess risk first (complex AI system)
+@qa *risk docs/stories/recipe-generation-[feature].md
+
+# Architect should review AI integration points
+@architect Review recipe generation architecture for [change]
+
+# Dev with extensive testing
+@dev Implement [change] (reference: server/services/recipeGenerator.ts)
+
+# NFR assessment critical (performance + cost)
+@qa *nfr docs/stories/recipe-generation-[feature].md
+```
+
+#### 2. Database Schema Changes
+
+**Drizzle ORM + PostgreSQL**
+
+```bash
+# Always create PRD + Architecture for schema changes
+@pm Document database schema change for [feature]
+@architect Design database migration strategy
+
+# SM creates detailed story with rollback plan
+@sm Create story for database migration (include rollback)
+
+# Dev implements with thorough testing
+@dev Implement migration + comprehensive tests
+@qa *review (focus on data integrity and rollback)
+```
+
+#### 3. PDF Export Features
+
+**Puppeteer + EJS Templates**
+
+```bash
+# Use Creative Writing agents for content
+@narrative-designer Improve meal plan PDF narrative
+@editor Polish PDF text for clarity
+
+# Architect for template structure
+@architect Design PDF template architecture for [feature]
+
+# Dev for implementation
+@dev Implement PDF template changes
+@qa *review (test across different meal plan types)
+```
+
+#### 4. Deployment Automation
+
+```bash
+# Use Infrastructure DevOps agent
+@infra-devops-platform Review current deployment process
+@infra-devops-platform Design automated deployment pipeline
+
+# Document as infrastructure story
+@sm Create infrastructure story for deployment automation
+
+# Implement with validation
+@dev Implement deployment automation
+@infra-devops-platform Validate deployment process
+```
+
+---
+
+### 🚀 Quick BMAD Commands (FitnessMealPlanner)
+
+#### Analyze Recipe Feature Request
+```bash
+@pm Create PRD for [recipe feature]
+@architect Design architecture (reference: server/services/recipeGenerator.ts)
+@po Shard into implementable stories
+```
+
+#### Add New Meal Planning Feature
+```bash
+@pm Create PRD for [meal plan feature]
+@architect Design architecture (reference: docs/architecture.md)
+@ux-expert Create UI specifications for [feature]
+@po Validate and shard
+```
+
+#### Improve Documentation
+```bash
+@narrative-designer Create user guide for [feature]
+@editor Polish documentation for clarity
+@dev Integrate documentation into app
+```
+
+#### Optimize Production Deployment
+```bash
+@infra-devops-platform Analyze current deployment
+@infra-devops-platform Design optimization strategy
+@dev Implement deployment improvements
+```
+
+#### Emergency Production Fix (Skip BMAD)
+```bash
+# For urgent issues only
+@dev Fix [production issue] in [file]
+# Document after the fact
+@pm Add [issue] to PRD backlog for proper resolution
+```
+
+---
+
+### 🎯 Agent Selection Guide (FitnessMealPlanner)
+
+| Task Type | Primary Agent | Secondary Agents | Notes |
+|-----------|--------------|------------------|-------|
+| **Recipe Features** | @architect | @dev, @qa | Review recipeGenerator.ts architecture |
+| **Meal Planning** | @pm → @architect | @dev, @qa | Start with requirements |
+| **UI/UX Changes** | @ux-expert | @dev, @qa | Get design specs first |
+| **Database Changes** | @architect | @pm, @dev | Always document migrations |
+| **PDF Export** | @narrative-designer | @architect, @dev | Polish content first |
+| **Deployment** | @infra-devops-platform | @dev | Use DevOps pack |
+| **User Guides** | @narrative-designer → @editor | - | Creative Writing pack |
+| **Testing Strategy** | @qa | @dev | Use *risk, *design, *review |
+| **Bug Fixes** | @dev | - | Skip BMAD for simple fixes |
+
+---
+
+### 📁 BMAD Document Structure (FitnessMealPlanner)
+
+```
+FitnessMealPlanner/
+├── docs/
+│   ├── prd.md                  # Product requirements (if using BMAD planning)
+│   ├── architecture.md         # System architecture (if using BMAD planning)
+│   ├── epics/                 # Sharded epic files
+│   │   └── [epic-number]-[name].md
+│   ├── stories/               # Sharded story files
+│   │   └── [epic].[story]-[name].md
+│   └── qa/
+│       ├── assessments/       # Risk profiles, test designs, traces, nfr
+│       └── gates/            # Quality gate decisions
+├── .bmad-core/               # Core BMAD framework
+├── .bmad-creative-writing/   # Creative writing agents
+└── .bmad-infrastructure-devops/ # DevOps agents
+```
+
+---
+
+### 🔧 Maintenance & Updates
+
+#### Update BMAD Installation
+
+**From Master:**
+```bash
+cd /c/Users/drmwe/Claude
+cp -r BMAD-METHOD-MASTER/bmad-core FitnessMealPlanner/.bmad-core
+cp -r BMAD-METHOD-MASTER/expansion-packs/bmad-creative-writing FitnessMealPlanner/.bmad-creative-writing
+cp -r BMAD-METHOD-MASTER/expansion-packs/bmad-infrastructure-devops FitnessMealPlanner/.bmad-infrastructure-devops
+```
+
+**Verify Installation:**
+```bash
+ls -la .bmad-core/agents/     # Should show 10 agents
+ls -la .bmad-creative-writing/agents/  # Should show 10 writing agents
+ls -la .bmad-infrastructure-devops/agents/  # Should show infrastructure agent
+```
+
+---
+
+### 🐛 Troubleshooting
+
+#### Issue: Agent Not Found
+**Symptom:** `@agent` command doesn't work
+
+**Solution:**
+```bash
+# Verify BMAD installation
+ls .bmad-core/agents/
+
+# Check agent name (case-sensitive)
+# Claude Code: Use @agent or /agent
+# Cursor/Windsurf: Use @agent
+```
+
+#### Issue: Story Too Complex
+**Symptom:** Story is > 500 lines, Dev agent overwhelmed
+
+**Solution:**
+```bash
+# Ask PO to split story
+@po Split story [name] into smaller stories
+
+# Or ask SM to refine
+@sm Refine story [name] into smaller tasks
+```
+
+#### Issue: Quality Gate FAIL
+**Symptom:** @qa *review returns FAIL
+
+**Solution:**
+```bash
+# Review QA assessment details
+@qa *review docs/stories/[story].md
+
+# Fix P0 issues first
+@dev Fix [critical issue] in [story]
+
+# Re-run gate
+@qa *gate docs/stories/[story].md
+```
+
+---
+
+### 📚 Resources
+
+**Global CTO Guidance:**
+- C:\Users\drmwe\Claude\CLAUDE.md (comprehensive BMAD protocol)
+
+**Project Documentation:**
+- PLANNING.md (session progress tracking)
+- docs/architecture.md (system architecture)
+- docs/prd.md (product requirements - if using BMAD)
+
+**BMAD Documentation:**
+- C:\Users\drmwe\Claude\BMAD-METHOD-MASTER\docs\user-guide.md
+- C:\Users\drmwe\Claude\BMAD-METHOD-MASTER\docs\core-architecture.md
+
+**Support:**
+- Discord: https://discord.gg/gk8jAdXWmj
+- GitHub: https://github.com/bmad-code-org/BMAD-METHOD
+
+---
+
+### ✅ Success Metrics (FitnessMealPlanner + BMAD)
+
+**Track:**
+- Stories using BMAD workflow (target: medium-high complexity features)
+- QA gate pass rate (target: >85%)
+- Story rework rate (target: <15%)
+- Test coverage on BMAD stories (target: >80%)
+
+**Quality Indicators:**
+- Recipe generation features: Always use BMAD (complex AI system)
+- Database migrations: Always use BMAD (data integrity critical)
+- UI enhancements: Use BMAD for multi-component changes
+- Bug fixes: Skip BMAD (unless complex root cause)
+
+---
+
+### 🏗️ BMAD Brownfield Development Strategy
+
+**Critical Context:** FitnessMealPlanner is a **brownfield project** (existing codebase with 100+ files, production deployment, active users).
+
+#### What is Brownfield?
+
+**Brownfield** = Working with existing code (adding features, fixing bugs, refactoring)
+**Greenfield** = Starting from scratch
+
+FitnessMealPlanner Status:
+- ✅ Mature production codebase
+- ✅ Active users at https://evofitmeals.com
+- ✅ Complex multi-component architecture
+- ✅ Database with existing data
+
+#### 📋 Two Brownfield Approaches
+
+##### **Approach A: PRD-First ⭐ RECOMMENDED FOR FITNESSMEALPLANNER**
+
+**Best for:**
+- Large codebases (like FitnessMealPlanner with 100+ files)
+- When you know exactly what feature you want to build
+- Complex features spanning multiple areas
+- Time-sensitive development
+
+**Workflow:**
+```bash
+# Step 1: Create PRD with brownfield context
+@pm *create-brownfield-prd for [feature name]
+# PM analyzes codebase and identifies affected areas
+
+# Step 2: Document only relevant areas (guided by PRD)
+@architect *document-project (reference PRD to focus on specific areas)
+# Architect focuses ONLY on areas mentioned in PRD
+
+# Step 3: Validate and shard
+@po Validate PRD and architecture alignment
+@po Shard PRD into epics and stories
+
+# Step 4: Begin development cycle
+@sm Create first story from sharded epic
+@qa *risk docs/stories/[story].md
+@dev Implement docs/stories/[story].md
+@qa *review docs/stories/[story].md
+```
+
+**Advantages:**
+- ✅ **Efficient** - Only documents what you need
+- ✅ **Focused** - Clear scope from the start
+- ✅ **Scalable** - Works with massive codebases
+- ✅ **Fast** - Skips irrelevant code documentation
+
+**Example for FitnessMealPlanner:**
+```bash
+# Adding meal plan sharing feature
+@pm *create-brownfield-prd for meal plan sharing
+# PM identifies: meal_plans table, sharing logic, API endpoints, UI components
+
+@architect *document-project (focus: meal plans module, sharing APIs, auth system)
+# Architect documents only meal plan-related areas
+
+@po Shard PRD into implementable stories
+@sm Create story for sharing API endpoint
+@dev Implement with tests
+@qa *review story
+```
+
+##### **Approach B: Document-First**
+
+**Best for:**
+- Smaller codebases (< 50 files)
+- Unknown systems needing exploration
+- When you're not sure what needs changing
+- Comprehensive system understanding needed
+
+**Workflow:**
+```bash
+# Step 1: Document everything first
+@architect *document-project (comprehensive mode)
+# Architect documents entire system
+
+# Step 2: Create PRD with full context
+@pm Create PRD for [feature] (reference: complete architecture)
+
+# Step 3: Validate and shard
+@po Validate PRD and architecture alignment
+@po Shard PRD into epics and stories
+
+# Step 4: Begin development
+@sm Create first story from sharded epic
+```
+
+**Advantages:**
+- ✅ **Thorough** - Complete system understanding
+- ✅ **Discovery** - Uncovers hidden dependencies
+- ✅ **Educational** - Great for new team members
+- ✅ **Safety** - Less chance of missing critical areas
+
+**When to Use Document-First:**
+- First time working on FitnessMealPlanner
+- Major refactoring affecting entire codebase
+- Need to understand system architecture comprehensively
+
+#### 🎯 FitnessMealPlanner Recommended Approach
+
+**Use Approach A (PRD-First) for:**
+- ✅ All new feature development
+- ✅ Recipe system enhancements
+- ✅ Meal planning improvements
+- ✅ UI/UX updates
+- ✅ Integration additions
+- ✅ Database schema changes
+
+**Reasoning:**
+- FitnessMealPlanner is a large, mature codebase
+- Most features only affect specific modules
+- Can't afford time to document entire system for each feature
+- Need focused, efficient development approach
+- Production system requires minimal disruption
+
+#### 🚀 Quick Start Command
+
+**When you're ready to add a new feature:**
+
+```bash
+# Start with this command
+@pm *create-brownfield-prd for [your feature name]
+
+# Then follow the PRD-First workflow above
+```
+
+#### 💡 Brownfield Best Practices
+
+**DO:**
+- ✅ Always start with `@pm *create-brownfield-prd`
+- ✅ Let PM identify affected areas before documenting
+- ✅ Use `@architect *document-project` with specific focus
+- ✅ Reference existing architecture docs when available
+- ✅ Use `@qa *risk` for regression assessment
+- ✅ Test backward compatibility thoroughly
+
+**DON'T:**
+- ❌ Document entire codebase for small features
+- ❌ Skip PRD creation for "quick" features
+- ❌ Ignore existing patterns and conventions
+- ❌ Forget to assess regression risks
+- ❌ Deploy without comprehensive testing
+
+#### 📊 Complexity Assessment
+
+Use this to decide if BMAD brownfield process is needed:
+
+| Complexity | Files Affected | BMAD Brownfield? | Approach |
+|------------|---------------|------------------|----------|
+| **Low** | 1 file, <50 lines | Optional | Quick fix, skip BMAD |
+| **Medium** | 2-3 files, 50-200 lines | Recommended | PRD-First (focused) |
+| **High** | 4+ files, 200+ lines | Strongly Recommended | PRD-First (comprehensive) |
+| **Critical** | Database schema, auth, core features | Mandatory | PRD-First + extensive QA |
+
+#### 🔄 Integration with Existing Workflows
+
+**Combine with Recipe Generation:**
+```bash
+# Enhancing BMAD recipe generation system
+@pm *create-brownfield-prd for recipe image quality improvement
+@architect *document-project (focus: recipeGenerator.ts, image generation agents)
+@qa *risk (critical: AI system changes)
+@dev Implement with extensive testing
+@qa *nfr (performance validation critical)
+```
+
+**Combine with Deployment:**
+```bash
+# Adding deployment automation
+@pm *create-brownfield-prd for automated deployment pipeline
+@architect *document-project (focus: Docker, DigitalOcean, CI/CD)
+@infra-devops-platform Design deployment strategy
+@dev Implement automation scripts
+@qa *review deployment process
+```
+
+#### 📚 Additional Resources
+
+**Comprehensive Brownfield Guide:**
+- C:\Users\drmwe\Claude\BMAD_BROWNFIELD_GUIDE.md (portfolio-wide guide)
+
+**BMAD Official Docs:**
+- C:\Users\drmwe\Claude\BMAD-METHOD-MASTER\docs\working-in-the-brownfield.md
+
+**CTO Strategic Guidance:**
+- C:\Users\drmwe\Claude\CLAUDE.md (Section: BROWNFIELD DEVELOPMENT)
+
+---
+
+**BMAD Integration Complete for FitnessMealPlanner**
+**Version:** 1.1.0 | **Updated:** October 13, 2025 | **Brownfield Strategy Added**

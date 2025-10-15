@@ -363,7 +363,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
   const saveMealPlan = useMutation({
     mutationFn: async ({ notes, tags }: { notes?: string; tags?: string[] }) => {
       if (!generatedPlan) throw new Error("No meal plan to save");
-      
+
       const response = await apiRequest(
         "POST",
         "/api/trainer/meal-plans",
@@ -381,7 +381,9 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         title: "Meal Plan Saved!",
         description: "The meal plan has been saved to your library.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/trainer/meal-plans"] });
+      // FIX: Use correct query key to match TrainerMealPlans component
+      queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans'] }); // Also invalidate without user ID for compatibility
     },
     onError: (error: Error) => {
       toast({

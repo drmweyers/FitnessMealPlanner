@@ -37,9 +37,9 @@ interface GenerationResult {
 // Placeholder image URL for recipes without generated images
 const PLACEHOLDER_IMAGE_URL = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=600&fit=crop';
 
-// Timeout configuration
-const IMAGE_GENERATION_TIMEOUT_MS = 30000; // 30 seconds
-const IMAGE_UPLOAD_TIMEOUT_MS = 15000; // 15 seconds
+// Timeout configuration - INCREASED for reliable DALL-E 3 generation
+const IMAGE_GENERATION_TIMEOUT_MS = 90000; // 90 seconds (DALL-E 3 can take 30-60s)
+const IMAGE_UPLOAD_TIMEOUT_MS = 30000; // 30 seconds (S3 upload with retries)
 
 export class RecipeGeneratorService {
   private rateLimiter = new OpenAIRateLimiter();
@@ -124,10 +124,13 @@ export class RecipeGeneratorService {
     });
   }
 
-  private async withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  private async withTimeout<T>(promise: Promise<T>, ms: number, fallback: T | null): Promise<T | null> {
     try {
       return await Promise.race([promise, this.timeoutAfter(ms)]);
-    } catch {
+    } catch (error) {
+      if (fallback === null) {
+        throw error; // Re-throw for retry logic
+      }
       return fallback;
     }
   }
@@ -224,57 +227,73 @@ export class RecipeGeneratorService {
   private async getOrGenerateImage(recipe: GeneratedRecipe): Promise<string> {
     const cacheKey = `image_s3_${recipe.name.replace(/\s/g, '_')}`;
 
-    try {
-      return await this.cache.getOrSet(cacheKey, async () => {
-        // Generate temp URL with timeout
-        const tempUrl = await this.withTimeout(
-          generateImageForRecipe(recipe),
-          IMAGE_GENERATION_TIMEOUT_MS,
-          null
-        );
+    return await this.cache.getOrSet(cacheKey, async () => {
+      console.log(`🎨 Starting DALL-E 3 image generation for "${recipe.name}"...`);
 
-        if (!tempUrl) {
-          console.log(`⚠️  Image generation timeout/failed for "${recipe.name}"`);
-          return PLACEHOLDER_IMAGE_URL;
-        }
+      // Generate temp URL from OpenAI DALL-E 3
+      const tempUrl = await generateImageForRecipe(recipe);
+      console.log(`✅ DALL-E 3 image generated for "${recipe.name}": ${tempUrl.substring(0, 50)}...`);
 
-        // Upload to S3 with timeout
-        const permanentUrl = await this.withTimeout(
-          uploadImageToS3(tempUrl, recipe.name),
-          IMAGE_UPLOAD_TIMEOUT_MS,
-          PLACEHOLDER_IMAGE_URL
-        );
+      if (!tempUrl) {
+        throw new Error('No image URL returned from DALL-E 3');
+      }
 
-        return permanentUrl || PLACEHOLDER_IMAGE_URL;
-      });
-    } catch (error) {
-      console.error(`Failed to generate/upload image for "${recipe.name}":`, error);
-      return PLACEHOLDER_IMAGE_URL;
-    }
+      // Upload to S3
+      console.log(`☁️  Uploading image to S3 for "${recipe.name}"...`);
+      const permanentUrl = await uploadImageToS3(tempUrl, recipe.name);
+      console.log(`✅ Image uploaded to S3 for "${recipe.name}": ${permanentUrl.substring(0, 50)}...`);
+
+      if (!permanentUrl) {
+        throw new Error('S3 upload failed - no URL returned');
+      }
+
+      return permanentUrl;
+    });
   }
 
   private async generateImageInBackground(recipeId: number, recipe: GeneratedRecipe): Promise<void> {
-    try {
-      console.log(`⏳ Generating image in background for "${recipe.name}" (ID: ${recipeId})...`);
+    const maxRetries = 3;
+    let lastError: Error | null = null;
 
-      // Generate image with timeout
-      const imageUrl = await this.withTimeout(
-        this.getOrGenerateImage(recipe),
-        IMAGE_GENERATION_TIMEOUT_MS + IMAGE_UPLOAD_TIMEOUT_MS,
-        PLACEHOLDER_IMAGE_URL
-      );
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`⏳ Generating image for "${recipe.name}" (ID: ${recipeId}) - Attempt ${attempt}/${maxRetries}...`);
 
-      // Only update if we got a real image (not placeholder)
-      if (imageUrl && imageUrl !== PLACEHOLDER_IMAGE_URL) {
-        await storage.updateRecipe(String(recipeId), { imageUrl });
-        console.log(`✅ Background image generated for "${recipe.name}"`);
-      } else {
-        console.log(`ℹ️  Using placeholder image for "${recipe.name}"`);
+        // Generate image with extended timeout
+        const imageUrl = await this.withTimeout(
+          this.getOrGenerateImage(recipe),
+          IMAGE_GENERATION_TIMEOUT_MS + IMAGE_UPLOAD_TIMEOUT_MS,
+          null // Don't use fallback - we want to catch timeout
+        );
+
+        // Only update if we got a real image (not placeholder or null)
+        if (imageUrl && imageUrl !== PLACEHOLDER_IMAGE_URL) {
+          await storage.updateRecipe(String(recipeId), { imageUrl });
+          console.log(`✅ Background image generated successfully for "${recipe.name}" on attempt ${attempt}`);
+          return; // Success - exit retry loop
+        } else if (imageUrl === PLACEHOLDER_IMAGE_URL) {
+          console.log(`⚠️  Placeholder returned for "${recipe.name}" - will retry (${attempt}/${maxRetries})`);
+          throw new Error('Placeholder image returned instead of generated image');
+        } else {
+          console.log(`⚠️  No image URL returned for "${recipe.name}" - will retry (${attempt}/${maxRetries})`);
+          throw new Error('No image URL returned from generation');
+        }
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.error(`❌ Attempt ${attempt}/${maxRetries} failed for "${recipe.name}":`, lastError.message);
+
+        // Wait before retry (exponential backoff)
+        if (attempt < maxRetries) {
+          const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // 1s, 2s, 4s (max 10s)
+          console.log(`⏸️  Waiting ${backoffMs}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+        }
       }
-    } catch (error) {
-      console.error(`❌ Background image generation error for "${recipe.name}":`, error);
-      // Don't throw - recipe is already saved
     }
+
+    // All retries failed
+    console.error(`❌ All ${maxRetries} attempts failed for "${recipe.name}". Final error:`, lastError?.message);
+    console.error(`⚠️  Recipe ${recipeId} will keep placeholder image.`);
   }
 
   getMetrics() {

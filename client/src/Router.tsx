@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import FallbackUI from "./components/FallbackUI";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AccessDenied from "./components/AccessDenied";
 import { OAuthCallback } from "./components/OAuthCallback";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import SharedMealPlanView from "./components/SharedMealPlanView";
@@ -168,29 +169,35 @@ export default function Router() {
         {/* Trainer Routes - More specific routes first */}
         <Route path="/trainer/customers" component={() => {
           if (user.role !== 'trainer') {
-            return <Redirect to="/" />;
+            return <AccessDenied message="Trainer access required. You don't have permission to view customer management." />;
           }
           return <Trainer />;
         }} />
-        
+
         <Route path="/trainer/meal-plans" component={() => {
           if (user.role !== 'trainer') {
-            return <Redirect to="/" />;
+            return <AccessDenied message="Trainer access required. You don't have permission to view meal plans management." />;
           }
           return <Trainer />;
         }} />
-        
-        
+
+        <Route path="/trainer/manual-meal-plan" component={() => {
+          if (user.role !== 'trainer') {
+            return <AccessDenied message="Trainer access required. You don't have permission to create meal plans." />;
+          }
+          return <Trainer />;
+        }} />
+
         <Route path="/meal-plan-generator" component={() => {
           if (user.role !== 'trainer' && user.role !== 'admin') {
-            return <Redirect to="/" />;
+            return <AccessDenied message="Trainer or Admin access required. You don't have permission to generate meal plans." />;
           }
           return <Trainer />;
         }} />
-        
+
         <Route path="/trainer" component={() => {
           if (user.role !== 'trainer') {
-            return <Redirect to="/" />;
+            return <AccessDenied message="Trainer access required. You don't have permission to access the trainer dashboard." />;
           }
           return <Trainer />;
         }} />

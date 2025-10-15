@@ -48,9 +48,6 @@ export default function TrainerMealPlans() {
     queryKey: ['trainer-meal-plans', user?.id],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/trainer/meal-plans');
-      if (!response.ok) {
-        throw new Error('Failed to fetch meal plans');
-      }
       const data = await response.json();
       return data;
     },
@@ -71,7 +68,6 @@ export default function TrainerMealPlans() {
     queryKey: ['trainerCustomersForAssignment'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/trainer/customers');
-      if (!response.ok) throw new Error('Failed to fetch customers');
       const data = await response.json();
       return data.customers || [];
     },
@@ -80,7 +76,6 @@ export default function TrainerMealPlans() {
   const deleteMealPlan = useMutation({
     mutationFn: async (planId: string) => {
       const response = await apiRequest('DELETE', `/api/trainer/meal-plans/${planId}`);
-      if (!response.ok) throw new Error('Failed to delete meal plan');
       return response.json();
     },
     onSuccess: () => {
@@ -105,7 +100,6 @@ export default function TrainerMealPlans() {
       const response = await apiRequest('POST', `/api/trainer/meal-plans/${planId}/assign`, {
         customerId,
       });
-      if (!response.ok) throw new Error('Failed to assign meal plan');
       return response.json();
     },
     onSuccess: (data, variables) => {

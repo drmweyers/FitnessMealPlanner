@@ -90,6 +90,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, []);
 
+  // Effect to handle session expiration - redirect to login when user becomes null
+  useEffect(() => {
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/shared/'];
+    const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+
+    // If user is null, not loading, and we're not on a public route, redirect to login
+    if (!user && !isLoading && !isPublicRoute && !authToken) {
+      console.log('Session expired - redirecting to login');
+      navigate('/login');
+    }
+  }, [user, isLoading, authToken, navigate]);
+
   const handleLogout = async () => {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -126,11 +138,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
             },
             credentials: 'include',
           });
-          
+
+          // Handle 401 Unauthorized - token invalid or expired
+          if (response.status === 401) {
+            // Clear invalid token immediately
+            localStorage.removeItem('token');
+            setAuthToken(null);
+            throw new Error('Session expired. Please login again.');
+          }
+
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          
+
           return response;
         };
 
@@ -143,29 +163,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
             // Try to refresh token
             const newToken = await refreshToken();
             if (!newToken) {
+              // Clear everything and redirect to login
+              localStorage.removeItem('token');
+              setAuthToken(null);
+              navigate('/login');
               throw new Error('Session expired. Please login again.');
             }
             // Retry with new token
             response = await makeRequest(newToken);
+          } else if (error instanceof Error && error.message.includes('Session expired')) {
+            // Session expired - redirect to login
+            navigate('/login');
+            throw error;
           } else {
             throw error;
           }
         }
-        
+
         const data = await response.json();
         const normalized = normalizeAuthResponse(data);
         return normalized.user;
       } catch (error) {
         if (error instanceof Error && error.message.includes('Session expired')) {
-          await handleLogout();
+          // Ensure we're logged out and redirected
+          localStorage.removeItem('token');
+          setAuthToken(null);
+          navigate('/login');
         }
         throw error;
       }
     },
     retry: (failureCount, error) => {
       // Don't retry on auth errors
-      if (error instanceof Error && 
-         (error.message.includes('Session expired') || 
+      if (error instanceof Error &&
+         (error.message.includes('Session expired') ||
           error.message.includes('401'))) {
         return false;
       }

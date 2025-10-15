@@ -276,10 +276,10 @@ export default function AdminRecipeGenerator() {
 
             toast({
                 title: "Natural Language Generation Started",
-                description: `Generating ${result.parsedParameters.count || 10} recipes from your prompt. Check the BMAD Generator tab for progress.`,
+                description: `Generating ${result.parsedParameters.count || 10} recipes from your prompt. Check the Bulk Generator tab for progress.`,
             });
 
-            setGenerationProgress(`BMAD generation started: batchId ${result.batchId}`);
+            setGenerationProgress(`Bulk generation started: batchId ${result.batchId}`);
 
             // Optionally redirect user to BMAD tab or show a link
             console.log('[Natural Language Generation] Started BMAD batch:', result);

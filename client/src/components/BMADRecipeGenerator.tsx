@@ -26,7 +26,6 @@ import {
   Wand2,
   ChefHat,
   Target,
-  Users,
   FileText,
   Calendar,
   Utensils,
@@ -39,8 +38,6 @@ const bmadGenerationSchema = z.object({
   count: z.number().min(1).max(100).default(10),
 
   // Basic Information
-  planName: z.string().optional(),
-  clientName: z.string().optional(),
   description: z.string().optional(),
 
   // Meal Plan Parameters
@@ -57,9 +54,6 @@ const bmadGenerationSchema = z.object({
   // Filter Preferences
   dietaryTag: z.string().optional(),
   maxPrepTime: z.number().optional(),
-
-  // Daily total calorie goal for entire meal plan
-  dailyCalorieTarget: z.number().optional(),
 
   // Maximum calories allowed per individual recipe
   maxCalories: z.number().optional(),
@@ -284,7 +278,7 @@ export default function BMADRecipeGenerator() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to start BMAD generation');
+        throw new Error(errorData.message || 'Failed to start bulk generation');
       }
 
       const result: BMADGenerationResult = await response.json();
@@ -293,8 +287,8 @@ export default function BMADRecipeGenerator() {
       connectToSSE(result.batchId);
 
       toast({
-        title: "BMAD Generation Started",
-        description: `Generating ${result.count} recipes with multi-agent workflow`,
+        title: "Bulk Generation Started",
+        description: `Generating ${result.count} recipes with AI-powered workflow`,
       });
 
     } catch (error) {
@@ -426,10 +420,10 @@ export default function BMADRecipeGenerator() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-purple-600" />
-          <CardTitle>BMAD Multi-Agent Recipe Generator</CardTitle>
+          <CardTitle>Bulk Recipe Generator</CardTitle>
         </div>
         <CardDescription>
-          Bulk recipe generation with multi-agent AI workflow, nutrition validation, and image generation
+          Bulk recipe generation with AI-powered workflow, nutrition validation, and image generation
         </CardDescription>
       </CardHeader>
 
@@ -608,28 +602,6 @@ export default function BMADRecipeGenerator() {
               )}
             />
 
-              {/* Plan Name */}
-              <FormField
-                control={form.control}
-                name="planName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Target className="h-4 w-4" />
-                      Plan Name (Optional)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Weight Loss Spring 2025"
-                        {...field}
-                        disabled={isGenerating}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {/* Fitness Goal */}
               <FormField
                 control={form.control}
@@ -685,28 +657,6 @@ export default function BMADRecipeGenerator() {
                     <FormDescription>
                       Total daily calorie target for complete meal plan (not per recipe)
                     </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Client Name */}
-              <FormField
-                control={form.control}
-                name="clientName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Client Name (Optional)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Sarah Johnson"
-                        {...field}
-                        disabled={isGenerating}
-                      />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1192,7 +1142,7 @@ export default function BMADRecipeGenerator() {
                 ) : (
                   <>
                     <Zap className="mr-2 h-4 w-4" />
-                    Start BMAD Generation
+                    Start Bulk Generation
                   </>
                 )}
               </Button>

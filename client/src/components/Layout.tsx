@@ -11,10 +11,10 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 // ProfileAvatar removed - using initials only
-import { 
-  Home, 
-  User, 
-  LogOut, 
+import {
+  Home,
+  User,
+  LogOut,
   Menu,
   ChevronDown,
   Bell,
@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import MobileNavigation from './MobileNavigation';
+import OfflineBanner from './OfflineBanner';
 
 interface LayoutProps {
   children: ReactNode;
@@ -64,6 +65,9 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Offline Banner - Shows when network connection is lost */}
+      <OfflineBanner />
+
       {/* Mobile Navigation Component */}
       <MobileNavigation />
       

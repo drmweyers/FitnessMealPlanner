@@ -15,6 +15,7 @@ import RecipeAssignment from "../components/RecipeAssignment";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import CustomerManagement from "../components/CustomerManagement";
 import TrainerMealPlans from "../components/TrainerMealPlans";
+import ManualMealPlanCreator from "../components/ManualMealPlanCreator";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Trainer() {
@@ -31,6 +32,7 @@ export default function Trainer() {
   // Determine active tab based on URL
   const getActiveTab = () => {
     if (location === '/meal-plan-generator') return 'meal-plan';
+    if (location === '/trainer/manual-meal-plan') return 'manual-plan';
     if (location === '/trainer/customers') return 'customers';
     if (location === '/trainer/meal-plans') return 'saved-plans';
     return 'recipes';
@@ -40,6 +42,9 @@ export default function Trainer() {
     switch (value) {
       case 'meal-plan':
         navigate('/meal-plan-generator');
+        break;
+      case 'manual-plan':
+        navigate('/trainer/manual-meal-plan');
         break;
       case 'customers':
         navigate('/trainer/customers');
@@ -90,16 +95,16 @@ export default function Trainer() {
       </div>
 
       <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 sm:mb-8 h-auto p-1 gap-1">
-          <TabsTrigger 
-            value="recipes" 
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6 sm:mb-8 h-auto p-1 gap-1">
+          <TabsTrigger
+            value="recipes"
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
             <i className="fas fa-book-open text-sm sm:text-base"></i>
             <span className="hidden lg:inline">Browse Recipes</span>
             <span className="lg:hidden">Recipes</span>
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="meal-plan"
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
@@ -107,7 +112,16 @@ export default function Trainer() {
             <span className="hidden lg:inline">Generate Plans</span>
             <span className="lg:hidden">Generate</span>
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
+            value="manual-plan"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm bg-blue-50 hover:bg-blue-100"
+          >
+            <i className="fas fa-wand-magic-sparkles text-sm sm:text-base text-blue-600"></i>
+            <span className="hidden lg:inline text-blue-700">Create Custom</span>
+            <span className="lg:hidden text-blue-700">Custom</span>
+            <span className="text-[10px] text-blue-600 font-semibold hidden xl:inline">(No AI)</span>
+          </TabsTrigger>
+          <TabsTrigger
             value="saved-plans"
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
@@ -115,7 +129,7 @@ export default function Trainer() {
             <span className="hidden lg:inline">Saved Plans</span>
             <span className="lg:hidden">Saved</span>
           </TabsTrigger>
-          <TabsTrigger 
+          <TabsTrigger
             value="customers"
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
@@ -257,6 +271,10 @@ export default function Trainer() {
 
         <TabsContent value="meal-plan">
           <MealPlanGenerator />
+        </TabsContent>
+
+        <TabsContent value="manual-plan">
+          <ManualMealPlanCreator />
         </TabsContent>
 
         <TabsContent value="customers">

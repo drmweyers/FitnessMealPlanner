@@ -33,14 +33,40 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       return;
     }
 
-    // Check role-based access
+    // Check role-based access and redirect to user's home page
     if (requiredRole && user?.role !== requiredRole) {
-      navigate('/login');
+      // Redirect to user's proper dashboard based on their role
+      switch (user.role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'trainer':
+          navigate('/trainer');
+          break;
+        case 'customer':
+          navigate('/customer');
+          break;
+        default:
+          navigate('/login');
+      }
       return;
     }
 
     if (allowedRoles && user?.role && !allowedRoles.includes(user.role)) {
-      navigate('/login');
+      // Redirect to user's proper dashboard based on their role
+      switch (user.role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'trainer':
+          navigate('/trainer');
+          break;
+        case 'customer':
+          navigate('/customer');
+          break;
+        default:
+          navigate('/login');
+      }
       return;
     }
   }, [isAuthenticated, user, isLoading, navigate, requiredRole, allowedRoles]);
