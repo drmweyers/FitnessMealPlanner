@@ -16,7 +16,7 @@ import { handleMealPlanEvent, createMealPlanEvent, MealPlanEventType } from '../
 
 const mealPlanRouter = express.Router();
 
-mealPlanRouter.post('/parse-natural-language', async (req, res) => {
+mealPlanRouter.post('/parse-natural-language', requireAuth, async (req, res) => {
   const { naturalLanguageInput } = req.body;
 
   if (!naturalLanguageInput) {
