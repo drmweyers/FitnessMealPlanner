@@ -8,6 +8,9 @@ import { BaseAgent } from './BaseAgent';
 import { AgentResponse, RecipeImageMetadata } from './types';
 import OpenAI from 'openai';
 import crypto from 'crypto';
+import imghash from 'imghash';
+import { db } from '../../db';
+import { sql } from 'drizzle-orm';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -116,6 +119,7 @@ export class ImageGenerationAgent extends BaseAgent {
 
   /**
    * Generate a unique image for a recipe, retrying if duplicates are detected
+   * Uses perceptual hashing and database-backed duplicate detection
    */
   private async generateUniqueImage(
     recipe: ImageGenerationInput,
@@ -126,28 +130,42 @@ export class ImageGenerationAgent extends BaseAgent {
     try {
       const prompt = this.createImagePrompt(recipe);
       const imageUrl = await this.callDallE3(prompt);
-      const similarityHash = this.generateSimilarityHash(imageUrl, recipe.recipeName);
 
-      // Check for duplicates
-      if (this.isDuplicate(similarityHash) && retryCount < maxRetries) {
-        console.log(`Duplicate image detected for ${recipe.recipeName}, retrying... (${retryCount + 1}/${maxRetries})`);
+      // Generate perceptual hash (async now)
+      const perceptualHash = await this.generateSimilarityHash(imageUrl, recipe.recipeName);
+
+      // Check for duplicates in both memory and database
+      const inMemoryDuplicate = this.isDuplicate(perceptualHash);
+      const similarImages = await this.findSimilarHashes(perceptualHash, 0.95);
+
+      const isDuplicate = inMemoryDuplicate || similarImages.length > 0;
+
+      if (isDuplicate && retryCount < maxRetries) {
+        console.log(`[artist] Duplicate image detected for ${recipe.recipeName}`);
+        if (similarImages.length > 0) {
+          console.log(`[artist] Found ${similarImages.length} similar image(s) in database (similarity: ${(similarImages[0].similarity * 100).toFixed(1)}%)`);
+        }
+        console.log(`[artist] Retrying... (${retryCount + 1}/${maxRetries})`);
+
+        // Modify prompt slightly to encourage different image
         return this.generateUniqueImage(recipe, retryCount + 1);
       }
 
-      // Store hash to prevent future duplicates
-      this.generatedHashes.add(similarityHash);
+      // Store hash to prevent future duplicates (both in memory and database)
+      this.generatedHashes.add(perceptualHash);
+      await this.storeImageHash(recipe.recipeId, perceptualHash, imageUrl, prompt);
 
       return {
         imageUrl,
         dallePrompt: prompt,
-        similarityHash,
+        similarityHash: perceptualHash,
         generationTimestamp: new Date(),
         qualityScore: retryCount === 0 ? 100 : Math.max(70, 100 - (retryCount * 10)),
         isPlaceholder: false,
         retryCount
       };
     } catch (error) {
-      console.error(`DALL-E 3 generation failed for ${recipe.recipeName}:`, error);
+      console.error(`[artist] DALL-E 3 generation failed for ${recipe.recipeName}:`, error);
 
       // Use placeholder on failure
       return this.createPlaceholderMetadata(recipe.recipeName);
@@ -197,21 +215,129 @@ export class ImageGenerationAgent extends BaseAgent {
   }
 
   /**
-   * Generate a similarity hash for duplicate detection
-   * Uses recipe name + timestamp for uniqueness tracking
+   * Generate a perceptual hash for duplicate detection
+   * Uses imghash library to create a hash based on image visual content
    */
-  private generateSimilarityHash(imageUrl: string, recipeName: string): string {
-    // Create hash based on recipe name and URL
-    // In production, you would download the image and create a perceptual hash
-    const content = `${recipeName}-${imageUrl.substring(imageUrl.length - 20)}`;
-    return crypto.createHash('sha256').update(content).digest('hex').substring(0, 16);
+  private async generateSimilarityHash(imageUrl: string, recipeName: string): Promise<string> {
+    try {
+      // Generate perceptual hash (pHash) using imghash
+      // 16-bit hash, hex format (64 character string)
+      const pHash = await imghash(imageUrl, 16, 'hex');
+      console.log(`[artist] Generated pHash for ${recipeName}: ${pHash.substring(0, 16)}...`);
+      return pHash;
+    } catch (error) {
+      console.error(`[artist] Failed to generate pHash for ${recipeName}:`, error);
+      // Fallback to basic hash if perceptual hashing fails
+      const content = `${recipeName}-${imageUrl.substring(imageUrl.length - 20)}`;
+      return crypto.createHash('sha256').update(content).digest('hex').substring(0, 16);
+    }
   }
 
   /**
-   * Check if an image hash is a duplicate
+   * Check if an image hash is a duplicate (in-memory check)
+   * Note: This is supplemented by database checks for persistent duplicate detection
    */
   private isDuplicate(hash: string): boolean {
     return this.generatedHashes.has(hash);
+  }
+
+  /**
+   * Calculate Hamming distance between two hex strings
+   * Returns the number of differing bits
+   */
+  private calculateHammingDistance(hash1: string, hash2: string): number {
+    if (hash1.length !== hash2.length) {
+      throw new Error('Hashes must be the same length');
+    }
+
+    let distance = 0;
+    for (let i = 0; i < hash1.length; i++) {
+      // Compare each hex character as bits
+      const xor = parseInt(hash1[i], 16) ^ parseInt(hash2[i], 16);
+      // Count set bits using Brian Kernighan's algorithm
+      let n = xor;
+      while (n > 0) {
+        distance++;
+        n &= n - 1;
+      }
+    }
+    return distance;
+  }
+
+  /**
+   * Find similar images in the database using Hamming distance
+   * @param pHash - Perceptual hash to compare
+   * @param threshold - Similarity threshold (0-1), where 1 is identical
+   * @returns Array of similar image records
+   */
+  private async findSimilarHashes(pHash: string, threshold: number = 0.95): Promise<any[]> {
+    try {
+      // Query all existing hashes from database
+      const existingHashes = await db.execute(sql`
+        SELECT id, recipe_id, perceptual_hash, image_url, dalle_prompt, created_at
+        FROM recipe_image_hashes
+        ORDER BY created_at DESC
+        LIMIT 1000
+      `);
+
+      const similar: any[] = [];
+      const maxDistance = Math.floor((1 - threshold) * pHash.length * 4); // 4 bits per hex char
+
+      for (const row of existingHashes.rows as any[]) {
+        const existingHash = row.perceptual_hash;
+        if (!existingHash || existingHash === 'placeholder') continue;
+
+        const distance = this.calculateHammingDistance(pHash, existingHash);
+        const similarity = 1 - (distance / (pHash.length * 4));
+
+        if (similarity >= threshold) {
+          similar.push({
+            ...row,
+            hammingDistance: distance,
+            similarity: similarity
+          });
+        }
+      }
+
+      return similar;
+    } catch (error) {
+      console.error('[artist] Error finding similar hashes:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Store image hash in database for persistent duplicate detection
+   */
+  private async storeImageHash(
+    recipeId: number,
+    perceptualHash: string,
+    imageUrl: string,
+    dallePrompt: string
+  ): Promise<void> {
+    try {
+      await db.execute(sql`
+        INSERT INTO recipe_image_hashes (
+          recipe_id,
+          perceptual_hash,
+          similarity_hash,
+          image_url,
+          dalle_prompt,
+          created_at
+        ) VALUES (
+          ${recipeId}::uuid,
+          ${perceptualHash},
+          ${perceptualHash.substring(0, 16)},
+          ${imageUrl},
+          ${dallePrompt},
+          NOW()
+        )
+      `);
+      console.log(`[artist] Stored pHash for recipe ${recipeId}`);
+    } catch (error) {
+      console.error(`[artist] Failed to store image hash:`, error);
+      // Don't throw - this is non-critical for image generation
+    }
   }
 
   /**

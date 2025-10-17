@@ -219,6 +219,17 @@ export const searchSchema = z.object({
   filters: z.record(z.any()).optional(),
 });
 
+// Export schemas
+export const adminExportMealPlansSchema = z.object({
+  format: z.enum(['ndjson', 'json']).default('ndjson'),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(10000).default(1000),
+  trainerId: z.string().uuid().optional(),
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+  includeTemplates: z.coerce.boolean().default(false),
+});
+
 // Validation helper functions
 export const validateRequest = <T>(schema: z.ZodSchema<T>) => {
   return (data: unknown): T => {

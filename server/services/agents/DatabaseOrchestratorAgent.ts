@@ -45,6 +45,13 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
       const { recipes, validatedRecipes, batchId, imageUrl } = input as any;
       const defaultImageUrl = imageUrl || this.PLACEHOLDER_IMAGE_URL;
 
+      console.log('[database] Received:', {
+        hasRecipes: !!recipes,
+        recipesLength: recipes?.length,
+        hasValidatedRecipes: !!validatedRecipes,
+        validatedRecipesLength: validatedRecipes?.length
+      });
+
       const savedRecipes: SavedRecipeResult[] = [];
       const errors: string[] = [];
       let totalSaved = 0;
@@ -62,6 +69,12 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
           (vr: ValidatedRecipe) => vr.validationPassed
         );
 
+        console.log('[database] Filtered validated recipes:', {
+          total: validatedRecipes.length,
+          invalid: invalidRecipes.length,
+          valid: recipesToSave.length
+        });
+
         // Count invalid recipes as failures
         totalFailed = invalidRecipes.length;
         invalidRecipes.forEach(vr => {
@@ -69,7 +82,10 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
         });
       }
 
+      console.log('[database] Recipes to save:', recipesToSave.length);
+
       if (recipesToSave.length === 0) {
+        console.log('[database] No recipes to save - returning empty result');
         return {
           savedRecipes: [],
           batchId,
@@ -135,7 +151,7 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
             const createdRecipe = await storage.createRecipe(recipeData);
 
             saved.push({
-              recipeId: Number(createdRecipe.id),
+              recipeId: createdRecipe.id,  // UUID string, not Number
               recipeName: createdRecipe.name,
               success: true,
               imageUrl: createdRecipe.imageUrl || defaultImageUrl
@@ -217,7 +233,7 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
         const createdRecipe = await storage.createRecipe(recipeData);
 
         savedRecipes.push({
-          recipeId: Number(createdRecipe.id),
+          recipeId: createdRecipe.id,  // UUID string, not Number
           recipeName: createdRecipe.name,
           success: true,
           imageUrl: createdRecipe.imageUrl || defaultImageUrl

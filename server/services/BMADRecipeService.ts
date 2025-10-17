@@ -144,38 +144,47 @@ export class BMADRecipeService {
               sseManager.broadcastProgress(batchId, validationProgress);
             }
 
+            // Prepare concepts for validation
+            const concepts = generatedRecipes.map(r => ({
+              name: r.name,
+              description: r.description,
+              mealTypes: r.mealTypes,
+              dietaryTags: r.dietaryTags,
+              mainIngredientTags: r.mainIngredientTags,
+              estimatedDifficulty: 'medium' as const,
+              targetNutrition: {
+                calories: options.targetCalories || r.estimatedNutrition.calories,
+                protein: r.estimatedNutrition.protein,
+                carbs: r.estimatedNutrition.carbs,
+                fat: r.estimatedNutrition.fat
+              }
+            }));
+
             const validationResponse = await this.validatorAgent.process({
-              recipes: generatedRecipes.map(r => ({
-                recipeId: 0,
-                recipeName: r.name,
-                concept: {
-                  name: r.name,
-                  description: r.description,
-                  mealTypes: r.mealTypes,
-                  dietaryTags: r.dietaryTags,
-                  mainIngredientTags: r.mainIngredientTags,
-                  estimatedDifficulty: 'medium' as const,
-                  targetNutrition: {
-                    calories: options.targetCalories || r.estimatedNutrition.calories,
-                    protein: r.estimatedNutrition.protein,
-                    carbs: r.estimatedNutrition.carbs,
-                    fat: r.estimatedNutrition.fat
-                  }
-                },
-                actualNutrition: r.estimatedNutrition,
-                ingredients: r.ingredients,
-                batchId
-              })),
+              recipes: generatedRecipes,
+              concepts: concepts,
               batchId
             }, batchId);
 
             if (validationResponse.success && validationResponse.data) {
-              const validationData = validationResponse.data as { totalValidated: number; totalAutoFixed: number; totalFailed: number };
+              const validationData = validationResponse.data as {
+                totalValidated: number;
+                totalAutoFixed: number;
+                totalFailed: number;
+                validatedRecipes: any[];
+              };
               nutritionStats.validated += validationData.totalValidated;
               nutritionStats.autoFixed += validationData.totalAutoFixed;
               nutritionStats.failed += validationData.totalFailed;
+              // Use validated recipes for database save
+              if (validationData.validatedRecipes && validationData.validatedRecipes.length > 0) {
+                validatedRecipes = validationData.validatedRecipes;
+                console.log(`[BMAD] Using ${validatedRecipes.length} validated recipes for database save`);
+              }
             }
           }
+
+          console.log(`[BMAD] About to save ${validatedRecipes.length} recipes to database...`);
 
           // Step 3: Save to database
           await this.progressAgent.updateProgress(batchId, { phase: 'saving' });
@@ -186,13 +195,17 @@ export class BMADRecipeService {
             sseManager.broadcastProgress(batchId, savingProgress);
           }
 
+          console.log('[BMAD] Calling database agent...');
           const saveResponse = await this.databaseAgent.process({
-            recipes: generatedRecipes.map(r => ({
-              ...r,
-              imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=600&fit=crop' // Placeholder
-            })),
+            validatedRecipes: validatedRecipes,
             batchId
           }, batchId);
+
+          console.log('[BMAD] Database response:', {
+            success: saveResponse.success,
+            hasData: !!saveResponse.data,
+            error: saveResponse.error
+          });
 
           if (!saveResponse.success || !saveResponse.data) {
             allErrors.push(`Chunk ${chunkIndex + 1}: Database save failed - ${saveResponse.error}`);
@@ -201,6 +214,12 @@ export class BMADRecipeService {
 
           const saveData = saveResponse.data as { savedRecipes: any[] };
           const savedRecipes = saveData.savedRecipes;
+          console.log(`[BMAD] Saved ${savedRecipes.length} recipes to database`);
+          console.log('[BMAD] Sample savedRecipe:', savedRecipes[0] ? {
+            recipeId: savedRecipes[0].recipeId,
+            recipeName: savedRecipes[0].recipeName,
+            hasId: !!savedRecipes[0].id
+          } : 'none');
           allSavedRecipes.push(...savedRecipes);
 
           // Step 4: Image Generation (if enabled)

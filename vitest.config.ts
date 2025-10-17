@@ -12,9 +12,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./test/setup.ts'],
     css: true,
-    include: ['test/unit/**/*.test.{ts,tsx}', 'test/integration/**/*.test.{ts,tsx}'],
+    include: ['test/unit/**/*.test.{ts,tsx}', 'test/integration/**/*.test.{ts,tsx}', 'test/real-api/**/*.test.{ts,tsx}'],
     exclude: ['node_modules', 'dist', '.git', 'test/e2e/**'],
-    testTimeout: 30000, // 30 seconds for complex async operations
+    testTimeout: 180000, // 3 minutes for real API calls (DALL-E 3, S3)
     hookTimeout: 10000, // 10 seconds for setup/teardown hooks
     teardownTimeout: 10000, // 10 seconds for cleanup
     typecheck: {

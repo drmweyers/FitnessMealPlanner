@@ -17,11 +17,12 @@ export function getMeals(customerMealPlan: CustomerMealPlan): MealPlan['meals'] 
 }
 
 /**
- * Safely gets meals with valid recipe data
+ * Safely gets meals with valid recipe data OR manual meals
+ * Supports both AI-generated meals (with recipe) and manual meals (without recipe)
  */
 export function getValidMeals(customerMealPlan: CustomerMealPlan): NonNullable<MealPlan['meals']> {
   const meals = getMeals(customerMealPlan);
-  return meals.filter(meal => meal && meal.recipe);
+  return meals.filter(meal => meal && (meal.recipe || meal.manual));
 }
 
 /**
@@ -69,15 +70,33 @@ export function getDailyCalorieTarget(customerMealPlan: CustomerMealPlan): numbe
 
 /**
  * Calculates nutrition totals with safety checks
+ * Supports both AI-generated meals (with recipe) and manual meals (with optional nutrition)
  */
 export function calculateNutrition(customerMealPlan: CustomerMealPlan) {
   const validMeals = getValidMeals(customerMealPlan);
   const days = getDays(customerMealPlan);
-  
-  const totalCalories = validMeals.reduce((sum, meal) => sum + (meal.recipe.caloriesKcal || 0), 0);
-  const totalProtein = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.proteinGrams || 0), 0);
-  const totalCarbs = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.carbsGrams || 0), 0);
-  const totalFat = validMeals.reduce((sum, meal) => sum + Number(meal.recipe.fatGrams || 0), 0);
+
+  let totalCalories = 0;
+  let totalProtein = 0;
+  let totalCarbs = 0;
+  let totalFat = 0;
+
+  for (const meal of validMeals) {
+    if (meal.recipe) {
+      // AI-generated meal with recipe
+      totalCalories += meal.recipe.caloriesKcal || 0;
+      totalProtein += Number(meal.recipe.proteinGrams || 0);
+      totalCarbs += Number(meal.recipe.carbsGrams || 0);
+      totalFat += Number(meal.recipe.fatGrams || 0);
+    } else if (meal.manual && meal.manualNutrition) {
+      // Manual meal with nutrition data
+      totalCalories += meal.manualNutrition.calories || 0;
+      totalProtein += meal.manualNutrition.protein || 0;
+      totalCarbs += meal.manualNutrition.carbs || 0;
+      totalFat += meal.manualNutrition.fat || 0;
+    }
+    // If manual meal without nutrition, contribute 0 (will show "Not calculated")
+  }
 
   return {
     totalCalories,

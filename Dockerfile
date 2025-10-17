@@ -15,10 +15,15 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 # Development stage
 FROM base AS dev
+# ADDED: Install debugging tools for Docker troubleshooting
+RUN apk add --no-cache curl wget netcat-openbsd bind-tools
 COPY package*.json ./
 RUN npm install
 COPY . .
 EXPOSE 5001 24678
+# ADDED: Health check for dev container
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -q --spider http://localhost:4000/api/health || exit 1
 CMD ["npm", "run", "dev"]
 
 # Build stage - CRITICAL: Verify drizzle.config.ts exists

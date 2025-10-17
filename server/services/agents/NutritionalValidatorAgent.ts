@@ -56,12 +56,24 @@ export class NutritionalValidatorAgent extends BaseAgent {
         strictMode: false
       };
 
+      console.log('[validator] Processing:', {
+        recipesCount: recipes.length,
+        conceptsCount: concepts.length,
+        autoFix: options.autoFix
+      });
+
       const validatedRecipes: ValidatedRecipe[] = [];
       const issues: ValidationIssue[] = [];
 
       for (let i = 0; i < recipes.length; i++) {
         const recipe = recipes[i];
         const concept = concepts[i];  // ✅ Get concept from concepts array by index
+
+        console.log('[validator] Validating recipe:', {
+          index: i,
+          recipeName: recipe.recipeName || recipe.name,
+          hasConcept: !!concept
+        });
 
         if (!concept) {
           issues.push({
@@ -130,11 +142,18 @@ export class NutritionalValidatorAgent extends BaseAgent {
     const issues: ValidationIssue[] = [];
     let modifiedRecipe = { ...recipe };
 
+    console.log('[validator] validateSingleRecipe called with:', {
+      recipeKeys: Object.keys(recipe),
+      hasEstimatedNutrition: !!recipe.estimatedNutrition,
+      recipeName: recipe.name || recipe.recipeName
+    });
+
     // 1. Validate required fields
     const requiredFields = ['name', 'description', 'ingredients', 'instructions', 'estimatedNutrition'];
     for (const field of requiredFields) {
       if (!recipe[field as keyof GeneratedRecipe]) {
         errors.push(`Missing required field: ${field}`);
+        console.log(`[validator] Missing field: ${field}`);
         issues.push({
           recipeIndex: 0,
           recipeName: recipe.name || 'Unknown',
@@ -321,6 +340,16 @@ export class NutritionalValidatorAgent extends BaseAgent {
       Math.abs(modifiedRecipe.estimatedNutrition.protein - targetNutrition.protein) <= this.MACRO_TOLERANCE_GRAMS &&
       Math.abs(modifiedRecipe.estimatedNutrition.carbs - targetNutrition.carbs) <= this.MACRO_TOLERANCE_GRAMS &&
       Math.abs(modifiedRecipe.estimatedNutrition.fat - targetNutrition.fat) <= this.MACRO_TOLERANCE_GRAMS;
+
+    console.log('[validator] Validation result:', {
+      recipeName: recipe.name,
+      isValid,
+      criticalErrors: criticalErrors.length,
+      errors: errors.length,
+      autoFix: options.autoFix,
+      fixesApplied: fixesApplied.length,
+      errorMessages: errors
+    });
 
     return {
       isValid,

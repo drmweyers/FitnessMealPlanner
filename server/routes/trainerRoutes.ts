@@ -1120,7 +1120,14 @@ const manualMealPlanSchema = z.object({
       amount: z.string(),
       unit: z.string()
     })).optional(),
-    instructions: z.string().optional()
+    instructions: z.string().optional(),
+    // ✅ NEW: Optional nutrition tracking per meal
+    manualNutrition: z.object({
+      calories: z.number().optional(),
+      protein: z.number().optional(),
+      carbs: z.number().optional(),
+      fat: z.number().optional()
+    }).optional()
   })).min(1, 'At least one meal is required').max(50, 'Maximum 50 meals per plan'),
   notes: z.string().optional(),
   tags: z.array(z.string()).optional(),
