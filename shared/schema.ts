@@ -511,7 +511,16 @@ export const mealPlanSchema = z.object({
           .optional(),
         instructionsText: z.string().optional(),
         imageUrl: z.string().optional(),
-      }),
+      }).optional(), // Made optional to support manual meals
+
+      // Manual meal support (alternative to recipe)
+      manual: z.string().optional(), // Raw text for manual meal entry
+      manualNutrition: z.object({
+        calories: z.number(),
+        protein: z.number(),
+        carbs: z.number(),
+        fat: z.number(),
+      }).optional(), // Optional nutrition data for manual meals
     }),
   ),
 });

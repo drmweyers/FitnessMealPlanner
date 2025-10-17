@@ -76,57 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setAuthToken(localStorage.getItem('token'));
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener(AUTH_STATE_CHANGE_EVENT, handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener(AUTH_STATE_CHANGE_EVENT, handleStorageChange);
-    };
-  }, []);
-
-  // Effect to handle session expiration - redirect to login when user becomes null
-  useEffect(() => {
-    const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/shared/'];
-    const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
-
-    // If user is null, not loading, and we're not on a public route, redirect to login
-    if (!user && !isLoading && !isPublicRoute && !authToken) {
-      console.log('Session expired - redirecting to login');
-      navigate('/login');
-    }
-  }, [user, isLoading, authToken, navigate]);
-
-  const handleLogout = async () => {
-    try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
-      // Clear auth state and notify other tabs
-      localStorage.removeItem('token');
-      window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
-      setAuthToken(null);
-      
-      // Clear all queries from the cache
-      queryClient.clear();
-      
-      // Reset the user query data
-      queryClient.setQueryData([`${API_BASE_URL}/auth/me`], null);
-
-      // Navigate to login
-      navigate('/login');
-    }
-  };
-
+  // IMPORTANT: useQuery must come BEFORE any useEffect that uses its variables
   const { data: user, isLoading, error } = useQuery({
     queryKey: [`${API_BASE_URL}/auth/me`],
     queryFn: async () => {
@@ -207,6 +157,58 @@ export function AuthProvider({ children }: AuthProviderProps) {
     enabled: !!authToken,
     throwOnError: false
   });
+
+  // Storage change listener
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setAuthToken(localStorage.getItem('token'));
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener(AUTH_STATE_CHANGE_EVENT, handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener(AUTH_STATE_CHANGE_EVENT, handleStorageChange);
+    };
+  }, []);
+
+  // Effect to handle session expiration - redirect to login when user becomes null
+  useEffect(() => {
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/shared/'];
+    const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+
+    // If user is null, not loading, and we're not on a public route, redirect to login
+    if (!user && !isLoading && !isPublicRoute && !authToken) {
+      console.log('Session expired - redirecting to login');
+      navigate('/login');
+    }
+  }, [user, isLoading, authToken, navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      // Clear auth state and notify other tabs
+      localStorage.removeItem('token');
+      window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
+      setAuthToken(null);
+
+      // Clear all queries from the cache
+      queryClient.clear();
+
+      // Reset the user query data
+      queryClient.setQueryData([`${API_BASE_URL}/auth/me`], null);
+
+      // Navigate to login
+      navigate('/login');
+    }
+  };
 
   const login = async (credentials: LoginCredentials): Promise<User> => {
     try {

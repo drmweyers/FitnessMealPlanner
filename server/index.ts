@@ -213,11 +213,13 @@ app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 // Serve landing page and static public files
 app.use('/landing', express.static(path.join(__dirname, '../public/landing')));
 
-// In development, serve client assets (Vite dev files)
-if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
-  app.use('/src', express.static(path.join(__dirname, '../client/src')));
-  app.use('/assets', express.static(path.join(__dirname, '../client/src/assets')));
-}
+// In development, ViteExpress handles /src and /assets automatically
+// DO NOT serve these statically or it bypasses Vite's transformation
+// Commenting out to let ViteExpress handle file transformation:
+// if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+//   app.use('/src', express.static(path.join(__dirname, '../client/src')));
+//   app.use('/assets', express.static(path.join(__dirname, '../client/src/assets')));
+// }
 
 // Serve static files from the React app and handle routing
 if (process.env.NODE_ENV === 'production') {

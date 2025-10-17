@@ -231,21 +231,28 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                           </thead>
                           <tbody>
                             {dayMeals.map((meal, mealIndex) => {
+                              // Handle both AI-generated and manual meals
+                              const isManual = !!meal.manual;
                               const recipe = meal.recipe;
+                              const mealName = isManual ? meal.manual : (recipe?.name || 'Unknown');
+                              const mealImage = isManual ? meal.imageUrl : (recipe?.imageUrl || "/api/placeholder/60/60");
+                              const mealDescription = isManual ? 'Manual meal entry' : (recipe?.description || "Delicious and nutritious meal");
+
                               return (
                                 <tr
                                   key={mealIndex}
                                   className="border-b hover:bg-gray-50 transition-colors cursor-pointer"
-                                  onClick={(e) => handleRecipeClick(recipe.id, e)}
+                                  onClick={(e) => {
+                                    if (!isManual && recipe?.id) {
+                                      handleRecipeClick(recipe.id, e);
+                                    }
+                                  }}
                                 >
                                   <td className="py-4 px-4">
                                     <div className="flex items-center space-x-3">
                                       <img
-                                        src={
-                                          recipe.imageUrl ||
-                                          "/api/placeholder/60/60"
-                                        }
-                                        alt={recipe.name}
+                                        src={mealImage}
+                                        alt={mealName}
                                         className="w-12 h-12 rounded-lg object-cover pointer-events-none"
                                         onError={(e) => {
                                           const img = e.target as HTMLImageElement;
@@ -254,11 +261,15 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                                       />
                                       <div>
                                         <div className="font-medium text-gray-900">
-                                          {recipe.name}
+                                          {mealName}
+                                          {isManual && (
+                                            <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                              Manual
+                                            </span>
+                                          )}
                                         </div>
                                         <div className="text-sm text-gray-500 line-clamp-1">
-                                          {recipe.description ||
-                                            "Delicious and nutritious meal"}
+                                          {mealDescription}
                                         </div>
                                       </div>
                                     </div>
@@ -272,18 +283,30 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                                   </td>
                                   <td className="py-4 px-4">
                                     <div className="text-sm text-gray-900">
-                                      {recipe.caloriesKcal} cal
+                                      {isManual ? (
+                                        meal.manualNutrition?.calories ? `${meal.manualNutrition.calories} cal` : 'Not calculated'
+                                      ) : (
+                                        `${recipe?.caloriesKcal || 0} cal`
+                                      )}
                                     </div>
                                     <div className="text-xs text-gray-500">
-                                      {Number(recipe.proteinGrams).toFixed(0)}g protein
+                                      {isManual ? (
+                                        meal.manualNutrition?.protein ? `${meal.manualNutrition.protein}g protein` : 'Not tracked'
+                                      ) : (
+                                        `${Number(recipe?.proteinGrams || 0).toFixed(0)}g protein`
+                                      )}
                                     </div>
                                   </td>
                                   <td className="py-4 px-4">
                                     <div className="text-sm text-gray-900">
-                                      {recipe.prepTimeMinutes + (recipe.cookTimeMinutes || 0)} min
+                                      {isManual ? (
+                                        '-'
+                                      ) : (
+                                        `${(recipe?.prepTimeMinutes || 0) + (recipe?.cookTimeMinutes || 0)} min`
+                                      )}
                                     </div>
                                     <div className="text-xs text-gray-500">
-                                      prep + cook
+                                      {isManual ? 'manual entry' : 'prep + cook'}
                                     </div>
                                   </td>
                                 </tr>
