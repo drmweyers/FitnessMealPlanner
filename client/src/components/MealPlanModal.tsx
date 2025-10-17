@@ -271,6 +271,18 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                                         <div className="text-sm text-gray-500 line-clamp-1">
                                           {mealDescription}
                                         </div>
+                                        {meal.ingredients && meal.ingredients.length > 0 && (
+                                          <div className="mt-2 text-xs text-gray-600">
+                                            <div className="font-medium text-gray-700">Ingredients:</div>
+                                            <ul className="list-disc list-inside ml-2 space-y-0.5">
+                                              {meal.ingredients.map((ing, idx) => (
+                                                <li key={idx}>
+                                                  {ing.amount}{ing.unit !== 'unit' ? ing.unit : ''}{ing.unit !== 'unit' ? ' ' : ' × '}{ing.ingredient}
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   </td>

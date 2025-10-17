@@ -141,6 +141,23 @@ function MealPlanCard({ mealPlan, onClick, onDelete }: MealPlanCardProps) {
               </div>
             )}
 
+            {/* Ingredient Preview */}
+            {validMeals[0]?.ingredients && validMeals[0].ingredients.length > 0 && (
+              <div className="bg-slate-50 rounded p-2 border border-slate-100">
+                <div className="text-xs font-medium text-slate-700 mb-1">Sample Ingredients:</div>
+                <div className="text-xs text-slate-600 space-y-0.5">
+                  {validMeals[0].ingredients.slice(0, 3).map((ing, idx) => (
+                    <div key={idx} className="truncate">
+                      • {ing.amount}{ing.unit !== 'unit' ? ing.unit : ''}{ing.unit !== 'unit' ? ' ' : ' × '}{ing.ingredient}
+                    </div>
+                  ))}
+                  {validMeals[0].ingredients.length > 3 && (
+                    <div className="text-slate-400">+{validMeals[0].ingredients.length - 3} more...</div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Key Metrics */}
             <div className="grid grid-cols-2 gap-1 xs:gap-2 sm:gap-3 pt-1 xs:pt-2 border-t border-slate-100">
               <div className="text-center">
@@ -148,19 +165,19 @@ function MealPlanCard({ mealPlan, onClick, onDelete }: MealPlanCardProps) {
                   <Zap className="h-3 w-3 text-orange-500" />
                   <span className="text-xs sm:text-sm font-medium text-slate-600">Calories</span>
                 </div>
-                <div className="text-lg sm:text-xl font-bold text-orange-600">
-                  {avgCaloriesPerDay}
+                <div className={`text-lg sm:text-xl font-bold ${avgCaloriesPerDay > 0 ? 'text-orange-600' : 'text-slate-400'}`}>
+                  {avgCaloriesPerDay > 0 ? avgCaloriesPerDay : 'Not calculated'}
                 </div>
                 <div className="text-xs text-slate-500">per day</div>
               </div>
-              
+
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1 mb-1">
                   <Activity className="h-3 w-3 text-green-500" />
                   <span className="text-xs sm:text-sm font-medium text-slate-600">Protein</span>
                 </div>
-                <div className="text-lg sm:text-xl font-bold text-green-600">
-                  {avgProteinPerDay}g
+                <div className={`text-lg sm:text-xl font-bold ${avgProteinPerDay > 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                  {avgProteinPerDay > 0 ? `${avgProteinPerDay}g` : 'Not calculated'}
                 </div>
                 <div className="text-xs text-slate-500">per day</div>
               </div>

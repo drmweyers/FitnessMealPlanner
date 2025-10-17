@@ -521,6 +521,15 @@ export const mealPlanSchema = z.object({
         carbs: z.number(),
         fat: z.number(),
       }).optional(), // Optional nutrition data for manual meals
+
+      // Ingredient details for manual meals
+      ingredients: z.array(
+        z.object({
+          ingredient: z.string(),
+          amount: z.string(),
+          unit: z.string(),
+        })
+      ).optional(), // Parsed ingredient list with quantities
     }),
   ),
 });
