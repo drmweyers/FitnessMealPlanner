@@ -138,8 +138,17 @@ export default function TrainerMealPlans() {
     );
   });
 
-  const formatDate = (date: Date | string) => {
-    return new Date(date).toLocaleDateString('en-US', {
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return 'N/A';
+
+    const dateObj = new Date(date);
+
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) {
+      return 'N/A';
+    }
+
+    return dateObj.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -253,7 +262,7 @@ export default function TrainerMealPlans() {
                         {planData.planName || 'Unnamed Plan'}
                       </CardTitle>
                       <CardDescription className="text-sm">
-                        Created {formatDate(plan.createdAt || new Date())}
+                        Created {formatDate(plan.createdAt)}
                       </CardDescription>
                     </div>
                     <DropdownMenu>

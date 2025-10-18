@@ -1147,12 +1147,15 @@ trainerRouter.post('/manual-meal-plan', requireAuth, requireRole('trainer'), asy
     );
 
     // Save to database
+    const now = new Date();
     const savedPlan = await storage.createTrainerMealPlan({
       trainerId,
       mealPlanData: mealPlan as any,
       notes: notes || 'Manual meal plan created by trainer',
       tags: tags || [],
-      isTemplate: isTemplate || false
+      isTemplate: isTemplate || false,
+      createdAt: now,
+      updatedAt: now
     });
 
     res.status(201).json({

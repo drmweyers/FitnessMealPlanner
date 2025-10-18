@@ -292,8 +292,8 @@ export const trainerMealPlans = pgTable("trainer_meal_plans", {
   isTemplate: boolean("is_template").default(false), // Mark as reusable template
   tags: jsonb("tags").$type<string[]>().default([]), // For categorization
   notes: text("notes"), // Trainer's notes about the plan
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 }, (table) => ({
   trainerIdIdx: index("trainer_meal_plans_trainer_id_idx").on(table.trainerId),
 }));
