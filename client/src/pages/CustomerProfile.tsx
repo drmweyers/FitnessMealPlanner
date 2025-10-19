@@ -34,7 +34,7 @@ interface CustomerStats {
   currentStreak: number;
 }
 
-interface CustomerProfile {
+interface CustomerProfileData {
   id: string;
   email: string;
   role: string;
@@ -105,7 +105,7 @@ export default function CustomerProfile() {
   });
 
   // Fetch customer profile details
-  const { data: profile, isLoading: profileLoading } = useQuery<CustomerProfile>({
+  const { data: profile, isLoading: profileLoading } = useQuery<CustomerProfileData>({
     queryKey: ['customerProfile', 'details'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/profile');

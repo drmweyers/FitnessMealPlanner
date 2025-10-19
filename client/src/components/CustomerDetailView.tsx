@@ -4,31 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription
-} from './ui/dialog';
 import { useToast } from '../hooks/use-toast';
 import { apiRequest } from '../lib/queryClient';
 import { SimplePDFExportButton } from './PDFExportButton';
 import MealPlanGenerator from './MealPlanGenerator';
 import MealPlanModal from './MealPlanModal';
-import { 
-  User, 
-  Target, 
-  Calendar, 
+import {
+  User,
+  Target,
   ChefHat,
   TrendingUp,
   Scale,
   Heart,
   Activity,
-  Camera,
   Plus,
   ArrowLeft,
-  FileText,
   Zap
 } from 'lucide-react';
 import type { MealPlan, CustomerMealPlan } from '@shared/schema';

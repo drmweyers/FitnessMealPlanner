@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,8 @@ import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { useToast } from "../hooks/use-toast";
 import { createCacheManager } from "../lib/cacheUtils";
-import { ChefHat, Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown, Wand2, CheckCircle, Circle } from "lucide-react";
+import { invalidateRecipeQueries } from "../lib/recipeQueryInvalidation";
+import { Sparkles, Database, Target, Zap, Clock, ChevronUp, ChevronDown, Wand2, CheckCircle, Circle } from "lucide-react";
 import { z } from "zod";
 import { Textarea } from "./ui/textarea";
 
@@ -58,6 +59,10 @@ export default function AdminRecipeGenerator() {
   const [generationProgress, setGenerationProgress] = useState<string>("");
   const [naturalLanguageInput, setNaturalLanguageInput] = useState<string>("");
   const [progressPercentage, setProgressPercentage] = useState<number>(0);
+  const [_currentRecipe, setCurrentRecipe] = useState<string>("");
+  const [_recipesCompleted, setRecipesCompleted] = useState<number>(0);
+  const [_recipesFailed, setRecipesFailed] = useState<number>(0);
+  const [_totalRecipes, setTotalRecipes] = useState<number>(0);
   const [statusSteps, setStatusSteps] = useState<Array<{text: string; completed: boolean}>>([
     { text: "Initializing AI models...", completed: false },
     { text: "Generating recipe concepts...", completed: false },
@@ -65,6 +70,167 @@ export default function AdminRecipeGenerator() {
     { text: "Validating recipes...", completed: false },
     { text: "Saving to database...", completed: false }
   ]);
+
+  // EventSource ref for SSE connection
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const currentJobIdRef = useRef<string | null>(null);
+
+  // Cleanup EventSource on unmount
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Connect to SSE for real-time progress updates
+  const connectToProgressStream = (jobId: string) => {
+    // Close existing connection if any
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    currentJobIdRef.current = jobId;
+
+    // Store jobId in localStorage for reconnection
+    localStorage.setItem('currentJobId', jobId);
+    localStorage.setItem('jobStartTime', Date.now().toString());
+
+    console.log(`[SSE] Connecting to progress stream for job ${jobId}`);
+
+    const eventSource = new EventSource(`/api/admin/recipe-progress-stream/${jobId}`);
+    eventSourceRef.current = eventSource;
+
+    eventSource.onmessage = (event) => {
+      try {
+        const progress = JSON.parse(event.data);
+        console.log('[SSE] Progress update:', progress);
+
+        // Update UI based on progress data
+        if (progress.error) {
+          console.error('[SSE] Error in progress:', progress.error);
+          setIsGenerating(false);
+          toast({
+            title: "Generation Error",
+            description: progress.error,
+            variant: "destructive",
+          });
+          eventSource.close();
+          return;
+        }
+
+        // Update progress percentage
+        setProgressPercentage(progress.percentage || 0);
+
+        // Update step progress
+        const stepMap: Record<string, number> = {
+          'starting': 0,
+          'generating': 1,
+          'validating': 2,
+          'images': 3,
+          'storing': 3,
+          'complete': 4,
+          'failed': 4
+        };
+
+        const currentStepIndex = stepMap[progress.currentStep] || 0;
+        setStatusSteps(steps => steps.map((step, i) => ({
+          ...step,
+          completed: i <= currentStepIndex
+        })));
+
+        // Update current recipe name
+        if (progress.currentRecipeName) {
+          setCurrentRecipe(progress.currentRecipeName);
+        }
+
+        // Update counts
+        setRecipesCompleted(progress.completed || 0);
+        setRecipesFailed(progress.failed || 0);
+        setTotalRecipes(progress.totalRecipes || 0);
+
+        // Update progress message
+        const stepNames: Record<string, string> = {
+          'starting': 'Initializing...',
+          'generating': 'Generating recipes with AI...',
+          'validating': 'Validating recipe data...',
+          'images': 'Generating recipe images...',
+          'storing': 'Saving to database...',
+          'complete': 'Generation complete!',
+          'failed': 'Generation failed'
+        };
+        setGenerationProgress(stepNames[progress.currentStep] || progress.currentStep);
+
+        // Handle completion
+        if (progress.currentStep === 'complete' || progress.currentStep === 'failed') {
+          setIsGenerating(false);
+          setProgressPercentage(100);
+
+          // Clear localStorage
+          localStorage.removeItem('currentJobId');
+          localStorage.removeItem('jobStartTime');
+
+          // Show completion toast
+          if (progress.currentStep === 'complete') {
+            toast({
+              title: "Generation Complete",
+              description: `Successfully generated ${progress.completed} recipes${progress.failed > 0 ? `, ${progress.failed} failed` : ''}`,
+            });
+
+            // CRITICAL FIX: Invalidate ALL recipe queries to refresh UI
+            invalidateRecipeQueries(queryClient, 'AdminRecipe-Generation-Complete');
+          } else {
+            toast({
+              title: "Generation Failed",
+              description: `Failed after ${progress.completed} recipes. ${progress.errors?.length || 0} errors logged.`,
+              variant: "destructive",
+            });
+          }
+
+          // Close the EventSource
+          eventSource.close();
+          eventSourceRef.current = null;
+        }
+      } catch (error) {
+        console.error('[SSE] Failed to parse progress update:', error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('[SSE] Connection error:', error);
+      setIsGenerating(false);
+      eventSource.close();
+      eventSourceRef.current = null;
+
+      toast({
+        title: "Connection Lost",
+        description: "Lost connection to progress updates. Refresh to see final results.",
+        variant: "destructive",
+      });
+    };
+  };
+
+  // Check for existing job in localStorage on mount
+  useEffect(() => {
+    const storedJobId = localStorage.getItem('currentJobId');
+    const jobStartTime = localStorage.getItem('jobStartTime');
+
+    if (storedJobId && jobStartTime) {
+      const elapsed = Date.now() - parseInt(jobStartTime);
+      // Only reconnect if less than 5 minutes old
+      if (elapsed < 5 * 60 * 1000) {
+        console.log('[SSE] Reconnecting to existing job:', storedJobId);
+        setIsGenerating(true);
+        connectToProgressStream(storedJobId);
+      } else {
+        // Job too old, clear it
+        localStorage.removeItem('currentJobId');
+        localStorage.removeItem('jobStartTime');
+      }
+    }
+  }, []);
 
   const form = useForm<AdminRecipeGeneration>({
     resolver: zodResolver(adminRecipeGenerationSchema),
@@ -91,71 +257,32 @@ export default function AdminRecipeGenerator() {
 
       return response.json();
     },
-    onSuccess: (data: GenerationResult) => {
+    onSuccess: (data: any) => {
       setLastGeneration(data);
       setIsGenerating(true);
       setProgressPercentage(0);
-      
+      setTotalRecipes(data.count || 0);
+
       // Reset status steps
       setStatusSteps(steps => steps.map(step => ({ ...step, completed: false })));
 
       toast({
         title: "Recipe Generation Started",
-        description: `${data.message} - Generating ${data.count} recipes...`,
+        description: `${data.message} - Generating ${data.count || 0} recipes...`,
       });
 
       // Use smart cache management for recipe generation
-      cacheManager.handleRecipeGeneration(data.count);
+      cacheManager.handleRecipeGeneration(data.count || 0);
 
-      // Simulate progress updates with more granular steps
-      const updateStep = (index: number, progress: number) => {
-        setStatusSteps(steps => steps.map((step, i) => ({
-          ...step,
-          completed: i <= index
-        })));
-        setProgressPercentage(progress);
-        setGenerationProgress(statusSteps[index].text);
-      };
-
-      const stepDuration = 30000 / statusSteps.length; // Total 30s divided by number of steps
-      
-      // Update steps sequentially
-      statusSteps.forEach((_, index) => {
-        setTimeout(() => {
-          updateStep(index, (index + 1) * (100 / statusSteps.length));
-        }, stepDuration * (index + 1));
-      });
-
-      // Complete the generation
-      setTimeout(() => {
-        setIsGenerating(false);
-        setProgressPercentage(100);
-        setGenerationProgress("");
-        
-        // Show final results
-        const successRate = (data.success / data.count) * 100;
-        const avgTime = data.metrics?.averageTimePerRecipe 
-          ? Math.round(data.metrics.averageTimePerRecipe / 1000) 
-          : null;
-
-        toast({
-          title: "Generation Complete",
-          description: `Successfully generated ${data.success} recipes${data.failed > 0 ? `, ${data.failed} failed` : ''}${avgTime ? ` (avg. ${avgTime}s per recipe)` : ''}`
-        });
-
-        if (data.failed > 0) {
-          toast({
-            title: "Some Recipes Failed",
-            description: "Check the console for detailed error information",
-            variant: "destructive"
-          });
-          console.error("Recipe generation errors:", data.errors);
-        }
-
-        // Refresh data
-        queryClient.invalidateQueries({ queryKey: ['/api/recipes'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
-      }, 30000);
+      // Connect to SSE for real-time progress (Fix #2)
+      if (data.jobId) {
+        console.log('[Recipe Generation] Connecting to SSE with jobId:', data.jobId);
+        connectToProgressStream(data.jobId);
+      } else {
+        console.warn('[Recipe Generation] No jobId received, cannot track progress');
+        // Fallback: show generic progress message
+        setGenerationProgress("Recipe generation in progress...");
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -202,36 +329,110 @@ export default function AdminRecipeGenerator() {
 
     const parseNaturalLanguage = useMutation({
         mutationFn: async (input: string) => {
-            // Placeholder for natural language parsing logic
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing delay
-            return {
-                count: 15,
-                mealType: 'breakfast',
-                dietaryTag: 'keto',
-                maxPrepTime: 20,
-                focusIngredient: 'eggs and Greek yogurt',
-                minCalories: 400,
-                maxCalories: 600,
-            };
+            console.log('[Parse Button] Starting natural language parsing...');
+            console.log('[Parse Button] Input:', input);
+
+            // Call real parsing endpoint (Fix #6)
+            const response = await fetch('/api/admin/parse-recipe-prompt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ prompt: input }),
+            });
+
+            console.log('[Parse Button] Response status:', response.status);
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error('[Parse Button] Error response:', error);
+                throw new Error(error.message || error.error || 'Failed to parse natural language prompt');
+            }
+
+            const data = await response.json();
+            console.log('[Parse Button] Success response:', data);
+            return data;
         },
         onSuccess: (data) => {
-            form.setValue("count", data.count);
-            form.setValue("mealType", data.mealType);
-            form.setValue("dietaryTag", data.dietaryTag);
-            form.setValue("maxPrepTime", data.maxPrepTime);
-            form.setValue("focusIngredient", data.focusIngredient);
-            form.setValue("minCalories", data.minCalories);
-            form.setValue("maxCalories", data.maxCalories);
+            console.log('[Parse Button] Mutation success, populating form fields...');
+            const params = data.parsedParameters;
+            console.log('[Parse Button] Parsed parameters:', params);
+
+            let fieldsPopulated = 0;
+
+            // Map parsed parameters to form fields
+            if (params.count) {
+                form.setValue("count", params.count);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set count:', params.count);
+            }
+            if (params.mealTypes && params.mealTypes[0]) {
+                form.setValue("mealType", params.mealTypes[0]);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set mealType:', params.mealTypes[0]);
+            }
+            if (params.dietaryTags && params.dietaryTags[0]) {
+                form.setValue("dietaryTag", params.dietaryTags[0]);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set dietaryTag:', params.dietaryTags[0]);
+            }
+            if (params.maxPrepTime) {
+                form.setValue("maxPrepTime", params.maxPrepTime);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set maxPrepTime:', params.maxPrepTime);
+            }
+            if (params.maxCalories) {
+                form.setValue("maxCalories", params.maxCalories);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set maxCalories:', params.maxCalories);
+            }
+            if (params.minProtein) {
+                form.setValue("minProtein", params.minProtein);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set minProtein:', params.minProtein);
+            }
+            if (params.maxProtein) {
+                form.setValue("maxProtein", params.maxProtein);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set maxProtein:', params.maxProtein);
+            }
+            if (params.minCarbs) {
+                form.setValue("minCarbs", params.minCarbs);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set minCarbs:', params.minCarbs);
+            }
+            if (params.maxCarbs) {
+                form.setValue("maxCarbs", params.maxCarbs);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set maxCarbs:', params.maxCarbs);
+            }
+            if (params.minFat) {
+                form.setValue("minFat", params.minFat);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set minFat:', params.minFat);
+            }
+            if (params.maxFat) {
+                form.setValue("maxFat", params.maxFat);
+                fieldsPopulated++;
+                console.log('[Parse Button] Set maxFat:', params.maxFat);
+            }
+
+            console.log(`[Parse Button] ✅ Successfully populated ${fieldsPopulated} form fields`);
 
             toast({
                 title: "AI Parsing Complete",
-                description: "Automatically populated form with parsed recipe requirements.",
+                description: `Automatically populated ${fieldsPopulated} form fields from your prompt.`,
             });
         },
         onError: (error: Error) => {
+            console.error('[Parse Button] Mutation error:', error);
+            console.error('[Parse Button] Error message:', error.message);
+            console.error('[Parse Button] Error stack:', error.stack);
+
             toast({
                 title: "Parsing Failed",
-                description: error.message,
+                description: error.message || "Failed to parse prompt. Check console for details.",
                 variant: "destructive",
             });
         },
@@ -257,8 +458,11 @@ export default function AdminRecipeGenerator() {
             setProgressPercentage(0);
             setGenerationProgress("Parsing natural language prompt...");
 
-            // Call new natural language generation endpoint
-            const response = await fetch('/api/admin/generate-from-prompt', {
+            // Reset status steps
+            setStatusSteps(steps => steps.map(step => ({ ...step, completed: false })));
+
+            // Call RECIPE generation endpoint (Fix #6)
+            const response = await fetch('/api/admin/generate-recipes-from-prompt', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -276,15 +480,17 @@ export default function AdminRecipeGenerator() {
 
             toast({
                 title: "Natural Language Generation Started",
-                description: `Generating ${result.parsedParameters.count || 10} recipes from your prompt. Check the Bulk Generator tab for progress.`,
+                description: `Generating ${result.count || 10} recipes from your prompt with real-time progress tracking.`,
             });
 
-            setGenerationProgress(`Bulk generation started: batchId ${result.batchId}`);
+            // Connect to SSE for real-time progress
+            if (result.jobId) {
+                console.log('[Natural Language Generation] Connecting to SSE with jobId:', result.jobId);
+                connectToProgressStream(result.jobId);
+            }
 
-            // Optionally redirect user to BMAD tab or show a link
-            console.log('[Natural Language Generation] Started BMAD batch:', result);
+            console.log('[Natural Language Generation] Started recipe generation:', result);
             console.log('[Natural Language Generation] Parsed parameters:', result.parsedParameters);
-            console.log('[Natural Language Generation] Generation options:', result.generationOptions);
 
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -294,7 +500,6 @@ export default function AdminRecipeGenerator() {
                 variant: "destructive",
             });
             console.error('[Natural Language Generation] Error:', error);
-        } finally {
             setIsGenerating(false);
         }
     };
@@ -303,7 +508,7 @@ export default function AdminRecipeGenerator() {
     generateRecipes.mutate(data);
   };
 
-  const handleBulkGenerate = (count: number) => {
+  const _handleBulkGenerate = (count: number) => {
     bulkGenerate.mutate(count);
   };
 
@@ -806,8 +1011,20 @@ export default function AdminRecipeGenerator() {
               <Button
                 key={count}
                 variant="outline"
-                onClick={() => handleBulkGenerate(count)}
-                disabled={bulkGenerate.isPending}
+                onClick={() => {
+                  // Set count and submit with fitness-focused defaults
+                  form.setValue('count', count);
+                  form.handleSubmit((data) => {
+                    generateRecipes.mutate({
+                      ...data,
+                      count,
+                      // Default fitness-focused parameters
+                      minProtein: 20,
+                      maxCalories: 800,
+                    });
+                  })();
+                }}
+                disabled={generateRecipes.isPending || isGenerating}
                 className="h-16 flex flex-col items-center justify-center"
               >
                 <span className="text-lg font-bold">{count}</span>

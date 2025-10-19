@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
-import { Trash2, X, Check } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,

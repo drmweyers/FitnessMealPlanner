@@ -1,42 +1,68 @@
-# GitHub Actions Deployment Setup
+# GitHub Actions Workflows
 
-This workflow automatically builds and deploys the FitnessMealPlanner application to DigitalOcean App Platform.
+This directory contains automated workflows for the FitnessMealPlanner project.
 
-## Required Secrets
+## 📋 Available Workflows
 
-You need to add the following secrets to your GitHub repository:
+### 1. **Lint Code** (`lint.yml`)
 
-1. **DIGITALOCEAN_ACCESS_TOKEN**
-   - Your DigitalOcean API token
-   - Create one at: https://cloud.digitalocean.com/account/api/tokens
-   - Required scopes: Read & Write
+**Triggers:**
+- Every push to `main`, `qa-ready`, or `qa-ready-clean` branches
+- Every pull request to these branches
 
-2. **DO_APP_ID**
-   - Your DigitalOcean App ID: `600abc04-b784-426c-8799-0c09f8b9a958`
+**What it does:**
+- ✅ Runs ESLint on client code (production frontend)
+- ✅ Runs ESLint on server code
+- ✅ Generates a summary report
+- ✅ Comments on pull requests with detailed results
+- ❌ **Fails the build** if client code has errors (production must be error-free)
+- ⚠️ Warns about server errors but doesn't fail the build
 
-## How to Add Secrets
+**Status:**
+- Client errors will **block merging** (required check)
+- Server errors are **informational only**
 
-1. Go to your GitHub repository
-2. Click on "Settings" → "Secrets and variables" → "Actions"
-3. Click "New repository secret"
-4. Add each secret with the names above
+### 2. **Auto-fix Lint Issues** (`lint-autofix.yml`)
 
-## Workflow Behavior
+**Triggers:**
+- Manual trigger (workflow_dispatch)
+- Automatic on push to `feature/**`, `fix/**`, `hotfix/**` branches
 
-- **Main branch**: Builds Docker image, pushes to registry, and automatically deploys
-- **Develop branch**: Builds and pushes Docker image with `develop` tag
-- **Feature branches**: Builds and pushes Docker image with feature branch name as tag
-- **Pull requests**: Builds Docker image but doesn't push (for testing)
+**What it does:**
+- ✅ Runs ESLint with `--fix` flag
+- ✅ Automatically commits fixable issues
+- ✅ Pushes fixes back to the branch
+- ✅ Adds a comment to notify about auto-fixes
+- ⏭️ Skips if commit message contains `[skip-lint]`
 
-## Docker Tags
+## 🚀 How to Use
 
-The workflow creates the following tags:
-- `prod` - for main branch
-- `latest` - for main branch
-- `develop` - for develop branch
-- `feature-branch-name` - for feature branches
-- `pr-123` - for pull requests
+### For Local Development
 
-## Manual Deployment
+Run linting locally before pushing:
 
-You can also trigger the workflow manually from the Actions tab using the "workflow_dispatch" event.
+```bash
+# Check all code
+npm run lint
+
+# Check only client (production)
+npm run lint:client
+
+# Check only server
+npm run lint:server
+
+# Auto-fix what can be fixed
+npm run lint:fix
+```
+
+## 📊 Status Badge
+
+Add to your README.md:
+
+```markdown
+[![Lint](https://github.com/YOUR_USERNAME/FitnessMealPlanner/workflows/Lint%20Code/badge.svg)](https://github.com/YOUR_USERNAME/FitnessMealPlanner/actions/workflows/lint.yml)
+```
+
+---
+
+**Last Updated:** January 2025

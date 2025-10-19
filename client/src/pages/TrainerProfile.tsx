@@ -40,7 +40,7 @@ interface TrainerStats {
   clientSatisfactionRate: number;
 }
 
-interface TrainerProfile {
+interface TrainerProfileData {
   id: string;
   email: string;
   role: string;
@@ -93,7 +93,7 @@ export default function TrainerProfile() {
   });
 
   // Fetch trainer profile details
-  const { data: profile, isLoading: profileLoading } = useQuery<TrainerProfile>({
+  const { data: profile, isLoading: profileLoading } = useQuery<TrainerProfileData>({
     queryKey: ['trainerProfile', 'details'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/profile');

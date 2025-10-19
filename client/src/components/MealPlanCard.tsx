@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -14,19 +14,7 @@ interface MealPlanCardProps {
 }
 
 function MealPlanCard({ mealPlan, onClick, onDelete }: MealPlanCardProps) {
-  // Early null check
-  if (!mealPlan) {
-    return (
-      <Card className="border-red-200 bg-red-50">
-        <CardContent className="p-4">
-          <div className="text-red-600">
-            <h3 className="font-semibold">Error: Invalid meal plan data</h3>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  // CRITICAL: All hooks must be called before any conditional returns
   const { user } = useAuth();
   const {
     isValid,
@@ -58,7 +46,7 @@ function MealPlanCard({ mealPlan, onClick, onDelete }: MealPlanCardProps) {
   const handleClick = useCallback(() => {
     onClick?.();
   }, [onClick]);
-  
+
   // Delete handler
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click event
@@ -66,6 +54,19 @@ function MealPlanCard({ mealPlan, onClick, onDelete }: MealPlanCardProps) {
       onDelete(mealPlan.id);
     }
   }, [onDelete, mealPlan.id]);
+
+  // Early null check - AFTER all hooks
+  if (!mealPlan) {
+    return (
+      <Card className="border-red-200 bg-red-50">
+        <CardContent className="p-4">
+          <div className="text-red-600">
+            <h3 className="font-semibold">Error: Invalid meal plan data</h3>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   // Early return with error display if invalid meal plan
   if (!isValid) {

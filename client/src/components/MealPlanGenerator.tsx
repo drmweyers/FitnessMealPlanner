@@ -362,21 +362,53 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
 
   const saveMealPlan = useMutation({
     mutationFn: async ({ notes, tags }: { notes?: string; tags?: string[] }) => {
-      if (!generatedPlan) throw new Error("No meal plan to save");
+      console.log('[Save to Library] Starting save operation...');
+      console.log('[Save to Library] User role:', user?.role);
+      console.log('[Save to Library] Generated plan exists:', !!generatedPlan);
 
-      const response = await apiRequest(
-        "POST",
-        "/api/trainer/meal-plans",
-        {
-          mealPlanData: generatedPlan.mealPlan,
-          notes,
-          tags,
-          isTemplate: false,
-        },
-      );
-      return response.json();
+      if (!generatedPlan) {
+        console.error('[Save to Library] ERROR: No meal plan to save');
+        throw new Error("No meal plan to save");
+      }
+
+      if (!user) {
+        console.error('[Save to Library] ERROR: No user found');
+        throw new Error("You must be logged in to save meal plans");
+      }
+
+      // FIX: Trainer endpoint now accepts both trainer and admin roles
+      const endpoint = "/api/trainer/meal-plans";
+
+      console.log('[Save to Library] Using endpoint:', endpoint);
+      console.log('[Save to Library] Meal plan data:', {
+        planName: generatedPlan.mealPlan.planName,
+        daysCount: generatedPlan.mealPlan.days.length,
+        notes,
+        tags,
+      });
+
+      try {
+        const response = await apiRequest(
+          "POST",
+          endpoint,
+          {
+            mealPlanData: generatedPlan.mealPlan,
+            notes,
+            tags,
+            isTemplate: false,
+          },
+        );
+
+        const result = await response.json();
+        console.log('[Save to Library] SUCCESS: Meal plan saved', result);
+        return result;
+      } catch (error) {
+        console.error('[Save to Library] NETWORK ERROR:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[Save to Library] Mutation success handler called', data);
       toast({
         title: "Meal Plan Saved!",
         description: "The meal plan has been saved to your library.",
@@ -386,9 +418,21 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans'] }); // Also invalidate without user ID for compatibility
     },
     onError: (error: Error) => {
+      console.error('[Save to Library] Mutation error handler called:', error);
+
+      // Enhanced error messages
+      let errorMessage = error.message;
+      if (error.message.includes('403')) {
+        errorMessage = "You don't have permission to save meal plans. Please contact support.";
+      } else if (error.message.includes('401')) {
+        errorMessage = "Your session has expired. Please log in again.";
+      } else if (error.message.includes('500')) {
+        errorMessage = "Server error. Please try again later.";
+      }
+
       toast({
         title: "Save Failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -484,6 +528,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     };
 
     const cleanText = (text: string) => {
+      // eslint-disable-next-line no-control-regex
       return text.replace(/[^\x00-\x7F]/g, "").trim();
     };
 
@@ -1298,7 +1343,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                 className="space-y-6"
               >
                 {/* Plan Details */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   <FormField
                     control={form.control}
                     name="planName"
@@ -1358,6 +1403,47 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                             </SelectContent>
                           </Select>
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="dietaryTag"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 text-sm sm:text-base">
+                          <Utensils className="h-4 w-4" />
+                          Diet Type
+                        </FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value || "none"}
+                            onValueChange={(value) =>
+                              field.onChange(value === "none" ? undefined : value)
+                            }
+                          >
+                            <SelectTrigger className="text-sm sm:text-base">
+                              <SelectValue placeholder="Select diet type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No Restriction</SelectItem>
+                              <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                              <SelectItem value="vegan">Vegan</SelectItem>
+                              <SelectItem value="keto">Keto</SelectItem>
+                              <SelectItem value="paleo">Paleo</SelectItem>
+                              <SelectItem value="gluten-free">Gluten Free</SelectItem>
+                              <SelectItem value="low-carb">Low Carb</SelectItem>
+                              <SelectItem value="high-protein">High Protein</SelectItem>
+                              <SelectItem value="mediterranean">Mediterranean</SelectItem>
+                              <SelectItem value="pescatarian">Pescatarian</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                          Filter recipes by dietary preference
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1562,349 +1648,6 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                   />
                 </div>
 
-                <Separator />
-
-                {/* Filter Options */}
-                <div>
-                  <h4 className="text-sm sm:text-base font-medium text-slate-700 mb-4">
-                    Filter Preferences
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    <FormField
-                      control={form.control}
-                      name="mealType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm sm:text-base">Meal Type</FormLabel>
-                          <FormControl>
-                            <Select
-                              value={field.value || "all"}
-                              onValueChange={(value) =>
-                                field.onChange(
-                                  value === "all" ? undefined : value,
-                                )
-                              }
-                            >
-                              <SelectTrigger className="text-sm sm:text-base">
-                                <SelectValue placeholder="All Meals" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">All Meals</SelectItem>
-                                <SelectItem value="breakfast">
-                                  Breakfast
-                                </SelectItem>
-                                <SelectItem value="lunch">Lunch</SelectItem>
-                                <SelectItem value="dinner">Dinner</SelectItem>
-                                <SelectItem value="snack">Snack</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="dietaryTag"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm sm:text-base">Dietary</FormLabel>
-                          <FormControl>
-                            <Select
-                              value={field.value || "all"}
-                              onValueChange={(value) =>
-                                field.onChange(
-                                  value === "all" ? undefined : value,
-                                )
-                              }
-                            >
-                              <SelectTrigger className="text-sm sm:text-base">
-                                <SelectValue placeholder="All Diets" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">All Diets</SelectItem>
-                                <SelectItem value="vegetarian">
-                                  Vegetarian
-                                </SelectItem>
-                                <SelectItem value="vegan">Vegan</SelectItem>
-                                <SelectItem value="keto">Keto</SelectItem>
-                                <SelectItem value="paleo">Paleo</SelectItem>
-                                <SelectItem value="gluten-free">
-                                  Gluten Free
-                                </SelectItem>
-                                <SelectItem value="low-carb">
-                                  Low Carb
-                                </SelectItem>
-                                <SelectItem value="high-protein">
-                                  High Protein
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="maxPrepTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2 text-sm sm:text-base">
-                            <Clock className="h-4 w-4" />
-                            Max Prep Time
-                          </FormLabel>
-                          <FormControl>
-                            <Select
-                              value={field.value?.toString() || "all"}
-                              onValueChange={(value) =>
-                                field.onChange(
-                                  value === "all" ? undefined : parseInt(value),
-                                )
-                              }
-                            >
-                              <SelectTrigger className="text-sm sm:text-base">
-                                <SelectValue placeholder="Any Time" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">Any Time</SelectItem>
-                                <SelectItem value="15">15 minutes</SelectItem>
-                                <SelectItem value="30">30 minutes</SelectItem>
-                                <SelectItem value="60">1 hour</SelectItem>
-                                <SelectItem value="120">2 hours</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="maxCalories"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2 text-sm sm:text-base">
-                            <Zap className="h-4 w-4" />
-                            Max Calories
-                          </FormLabel>
-                          <FormControl>
-                            <Select
-                              value={field.value?.toString() || "all"}
-                              onValueChange={(value) =>
-                                field.onChange(
-                                  value === "all" ? undefined : parseInt(value),
-                                )
-                              }
-                            >
-                              <SelectTrigger className="text-sm sm:text-base">
-                                <SelectValue placeholder="Any Amount" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">Any Amount</SelectItem>
-                                <SelectItem value="300">Under 300</SelectItem>
-                                <SelectItem value="500">Under 500</SelectItem>
-                                <SelectItem value="800">Under 800</SelectItem>
-                                <SelectItem value="1200">Under 1200</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Macro Nutrient Filters */}
-                <div>
-                  <h4 className="text-sm sm:text-base font-medium text-slate-700 mb-4 flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    Macro Nutrient Targets (per meal)
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {/* Protein */}
-                    <div className="space-y-3">
-                      <h5 className="text-sm font-medium text-slate-600">
-                        Protein (g)
-                      </h5>
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                        <FormField
-                          control={form.control}
-                          name="minProtein"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs sm:text-sm">Min</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  className="text-sm sm:text-base"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      e.target.value
-                                        ? parseInt(e.target.value)
-                                        : undefined,
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="maxProtein"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs sm:text-sm">Max</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="∞"
-                                  className="text-sm sm:text-base"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      e.target.value
-                                        ? parseInt(e.target.value)
-                                        : undefined,
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Carbohydrates */}
-                    <div className="space-y-3">
-                      <h5 className="text-sm font-medium text-slate-600">
-                        Carbohydrates (g)
-                      </h5>
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                        <FormField
-                          control={form.control}
-                          name="minCarbs"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs sm:text-sm">Min</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  className="text-sm sm:text-base"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      e.target.value
-                                        ? parseInt(e.target.value)
-                                        : undefined,
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="maxCarbs"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs sm:text-sm">Max</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="∞"
-                                  className="text-sm sm:text-base"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      e.target.value
-                                        ? parseInt(e.target.value)
-                                        : undefined,
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Fat */}
-                    <div className="space-y-3">
-                      <h5 className="text-sm font-medium text-slate-600">
-                        Fat (g)
-                      </h5>
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                        <FormField
-                          control={form.control}
-                          name="minFat"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs sm:text-sm">Min</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  className="text-sm sm:text-base"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      e.target.value
-                                        ? parseInt(e.target.value)
-                                        : undefined,
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="maxFat"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs sm:text-sm">Max</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="∞"
-                                  className="text-sm sm:text-base"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      e.target.value
-                                        ? parseInt(e.target.value)
-                                        : undefined,
-                                    )
-                                  }
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <Button
                     type="submit"
@@ -1931,7 +1674,10 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                     <Button
                       type="button"
                       onClick={() => {
-                        console.log("Manual refresh button clicked");
+                        console.log("[Refresh List] Button clicked - refreshing recipe data");
+                        // FIX: Actually refresh recipe data from server
+                        queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
+                        queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans'] });
                         setRefreshKey((prev) => prev + 1);
                         setForceRender((prev) => prev + 1);
                         if (mealPlanRef.current) {
@@ -1940,6 +1686,11 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                             block: "start",
                           });
                         }
+                        toast({
+                          title: "Refreshed",
+                          description: "Recipe list has been updated with latest data.",
+                        });
+                        console.log("[Refresh List] Recipe queries invalidated, UI re-rendered");
                       }}
                       variant="outline"
                       size="lg"
@@ -1996,6 +1747,10 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                 )}
                 <Button
                   onClick={() => {
+                    console.log("[Refresh List] Header button clicked - refreshing recipe data");
+                    // FIX: Actually refresh recipe data from server
+                    queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
+                    queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans'] });
                     setRefreshKey((prev) => prev + 1);
                     setForceRender((prev) => prev + 1);
                     if (mealPlanRef.current) {
@@ -2004,6 +1759,11 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                         block: "start",
                       });
                     }
+                    toast({
+                      title: "Refreshed",
+                      description: "Recipe list has been updated with latest data.",
+                    });
+                    console.log("[Refresh List] Recipe queries invalidated, UI re-rendered");
                   }}
                   variant="outline"
                   size="sm"

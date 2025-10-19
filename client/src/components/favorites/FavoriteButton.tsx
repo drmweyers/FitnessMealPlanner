@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useEffect } from 'react';
+import React, { memo, useState, useCallback, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';

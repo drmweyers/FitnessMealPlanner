@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Share2, Copy, ExternalLink, Eye, Calendar, Trash2, Settings, Link, ChevronDown, Facebook, Twitter, Mail, MessageCircle, Instagram } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -152,7 +153,7 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
       case 'email':
         socialUrl = `mailto:?subject=${encodeURIComponent(`Meal Plan: ${mealPlanName}`)}&body=${encodeURIComponent(`Hi!\n\nI wanted to share my meal plan with you: "${mealPlanName}"\n\nYou can view it here: ${shareUrl}\n\nEnjoy!\n`)}`;
         break;
-      case 'instagram':
+      case 'instagram': {
         // Instagram doesn't allow direct sharing, so copy to clipboard with instructions
         const instagramText = `${shareText}\n\n${shareUrl}\n\n#mealplanning #fitness #health`;
         copyToClipboard(instagramText);
@@ -161,6 +162,7 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
           description: 'Text copied to clipboard. Paste it in your Instagram post or story.',
         });
         return;
+      }
     }
     
     if (socialUrl) {
