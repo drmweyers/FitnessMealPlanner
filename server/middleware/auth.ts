@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
-import { verifyToken, verifyRefreshToken, generateTokens } from '../auth';
+import { verifyToken, verifyRefreshToken } from '../auth';
 import jwt from 'jsonwebtoken';
+import { refreshTokensWithDeduplication, isTokenInGracePeriod } from './tokenRefreshManager';
 
 /**
  * Authentication Middleware Module
@@ -140,9 +141,24 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
           // Verify refresh token using the refresh token verification function
           const refreshDecoded = await verifyRefreshToken(refreshToken);
 
-          // Validate refresh token in storage
+          // Validate refresh token in storage or grace period
           const storedToken = await storage.getRefreshToken(refreshToken);
-          if (!storedToken || new Date() > new Date(storedToken.expiresAt)) {
+          const inGracePeriod = isTokenInGracePeriod(refreshToken);
+
+          // Token must be in storage OR in grace period
+          if (!storedToken && !inGracePeriod) {
+            // Clear invalid cookies
+            res.clearCookie('token');
+            res.clearCookie('refreshToken');
+
+            return res.status(401).json({
+              error: 'Session expired. Please login again.',
+              code: 'REFRESH_TOKEN_EXPIRED'
+            });
+          }
+
+          // Check expiry only if token is in storage (grace period tokens are already validated)
+          if (storedToken && new Date() > new Date(storedToken.expiresAt)) {
             // Clear invalid cookies
             res.clearCookie('token');
             res.clearCookie('refreshToken');
@@ -161,22 +177,21 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
             });
           }
 
-          // Generate new token pair
-          const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
-
-          // Store new refresh token
-          const refreshTokenExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-          await storage.createRefreshToken(user.id, newRefreshToken, refreshTokenExpires);
-
-          // Delete old refresh token
-          await storage.deleteRefreshToken(refreshToken);
+          // Use deduplicated refresh to prevent race conditions
+          const { accessToken, refreshToken: newRefreshToken } = await refreshTokensWithDeduplication(
+            user.id,
+            refreshToken
+          );
 
           // Set new cookies
+          const accessTokenExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+          const refreshTokenExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
           res.cookie('token', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            expires: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+            expires: accessTokenExpires
           });
 
           res.cookie('refreshToken', newRefreshToken, {

@@ -61,7 +61,7 @@ function generateRealisticMeasurements() {
   };
 
   // Generate measurements every 3-4 days (more realistic than daily)
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
   let dayCount = 0;
 
   while (dayCount <= 90) {

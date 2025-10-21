@@ -1919,7 +1919,7 @@ describe.skip('ENHANCED ROLE MANAGEMENT SERVICE TESTS', () => {
           }
         };
         
-        let config = baseConfigs[userRole as keyof typeof baseConfigs] || {
+        const config = baseConfigs[userRole as keyof typeof baseConfigs] || {
           requests: 10,
           windowMs: 60000,
           burstAllowed: 2,

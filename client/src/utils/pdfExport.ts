@@ -267,8 +267,62 @@ function drawRecipeCard(
 }
 
 /**
+ * Export via server-side (Puppeteer) for large meal plans
+ * Uses the timeout-optimized server endpoint
+ */
+async function exportViaServerSide(
+  mealPlan: any,
+  options: {
+    includeNutrition?: boolean;
+    cardSize?: 'small' | 'medium' | 'large';
+  } = {}
+): Promise<void> {
+  const response = await fetch('/api/pdf/export', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      mealPlanData: mealPlan,
+      customerName: mealPlan.mealPlanData?.clientName || mealPlan.clientName,
+      options: {
+        includeShoppingList: true,
+        includeMacroSummary: options.includeNutrition ?? true,
+        includeRecipePhotos: false,
+        orientation: 'portrait',
+        pageSize: 'A4'
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Server export failed with status ${response.status}`);
+  }
+
+  // Download the PDF
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+
+  // Extract filename from response headers or use default
+  const contentDisposition = response.headers.get('content-disposition');
+  const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+  a.download = filenameMatch ? filenameMatch[1] : 'meal-plan.pdf';
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
+
+/**
  * Export a single meal plan to PDF
  * This is the main function that will be called from the UI
+ *
+ * Automatically routes to server-side export for large plans (20+ recipes)
+ * to utilize timeout optimization and better performance
  */
 export async function exportSingleMealPlanToPDF(
   mealPlan: any,
@@ -278,8 +332,19 @@ export async function exportSingleMealPlanToPDF(
   } = {}
 ): Promise<void> {
   try {
-    const mealPlanData = extractRecipeCardsFromMealPlan(mealPlan);
-    await exportMealPlanRecipesToPDF(mealPlanData, options);
+    const mealCount = mealPlan.meals?.length || 0;
+
+    // Use server-side export for large plans (20+ recipes)
+    // This uses the timeout-optimized Puppeteer implementation
+    if (mealCount >= 20) {
+      console.log(`Large plan detected (${mealCount} recipes) - using server-side export with timeout optimization`);
+      await exportViaServerSide(mealPlan, options);
+    } else {
+      // Use client-side export for small plans (< 20 recipes)
+      console.log(`Small plan detected (${mealCount} recipes) - using client-side jsPDF export`);
+      const mealPlanData = extractRecipeCardsFromMealPlan(mealPlan);
+      await exportMealPlanRecipesToPDF(mealPlanData, options);
+    }
   } catch (error) {
     console.error('Error exporting meal plan to PDF:', error);
     throw new Error('Failed to export meal plan to PDF. Please try again.');

@@ -696,16 +696,18 @@ export class MealPlanVariationService {
     switch (variationType) {
       case 'seasonal_rotation':
         return await this.createSeasonalVariation(baseMealPlan);
-        
-      case 'cuisine_variation':
+
+      case 'cuisine_variation': {
         const cuisine = variationParameters?.cuisine || 'mediterranean';
         return await this.createCuisineVariation(baseMealPlan, cuisine);
-        
-      case 'difficulty_progression':
+      }
+
+      case 'difficulty_progression': {
         const direction = variationParameters?.direction || 'increase';
         const skillLevel = variationParameters?.skillLevel || 'intermediate';
         return await this.createDifficultyProgressionVariation(baseMealPlan, direction, skillLevel);
-        
+      }
+
       default:
         // Create a basic ingredient substitution variation
         return await this.createIngredientSubstitutionVariation(baseMealPlan, availableRecipes);

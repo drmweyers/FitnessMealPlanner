@@ -272,7 +272,7 @@ export function createCacheMiddleware(
           res.set('ETag', etag);
           
           // Prepare cache entry
-          let cacheData: any = {
+          const cacheData: any = {
             data: responseData,
             statusCode: res.statusCode,
             contentType,

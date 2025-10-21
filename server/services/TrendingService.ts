@@ -301,7 +301,7 @@ export class TrendingService {
       return cached;
     }
 
-    let whereConditions = [
+    const whereConditions = [
       eq(recipes.isApproved, true),
       gte(recipeFavorites.favoritedAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) // Last 7 days
     ];

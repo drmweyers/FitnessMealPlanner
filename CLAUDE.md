@@ -726,11 +726,35 @@ The project is using the **BMAD Method** (Agile AI-Driven Development) for syste
 
 **COMPLETE GUIDE:** See `public/landing/content/README.md`
 
+## 🚨 URGENT: MANUAL TESTING REQUIRED ⚠️
+
+**⏳ AWAITING USER ACTION - DO NOT PROCEED WITHOUT TESTING**
+
+### Critical Tasks Pending (Current Session):
+1. ⏳ **TEST PARSE BUTTON** (5 min) - Parse AI button functionality
+2. ⏳ **TEST QUEUE AUTO-REFRESH** (5 min) - Pending recipes auto-update
+
+**Instructions**: See `TODO_URGENT.md` for detailed testing steps.
+
+**Status**: Implementation complete ✅ | Testing pending ⏳ | DO NOT PROCEED UNTIL TESTED
+
+**Claude will continue reminding you to complete these tests until done!**
+
+---
+
 ## Session Progress Tracking
+- **Current Session:** Parse Button & Queue Auto-Refresh Fixes (⏳ TESTING REQUIRED)
+  - ✅ Deep dive analysis completed
+  - ✅ Centralized query invalidation utility created (`client/src/lib/recipeQueryInvalidation.ts`)
+  - ✅ BMADRecipeGenerator updated with comprehensive invalidation
+  - ✅ AdminRecipeGenerator updated with Parse Button logging + queue refresh
+  - ✅ Dev server restarted and verified healthy
+  - ⏳ **BLOCKING**: Manual testing required before proceeding
+  - 📁 Docs: `PARSE_BUTTON_QUEUE_REFRESH_FIX_PLAN.md`, `PARSE_BUTTON_QUEUE_REFRESH_FIXES_COMPLETE.md`, `TODO_URGENT.md`, `BMAD_PARSE_BUTTON_QUEUE_REFRESH_SESSION.md`
 - **Last Major Update:** Landing Page with Markdown CMS (September 17, 2025)
 - **Previous Update:** Test Credentials Standardization (September 15, 2025)
 - **Mission Status:** ✅ PRODUCTION FULLY OPERATIONAL - Landing Page Ready
-- **Current Focus:** Landing page content management via markdown files
+- **Current Focus:** Parse Button & Queue Refresh fixes (TESTING PHASE)
   - **Test Accounts Fixed:** All three accounts (admin, trainer, customer) verified working
   - **Seed Scripts Updated:** Both JS and TypeScript seed scripts use correct passwords
   - **SQL Scripts Fixed:** Updated bcrypt hashes for direct SQL insertion

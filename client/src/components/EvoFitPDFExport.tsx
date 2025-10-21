@@ -109,8 +109,13 @@ export default function EvoFitPDFExport({
    * Execute the PDF export with specified options
    */
   const executeExport = async (exportOptions: ExportOptions) => {
+    console.log('[PDF Export] Starting export...');
+    console.log('[PDF Export] isSingle:', isSingle, 'isMultiple:', isMultiple, 'isServerSide:', isServerSide);
+    console.log('[PDF Export] mealPlan:', mealPlan ? 'exists' : 'null');
+    console.log('[PDF Export] Export options:', exportOptions);
+
     setIsExporting(true);
-    
+
     try {
       let response: Response;
 
@@ -128,6 +133,11 @@ export default function EvoFitPDFExport({
         });
       } else if (isSingle) {
         // Single meal plan export
+        console.log('[PDF Export] Calling single meal plan export API');
+        console.log('[PDF Export] Endpoint: /api/pdf/export');
+        console.log('[PDF Export] Meal plan name:', mealPlan.planName || 'Unnamed');
+        console.log('[PDF Export] Customer name:', customerName);
+
         response = await fetch('/api/pdf/export', {
           method: 'POST',
           headers: {
@@ -140,6 +150,8 @@ export default function EvoFitPDFExport({
             options: exportOptions
           })
         });
+
+        console.log('[PDF Export] Response status:', response.status);
       } else if (isMultiple) {
         // Multiple meal plans export
         const combinedMealPlan = {
@@ -173,17 +185,21 @@ export default function EvoFitPDFExport({
       }
 
       if (!response.ok) {
+        console.error('[PDF Export] Response not OK - status:', response.status);
         const errorData = await response.json().catch(() => ({}));
+        console.error('[PDF Export] Error data:', errorData);
         throw new Error(errorData.message || `Export failed with status ${response.status}`);
       }
 
+      console.log('[PDF Export] Response OK, getting blob...');
       // Get the PDF blob
       const blob = await response.blob();
-      
+      console.log('[PDF Export] Blob size:', blob.size, 'bytes');
+
       // Extract filename from response headers or generate one
       const contentDisposition = response.headers.get('Content-Disposition');
       let filename = 'EvoFit_Meal_Plan.pdf';
-      
+
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
         if (filenameMatch) {
@@ -191,23 +207,27 @@ export default function EvoFitPDFExport({
         }
       }
 
+      console.log('[PDF Export] Saving file:', filename);
       // Save the file
       saveAs(blob, filename);
-      
+
+      console.log('[PDF Export] SUCCESS - File downloaded');
       toast({
         title: 'Export Complete',
         description: `${isSingle ? 'Meal plan' : isMultiple ? `${mealPlans!.length} meal plans` : 'Meal plan'} exported successfully.`,
       });
-      
+
     } catch (error) {
-      console.error('PDF export error:', error);
-      
+      console.error('[PDF Export] ERROR:', error);
+      console.error('[PDF Export] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+
       toast({
         title: 'Export Failed',
         description: error instanceof Error ? error.message : 'An error occurred during export.',
         variant: 'destructive',
       });
     } finally {
+      console.log('[PDF Export] Export process finished');
       setIsExporting(false);
     }
   };

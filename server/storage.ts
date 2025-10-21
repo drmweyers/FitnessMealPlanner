@@ -59,6 +59,7 @@ import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
 import { inArray } from "drizzle-orm";
 import { handleMealPlanEvent, createMealPlanEvent, MealPlanEventType } from "./utils/mealPlanEvents";
+import { normalizeToUTCMidnight } from "./utils/dateUtils";
 
 /**
  * Storage Interface
@@ -640,7 +641,7 @@ export class DatabaseStorage implements IStorage {
           assignments: assignments.map(a => ({
             customerId: a.customerId,
             customerEmail: a.customerEmail || '',
-            assignedAt: a.assignedAt || new Date(),
+            assignedAt: a.assignedAt || normalizeToUTCMidnight(),
           })),
           assignmentCount: assignments.length,
         };
@@ -740,7 +741,7 @@ export class DatabaseStorage implements IStorage {
         customerMap.set(customer.customerId, {
           id: customer.customerId,
           email: customer.customerEmail,
-          firstAssignedAt: customer.assignedAt?.toISOString() || new Date().toISOString(),
+          firstAssignedAt: customer.assignedAt?.toISOString() || normalizeToUTCMidnight().toISOString(),
         });
       } else {
         const existing = customerMap.get(customer.customerId);

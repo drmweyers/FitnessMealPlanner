@@ -43,19 +43,30 @@ interface MealPlanResult {
 }
 
 const fetchCustomers = async (): Promise<Customer[]> => {
-  const response = await apiRequest('GET', '/api/admin/customers');
+  // FIX: Use trainer endpoint (accepts both trainer and admin roles)
+  console.log('[MealPlanAssignment] Fetching customers...');
+  const response = await apiRequest('GET', '/api/trainer/customers');
   if (!response.ok) {
+    console.error('[MealPlanAssignment] Failed to fetch customers:', response.status);
     throw new Error('Failed to fetch customers');
   }
-  return response.json();
+  const data = await response.json();
+  console.log('[MealPlanAssignment] Fetched customers:', data.customers?.length || 0);
+  // API returns { customers: Customer[], total: number }
+  return data.customers || [];
 };
 
 const assignMealPlan = async (data: { mealPlanData: MealPlan; customerIds: string[] }) => {
-  const response = await apiRequest('POST', '/api/admin/assign-meal-plan', data);
+  // FIX: Use new bulk assignment endpoint (accepts both trainer and admin roles)
+  console.log('[MealPlanAssignment] Assigning to', data.customerIds.length, 'customers');
+  const response = await apiRequest('POST', '/api/trainer/assign-meal-plan-bulk', data);
   if (!response.ok) {
+    console.error('[MealPlanAssignment] Assignment failed:', response.status);
     throw new Error('Failed to assign meal plan');
   }
-  return response.json();
+  const result = await response.json();
+  console.log('[MealPlanAssignment] Assignment SUCCESS:', result);
+  return result;
 };
 
 export default function MealPlanAssignment({ mealPlan }: MealPlanAssignmentProps) {

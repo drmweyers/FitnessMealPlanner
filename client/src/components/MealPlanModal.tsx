@@ -14,6 +14,7 @@ import { Calendar, Users, Utensils, Clock, Zap, Target, Activity, ChefHat } from
 import RecipeDetailModal from "./RecipeDetailModal";
 import MealPrepDisplay from "./MealPrepDisplay";
 import { useSafeMealPlan } from '../hooks/useSafeMealPlan';
+import { formatDateSafe } from '../utils/dateUtils';
 
 interface MealPlanModalProps {
   mealPlan: CustomerMealPlan;
@@ -21,9 +22,22 @@ interface MealPlanModalProps {
 }
 
 export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps) {
+  // CRITICAL: All hooks must be called before any conditional returns
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
 
-  // Early null check
+  const {
+    isValid,
+    validMeals,
+    days,
+    planName,
+    fitnessGoal,
+    clientName,
+    dailyCalorieTarget,
+    nutrition,
+    getMealsForDay
+  } = useSafeMealPlan(mealPlan);
+
+  // Early null check - AFTER all hooks
   if (!mealPlan) {
     return (
       <Dialog open={true} onOpenChange={onClose}>
@@ -38,18 +52,6 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
       </Dialog>
     );
   }
-
-  const {
-    isValid,
-    validMeals,
-    days,
-    planName,
-    fitnessGoal,
-    clientName,
-    dailyCalorieTarget,
-    nutrition,
-    getMealsForDay
-  } = useSafeMealPlan(mealPlan);
 
   if (!isValid) {
     return (
@@ -340,7 +342,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                 <span className="font-medium">Assignment Details</span>
               </div>
               <p className="text-blue-600 text-sm mt-1">
-                This meal plan was assigned to you on {new Date(mealPlan.assignedAt || mealPlan.mealPlanData?.createdAt || new Date()).toLocaleDateString()}
+                This meal plan was assigned to you on {formatDateSafe(mealPlan.assignedAt || mealPlan.mealPlanData?.createdAt)}
               </p>
             </div>
           </TabsContent>

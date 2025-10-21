@@ -390,7 +390,7 @@ async function analyzeSecurityContext(req: Request, window?: RateLimitWindow): P
   const ip = req.ip;
   
   let riskScore = 0;
-  let requestPattern: 'normal' | 'rapid' | 'burst' = 'normal';
+  const requestPattern: 'normal' | 'rapid' | 'burst' = 'normal';
 
   // Check for bot user agents
   const isBot = SUSPICIOUS_PATTERNS.BOT_USER_AGENTS.some(pattern => pattern.test(userAgent));

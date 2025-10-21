@@ -114,7 +114,8 @@ trainerRouter.get('/profile/stats', requireAuth, requireRole('trainer'), async (
 });
 
 // Get all customers assigned to this trainer
-trainerRouter.get('/customers', requireAuth, requireRole('trainer'), async (req, res) => {
+// FIX: Allow both trainer and admin roles to view customers
+trainerRouter.get('/customers', requireAuth, requireTrainerOrAdmin, async (req, res) => {
   try {
     const trainerId = req.user!.id;
     const { recipeId } = req.query;
@@ -354,34 +355,34 @@ trainerRouter.get('/customers/:customerId/goals', requireAuth, requireRole('trai
 });
 
 // Assign a new meal plan to a customer
-trainerRouter.post('/customers/:customerId/meal-plans', requireAuth, requireRole('trainer'), async (req, res) => {
+trainerRouter.post('/customers/:customerId/meal-plans', requireAuth, requireTrainerOrAdmin, async (req, res) => {
   try {
     const trainerId = req.user!.id;
     const { customerId } = req.params;
     const { mealPlanData } = req.body;
-    
+
     if (!mealPlanData) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         status: 'error',
         message: 'Meal plan data is required',
         code: 'INVALID_INPUT'
       });
     }
-    
+
     // Verify customer exists
     const customer = await db.select()
       .from(users)
       .where(and(eq(users.id, customerId), eq(users.role, 'customer')))
       .limit(1);
-    
+
     if (customer.length === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         status: 'error',
         message: 'Customer not found',
         code: 'NOT_FOUND'
       });
     }
-    
+
     // Create the meal plan assignment
     const [newAssignment] = await db.insert(personalizedMealPlans)
       .values({
@@ -390,16 +391,87 @@ trainerRouter.post('/customers/:customerId/meal-plans', requireAuth, requireRole
         mealPlanData: mealPlanData as MealPlan,
       })
       .returning();
-    
-    res.status(201).json({ 
+
+    res.status(201).json({
       assignment: newAssignment,
       message: 'Meal plan assigned successfully'
     });
   } catch (error) {
     console.error('Failed to assign meal plan:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       status: 'error',
       message: 'Failed to assign meal plan',
+      code: 'SERVER_ERROR'
+    });
+  }
+});
+
+// Bulk assign meal plan to multiple customers
+const bulkAssignSchema = z.object({
+  mealPlanData: z.any(), // MealPlan schema
+  customerIds: z.array(z.string().uuid()).min(1, 'At least one customer is required'),
+});
+
+trainerRouter.post('/assign-meal-plan-bulk', requireAuth, requireTrainerOrAdmin, async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { mealPlanData, customerIds } = bulkAssignSchema.parse(req.body);
+
+    console.log('[Bulk Assign] Request from:', req.user?.email, 'Role:', req.user?.role);
+    console.log('[Bulk Assign] Assigning to', customerIds.length, 'customers');
+
+    // Verify all customers exist
+    const customers = await db.select()
+      .from(users)
+      .where(
+        and(
+          inArray(users.id, customerIds),
+          eq(users.role, 'customer')
+        )
+      );
+
+    if (customers.length !== customerIds.length) {
+      return res.status(404).json({
+        status: 'error',
+        message: `Found ${customers.length} customers, expected ${customerIds.length}`,
+        code: 'SOME_CUSTOMERS_NOT_FOUND'
+      });
+    }
+
+    // Create assignments for all customers
+    const assignments = await Promise.all(
+      customerIds.map(async (customerId) => {
+        const [assignment] = await db.insert(personalizedMealPlans)
+          .values({
+            customerId,
+            trainerId,
+            mealPlanData: mealPlanData as MealPlan,
+          })
+          .returning();
+        return assignment;
+      })
+    );
+
+    console.log('[Bulk Assign] SUCCESS: Assigned to', assignments.length, 'customers');
+
+    res.status(201).json({
+      status: 'success',
+      message: `Meal plan assigned to ${assignments.length} customer(s) successfully`,
+      assignments,
+      count: assignments.length
+    });
+  } catch (error) {
+    console.error('[Bulk Assign] ERROR:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid request data',
+        details: error.errors
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to assign meal plans',
       code: 'SERVER_ERROR'
     });
   }
@@ -474,11 +546,17 @@ const saveMealPlanSchema = z.object({
   isTemplate: z.boolean().optional(),
 });
 
-trainerRouter.post('/meal-plans', requireAuth, requireRole('trainer'), async (req, res) => {
+// FIX: Allow both trainer and admin roles to save meal plans
+import { requireTrainerOrAdmin } from '../middleware/auth';
+
+trainerRouter.post('/meal-plans', requireAuth, requireTrainerOrAdmin, async (req, res) => {
   try {
     const trainerId = req.user!.id;
     const { mealPlanData, notes, tags, isTemplate } = saveMealPlanSchema.parse(req.body);
-    
+
+    console.log('[Save Meal Plan] Request from user:', req.user?.email, 'Role:', req.user?.role);
+    console.log('[Save Meal Plan] Plan name:', (mealPlanData as any)?.planName || 'Unknown');
+
     const savedPlan = await storage.createTrainerMealPlan({
       trainerId,
       mealPlanData,
@@ -486,21 +564,23 @@ trainerRouter.post('/meal-plans', requireAuth, requireRole('trainer'), async (re
       tags,
       isTemplate,
     });
-    
-    res.status(201).json({ 
+
+    console.log('[Save Meal Plan] SUCCESS: Meal plan saved with ID:', savedPlan.id);
+
+    res.status(201).json({
       mealPlan: savedPlan,
       message: 'Meal plan saved successfully'
     });
   } catch (error) {
-    console.error('Failed to save meal plan:', error);
+    console.error('[Save Meal Plan] ERROR:', error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         status: 'error',
         message: 'Invalid request data',
         details: error.errors
       });
     }
-    res.status(500).json({ 
+    res.status(500).json({
       status: 'error',
       message: 'Failed to save meal plan',
       code: 'SERVER_ERROR'

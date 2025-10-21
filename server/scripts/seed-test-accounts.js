@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import { users, customerInvitations, mealPlanAssignments, trainerMealPlans } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
+import { normalizeToUTCMidnight } from '../utils/dateUtils.js';
 
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/fitnessmealplanner';
 const pool = new Pool({ connectionString });
@@ -149,7 +150,7 @@ async function seedTestAccounts() {
         mealPlanId: mealPlanId,
         customerId: customerId,
         assignedBy: trainerId,
-        assignedAt: new Date(),
+        assignedAt: normalizeToUTCMidnight(),
         notes: 'Test assignment for development purposes'
       });
       console.log('✅ Created meal plan assignment from trainer to customer');

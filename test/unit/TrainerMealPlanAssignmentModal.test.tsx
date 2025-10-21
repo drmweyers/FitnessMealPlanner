@@ -321,8 +321,8 @@ describe('TrainerMealPlanAssignmentModal - Core Logic', () => {
       expect(response.ok).toBe(false);
       
       // Simulate error handling - modal should stay open
-      let planToAssign: any = { id: planId };
-      let selectedCustomers = [customerId];
+      const planToAssign: any = { id: planId };
+      const selectedCustomers = [customerId];
       
       // After failed assignment, modal should stay open
       if (!response.ok) {

@@ -66,7 +66,7 @@ const GroceryListWrapper: React.FC<GroceryListWrapperProps> = ({
     if (!Array.isArray(groceryLists)) return [];
 
     // Filter by search term
-    let filtered = groceryLists.filter(list =>
+    const filtered = groceryLists.filter(list =>
       list && list.id && list.name &&
       list.name.toLowerCase().includes(searchTerm.toLowerCase())
     );

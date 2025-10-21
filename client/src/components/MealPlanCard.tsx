@@ -6,6 +6,7 @@ import type { CustomerMealPlan } from "@shared/schema";
 import { Calendar, Users, Utensils, Clock, Zap, Target, Activity, Trash2 } from "lucide-react";
 import { useSafeMealPlan } from '../hooks/useSafeMealPlan';
 import { useAuth } from '../contexts/AuthContext';
+import { formatDateSafe } from '../utils/dateUtils';
 
 interface MealPlanCardProps {
   mealPlan: CustomerMealPlan;
@@ -27,9 +28,9 @@ function MealPlanCard({ mealPlan, onClick, onDelete }: MealPlanCardProps) {
     hasMeals
   } = useSafeMealPlan(mealPlan);
 
-  // Memoized date formatting
+  // Memoized date formatting using timezone-safe utility
   const formattedAssignedDate = useMemo(() => {
-    return mealPlan?.assignedAt ? new Date(mealPlan.assignedAt).toLocaleDateString() : null;
+    return mealPlan?.assignedAt ? formatDateSafe(mealPlan.assignedAt) : null;
   }, [mealPlan?.assignedAt]);
 
   // Memoized calculations

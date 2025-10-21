@@ -437,7 +437,7 @@ describe('Responsive Utilities Tests', () => {
     test('should display all data in both table and card views', () => {
       // Test desktop view
       setViewportSize(1024, 768);
-      let { unmount } = render(<ResponsiveTable data={sampleData} />);
+      const { unmount } = render(<ResponsiveTable data={sampleData} />);
 
       expect(screen.getByText('John Doe')).toBeInTheDocument();
       expect(screen.getByText('john@example.com')).toBeInTheDocument();

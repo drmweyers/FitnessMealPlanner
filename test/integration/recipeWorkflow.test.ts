@@ -40,8 +40,8 @@ import { uploadImageToS3 } from '../../server/services/utils/S3Uploader';
 describe('Recipe Workflow Integration Tests', () => {
   let testUserId: string;
   let testAdminId: string;
-  let cleanupRecipeIds: string[] = [];
-  let cleanupUserIds: string[] = [];
+  const cleanupRecipeIds: string[] = [];
+  const cleanupUserIds: string[] = [];
 
   const mockGeneratedRecipe: GeneratedRecipe = {
     name: 'Integration Test Protein Pancakes',

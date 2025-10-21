@@ -228,7 +228,7 @@ export class RecommendationService {
     const { preferences } = userProfile;
     
     // Build content filters based on user preferences
-    let whereConditions = [eq(recipes.isApproved, true)];
+    const whereConditions = [eq(recipes.isApproved, true)];
     
     // Exclude already rated recipes
     whereConditions.push(

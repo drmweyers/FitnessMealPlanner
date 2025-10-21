@@ -422,7 +422,7 @@ export class FeatureFlagService extends EventEmitter {
           },
         };
 
-      case 'percentage':
+      case 'percentage': {
         const isInPercentage = this.isUserInPercentage(flag.id, context, flag.targeting.percentage || 0);
         return {
           enabled: isInPercentage,
@@ -434,8 +434,9 @@ export class FeatureFlagService extends EventEmitter {
             timestamp: Date.now(),
           },
         };
+      }
 
-      case 'user-list':
+      case 'user-list': {
         const isTargetedUser = flag.targeting.userIds?.includes(context.userId || '') || false;
         return {
           enabled: isTargetedUser,
@@ -447,8 +448,9 @@ export class FeatureFlagService extends EventEmitter {
             timestamp: Date.now(),
           },
         };
+      }
 
-      case 'role-based':
+      case 'role-based': {
         const hasTargetRole = flag.targeting.roles?.includes(context.userRole || '') || false;
         return {
           enabled: hasTargetRole,
@@ -460,8 +462,9 @@ export class FeatureFlagService extends EventEmitter {
             timestamp: Date.now(),
           },
         };
+      }
 
-      case 'variant':
+      case 'variant': {
         const variant = this.selectVariant(flag, context);
         return {
           enabled: true,

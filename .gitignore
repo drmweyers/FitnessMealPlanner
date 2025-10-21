@@ -45,3 +45,4 @@ app-spec*.yaml
 token.txt
 .env.local
 coverage/
+dev-env-variables.txt

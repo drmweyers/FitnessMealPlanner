@@ -1,0 +1,252 @@
+{
+  "metadata": {
+    "generated": "2025-01-23T22:00:00.000Z",
+    "totalFiles": 291,
+    "totalTestFiles": 616,
+    "architecture": "Monorepo (client/server/shared)"
+  },
+  "categories": {
+    "authentication": {
+      "risk": "critical",
+      "description": "Authentication, authorization, and session management",
+      "files": [
+        {
+          "path": "server/auth.ts",
+          "risk": "critical",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 1
+        },
+        {
+          "path": "server/authRoutes.ts",
+          "risk": "critical",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 1
+        },
+        {
+          "path": "server/middleware/auth.ts",
+          "risk": "critical",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 1
+        },
+        {
+          "path": "client/src/contexts/AuthContext.tsx",
+          "risk": "critical",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 1
+        },
+        {
+          "path": "server/passport-config.ts",
+          "risk": "critical",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 1
+        }
+      ]
+    },
+    "recipes": {
+      "risk": "high",
+      "description": "Recipe generation, management, and AI integration",
+      "files": [
+        {
+          "path": "server/services/recipeGenerator.ts",
+          "risk": "high",
+          "currentTest": "test/100-percent-test-suite/AdminRecipeGenerator.comprehensive.test.tsx",
+          "coverage": "partial",
+          "priority": 2
+        },
+        {
+          "path": "server/services/openai.ts",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2
+        },
+        {
+          "path": "client/src/components/AdminRecipeGenerator.tsx",
+          "risk": "high",
+          "currentTest": "test/100-percent-test-suite/AdminRecipeGenerator.comprehensive.test.tsx",
+          "coverage": "good",
+          "priority": 2
+        },
+        {
+          "path": "server/routes/recipes.ts",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2
+        }
+      ]
+    },
+    "mealPlans": {
+      "risk": "high",
+      "description": "Meal plan generation, assignment, and management",
+      "files": [
+        {
+          "path": "server/services/mealPlanGenerator.ts",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2
+        },
+        {
+          "path": "client/src/components/MealPlanGenerator.tsx",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2
+        },
+        {
+          "path": "server/routes/mealPlan.ts",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2
+        }
+      ]
+    },
+    "security": {
+      "risk": "critical",
+      "description": "Security middleware, rate limiting, and data protection",
+      "files": [
+        {
+          "path": "server/middleware/rateLimiter.ts",
+          "risk": "critical",
+          "currentTest": "test/100-percent-test-suite/rateLimiter.test.ts",
+          "coverage": "good",
+          "priority": 1
+        },
+        {
+          "path": "server/middleware/security.ts",
+          "risk": "critical",
+          "currentTest": "test/100-percent-test-suite/security.test.ts",
+          "coverage": "good",
+          "priority": 1
+        },
+        {
+          "path": "server/middleware/cacheMiddleware.ts",
+          "risk": "medium",
+          "currentTest": "test/100-percent-test-suite/cacheMiddleware.test.ts",
+          "coverage": "good",
+          "priority": 3
+        }
+      ]
+    },
+    "api": {
+      "risk": "high",
+      "description": "API endpoints and request handling",
+      "files": [
+        {
+          "path": "client/src/utils/api.ts",
+          "risk": "high",
+          "currentTest": "test/100-percent-test-suite/apiRequest.test.ts",
+          "coverage": "good",
+          "priority": 2
+        },
+        {
+          "path": "server/routes/trainerRoutes.ts",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2
+        },
+        {
+          "path": "server/routes/customerRoutes.ts",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2
+        }
+      ]
+    },
+    "charts": {
+      "risk": "medium",
+      "description": "Data visualization and progress tracking charts",
+      "files": [
+        {
+          "path": "client/src/components/charts/WeightProgressChart.tsx",
+          "risk": "medium",
+          "currentTest": "test/100-percent-test-suite/WeightProgressChart.test.tsx",
+          "coverage": "good",
+          "priority": 3
+        },
+        {
+          "path": "client/src/components/charts/BodyMeasurementChart.tsx",
+          "risk": "medium",
+          "currentTest": "test/100-percent-test-suite/BodyMeasurementChart.test.tsx",
+          "coverage": "good",
+          "priority": 3
+        }
+      ]
+    },
+    "ui": {
+      "risk": "low",
+      "description": "UI components and utilities",
+      "files": [
+        {
+          "path": "client/src/components/ui/*.tsx",
+          "risk": "low",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 4,
+          "count": 51
+        }
+      ]
+    },
+    "database": {
+      "risk": "high",
+      "description": "Database schema, migrations, and operations",
+      "files": [
+        {
+          "path": "server/db.ts",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2
+        },
+        {
+          "path": "shared/schema.ts",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2
+        }
+      ]
+    },
+    "services": {
+      "risk": "high",
+      "description": "Business logic and service layer",
+      "files": [
+        {
+          "path": "server/services/*.ts",
+          "risk": "high",
+          "currentTest": null,
+          "coverage": "unknown",
+          "priority": 2,
+          "count": 47
+        }
+      ]
+    }
+  },
+  "summary": {
+    "criticalPaths": 8,
+    "highRiskFiles": 57,
+    "mediumRiskFiles": 3,
+    "lowRiskFiles": 51,
+    "currentCoverage": {
+      "withTests": 8,
+      "withoutTests": 283,
+      "coveragePercentage": "2.7%"
+    },
+    "targetCoverage": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100,
+      "statements": 100,
+      "mutationScore": 90
+    }
+  }
+}

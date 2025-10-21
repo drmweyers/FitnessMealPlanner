@@ -1300,7 +1300,7 @@ test.describe('Comprehensive GUI Security Tests', () => {
         await page.goto('/login');
 
         // Monitor cookies during login
-        let authCookies = [];
+        const authCookies = [];
 
         context.on('response', async (response) => {
           const headers = response.headers();

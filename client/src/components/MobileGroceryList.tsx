@@ -119,7 +119,7 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
 
   // Filter and sort items
   const filteredAndSortedItems = useMemo(() => {
-    let filtered = items.filter((item: GroceryListItem) => {
+    const filtered = items.filter((item: GroceryListItem) => {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = !selectedCategory || item.category === selectedCategory;
       return matchesSearch && matchesCategory;
@@ -135,16 +135,18 @@ const MobileGroceryList: React.FC<MobileGroceryListProps> = ({
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
-        case 'priority':
+        case 'priority': {
           const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
           return priorityOrder[b.priority] - priorityOrder[a.priority];
+        }
         case 'category':
-        default:
+        default: {
           const categoryOrder = CATEGORIES.reduce((acc, cat, index) => {
             acc[cat.id] = index;
             return acc;
           }, {} as Record<string, number>);
           return (categoryOrder[a.category] || 999) - (categoryOrder[b.category] || 999);
+        }
       }
     });
 

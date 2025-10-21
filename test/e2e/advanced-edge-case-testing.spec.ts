@@ -144,8 +144,8 @@ test.describe('Advanced Edge Case Testing Suite', () => {
       await page.waitForLoadState('networkidle');
       
       // Override fetch to track concurrent calls
-      let concurrentCallCount = 0;
-      let maxConcurrentCalls = 0;
+      const concurrentCallCount = 0;
+      const maxConcurrentCalls = 0;
       
       await page.evaluateOnNewDocument(() => {
         let activeCalls = 0;

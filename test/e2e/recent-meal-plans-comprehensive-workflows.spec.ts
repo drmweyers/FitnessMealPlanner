@@ -626,7 +626,7 @@ test.describe('Recent Meal Plans Comprehensive Workflows', () => {
         await pdfButton.click();
         await page.waitForTimeout(1000);
         
-        let modal = page.locator(WORKFLOW_SELECTORS.modal.overlay);
+        const modal = page.locator(WORKFLOW_SELECTORS.modal.overlay);
         expect(await modal.isVisible()).toBe(false);
         
         // 2. Click title (should open modal)

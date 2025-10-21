@@ -1,0 +1,87 @@
+# Bulletproof Testing Coverage Exceptions
+# These are time-boxed exceptions to 100% coverage requirement
+# All exceptions MUST have justification and removal timeline
+
+exceptions:
+  - file: "client/src/main.tsx"
+    reason: "Entry point with minimal logic - excluded by vitest config"
+    expires: "never"
+    impact: "low"
+
+  - file: "server/index.ts"
+    reason: "Server entry point - excluded by vitest config"
+    expires: "never"
+    impact: "low"
+
+  - file: "**/*.d.ts"
+    reason: "Type definitions - no runtime logic to test"
+    expires: "never"
+    impact: "none"
+
+  - file: "**/*.config.*"
+    reason: "Configuration files - no business logic"
+    expires: "never"
+    impact: "low"
+
+# Temporary exceptions (must be resolved)
+temporary_exceptions:
+  - file: "server/services/openai.ts"
+    reason: "External API dependency - needs mock implementation"
+    expires: "2025-02-15"
+    assigned_to: "test-architect"
+    priority: "high"
+
+  - file: "server/passport-config.ts"
+    reason: "OAuth configuration - needs test environment setup"
+    expires: "2025-02-10"
+    assigned_to: "test-architect"
+    priority: "critical"
+
+  - file: "client/src/components/ui/*.tsx"
+    reason: "ShadCN UI components - low business logic risk"
+    expires: "2025-03-01"
+    assigned_to: "frontend-team"
+    priority: "medium"
+
+# Legacy code exceptions (phasing out)
+legacy_exceptions:
+  - file: "server/auth-optimized.ts"
+    reason: "Duplicate auth implementation - being replaced"
+    expires: "2025-02-01"
+    action: "remove_file"
+    priority: "medium"
+
+  - file: "server/db-optimized.ts"
+    reason: "Duplicate DB implementation - being replaced"
+    expires: "2025-02-01"
+    action: "remove_file"
+    priority: "medium"
+
+# Review schedule
+review_schedule:
+  - date: "2025-02-01"
+    action: "Review all temporary exceptions"
+    reviewer: "test-architect"
+
+  - date: "2025-03-01"
+    action: "Review UI component coverage"
+    reviewer: "frontend-team"
+
+  - date: "2025-04-01"
+    action: "Quarterly coverage review"
+    reviewer: "cto"
+
+# Escalation rules
+escalation:
+  overdue_exceptions:
+    - days: 7
+      action: "notify_assignee"
+    - days: 14
+      action: "escalate_to_lead"
+    - days: 30
+      action: "escalate_to_cto"
+
+  new_exceptions:
+    approval_required: true
+    approvers: ["test-architect", "cto"]
+    max_duration: "30_days"

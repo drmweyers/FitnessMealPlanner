@@ -168,11 +168,12 @@ export class SchedulerService {
   public async triggerJob(jobName: string): Promise<{ success: boolean; result?: any; error?: string }> {
     try {
       switch (jobName) {
-        case 'weekly-progress-summaries':
+        case 'weekly-progress-summaries': {
           console.log('Manually triggering weekly progress summaries...');
           const result = await progressSummaryService.sendWeeklyProgressSummariesForAllCustomers();
           return { success: true, result };
-          
+        }
+
         default:
           return { success: false, error: `Unknown job: ${jobName}` };
       }

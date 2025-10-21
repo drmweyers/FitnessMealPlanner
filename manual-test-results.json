@@ -1,0 +1,44 @@
+[
+  {
+    "test": "Root Endpoint",
+    "status": "ERROR",
+    "message": "Request failed: ",
+    "timestamp": "2025-10-02T00:30:05.072Z"
+  },
+  {
+    "test": "Landing Page",
+    "status": "ERROR",
+    "message": "Request failed: ",
+    "timestamp": "2025-10-02T00:30:05.074Z"
+  },
+  {
+    "test": "Recipes API",
+    "status": "ERROR",
+    "message": "Request failed: ",
+    "timestamp": "2025-10-02T00:30:05.076Z"
+  },
+  {
+    "test": "Users API",
+    "status": "ERROR",
+    "message": "Request failed: ",
+    "timestamp": "2025-10-02T00:30:05.078Z"
+  },
+  {
+    "test": "Admin Login",
+    "status": "ERROR",
+    "message": "Login failed: ",
+    "timestamp": "2025-10-02T00:30:05.080Z"
+  },
+  {
+    "test": "Meal Plans API",
+    "status": "ERROR",
+    "message": "Request failed: ",
+    "timestamp": "2025-10-02T00:30:05.081Z"
+  },
+  {
+    "test": "Admin Stats",
+    "status": "ERROR",
+    "message": "Request failed: ",
+    "timestamp": "2025-10-02T00:30:05.083Z"
+  }
+]

@@ -59,7 +59,7 @@ export class MealPlanGeneratorService {
      */
     
     // Build initial filter with user preferences
-    let recipeFilter: RecipeFilter = {
+    const recipeFilter: RecipeFilter = {
       approved: true, // Security: Only use approved recipes
       limit: 100,     // Get enough recipes for variety
       page: 1,
@@ -185,12 +185,46 @@ export class MealPlanGeneratorService {
           selectedRecipe = selectedRecipes[randomIndex];
         }
 
-        // Use existing recipe image or fallback to placeholder
+        // Use existing recipe image or generate unique AI image
         const recipeDescription = selectedRecipe.description || `Delicious ${mealType} meal`;
         const recipeMealTypes = selectedRecipe.mealTypes || [mealType];
-        
-        // Use the recipe's existing image URL or a placeholder
-        const imageUrl = selectedRecipe.imageUrl || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=250&fit=crop`;
+
+        // Generate unique AI image for each meal if recipe doesn't have one
+        let imageUrl = selectedRecipe.imageUrl;
+
+        if (!imageUrl) {
+          try {
+            console.log(`[Meal Plan Generator] Generating unique AI image for: ${selectedRecipe.name}`);
+
+            // Create GeneratedRecipe-compatible object for image generation
+            const recipeForImage = {
+              name: selectedRecipe.name,
+              description: recipeDescription,
+              mealTypes: recipeMealTypes,
+              dietaryTags: selectedRecipe.dietaryTags || [],
+              mainIngredientTags: selectedRecipe.mainIngredientTags || [],
+              ingredients: selectedRecipe.ingredientsJson || [],
+              instructions: selectedRecipe.instructionsText || "",
+              prepTimeMinutes: selectedRecipe.prepTimeMinutes,
+              cookTimeMinutes: selectedRecipe.cookTimeMinutes || 0,
+              servings: selectedRecipe.servings,
+              estimatedNutrition: {
+                calories: selectedRecipe.caloriesKcal,
+                protein: parseFloat(selectedRecipe.proteinGrams?.toString() || "0"),
+                carbs: parseFloat(selectedRecipe.carbsGrams?.toString() || "0"),
+                fat: parseFloat(selectedRecipe.fatGrams?.toString() || "0"),
+              }
+            };
+
+            imageUrl = await generateMealImage(recipeForImage);
+            console.log(`[Meal Plan Generator] Successfully generated image: ${imageUrl.substring(0, 50)}...`);
+          } catch (error) {
+            console.error(`[Meal Plan Generator] Failed to generate AI image for ${selectedRecipe.name}:`, error);
+            // Fallback to placeholder with unique signature to avoid duplication
+            const uniqueSig = `${selectedRecipe.id}-${day}-${mealNumber}`;
+            imageUrl = `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=250&fit=crop&sig=${uniqueSig}`;
+          }
+        }
 
         mealPlan.meals.push({
           day,

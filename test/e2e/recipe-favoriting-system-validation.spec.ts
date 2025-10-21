@@ -191,7 +191,7 @@ test.describe('Recipe Favoriting System Integration Validation', () => {
   test('Generate comprehensive integration report', async ({ page }) => {
     console.log('📋 Generating comprehensive integration report...');
     
-    let report = {
+    const report = {
       timestamp: new Date().toISOString(),
       login: { success: false, error: null },
       pages: {},

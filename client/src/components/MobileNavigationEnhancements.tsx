@@ -26,7 +26,7 @@ import {
   ChefHat, 
   Calendar, 
   ShoppingCart, 
-  User, 
+  User as UserIcon,
   Settings,
   Heart,
   BarChart3,
@@ -371,7 +371,7 @@ const MobileNavigationEnhancements: React.FC<MobileNavigationEnhancementsProps> 
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
+                <UserIcon className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
               <DropdownMenuItem>

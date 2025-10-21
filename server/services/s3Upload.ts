@@ -39,9 +39,10 @@ export const upload = multer({
  */
 export async function uploadProfileImage(file: Express.Multer.File, userId: string): Promise<string> {
   try {
-    // Process image with sharp
+    // Process image with sharp - auto-rotate based on EXIF orientation
     const processedImage = await sharp(file.buffer)
-      .resize(200, 200, { 
+      .rotate() // Auto-rotates based on EXIF orientation metadata
+      .resize(200, 200, {
         fit: 'cover',
         position: 'center'
       })
@@ -125,14 +126,15 @@ export async function uploadProfileImageLocal(file: Express.Multer.File, userId:
   try {
     const fs = await import('fs/promises');
     const path = await import('path');
-    
+
     // Create uploads directory if it doesn't exist
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'profile-images');
     await fs.mkdir(uploadsDir, { recursive: true });
 
-    // Process image
+    // Process image - auto-rotate based on EXIF orientation
     const processedImage = await sharp(file.buffer)
-      .resize(200, 200, { 
+      .rotate() // Auto-rotates based on EXIF orientation metadata
+      .resize(200, 200, {
         fit: 'cover',
         position: 'center'
       })

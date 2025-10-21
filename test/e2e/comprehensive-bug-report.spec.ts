@@ -31,8 +31,8 @@ interface TestResult {
   executionTime: number;
 }
 
-let bugReports: BugReport[] = [];
-let testResults: TestResult[] = [];
+const bugReports: BugReport[] = [];
+const testResults: TestResult[] = [];
 
 function addBugReport(bug: BugReport) {
   bugReports.push(bug);

@@ -357,13 +357,15 @@ router.post(
       const photoKey = `progress-photos/${userId}/${photoId}.webp`;
       const thumbnailKey = `progress-photos/${userId}/${photoId}_thumb.webp`;
 
-      // Process images
+      // Process images - auto-rotate based on EXIF orientation
       const photoBuffer = await sharp(file.buffer)
+        .rotate() // Auto-rotates based on EXIF orientation metadata
         .resize(1200, 1600, { fit: 'inside', withoutEnlargement: true })
         .webp({ quality: 85 })
         .toBuffer();
 
       const thumbnailBuffer = await sharp(file.buffer)
+        .rotate() // Auto-rotates based on EXIF orientation metadata
         .resize(300, 400, { fit: 'cover' })
         .webp({ quality: 80 })
         .toBuffer();

@@ -2,16 +2,19 @@
  * NutritionalValidatorAgent - BMAD Phase 2
  * Validates and auto-fixes nutritional data for generated recipes
  * Ensures macro targets are met within acceptable tolerance
+ * Also enforces hard nutritional constraints via RecipeValidator
  */
 
 import { BaseAgent } from './BaseAgent';
 import { AgentResponse, RecipeConcept, ValidatedRecipe } from './types';
 import type { GeneratedRecipe } from '../openai';
+import { RecipeValidator, type NutritionalConstraints } from '../RecipeValidator';
 
 interface ValidationInput {
   recipes: GeneratedRecipe[];
   concepts: RecipeConcept[];
   batchId: string;
+  constraints?: NutritionalConstraints; // Hard constraints for validation
 }
 
 interface ValidationOptions {
@@ -49,7 +52,7 @@ export class NutritionalValidatorAgent extends BaseAgent {
     correlationId: string
   ): Promise<AgentResponse<ValidationOutput>> {
     return this.executeWithMetrics(async () => {
-      const { recipes, concepts, batchId } = input as any;
+      const { recipes, concepts, batchId, constraints } = input as any;
       const options: ValidationOptions = {
         tolerancePercent: this.DEFAULT_TOLERANCE_PERCENT,
         autoFix: true,
@@ -59,7 +62,8 @@ export class NutritionalValidatorAgent extends BaseAgent {
       console.log('[validator] Processing:', {
         recipesCount: recipes.length,
         conceptsCount: concepts.length,
-        autoFix: options.autoFix
+        autoFix: options.autoFix,
+        hasConstraints: !!constraints
       });
 
       const validatedRecipes: ValidatedRecipe[] = [];
@@ -88,7 +92,7 @@ export class NutritionalValidatorAgent extends BaseAgent {
           continue;
         }
 
-        const validation = await this.validateSingleRecipe(recipe, concept, options);
+        const validation = await this.validateSingleRecipe(recipe, concept, options, constraints);
 
         if (validation.isValid || validation.autoFixed) {
           validatedRecipes.push({
@@ -127,7 +131,8 @@ export class NutritionalValidatorAgent extends BaseAgent {
   private async validateSingleRecipe(
     recipe: GeneratedRecipe,
     concept: RecipeConcept,
-    options: ValidationOptions
+    options: ValidationOptions,
+    constraints?: NutritionalConstraints
   ): Promise<{
     isValid: boolean;
     autoFixed: boolean;
@@ -140,7 +145,7 @@ export class NutritionalValidatorAgent extends BaseAgent {
     const fixesApplied: string[] = [];
     const errors: string[] = [];
     const issues: ValidationIssue[] = [];
-    let modifiedRecipe = { ...recipe };
+    const modifiedRecipe = { ...recipe };
 
     console.log('[validator] validateSingleRecipe called with:', {
       recipeKeys: Object.keys(recipe),
@@ -202,6 +207,43 @@ export class NutritionalValidatorAgent extends BaseAgent {
         } else {
           errors.push(`Invalid ${field}: ${nutrition[field]} (must be >= 0)`);
         }
+      }
+    }
+
+    // 3.5. Hard constraint validation (if constraints provided)
+    if (constraints && Object.keys(constraints).some(k => constraints[k as keyof NutritionalConstraints] !== undefined)) {
+      const validator = new RecipeValidator(constraints);
+
+      // Convert GeneratedRecipe to Recipe format for validator
+      const recipeForValidation = {
+        id: recipe.name,
+        name: recipe.name,
+        calories: modifiedRecipe.estimatedNutrition.calories,
+        protein: modifiedRecipe.estimatedNutrition.protein,
+        carbs: modifiedRecipe.estimatedNutrition.carbs,
+        fat: modifiedRecipe.estimatedNutrition.fat,
+        prepTime: recipe.prepTimeMinutes,
+      };
+
+      const validationResult = validator.validate(recipeForValidation);
+
+      if (!validationResult.isValid) {
+        // Hard constraints are STRICT - cannot be auto-fixed
+        validationResult.violations.forEach(violation => {
+          errors.push(`Hard constraint violation: ${violation}`);
+          issues.push({
+            recipeIndex: 0,
+            recipeName: recipe.name,
+            field: 'hard_constraint',
+            expected: 0,
+            actual: 0,
+            severity: 'critical',
+            fixed: false
+          });
+        });
+        console.log(`⚠️  Recipe "${recipe.name}" failed hard constraint validation: ${validationResult.violations.join('; ')}`);
+      } else {
+        console.log(`✅ Recipe "${recipe.name}" passed hard constraint validation`);
       }
     }
 

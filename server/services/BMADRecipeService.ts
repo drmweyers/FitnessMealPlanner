@@ -97,7 +97,7 @@ export class BMADRecipeService {
       console.log(`[BMAD] Phase 2: Generating ${strategy.totalRecipes} recipes in ${strategy.chunks} chunks...`);
 
       const allSavedRecipes: any[] = [];
-      let nutritionStats = { validated: 0, autoFixed: 0, failed: 0 };
+      const nutritionStats = { validated: 0, autoFixed: 0, failed: 0 };
       let imagesGenerated = 0;
       let imagesUploaded = 0;
       const allErrors: string[] = [];
@@ -160,10 +160,23 @@ export class BMADRecipeService {
               }
             }));
 
+            // Extract constraints from options for validation
+            const constraints = {
+              maxCalories: options.maxCalories,
+              minProtein: options.minProtein,
+              maxProtein: options.maxProtein,
+              minCarbs: options.minCarbs,
+              maxCarbs: options.maxCarbs,
+              minFat: options.minFat,
+              maxFat: options.maxFat,
+              maxPrepTime: options.maxPrepTime,
+            };
+
             const validationResponse = await this.validatorAgent.process({
               recipes: generatedRecipes,
               concepts: concepts,
-              batchId
+              batchId,
+              constraints
             }, batchId);
 
             if (validationResponse.success && validationResponse.data) {

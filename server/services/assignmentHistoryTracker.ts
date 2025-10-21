@@ -1,12 +1,13 @@
 import { db } from '../db';
 import { eq, and, desc, asc, sql, gte, lte } from 'drizzle-orm';
-import { 
-  personalizedMealPlans, 
+import {
+  personalizedMealPlans,
   personalizedRecipes,
   users,
-  type MealPlan 
+  type MealPlan
 } from '@shared/schema';
 import { z } from 'zod';
+import { normalizeToUTCMidnight } from '../utils/dateUtils';
 
 export interface AssignmentHistoryItem {
   id: string;
@@ -171,7 +172,7 @@ export class AssignmentHistoryTrackerService {
         trainerEmail: trainer[0].email,
         customerId,
         customerEmail: customer[0].email,
-        assignedAt: new Date(),
+        assignedAt: normalizeToUTCMidnight(),
         data,
         status: 'active',
         notes
@@ -366,7 +367,7 @@ export class AssignmentHistoryTrackerService {
       trainerEmail: r.trainerEmail,
       customerId: r.customerId,
       customerEmail: customerMap.get(r.customerId) || '',
-      assignedAt: r.assignedAt || new Date(),
+      assignedAt: r.assignedAt || normalizeToUTCMidnight(),
       data: r.mealPlanData,
       status: 'active' as const,
     }));
@@ -423,7 +424,7 @@ export class AssignmentHistoryTrackerService {
       trainerEmail: r.trainerEmail,
       customerId: r.customerId,
       customerEmail: customerMap.get(r.customerId) || '',
-      assignedAt: r.assignedAt || new Date(),
+      assignedAt: r.assignedAt || normalizeToUTCMidnight(),
       data: { recipeId: r.recipeId },
       status: 'active' as const,
     }));
@@ -511,7 +512,7 @@ export class AssignmentHistoryTrackerService {
         customerCounts.set(assignment.customerId, {
           email: assignment.customerEmail,
           count: 1,
-          lastDate: assignment.assignedAt || new Date()
+          lastDate: assignment.assignedAt || normalizeToUTCMidnight()
         });
       } else {
         existing.count++;

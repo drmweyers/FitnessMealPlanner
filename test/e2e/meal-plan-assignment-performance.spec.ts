@@ -478,8 +478,8 @@ test.describe('Meal Plan Assignment Performance Tests', () => {
     await trainerPage.waitForSavedPlansToLoad();
 
     // Monitor frame rate during modal open/close
-    let frameCount = 0;
-    let frameTimeTotal = 0;
+    const frameCount = 0;
+    const frameTimeTotal = 0;
     
     const startFrameMonitoring = () => {
       return page.evaluate(() => {

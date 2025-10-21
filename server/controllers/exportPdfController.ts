@@ -83,6 +83,27 @@ export async function exportPdfController(req: PdfExportRequest, res: Response):
     // Generate HTML from template
     const html = await compileHtmlTemplate(templateData);
 
+    // Calculate meal count for dynamic timeout
+    const mealCount = validatedData.meals?.length || 0;
+
+    // Dynamic timeout based on meal count
+    // Small plans (<28 meals): 60 seconds
+    // Medium plans (28-56 meals): 120 seconds (2 minutes)
+    // Large plans (56-100 meals): 180 seconds (3 minutes)
+    // Very large plans (100+ meals): 300 seconds (5 minutes)
+    let timeout: number;
+    if (mealCount <= 28) {
+      timeout = 60000;
+    } else if (mealCount <= 56) {
+      timeout = 120000;
+    } else if (mealCount <= 100) {
+      timeout = 180000;
+    } else {
+      timeout = 300000;
+    }
+
+    console.log(`PDF Export: Processing ${mealCount} meals with ${timeout}ms timeout`);
+
     // Launch Puppeteer browser
     browser = await puppeteer.launch({
       args: [
@@ -98,28 +119,29 @@ export async function exportPdfController(req: PdfExportRequest, res: Response):
     });
 
     const page = await browser.newPage();
-    
+
     // Set viewport for consistent rendering
     await page.setViewport({ width: 1200, height: 1600 });
-    
+
     // Set content and wait for resources to load
-    await page.setContent(html, { 
+    await page.setContent(html, {
       waitUntil: ['networkidle0', 'domcontentloaded'],
-      timeout: 30000
+      timeout
     });
 
-    // Generate PDF with optimal settings
+    // Generate PDF with optimal settings and timeout
     const pdf = await page.pdf({
       format: exportOptions.pageSize as any,
       printBackground: true,
-      margin: { 
-        top: '20mm', 
-        bottom: '20mm', 
-        left: '24mm', 
-        right: '24mm' 
+      margin: {
+        top: '20mm',
+        bottom: '20mm',
+        left: '24mm',
+        right: '24mm'
       },
       preferCSSPageSize: true,
-      displayHeaderFooter: false
+      displayHeaderFooter: false,
+      timeout
     });
 
     await browser.close();

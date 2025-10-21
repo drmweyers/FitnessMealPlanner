@@ -78,7 +78,7 @@ test.describe('Recipe Generation - Core Functionality', () => {
       'Queue'
     ];
     
-    let foundFeatures = [];
+    const foundFeatures = [];
     for (const feature of features) {
       if (pageContent.toLowerCase().includes(feature.toLowerCase())) {
         foundFeatures.push(feature);
@@ -152,7 +152,7 @@ test.describe('Recipe Generation - Core Functionality', () => {
       'Recipe'
     ];
     
-    let foundStats = [];
+    const foundStats = [];
     for (const stat of stats) {
       if (pageContent.includes(stat)) {
         foundStats.push(stat);

@@ -22,6 +22,7 @@ import {
   Zap
 } from 'lucide-react';
 import type { MealPlan, CustomerMealPlan } from '@shared/schema';
+import { formatDateSafe } from '../utils/dateUtils';
 
 interface Customer {
   id: string;
@@ -107,11 +108,11 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
     if (!latestMeasurement) return undefined;
     
     return {
-      weight: latestMeasurement.weightLbs ? `${latestMeasurement.weightLbs} lbs` : 
+      weight: latestMeasurement.weightLbs ? `${latestMeasurement.weightLbs} lbs` :
               latestMeasurement.weightKg ? `${latestMeasurement.weightKg} kg` : 'Not recorded',
       bodyFat: latestMeasurement.bodyFatPercentage ? `${latestMeasurement.bodyFatPercentage}%` : 'Not recorded',
       waist: latestMeasurement.waistCm ? `${latestMeasurement.waistCm} cm` : 'Not recorded',
-      lastUpdated: new Date(latestMeasurement.measurementDate).toLocaleDateString()
+      lastUpdated: formatDateSafe(latestMeasurement.measurementDate)
     };
   };
 
@@ -265,7 +266,7 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
           <div>
             <h2 className="text-2xl font-bold text-gray-900">{customer.email}</h2>
             <p className="text-gray-600">
-              Customer since {new Date(customer.firstAssignedAt).toLocaleDateString()}
+              Customer since {formatDateSafe(customer.firstAssignedAt)}
             </p>
           </div>
         </div>
@@ -399,7 +400,7 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                       <div className="flex-1">
                         <h5 className="font-medium hover:text-blue-600 transition-colors">{assignment.mealPlanData.planName}</h5>
                         <p className="text-sm text-gray-600">
-                          Assigned {assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString() : 'Unknown'}
+                          Assigned {formatDateSafe(assignment.assignedAt)}
                         </p>
                       </div>
                       <SimplePDFExportButton
@@ -482,7 +483,7 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                           <div>
                             <div className="text-sm text-gray-600">Assigned</div>
                             <div className="text-sm font-medium">
-                              {assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString() : 'Unknown'}
+                              {formatDateSafe(assignment.assignedAt)}
                             </div>
                           </div>
                         </div>
@@ -529,10 +530,10 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h5 className="font-medium">
-                          {new Date(measurement.measurementDate).toLocaleDateString()}
+                          {formatDateSafe(measurement.measurementDate)}
                         </h5>
                         <p className="text-sm text-gray-600">
-                          Recorded {new Date(measurement.createdAt).toLocaleDateString()}
+                          Recorded {formatDateSafe(measurement.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -629,7 +630,7 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                           <div>
                             <div className="text-gray-600">Target Date</div>
                             <div className="font-medium">
-                              {goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : 'No deadline'}
+                              {goal.targetDate ? formatDateSafe(goal.targetDate) : 'No deadline'}
                             </div>
                           </div>
                         </div>

@@ -89,7 +89,7 @@ test.describe('UX Validation & Design Consistency Edge Cases', () => {
         { width: 1920, height: 1080, name: 'desktop-large' },
       ];
 
-      let colorSchemes: any[] = [];
+      const colorSchemes: any[] = [];
       
       for (const viewport of viewports) {
         console.log(`Testing color scheme at ${viewport.name}`);
@@ -349,7 +349,7 @@ test.describe('UX Validation & Design Consistency Edge Cases', () => {
       
       console.log('Initial focus:', focusedText);
       
-      let focusedElements = [];
+      const focusedElements = [];
       
       // Navigate through all focusable elements
       for (let i = 0; i < 20; i++) {

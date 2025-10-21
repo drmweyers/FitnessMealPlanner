@@ -106,7 +106,7 @@ export default function Admin() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ recipeIds }),
+        body: JSON.stringify({ ids: recipeIds }),
       });
       if (!response.ok) {
         throw new Error('Failed to delete recipes');

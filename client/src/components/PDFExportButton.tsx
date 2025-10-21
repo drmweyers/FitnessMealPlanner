@@ -1,11 +1,11 @@
 /**
  * PDF Export Button Component
- * 
+ *
  * Provides a user-friendly interface for exporting meal plan recipe cards to PDF.
  * Includes options for customizing the export format and handles loading states.
  */
 
-import { memo, useState, useCallback, useMemo } from 'react';
+import React, { memo, useState, useCallback, useMemo } from 'react';
 import { Button } from './ui/button';
 import { 
   Dialog, 
@@ -168,6 +168,7 @@ function PDFExportButton({
     <div className="flex items-center gap-2">
       {/* Quick Export Button */}
       <Button
+        data-testid="export-pdf-button"
         variant={variant}
         size={size}
         className={className}

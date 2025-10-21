@@ -363,7 +363,7 @@ describe('Meal Plan Grocery List Integration', () => {
     });
 
     it('should track checked status of items', () => {
-      let items = [
+      const items = [
         { id: 'item-1', name: 'Eggs', isChecked: false },
         { id: 'item-2', name: 'Milk', isChecked: false },
         { id: 'item-3', name: 'Bread', isChecked: true }

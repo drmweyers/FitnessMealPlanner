@@ -5,6 +5,8 @@ import { OpenAIRateLimiter } from "./utils/RateLimiter";
 import { RecipeCache } from "./utils/RecipeCache";
 import { RecipeGenerationMetrics } from "./utils/Metrics";
 import { uploadImageToS3 } from "./utils/S3Uploader";
+import { RecipeValidator, type NutritionalConstraints } from "./RecipeValidator";
+import { progressTracker } from "./progressTracker";
 
 interface GenerationOptions {
   count: number;
@@ -22,6 +24,7 @@ interface GenerationOptions {
   maxCarbs?: number;
   minFat?: number;
   maxFat?: number;
+  jobId?: string; // For progress tracking with SSE
 }
 
 interface GenerationResult {
@@ -45,10 +48,36 @@ export class RecipeGeneratorService {
   private rateLimiter = new OpenAIRateLimiter();
   private cache = new RecipeCache();
   private metrics = new RecipeGenerationMetrics();
+  private currentConstraints?: NutritionalConstraints;
 
   async generateAndStoreRecipes(options: GenerationOptions): Promise<GenerationResult> {
     const startTime = Date.now();
+    const { jobId } = options;
+
+    // Store nutritional constraints for validation
+    this.currentConstraints = {
+      maxCalories: options.maxCalories,
+      minCalories: undefined, // Not in current options, but available in validator
+      maxProtein: options.maxProtein,
+      minProtein: options.minProtein,
+      maxCarbs: options.maxCarbs,
+      minCarbs: options.minCarbs,
+      maxFat: options.maxFat,
+      minFat: options.minFat,
+      maxPrepTime: options.maxPrepTime,
+    };
+
     try {
+      // Update progress: starting
+      if (jobId) {
+        progressTracker.markStepComplete(jobId, 'starting');
+      }
+
+      // Update progress: generating
+      if (jobId) {
+        progressTracker.markStepComplete(jobId, 'generating');
+      }
+
       const generatedRecipes = await this.rateLimiter.execute(() =>
         generateRecipeBatch(options.count, {
           mealTypes: options.mealTypes,
@@ -67,13 +96,23 @@ export class RecipeGeneratorService {
           maxFat: options.maxFat,
         })
       );
-      
+
       if (!generatedRecipes || generatedRecipes.length === 0) {
+        if (jobId) {
+          progressTracker.markJobFailed(jobId, "No recipes were generated");
+        }
         throw new Error("No recipes were generated in the batch.");
       }
 
+      // Update progress: validating
+      if (jobId) {
+        progressTracker.markStepComplete(jobId, 'validating');
+      }
+
       const results = await Promise.allSettled(
-        generatedRecipes.map(recipe => this.processSingleRecipe(recipe))
+        generatedRecipes.map((recipe, index) =>
+          this.processSingleRecipe(recipe, jobId, index + 1, options.count)
+        )
       );
       
       const finalResult = results.reduce<GenerationResult>(
@@ -104,6 +143,12 @@ export class RecipeGeneratorService {
     } catch (error) {
       const errorMsg = `Recipe generation service failed: ${error}`;
       console.error(errorMsg);
+
+      // Mark job as failed in progress tracker
+      if (jobId) {
+        progressTracker.markJobFailed(jobId, errorMsg);
+      }
+
       this.metrics.recordGeneration(
         Date.now() - startTime,
         false,
@@ -143,46 +188,106 @@ export class RecipeGeneratorService {
    * Solution: Save recipes with placeholder images, generate actual images in background
    * ==========================================
    */
-  private async processSingleRecipe(recipe: GeneratedRecipe): Promise<{ success: boolean; error?: string; recipeId?: number }> {
-    const validation = await this.validateRecipe(recipe);
-    if (!validation.success) {
-      return { success: false, error: validation.error };
+  private async processSingleRecipe(
+    recipe: GeneratedRecipe,
+    jobId?: string,
+    currentIndex?: number,
+    totalRecipes?: number
+  ): Promise<{ success: boolean; error?: string; recipeId?: number }> {
+    try {
+      const validation = await this.validateRecipe(recipe);
+      if (!validation.success) {
+        // Record failure in progress tracker
+        if (jobId) {
+          progressTracker.recordFailure(jobId, validation.error || 'Validation failed', recipe.name);
+        }
+        return { success: false, error: validation.error };
+      }
+
+      // Update progress: storing
+      if (jobId && currentIndex === 1) {
+        progressTracker.markStepComplete(jobId, 'storing');
+      }
+
+      // ✅ Use placeholder image immediately - DON'T WAIT for image generation
+      // This allows recipe to be saved quickly (< 5 seconds)
+      const imageUrl = PLACEHOLDER_IMAGE_URL;
+
+      // ✅ Save recipe to database FIRST
+      const result = await this.storeRecipe({ ...recipe, imageUrl });
+
+      if (result.success) {
+        // Record success in progress tracker
+        if (jobId) {
+          progressTracker.recordSuccess(jobId, recipe.name);
+        }
+
+        // ✅ Generate actual image in BACKGROUND (fire and forget)
+        if (result.recipeId) {
+          this.generateImageInBackground(result.recipeId, recipe).catch(error => {
+            console.error(`Background image generation failed for ${recipe.name}:`, error);
+            // Don't fail the recipe - it's already saved with placeholder
+          });
+        }
+      } else {
+        // Record failure in progress tracker
+        if (jobId) {
+          progressTracker.recordFailure(jobId, result.error || 'Failed to store recipe', recipe.name);
+        }
+      }
+
+      return result;
+    } catch (error) {
+      const errorMsg = `Failed to process recipe "${recipe.name}": ${error}`;
+      if (jobId) {
+        progressTracker.recordFailure(jobId, errorMsg, recipe.name);
+      }
+      return { success: false, error: errorMsg };
     }
-
-    // ✅ Use placeholder image immediately - DON'T WAIT for image generation
-    // This allows recipe to be saved quickly (< 5 seconds)
-    const imageUrl = PLACEHOLDER_IMAGE_URL;
-
-    // ✅ Save recipe to database FIRST
-    const result = await this.storeRecipe({ ...recipe, imageUrl });
-
-    // ✅ Generate actual image in BACKGROUND (fire and forget)
-    if (result.success && result.recipeId) {
-      this.generateImageInBackground(result.recipeId, recipe).catch(error => {
-        console.error(`Background image generation failed for ${recipe.name}:`, error);
-        // Don't fail the recipe - it's already saved with placeholder
-      });
-    }
-
-    return result;
   }
 
   private async validateRecipe(recipe: GeneratedRecipe): Promise<{ success: boolean; error?: string }> {
     try {
+      // Step 1: Basic structural validation
       if (!recipe.name || !recipe.ingredients || !recipe.instructions) {
         return { success: false, error: 'Missing required fields' };
       }
       const nutrition = recipe.estimatedNutrition;
-      if (!nutrition || 
-          nutrition.calories < 0 || 
-          nutrition.protein < 0 || 
-          nutrition.carbs < 0 || 
+      if (!nutrition ||
+          nutrition.calories < 0 ||
+          nutrition.protein < 0 ||
+          nutrition.carbs < 0 ||
           nutrition.fat < 0) {
         return { success: false, error: 'Invalid nutritional information' };
       }
       if (!recipe.ingredients.every(ing => ing.name && ing.amount)) {
         return { success: false, error: 'Invalid ingredients' };
       }
+
+      // Step 2: Nutritional constraint validation (if constraints are set)
+      if (this.currentConstraints && Object.keys(this.currentConstraints).some(k => this.currentConstraints![k as keyof NutritionalConstraints] !== undefined)) {
+        const validator = new RecipeValidator(this.currentConstraints);
+
+        // Convert GeneratedRecipe to Recipe format for validator
+        const recipeForValidation = {
+          id: recipe.name, // Use name as temporary ID
+          name: recipe.name,
+          calories: nutrition.calories,
+          protein: nutrition.protein,
+          carbs: nutrition.carbs,
+          fat: nutrition.fat,
+          prepTime: recipe.prepTimeMinutes,
+        };
+
+        const validationResult = validator.validate(recipeForValidation);
+
+        if (!validationResult.isValid) {
+          const violationsMsg = validationResult.violations.join('; ');
+          console.log(`⚠️  Recipe "${recipe.name}" failed nutritional validation: ${violationsMsg}`);
+          return { success: false, error: `Nutritional constraints violated: ${violationsMsg}` };
+        }
+      }
+
       return { success: true };
     } catch (error) {
       return { success: false, error: `Validation error: ${error}` };

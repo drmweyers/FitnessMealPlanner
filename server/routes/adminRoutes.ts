@@ -10,6 +10,7 @@ import { progressTracker } from '../services/progressTracker';
 import { bmadRecipeService } from '../services/BMADRecipeService';
 import { sseManager } from '../services/utils/SSEManager';
 import { parseNaturalLanguageRecipeRequirements } from '../services/openai';
+import { intelligentMealPlanGenerator } from '../services/intelligentMealPlanGenerator';
 import { nanoid } from 'nanoid';
 import { eq, sql } from 'drizzle-orm';
 import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
@@ -177,12 +178,12 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
   }
 });
 
-// Natural language recipe generation endpoint
-adminRouter.post('/generate-from-prompt', requireAdmin, async (req, res) => {
+// Parse natural language prompt (Fix #6 - Parse button)
+adminRouter.post('/parse-recipe-prompt', requireAdmin, async (req, res) => {
   try {
     const { prompt } = req.body;
 
-    console.log('[Natural Language Generation] Received prompt:', prompt);
+    console.log('[Natural Language Parse] Received prompt:', prompt);
 
     // Validate prompt
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
@@ -191,19 +192,63 @@ adminRouter.post('/generate-from-prompt', requireAdmin, async (req, res) => {
       });
     }
 
-    // Parse natural language into structured parameters
+    // Parse natural language into structured recipe parameters
     const parsedParams = await parseNaturalLanguageRecipeRequirements(prompt);
-    console.log('[Natural Language Generation] Parsed parameters:', parsedParams);
+    console.log('[Natural Language Parse] Parsed parameters:', parsedParams);
 
-    // Map parsed parameters to BMAD generation options
-    const generationOptions: any = {
-      count: parsedParams.count || 10,
-      mealTypes: parsedParams.mealTypes || [],
-      dietaryTags: parsedParams.dietaryTags || [],
-      mainIngredientTags: parsedParams.mainIngredientTags || [],
-      focusIngredient: parsedParams.focusIngredient,
+    res.status(200).json({
+      message: "Successfully parsed recipe requirements",
+      parsedParameters: parsedParams
+    });
+  } catch (error) {
+    console.error("[Natural Language Parse] Error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    res.status(500).json({
+      message: "Failed to parse natural language prompt",
+      error: errorMessage
+    });
+  }
+});
+
+// Natural language RECIPE generation endpoint (Fix #6)
+adminRouter.post('/generate-recipes-from-prompt', requireAdmin, async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    console.log('[Natural Language Recipe Generation] Received prompt:', prompt);
+
+    // Validate prompt
+    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+      return res.status(400).json({
+        message: "Natural language prompt is required"
+      });
+    }
+
+    // Parse natural language into structured recipe parameters
+    const parsedParams = await parseNaturalLanguageRecipeRequirements(prompt);
+    console.log('[Natural Language Recipe Generation] Parsed parameters:', parsedParams);
+
+    // Determine recipe count from parsed params or default to 10
+    const count = parsedParams.count || 10;
+
+    // Create progress tracking job
+    const jobId = progressTracker.createJob({
+      totalRecipes: count,
+      metadata: {
+        naturalLanguagePrompt: prompt,
+        parsedParams
+      }
+    });
+
+    // Map parsed parameters to RECIPE generation options
+    const generationOptions = {
+      count,
+      mealTypes: parsedParams.mealTypes,
+      dietaryRestrictions: parsedParams.dietaryTags,
+      targetCalories: parsedParams.dailyCalorieTarget || parsedParams.maxCalories,
+      fitnessGoal: parsedParams.fitnessGoal,
+      naturalLanguagePrompt: prompt,
       maxPrepTime: parsedParams.maxPrepTime,
-      minCalories: parsedParams.minCalories,
       maxCalories: parsedParams.maxCalories,
       minProtein: parsedParams.minProtein,
       maxProtein: parsedParams.maxProtein,
@@ -211,36 +256,102 @@ adminRouter.post('/generate-from-prompt', requireAdmin, async (req, res) => {
       maxCarbs: parsedParams.maxCarbs,
       minFat: parsedParams.minFat,
       maxFat: parsedParams.maxFat,
-      difficulty: parsedParams.difficulty,
-      fitnessGoal: parsedParams.fitnessGoal,
+      jobId // For SSE progress tracking
     };
 
-    // Remove undefined values
-    Object.keys(generationOptions).forEach(key => {
-      if (generationOptions[key] === undefined) {
-        delete generationOptions[key];
-      }
-    });
+    console.log('[Natural Language Recipe Generation] Starting generation:', generationOptions);
 
-    console.log('[Natural Language Generation] Generation options:', generationOptions);
+    // Start background recipe generation
+    recipeGenerator.generateAndStoreRecipes(generationOptions);
 
-    // Start BMAD generation
-    const batchId = await bmadRecipeService.startGeneration(generationOptions);
-
-    console.log('[Natural Language Generation] Started BMAD generation, batchId:', batchId);
-
-    // Return 202 Accepted with batchId for SSE tracking
+    // Return immediate response with jobId for SSE tracking
     res.status(202).json({
-      message: "Recipe generation started from natural language prompt",
-      batchId,
+      message: `Recipe generation started from natural language prompt`,
+      count,
+      jobId,
       parsedParameters: parsedParams,
-      generationOptions,
+      generationOptions
     });
   } catch (error) {
-    console.error("[Natural Language Generation] Error:", error);
+    console.error("[Natural Language Recipe Generation] Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     res.status(500).json({
       message: "Failed to generate recipes from natural language prompt",
+      error: errorMessage
+    });
+  }
+});
+
+// Natural language MEAL PLAN generation endpoint
+adminRouter.post('/generate-from-prompt', requireAdmin, async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    console.log('[Natural Language Meal Plan Generation] Received prompt:', prompt);
+
+    // Validate prompt
+    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+      return res.status(400).json({
+        message: "Natural language prompt is required"
+      });
+    }
+
+    // Parse natural language into structured meal plan parameters
+    const parsedParams = await parseNaturalLanguageRecipeRequirements(prompt);
+    console.log('[Natural Language Meal Plan Generation] Parsed parameters:', parsedParams);
+
+    // Map parsed parameters to MEAL PLAN generation options
+    const mealPlanOptions: any = {
+      planName: parsedParams.planName || `AI-Generated Meal Plan`,
+      fitnessGoal: parsedParams.fitnessGoal || 'general_health',
+      dailyCalorieTarget: parsedParams.dailyCalorieTarget || parsedParams.maxCalories || 2000,
+      days: parsedParams.days || 7,
+      mealsPerDay: parsedParams.mealsPerDay || 3,
+      clientName: parsedParams.clientName || 'Admin Generated',
+      description: `Generated from natural language: "${prompt.substring(0, 100)}"`,
+
+      // Filter parameters
+      mealType: parsedParams.mealTypes?.[0], // Use first meal type as filter
+      dietaryTag: parsedParams.dietaryTags?.[0], // Use first dietary tag as filter
+      maxPrepTime: parsedParams.maxPrepTime,
+      maxCalories: parsedParams.maxCalories,
+      minProtein: parsedParams.minProtein,
+      maxProtein: parsedParams.maxProtein,
+      minCarbs: parsedParams.minCarbs,
+      maxCarbs: parsedParams.maxCarbs,
+      minFat: parsedParams.minFat,
+      maxFat: parsedParams.maxFat,
+    };
+
+    // Remove undefined values
+    Object.keys(mealPlanOptions).forEach(key => {
+      if (mealPlanOptions[key] === undefined) {
+        delete mealPlanOptions[key];
+      }
+    });
+
+    console.log('[Natural Language Meal Plan Generation] Meal plan options:', mealPlanOptions);
+
+    // Generate intelligent meal plan using intelligentMealPlanGenerator
+    const mealPlan = await intelligentMealPlanGenerator.generateIntelligentMealPlan(
+      mealPlanOptions,
+      req.user!.id
+    );
+
+    console.log('[Natural Language Meal Plan Generation] Successfully generated meal plan:', mealPlan.id);
+
+    // Return the complete meal plan immediately
+    res.status(200).json({
+      message: "Meal plan generated successfully from natural language prompt",
+      mealPlan,
+      parsedParameters: parsedParams,
+      generationOptions: mealPlanOptions,
+    });
+  } catch (error) {
+    console.error("[Natural Language Meal Plan Generation] Error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    res.status(500).json({
+      message: "Failed to generate meal plan from natural language prompt",
       error: errorMessage
     });
   }
@@ -675,25 +786,82 @@ adminRouter.get('/stats', requireAdmin, async (req, res) => {
   }
 });
 
-// Progress tracking endpoint
+// Progress tracking endpoint (polling - for backward compatibility)
 adminRouter.get('/generation-progress/:jobId', requireAdmin, async (req, res) => {
   try {
     const { jobId } = req.params;
-    
+
     if (!jobId) {
       return res.status(400).json({ error: 'Job ID is required' });
     }
-    
+
     const progress = progressTracker.getProgress(jobId);
-    
+
     if (!progress) {
       return res.status(404).json({ error: 'Job not found or has expired' });
     }
-    
+
     res.json(progress);
   } catch (error) {
     console.error('Failed to fetch generation progress:', error);
     res.status(500).json({ error: 'Failed to fetch generation progress' });
+  }
+});
+
+// SSE endpoint for real-time progress updates (Fix #2: Background Generation)
+adminRouter.get('/recipe-progress-stream/:jobId', requireAdmin, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    if (!jobId) {
+      return res.status(400).json({ error: 'Job ID is required' });
+    }
+
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+
+    console.log(`[SSE] Client connecting for job ${jobId}`);
+
+    // Send initial progress state if available
+    const currentProgress = progressTracker.getProgress(jobId);
+    if (currentProgress) {
+      res.write(`data: ${JSON.stringify(currentProgress)}\n\n`);
+    } else {
+      res.write(`data: ${JSON.stringify({ error: 'Job not found', jobId })}\n\n`);
+      res.end();
+      return;
+    }
+
+    // Listen for progress updates for this specific job
+    const progressHandler = (progress: any) => {
+      if (progress.jobId === jobId) {
+        res.write(`data: ${JSON.stringify(progress)}\n\n`);
+
+        // Close connection when complete or failed
+        if (progress.currentStep === 'complete' || progress.currentStep === 'failed') {
+          console.log(`[SSE] Job ${jobId} ${progress.currentStep}, closing connection`);
+          setTimeout(() => {
+            progressTracker.removeListener('progress', progressHandler);
+            res.end();
+          }, 1000); // Give 1 second for final message to send
+        }
+      }
+    };
+
+    progressTracker.on('progress', progressHandler);
+
+    // Handle client disconnect
+    req.on('close', () => {
+      console.log(`[SSE] Client disconnected from job ${jobId}`);
+      progressTracker.removeListener('progress', progressHandler);
+    });
+
+  } catch (error) {
+    console.error('[SSE] Failed to establish stream:', error);
+    res.status(500).json({ error: 'Failed to establish progress stream' });
   }
 });
 

@@ -91,7 +91,7 @@ test.describe('Quick QA Assessment', () => {
   test('Authentication system basic functionality', async ({ page }) => {
     console.log('\n🔐 Testing: Authentication System');
     
-    let loginResults = {
+    const loginResults = {
       admin: false,
       trainer: false,
       customer: false

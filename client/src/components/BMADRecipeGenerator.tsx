@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -13,6 +14,7 @@ import { Progress } from "./ui/progress";
 import { useToast } from "../hooks/use-toast";
 import { Checkbox } from "./ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { invalidateRecipeQueries } from "../lib/recipeQueryInvalidation";
 import {
   Sparkles,
   Zap,
@@ -121,6 +123,7 @@ const fitnessGoalOptions = [
 
 export default function BMADRecipeGenerator() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState<ProgressState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -200,6 +203,9 @@ export default function BMADRecipeGenerator() {
       // Clear active batch from localStorage
       localStorage.removeItem('bmad-active-batch');
       console.log('[BMAD] Cleared active batch from localStorage');
+
+      // CRITICAL FIX: Invalidate ALL recipe queries to refresh UI
+      invalidateRecipeQueries(queryClient, 'BMAD-Generation-Complete');
 
       toast({
         title: "Generation Complete!",
@@ -811,7 +817,10 @@ export default function BMADRecipeGenerator() {
                     name="dietaryTag"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Dietary</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          <Utensils className="h-4 w-4" />
+                          Diet Type
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -823,15 +832,22 @@ export default function BMADRecipeGenerator() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="any">Any</SelectItem>
+                            <SelectItem value="any">No Restriction</SelectItem>
                             <SelectItem value="vegetarian">Vegetarian</SelectItem>
                             <SelectItem value="vegan">Vegan</SelectItem>
-                            <SelectItem value="gluten_free">Gluten Free</SelectItem>
-                            <SelectItem value="dairy_free">Dairy Free</SelectItem>
                             <SelectItem value="keto">Keto</SelectItem>
                             <SelectItem value="paleo">Paleo</SelectItem>
+                            <SelectItem value="gluten_free">Gluten Free</SelectItem>
+                            <SelectItem value="low_carb">Low Carb</SelectItem>
+                            <SelectItem value="high_protein">High Protein</SelectItem>
+                            <SelectItem value="mediterranean">Mediterranean</SelectItem>
+                            <SelectItem value="pescatarian">Pescatarian</SelectItem>
+                            <SelectItem value="dairy_free">Dairy Free</SelectItem>
                           </SelectContent>
                         </Select>
+                        <FormDescription className="text-xs">
+                          Filter generated recipes by dietary preference
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

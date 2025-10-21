@@ -541,7 +541,7 @@ function drawComparisonSection(
 
   pdf.setFontSize(9);
   for (const measure of currentMeasurements) {
-    let text = `${measure.label}: ${measure.value?.toFixed(1) || '-'} ${measure.unit}`;
+    const text = `${measure.label}: ${measure.value?.toFixed(1) || '-'} ${measure.unit}`;
     if (measure.change !== null) {
       const changeText = measure.change > 0 ? `+${measure.change.toFixed(1)}` : measure.change.toFixed(1);
       const changeColor = measure.label === 'Muscle' 

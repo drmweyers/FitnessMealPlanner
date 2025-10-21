@@ -246,7 +246,7 @@ test.describe('Grocery List Edge Cases and Error Scenarios', () => {
       await page.keyboard.press('Tab'); // Move to next element
 
       // Should be able to add item using keyboard
-      let currentElement = await page.evaluate(() => document.activeElement?.tagName);
+      const currentElement = await page.evaluate(() => document.activeElement?.tagName);
 
       // Keep tabbing until we find Add Item button
       for (let i = 0; i < 10; i++) {

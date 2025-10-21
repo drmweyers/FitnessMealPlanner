@@ -254,17 +254,17 @@ test.describe('Admin Comprehensive QA Tests', () => {
     // Test desktop
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.waitForTimeout(500);
-    let desktopOk = await page.locator('h1').filter({ hasText: 'Admin Dashboard' }).isVisible();
+    const desktopOk = await page.locator('h1').filter({ hasText: 'Admin Dashboard' }).isVisible();
     
     // Test tablet
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(500);
-    let tabletOk = await page.locator('h1').filter({ hasText: 'Admin Dashboard' }).isVisible();
+    const tabletOk = await page.locator('h1').filter({ hasText: 'Admin Dashboard' }).isVisible();
     
     // Test mobile
     await page.setViewportSize({ width: 375, height: 667 });
     await page.waitForTimeout(500);
-    let mobileOk = await page.locator('h1').filter({ hasText: 'Admin Dashboard' }).isVisible();
+    const mobileOk = await page.locator('h1').filter({ hasText: 'Admin Dashboard' }).isVisible();
     
     console.log(`✅ Responsive: Desktop=${desktopOk}, Tablet=${tabletOk}, Mobile=${mobileOk}`);
   });

@@ -112,8 +112,11 @@ export class PdfGenerationService {
       // Generate HTML template
       const html = await this.generateMealPlanHtml(mealPlanData, pdfOptions);
 
-      // Generate PDF using Puppeteer
-      const pdfBuffer = await this.generatePdfFromHtml(html, pdfOptions);
+      // Calculate meal count for timeout
+      const mealCount = mealPlanData.meals?.length || 0;
+
+      // Generate PDF using Puppeteer with meal count for timeout calculation
+      const pdfBuffer = await this.generatePdfFromHtml(html, { ...pdfOptions, mealCount });
 
       // Generate filename
       const fileName = this.generateFileName('meal-plan', mealPlanData.name);
@@ -531,7 +534,7 @@ export class PdfGenerationService {
    */
   private async generatePdfFromHtml(
     html: string,
-    options: PdfGenerationOptions
+    options: PdfGenerationOptions & { mealCount?: number }
   ): Promise<Buffer> {
     await this.initializeBrowser();
 
@@ -541,10 +544,25 @@ export class PdfGenerationService {
       // Set viewport for consistent rendering
       await page.setViewport({ width: 1200, height: 1600 });
 
+      // Calculate dynamic timeout based on meal count
+      const mealCount = options.mealCount || 0;
+      let timeout: number;
+      if (mealCount <= 28) {
+        timeout = 60000; // 1 minute for small plans
+      } else if (mealCount <= 56) {
+        timeout = 120000; // 2 minutes for medium plans
+      } else if (mealCount <= 100) {
+        timeout = 180000; // 3 minutes for large plans
+      } else {
+        timeout = 300000; // 5 minutes for very large plans
+      }
+
+      console.log(`PDF Service: Processing ${mealCount} meals with ${timeout}ms timeout`);
+
       // Set content and wait for resources
       await page.setContent(html, {
         waitUntil: ['networkidle0', 'domcontentloaded'],
-        timeout: 30000
+        timeout
       });
 
       // Add watermark if specified
@@ -566,7 +584,7 @@ export class PdfGenerationService {
         }, options.watermark);
       }
 
-      // Generate PDF
+      // Generate PDF with timeout
       const pdfBuffer = await page.pdf({
         format: options.format as any,
         landscape: options.orientation === 'landscape',
@@ -580,7 +598,8 @@ export class PdfGenerationService {
         preferCSSPageSize: true,
         displayHeaderFooter: options.includeBranding !== false,
         headerTemplate: options.includeBranding ? this.getHeaderTemplate() : '',
-        footerTemplate: options.includeBranding ? this.getFooterTemplate() : ''
+        footerTemplate: options.includeBranding ? this.getFooterTemplate() : '',
+        timeout
       });
 
       return pdfBuffer;
@@ -696,23 +715,106 @@ export class PdfGenerationService {
   }
 
   /**
-   * Generate meals HTML
+   * Generate meals HTML with pagination for large plans
    */
   private generateMealsHtml(mealPlanData: any, options: MealPlanPdfOptions): string {
+    const meals = mealPlanData.meals || [];
+    const MEALS_PER_PAGE = 10; // Limit to 10 meals per page for optimal rendering
+
     let html = '<div class="meals-section">';
-    
+
     if (options.groupByDay) {
-      // Group meals by day
       html += '<h2>Your Meal Plan</h2>';
-      // Implementation would group meals by day
+
+      // Group meals by day
+      const mealsByDay = meals.reduce((acc: any, meal: any) => {
+        const day = meal.day || 1;
+        if (!acc[day]) acc[day] = [];
+        acc[day].push(meal);
+        return acc;
+      }, {});
+
+      let mealCount = 0;
+      for (const day in mealsByDay) {
+        // Add page break if we've exceeded meals per page
+        if (mealCount > 0 && mealCount % MEALS_PER_PAGE === 0) {
+          html += '<div style="page-break-after: always;"></div>';
+        }
+
+        html += `<div class="day-section">`;
+        html += `<h3>Day ${day}</h3>`;
+
+        for (const meal of mealsByDay[day]) {
+          html += this.generateMealCardHtml(meal, options);
+          mealCount++;
+
+          // Add page break within day if needed
+          if (mealCount % MEALS_PER_PAGE === 0 && mealCount < meals.length) {
+            html += '<div style="page-break-after: always;"></div>';
+          }
+        }
+
+        html += `</div>`;
+      }
     } else {
-      // List all meals
+      // List all meals with pagination
       html += '<h2>All Recipes</h2>';
+
+      for (let i = 0; i < meals.length; i++) {
+        // Add page break every MEALS_PER_PAGE meals
+        if (i > 0 && i % MEALS_PER_PAGE === 0) {
+          html += '<div style="page-break-after: always;"></div>';
+        }
+
+        html += this.generateMealCardHtml(meals[i], options);
+      }
     }
-    
-    // Add meal cards
+
     html += '</div>';
     return html;
+  }
+
+  /**
+   * Generate HTML for a single meal card
+   */
+  private generateMealCardHtml(meal: any, options: MealPlanPdfOptions): string {
+    const recipe = meal.recipe || meal;
+    const ingredients = recipe.ingredientsJson || [];
+    const instructions = recipe.instructionsText || recipe.instructions || '';
+
+    return `
+      <div class="meal-card">
+        <div class="meal-header">
+          <h4>${recipe.name || 'Unnamed Recipe'}</h4>
+          <span class="meal-type">${meal.mealType || 'Meal'}</span>
+        </div>
+        ${recipe.description ? `<p class="meal-description">${recipe.description}</p>` : ''}
+        ${options.includeMacroSummary ? `
+          <div class="meal-nutrition">
+            <span><strong>Calories:</strong> ${recipe.caloriesKcal || 0} kcal</span>
+            <span><strong>Protein:</strong> ${recipe.proteinGrams || 0}g</span>
+            <span><strong>Carbs:</strong> ${recipe.carbsGrams || 0}g</span>
+            <span><strong>Fat:</strong> ${recipe.fatGrams || 0}g</span>
+          </div>
+        ` : ''}
+        ${ingredients.length > 0 ? `
+          <div class="meal-ingredients">
+            <h5>Ingredients:</h5>
+            <ul>
+              ${ingredients.map((ing: any) => `
+                <li>${ing.amount || ''} ${ing.unit || ''} ${ing.name || ing.ingredient || ''}</li>
+              `).join('')}
+            </ul>
+          </div>
+        ` : ''}
+        ${instructions ? `
+          <div class="meal-instructions">
+            <h5>Instructions:</h5>
+            <p>${instructions}</p>
+          </div>
+        ` : ''}
+      </div>
+    `;
   }
 
   /**
