@@ -152,7 +152,8 @@
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitnessmealplanner\" psql -c \"SELECT id, created_at, updated_at, meal_plan_data->>''planName'' as plan_name FROM trainer_meal_plans ORDER BY created_at DESC NULLS LAST LIMIT 5;\")",
       "Bash(awk:*)",
       "Bash(npx eslint:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": [],

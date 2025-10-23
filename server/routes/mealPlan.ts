@@ -534,7 +534,8 @@ mealPlanRouter.get('/personalized', requireAuth, async (req, res) => {
   }
 });
 
-// DELETE /api/meal-plan/:id - Delete a meal plan for the current customer
+// DELETE /api/meal-plan/:id - Delete a meal plan assignment for the current customer
+// NOTE: This deletes the ASSIGNMENT, not the trainer's original plan
 mealPlanRouter.delete('/:id', requireAuth, async (req, res) => {
   const mealPlanId = req.params.id;
   const userId = req.user?.id;
@@ -545,26 +546,45 @@ mealPlanRouter.delete('/:id', requireAuth, async (req, res) => {
   }
 
   if (userRole !== 'customer') {
-    return res.status(403).json({ error: 'Only customers can delete their meal plans' });
+    return res.status(403).json({ error: 'Only customers can delete their meal plan assignments' });
   }
 
   try {
-    // Get the customer's personalized meal plans
-    const customerMealPlans = await storage.getPersonalizedMealPlans(userId);
-    
-    // Check if the meal plan exists and belongs to this customer
-    const mealPlanToDelete = customerMealPlans.find((mp: any) => mp.id === mealPlanId);
-    
-    if (!mealPlanToDelete) {
-      return res.status(404).json({ error: 'Meal plan not found or you do not have permission to delete it' });
-    }
+    // Import required tables
+    const { mealPlanAssignments, trainerMealPlans } = await import('@shared/schema');
 
-    // Delete the meal plan from the database
-    const result = await db.delete(personalizedMealPlans)
+    // First, verify the assignment exists and belongs to this customer
+    const assignment = await db
+      .select({
+        assignmentId: mealPlanAssignments.id,
+        mealPlanId: mealPlanAssignments.mealPlanId,
+        customerId: mealPlanAssignments.customerId,
+        mealPlanData: trainerMealPlans.mealPlanData,
+      })
+      .from(mealPlanAssignments)
+      .innerJoin(trainerMealPlans, eq(trainerMealPlans.id, mealPlanAssignments.mealPlanId))
       .where(
         and(
-          eq(personalizedMealPlans.id, mealPlanId),
-          eq(personalizedMealPlans.customerId, userId)
+          eq(mealPlanAssignments.mealPlanId, mealPlanId),
+          eq(mealPlanAssignments.customerId, userId)
+        )
+      )
+      .limit(1);
+
+    if (!assignment || assignment.length === 0) {
+      return res.status(404).json({
+        error: 'Meal plan assignment not found or you do not have permission to delete it'
+      });
+    }
+
+    const assignmentToDelete = assignment[0];
+
+    // Delete the assignment (keeps trainer's original plan intact)
+    await db.delete(mealPlanAssignments)
+      .where(
+        and(
+          eq(mealPlanAssignments.mealPlanId, mealPlanId),
+          eq(mealPlanAssignments.customerId, userId)
         )
       );
 
@@ -574,7 +594,7 @@ mealPlanRouter.delete('/:id', requireAuth, async (req, res) => {
         MealPlanEventType.DELETED,
         mealPlanId,
         userId,
-        mealPlanToDelete.mealPlanData
+        assignmentToDelete.mealPlanData
       );
 
       const cleanupResult = await handleMealPlanEvent(event);
@@ -587,16 +607,20 @@ mealPlanRouter.delete('/:id', requireAuth, async (req, res) => {
       // Don't fail the meal plan deletion if grocery list cleanup fails
     }
 
-    console.log(`[Meal Plan Delete] Customer ${userId} deleted meal plan ${mealPlanId}`);
+    console.log(`[Meal Plan Delete] Customer ${userId} deleted assignment for meal plan ${mealPlanId}`);
 
     res.json({
       success: true,
-      message: 'Meal plan deleted successfully',
-      deletedMealPlanId: mealPlanId
+      message: 'Meal plan removed from your account successfully',
+      deletedMealPlanId: mealPlanId,
+      note: 'The meal plan has been removed from your account. Your trainer still has the original plan.'
     });
   } catch (error) {
-    console.error('Failed to delete meal plan:', error);
-    res.status(500).json({ error: 'Failed to delete meal plan' });
+    console.error('Failed to delete meal plan assignment:', error);
+    res.status(500).json({
+      error: 'Failed to delete meal plan assignment',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 

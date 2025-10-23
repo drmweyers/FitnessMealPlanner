@@ -22,6 +22,7 @@ import customerRouter from './routes/customerRoutes';
 import pdfRouter from './routes/pdf';
 import progressRouter from './routes/progressRoutes';
 import profileRouter from './routes/profileRoutes';
+import accountDeletionRouter from './routes/accountDeletion';
 import { favoritesRouter } from './routes/favorites';
 // import { engagementRouter } from './routes/engagement';
 import { trendingRouter } from './routes/trending';
@@ -192,6 +193,7 @@ app.use('/api/meal-plans', mealPlanSharingRouter);
 app.use('/api/pdf', requireAuth, pdfRouter);
 app.use('/api/progress', requireAuth, progressRouter);
 app.use('/api/profile', requireAuth, profileRouter);
+app.use('/api/account', requireAuth, accountDeletionRouter);
 app.use('/api/grocery-lists', requireAuth, groceryListsRouter);
 
 // New analytics and engagement routes

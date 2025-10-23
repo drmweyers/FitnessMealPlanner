@@ -25,6 +25,7 @@ import {
 import { useToast } from '../hooks/use-toast';
 import ProgressTracking from '../components/ProgressTracking';
 import GroceryListWrapper from '../components/GroceryListWrapper';
+import { DeleteAccountSection } from '../components/DeleteAccountSection';
 
 // Enhanced MealPlan includes the flattened properties from the API
 interface EnhancedMealPlan extends MealPlan {
@@ -79,6 +80,7 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
     const tab = params.get('tab');
     if (tab === 'progress') return 'progress';
     if (tab === 'grocery-list') return 'grocery-list';
+    if (tab === 'profile') return 'profile';
     return 'meal-plans';
   });
   const [fitnessGoalFilter, setFitnessGoalFilter] = useState('all');
@@ -340,13 +342,15 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
               url.searchParams.set('tab', 'progress');
             } else if (value === 'grocery-list') {
               url.searchParams.set('tab', 'grocery-list');
+            } else if (value === 'profile') {
+              url.searchParams.set('tab', 'profile');
             } else {
               url.searchParams.delete('tab');
             }
             window.history.replaceState({}, '', url.toString());
           }} className="w-full">
             <div className="flex justify-center mb-8">
-              <TabsList className="grid w-full max-w-lg grid-cols-3 bg-white/60 backdrop-blur-sm">
+              <TabsList className="grid w-full max-w-lg grid-cols-4 bg-white/60 backdrop-blur-sm">
                 <TabsTrigger value="meal-plans" className="flex items-center space-x-2">
                   <ChefHat className="w-4 h-4" />
                   <span>Meal Plans</span>
@@ -358,6 +362,10 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
                 <TabsTrigger value="grocery-list" className="flex items-center space-x-2">
                   <ShoppingCart className="w-4 h-4" />
                   <span>Grocery</span>
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="flex items-center space-x-2">
+                  <User className="w-4 h-4" />
+                  <span>Profile</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -653,6 +661,39 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
               <GroceryListWrapper
                 activeMealPlan={activeMealPlan}
               />
+            </TabsContent>
+
+            <TabsContent value="profile">
+              {/* Profile and Account Settings */}
+              <div className="max-w-4xl mx-auto space-y-6">
+                <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <User className="w-5 h-5 text-blue-600" />
+                      <span>Account Settings</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* User Info Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-slate-900">Profile Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-slate-700">Email</label>
+                          <p className="text-slate-900 mt-1">{user?.email}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700">Role</label>
+                          <p className="text-slate-900 mt-1 capitalize">{user?.role}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delete Account Section */}
+                    <DeleteAccountSection />
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
