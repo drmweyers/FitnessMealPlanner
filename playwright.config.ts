@@ -38,12 +38,10 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
-        // Run in headed mode so you can see the tests
-        headless: false,
-        // Slow down a bit so you can see what's happening
-        slowMo: 1000,
+        // Run in headless mode for Docker compatibility
+        headless: true,
         // Set viewport size
         viewport: { width: 1280, height: 720 }
       },

@@ -139,7 +139,10 @@ global.fetch = vi.fn().mockImplementation((url: string, options?: any) => {
 // Mock environment variables for testing
 process.env.NODE_ENV = 'test';
 process.env.OPENAI_API_KEY = 'test-key';
-process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5433/fitmeal';
+// Only set DATABASE_URL if not already configured (e.g., in Docker)
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5433/fitmeal';
+}
 process.env.JWT_SECRET = 'test-jwt-secret-for-testing-that-is-long-enough-to-meet-minimum-requirements';
 process.env.SESSION_SECRET = 'test-session-secret-for-testing-that-is-long-enough-to-meet-minimum-requirements';
 process.env.S3_BUCKET_NAME = 'test-bucket';
@@ -681,7 +684,10 @@ vi.mock('path', async () => {
 
 // Mock process.env for consistent test environment
 process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5433/fitmeal';
+// Only set DATABASE_URL if not already configured (e.g., in Docker)
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5433/fitmeal';
+}
 process.env.JWT_SECRET = 'test-jwt-secret-for-testing-that-is-long-enough-to-meet-minimum-requirements';
 process.env.OPENAI_API_KEY = 'test-key';
 

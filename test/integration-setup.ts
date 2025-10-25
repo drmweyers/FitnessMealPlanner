@@ -4,8 +4,11 @@ import { vi, beforeAll, afterAll } from 'vitest';
 // Mock environment variables for testing
 process.env.NODE_ENV = 'test';
 process.env.OPENAI_API_KEY = 'test-key';
-// Use localhost:5433 for tests running on host machine (not inside Docker)
-process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5433/fitmeal';
+// Only set DATABASE_URL if not already configured (e.g., in Docker)
+// Docker uses postgres:5432, host machine uses localhost:5433
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5433/fitmeal';
+}
 process.env.JWT_SECRET = 'test-jwt-secret-for-testing-that-is-long-enough-to-meet-minimum-requirements';
 process.env.SESSION_SECRET = 'test-session-secret-for-testing-that-is-long-enough-to-meet-minimum-requirements';
 process.env.S3_BUCKET_NAME = 'test-bucket';

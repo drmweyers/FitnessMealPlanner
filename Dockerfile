@@ -1,29 +1,60 @@
-# FIXED Dockerfile - Ensuring drizzle.config.ts is properly copied
-FROM node:20-alpine AS base
+# Playwright-Compatible Dockerfile - Using Debian base for full browser support
+FROM node:20-bookworm-slim AS base
 WORKDIR /app
-RUN apk add --no-cache postgresql-client \
-    && apk add --no-cache chromium \
-    && apk add --no-cache nss \
-    && apk add --no-cache freetype \
-    && apk add --no-cache harfbuzz \
-    && apk add --no-cache ca-certificates \
-    && apk add --no-cache ttf-freefont
 
-# Tell Puppeteer to skip downloading Chrome and use the installed version
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Install PostgreSQL client and common dependencies
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    curl \
+    wget \
+    ca-certificates \
+    fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
 
 # Development stage
 FROM base AS dev
-# ADDED: Install debugging tools for Docker troubleshooting
-RUN apk add --no-cache curl wget netcat-openbsd bind-tools
+
+# Install Playwright system dependencies + debugging tools
+RUN apt-get update && apt-get install -y \
+    # Playwright dependencies
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libdbus-1-3 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
+    libatspi2.0-0 \
+    # Additional tools
+    netcat-openbsd \
+    dnsutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
 COPY package*.json ./
 RUN npm install
+
+# Install Playwright browsers
+RUN npx playwright install --with-deps chromium firefox webkit
+
+# Copy application files
 COPY . .
-EXPOSE 5001 24678
-# ADDED: Health check for dev container
+
+EXPOSE 5001 24678 4000
+
+# Health check for dev container
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
   CMD wget -q --spider http://localhost:4000/api/health || exit 1
+
 CMD ["npm", "run", "dev"]
 
 # Build stage - CRITICAL: Verify drizzle.config.ts exists
@@ -177,7 +208,7 @@ RUN echo '#!/bin/sh' > start.sh && \
     chmod +x start.sh
 
 # Security: non-root user
-RUN adduser -D -s /bin/sh appuser && \
+RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
