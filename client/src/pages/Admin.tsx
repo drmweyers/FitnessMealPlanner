@@ -29,6 +29,7 @@ import MealPlanGenerator from "../components/MealPlanGenerator";
 import BulkDeleteToolbar from "../components/BulkDeleteToolbar";
 import ExportJSONModal from "../components/ExportJSONModal";
 import BMADRecipeGenerator from "../components/BMADRecipeGenerator";
+import AdminRecipeGenerator from "../components/AdminRecipeGenerator";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Admin() {
@@ -300,6 +301,9 @@ export default function Admin() {
                 </Button>
               </div>
             </div>
+
+            {/* AI Recipe Generator with Parse Button */}
+            <AdminRecipeGenerator />
 
             {/* Search and Filters */}
             <div className="space-y-4">

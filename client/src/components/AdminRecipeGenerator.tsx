@@ -439,6 +439,12 @@ export default function AdminRecipeGenerator() {
     });
 
     const handleNaturalLanguageParse = () => {
+        // Show immediate feedback to user
+        toast({
+            title: "🤖 AI Parser Working...",
+            description: "Analyzing your prompt with AI. This may take a few seconds.",
+        });
+
         parseNaturalLanguage.mutate(naturalLanguageInput);
     };
 

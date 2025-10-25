@@ -41,16 +41,16 @@ test.describe('Parse Button & Queue Refresh Fixes', () => {
       await page.goto(`${DEV_URL}/admin`);
       await page.waitForLoadState('networkidle');
 
-      // Click on "Recipe Library" tab to find the generator
+      // Click on "Recipe Library" tab
       const recipeLibraryTab = page.locator('button:has-text("Recipe Library")');
       if (await recipeLibraryTab.isVisible()) {
         await recipeLibraryTab.click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(2000); // Wait for AdminRecipeGenerator to load
       }
 
-      // Find the natural language textarea
-      const nlInput = page.locator('textarea[placeholder*="Generate"]').first();
-      await expect(nlInput).toBeVisible({ timeout: 5000 });
+      // Find the natural language textarea (now directly on page, not in modal)
+      const nlInput = page.locator('textarea#natural-language').first();
+      await expect(nlInput).toBeVisible({ timeout: 10000 });
 
       // Enter natural language description
       const testPrompt = "Generate 15 high-protein breakfast recipes under 20 minutes prep time, focusing on eggs and Greek yogurt, suitable for keto diet, with 400-600 calories";
@@ -103,12 +103,12 @@ test.describe('Parse Button & Queue Refresh Fixes', () => {
       const recipeLibraryTab = page.locator('button:has-text("Recipe Library")');
       if (await recipeLibraryTab.isVisible()) {
         await recipeLibraryTab.click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(2000); // Wait for AdminRecipeGenerator to load
       }
 
-      // Find the natural language textarea
-      const nlInput = page.locator('textarea[placeholder*="Generate"]').first();
-      await expect(nlInput).toBeVisible({ timeout: 5000 });
+      // Find the natural language textarea (now directly on page, not in modal)
+      const nlInput = page.locator('textarea#natural-language').first();
+      await expect(nlInput).toBeVisible({ timeout: 10000 });
 
       // Enter a very complex/confusing prompt that might cause parsing issues
       const badPrompt = "Generate $$$ invalid ###";
@@ -141,12 +141,12 @@ test.describe('Parse Button & Queue Refresh Fixes', () => {
       const recipeLibraryTab = page.locator('button:has-text("Recipe Library")');
       if (await recipeLibraryTab.isVisible()) {
         await recipeLibraryTab.click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(2000); // Wait for AdminRecipeGenerator to load
       }
 
-      // Find the natural language textarea
-      const nlInput = page.locator('textarea[placeholder*="Generate"]').first();
-      await expect(nlInput).toBeVisible({ timeout: 5000 });
+      // Find the natural language textarea (now directly on page, not in modal)
+      const nlInput = page.locator('textarea#natural-language').first();
+      await expect(nlInput).toBeVisible({ timeout: 10000 });
 
       // Ensure textarea is empty
       await nlInput.clear();
@@ -166,12 +166,12 @@ test.describe('Parse Button & Queue Refresh Fixes', () => {
       const recipeLibraryTab = page.locator('button:has-text("Recipe Library")');
       if (await recipeLibraryTab.isVisible()) {
         await recipeLibraryTab.click();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(2000); // Wait for AdminRecipeGenerator to load
       }
 
-      // Find the natural language textarea
-      const nlInput = page.locator('textarea[placeholder*="Generate"]').first();
-      await expect(nlInput).toBeVisible({ timeout: 5000 });
+      // Find the natural language textarea (now directly on page, not in modal)
+      const nlInput = page.locator('textarea#natural-language').first();
+      await expect(nlInput).toBeVisible({ timeout: 10000 });
 
       await nlInput.fill("Generate 10 easy vegetarian recipes");
 
@@ -376,12 +376,13 @@ test.describe('Parse Button & Queue Refresh Fixes', () => {
       const recipeLibraryTab = page.locator('button:has-text("Recipe Library")');
       if (await recipeLibraryTab.isVisible()) {
         await recipeLibraryTab.click();
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(2000); // Wait for AdminRecipeGenerator to load
       }
 
       // Step 1: Parse natural language
       console.log('[TEST] Step 1: Parsing natural language...');
-      const nlInput = page.locator('textarea[placeholder*="Generate"]').first();
+      const nlInput = page.locator('textarea#natural-language').first();
+      await expect(nlInput).toBeVisible({ timeout: 10000 });
       await nlInput.fill("Generate 2 easy keto dinner recipes with chicken");
 
       const parseButton = page.locator('button:has-text("Parse with AI")').first();
