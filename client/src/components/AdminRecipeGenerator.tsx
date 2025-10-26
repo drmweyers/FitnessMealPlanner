@@ -591,24 +591,6 @@ export default function AdminRecipeGenerator() {
                 <div className="flex gap-3">
                   <Button
                     type="button"
-                    onClick={handleNaturalLanguageParse}
-                    disabled={parseNaturalLanguage.isPending || !naturalLanguageInput.trim()}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {parseNaturalLanguage.isPending ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                        Parsing with AI...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Parse with AI
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
                     onClick={handleDirectGeneration}
                     disabled={generateRecipes.isPending || isGenerating || !naturalLanguageInput.trim()}
                     className="bg-green-600 hover:bg-green-700"
