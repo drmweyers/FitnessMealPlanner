@@ -166,6 +166,9 @@ RUN echo "🔍 CRITICAL CHECK: Verifying public static files exist..." && \
 # CRITICAL: Copy drizzle.config.ts with verification
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 
+# Copy database seeds directory for auto-seeding
+COPY --from=builder /app/server/db/seeds ./server/db/seeds
+
 # MANDATORY VERIFICATION: Fail if drizzle.config.ts wasn't copied
 RUN echo "🔍 FINAL VERIFICATION: Checking drizzle.config.ts in production stage..." && \
     if [ ! -f "drizzle.config.ts" ]; then \
@@ -203,6 +206,8 @@ RUN echo '#!/bin/sh' > start.sh && \
     echo 'fi' >> start.sh && \
     echo 'echo "⚡ Running migrations with drizzle.config.ts..."' >> start.sh && \
     echo 'npx drizzle-kit push --config=./drizzle.config.ts --verbose || echo "⚠️ Migration failed"' >> start.sh && \
+    echo 'echo "🌱 Auto-seeding test accounts..."' >> start.sh && \
+    echo 'npm run seed:production || echo "⚠️ Test account seeding failed (non-fatal)"' >> start.sh && \
     echo 'echo "🎉 Starting application..."' >> start.sh && \
     echo 'exec npm start' >> start.sh && \
     chmod +x start.sh

@@ -46,6 +46,7 @@
     "seed:test-accounts": "tsx server/db/seeds/test-accounts.ts",
     "seed:test": "tsx server/db/seeds/seed-test-accounts.ts",
     "seed:verify": "tsx server/db/seeds/verify-seed-script.ts",
+    "seed:production": "tsx server/db/seeds/auto-seed-production.ts",
     "reset:test-accounts": "node scripts/reset-test-accounts.cjs",
     "setup:test-relationships": "bash scripts/setup-test-relationships.sh",
     "test:comprehensive:unit": "tsx test/test-runner.ts --unit-only",
