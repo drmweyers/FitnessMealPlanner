@@ -102,22 +102,22 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.id;
-      const { recipeId, notes }: CreateFavorite = req.body;
+      const favoriteData: CreateFavorite = req.body;
 
-      const result = await favoritesService.addFavorite(userId, recipeId, notes);
+      const result = await favoritesService.addToFavorites(userId, favoriteData);
 
       if (!result.success) {
         return res.status(400).json({
           status: 'error',
           code: 'FAVORITE_ERROR',
-          message: result.message
+          message: result.error
         });
       }
 
       res.status(201).json({
         status: 'success',
         data: {
-          favorite: result.favorite
+          favorite: result.data
         },
         message: 'Recipe added to favorites'
       });
@@ -146,13 +146,13 @@ router.delete(
         });
       }
 
-      const result = await favoritesService.removeFavorite(userId, recipeId);
+      const result = await favoritesService.removeFromFavorites(userId, recipeId);
 
       if (!result.success) {
         return res.status(404).json({
           status: 'error',
           code: 'FAVORITE_NOT_FOUND',
-          message: result.message
+          message: result.error
         });
       }
 

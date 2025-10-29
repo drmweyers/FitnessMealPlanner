@@ -98,12 +98,68 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
       token = req.cookies.token;
     }
 
-    // No token found in either location
+    // No token found - try refresh token flow
     if (!token) {
-      return res.status(401).json({ 
-        error: 'Authentication required. Please provide a valid token.',
-        code: 'NO_TOKEN'
-      });
+      const refreshToken = req.cookies.refreshToken;
+      
+      if (!refreshToken) {
+        return res.status(401).json({ 
+          error: 'Authentication required. Please provide a valid token.',
+          code: 'NO_TOKEN'
+        });
+      }
+
+      // Try to refresh using the refresh token
+      try {
+        const newTokens = await refreshTokensWithDeduplication(refreshToken);
+        
+        if (!newTokens) {
+          return res.status(401).json({ 
+            error: 'Session expired',
+            code: 'SESSION_EXPIRED'
+          });
+        }
+
+        const decoded = await verifyToken(newTokens.accessToken);
+        const user = await storage.getUser(decoded.id);
+        
+        if (!user) {
+          return res.status(401).json({ 
+            error: 'Invalid user session',
+            code: 'INVALID_SESSION'
+          });
+        }
+
+        req.user = {
+          id: user.id,
+          role: user.role,
+        };
+
+        // Set new cookies
+        const accessTokenExpires = new Date(Date.now() + 15 * 60 * 1000);
+        const refreshTokenExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+        res.cookie('token', newTokens.accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          expires: accessTokenExpires,
+        });
+
+        res.cookie('refreshToken', newTokens.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          expires: refreshTokenExpires,
+        });
+
+        return next();
+      } catch (e) {
+        return res.status(401).json({ 
+          error: 'Session expired',
+          code: 'SESSION_EXPIRED'
+        });
+      }
     }
 
     try {

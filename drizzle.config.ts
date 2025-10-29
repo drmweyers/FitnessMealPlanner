@@ -44,7 +44,7 @@ const sslConfig = getSslConfigForDrizzle();
 
 const config = {
   out: "./migrations",
-  schema: "./shared/schema.ts",
+  schema: ["./shared/schema.ts", "./shared/schema-favorites.ts"],
   dialect: "postgresql" as const,
   dbCredentials: {
     url: process.env.DATABASE_URL,
