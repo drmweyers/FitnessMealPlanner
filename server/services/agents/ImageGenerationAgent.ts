@@ -8,7 +8,9 @@ import { BaseAgent } from './BaseAgent';
 import { AgentResponse, RecipeImageMetadata } from './types';
 import OpenAI from 'openai';
 import crypto from 'crypto';
-import imghash from 'imghash';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const imghash = require('imghash');
 import { db } from '../../db';
 import { sql } from 'drizzle-orm';
 
