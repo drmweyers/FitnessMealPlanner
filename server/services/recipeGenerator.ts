@@ -10,6 +10,7 @@ import { progressTracker } from "./progressTracker";
 
 interface GenerationOptions {
   count: number;
+  tierLevel?: 'starter' | 'professional' | 'enterprise'; // Story 2.14: Tier assignment for recipes
   mealTypes?: string[];
   dietaryRestrictions?: string[];
   targetCalories?: number;
@@ -111,7 +112,7 @@ export class RecipeGeneratorService {
 
       const results = await Promise.allSettled(
         generatedRecipes.map((recipe, index) =>
-          this.processSingleRecipe(recipe, jobId, index + 1, options.count)
+          this.processSingleRecipe(recipe, jobId, index + 1, options.count, options.tierLevel)
         )
       );
       
@@ -192,7 +193,8 @@ export class RecipeGeneratorService {
     recipe: GeneratedRecipe,
     jobId?: string,
     currentIndex?: number,
-    totalRecipes?: number
+    totalRecipes?: number,
+    tierLevel?: 'starter' | 'professional' | 'enterprise' // Story 2.14: Tier assignment parameter
   ): Promise<{ success: boolean; error?: string; recipeId?: number }> {
     try {
       const validation = await this.validateRecipe(recipe);
@@ -214,7 +216,7 @@ export class RecipeGeneratorService {
       const imageUrl = PLACEHOLDER_IMAGE_URL;
 
       // ✅ Save recipe to database FIRST
-      const result = await this.storeRecipe({ ...recipe, imageUrl });
+      const result = await this.storeRecipe({ ...recipe, imageUrl }, tierLevel || 'starter');
 
       if (result.success) {
         // Record success in progress tracker
@@ -295,7 +297,8 @@ export class RecipeGeneratorService {
   }
 
   private async storeRecipe(
-    recipe: GeneratedRecipe
+    recipe: GeneratedRecipe,
+    tierLevel: 'starter' | 'professional' | 'enterprise' = 'starter' // Story 2.14: Tier assignment
   ): Promise<{ success: boolean; error?: string; recipeId?: number }> {
     try {
       const recipeData: InsertRecipe = {
@@ -319,6 +322,7 @@ export class RecipeGeneratorService {
         imageUrl: recipe.imageUrl,
         sourceReference: 'AI Generated',
         isApproved: false,
+        tierLevel, // Story 2.14: Assign tier to recipe
       };
 
       const createdRecipe = await storage.createRecipe(recipeData);

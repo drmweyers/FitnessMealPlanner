@@ -153,6 +153,8 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
             saved.push({
               recipeId: createdRecipe.id,  // UUID string, not Number
               recipeName: createdRecipe.name,
+              recipeDescription: createdRecipe.description || '',
+              mealTypes: createdRecipe.mealTypes || [],
               success: true,
               imageUrl: createdRecipe.imageUrl || defaultImageUrl
             });
@@ -235,6 +237,8 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
         savedRecipes.push({
           recipeId: createdRecipe.id,  // UUID string, not Number
           recipeName: createdRecipe.name,
+          recipeDescription: createdRecipe.description || '',
+          mealTypes: createdRecipe.mealTypes || [],
           success: true,
           imageUrl: createdRecipe.imageUrl || defaultImageUrl
         });

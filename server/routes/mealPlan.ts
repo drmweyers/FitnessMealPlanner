@@ -7,6 +7,9 @@ import { nutritionalOptimizer } from '../services/nutritionalOptimizer';
 import { mealPlanScheduler } from '../services/mealPlanScheduler';
 import { mealPlanVariationService } from '../services/mealPlanVariationService';
 import { requireAuth } from '../middleware/auth';
+// TEMPORARILY DISABLED - Stripe integration incomplete
+// import { enforceUsageLimit, incrementUsage } from '../middleware/usageEnforcement';
+// import { trackMealPlanGeneration } from '../services/usageTracking';
 import { storage } from '../storage';
 import { db } from '../db';
 import { personalizedMealPlans } from '@shared/schema';
@@ -44,20 +47,30 @@ mealPlanRouter.post('/generate', requireAuth, async (req, res) => {
 
   try {
     const mealPlanService = new MealPlanGeneratorService();
-    
+
     console.log('Generating meal plan with params:', mealPlanParams);
     const mealPlan = await mealPlanService.generateMealPlan(mealPlanParams, userId);
 
     console.log('Calculating nutrition for generated meal plan...');
     const nutrition = mealPlanService.calculateMealPlanNutrition(mealPlan);
 
+    // Track successful meal plan generation
+    // TEMPORARILY DISABLED - Stripe integration incomplete
+    // await incrementUsage(userId);
+    // await trackMealPlanGeneration(userId, mealPlan.id || 'unknown', {
+    //   planName: mealPlan.planName,
+    //   daysCount: mealPlanParams.numberOfDays,
+    //   generationMethod: 'manual',
+    // });
+
     console.log('Meal plan generated successfully.');
-    res.json({ 
+    res.json({
       mealPlan,
       nutrition,
       message: 'Meal plan generated successfully',
       completed: true,
       timestamp: new Date().toISOString(),
+      usageInfo: (req as any).usageInfo, // Include usage info from middleware
     });
 
   } catch (error) {
@@ -84,7 +97,7 @@ mealPlanRouter.post('/generate-intelligent', requireAuth, async (req, res) => {
 
   try {
     console.log('[Intelligent API] Generating intelligent meal plan with params:', mealPlanParams);
-    
+
     // Generate intelligent meal plan with AI optimization
     const mealPlan = await intelligentMealPlanGenerator.generateIntelligentMealPlan(
       mealPlanParams,
@@ -96,7 +109,7 @@ mealPlanRouter.post('/generate-intelligent', requireAuth, async (req, res) => {
 
     // Get customer preferences for additional context
     const customerPrefs = await customerPreferenceService.getCustomerPreferences(mealPlanParams.clientName || '');
-    const preferenceAnalysis = customerPrefs ? 
+    const preferenceAnalysis = customerPrefs ?
       customerPreferenceService.generatePreferenceAnalysis(customerPrefs) : null;
 
     // Create intelligent schedule if requested
@@ -112,8 +125,18 @@ mealPlanRouter.post('/generate-intelligent', requireAuth, async (req, res) => {
       }
     }
 
+    // Track successful meal plan generation
+    // TEMPORARILY DISABLED - Stripe integration incomplete
+    // await incrementUsage(userId);
+    // await trackMealPlanGeneration(userId, mealPlan.id || 'unknown', {
+    //   customerId: mealPlanParams.customerId,
+    //   planName: mealPlan.planName,
+    //   daysCount: mealPlanParams.numberOfDays,
+    //   generationMethod: 'ai',
+    // });
+
     console.log('[Intelligent API] Intelligent meal plan generated successfully.');
-    res.json({ 
+    res.json({
       mealPlan,
       nutrition,
       schedule: schedule,
@@ -128,6 +151,7 @@ mealPlanRouter.post('/generate-intelligent', requireAuth, async (req, res) => {
       message: 'Intelligent meal plan generated successfully with AI optimization',
       completed: true,
       timestamp: new Date().toISOString(),
+      usageInfo: (req as any).usageInfo, // Include usage info from middleware
     });
 
   } catch (error) {

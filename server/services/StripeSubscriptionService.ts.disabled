@@ -1,0 +1,439 @@
+/**
+ * Stripe Subscription Service
+ *
+ * Handles Stripe Subscriptions API integration for 3-tier system.
+ * Canonical Source: docs/TIER_SOURCE_OF_TRUTH.md v2.0
+ *
+ * Features:
+ * - Checkout Session creation for subscriptions
+ * - Subscription upgrades/downgrades with proration
+ * - Cancellation scheduling (at period end)
+ * - Trial period management
+ *
+ * Prerequisites:
+ * - npm install stripe
+ * - Set STRIPE_SECRET_KEY in environment variables
+ * - Set STRIPE_WEBHOOK_SECRET in environment variables
+ * - Create Stripe Price IDs for all tiers and AI plans
+ */
+
+import Stripe from 'stripe';
+import { db } from '../db';
+import { eq, and } from 'drizzle-orm';
+import {
+  trainerSubscriptions,
+  subscriptionItems,
+  paymentLogs,
+  users,
+  InsertTrainerSubscription,
+  InsertSubscriptionItem,
+  InsertPaymentLog,
+} from '../../shared/schema';
+import { entitlementsService } from './EntitlementsService';
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+}
+
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2024-12-18.acacia',
+});
+
+export interface PriceConfig {
+  tier: 'starter' | 'professional' | 'enterprise';
+  stripePriceId: string;
+  amount: number;
+  currency: string;
+  interval: 'month' | 'year';
+}
+
+export interface CreateCheckoutSessionParams {
+  trainerId: string;
+  tier: 'starter' | 'professional' | 'enterprise';
+  successUrl: string;
+  cancelUrl: string;
+  trialPeriodDays?: number;
+}
+
+export interface UpgradeSubscriptionParams {
+  trainerId: string;
+  newTier: 'professional' | 'enterprise';
+  prorationBehavior?: 'create_prorations' | 'none';
+}
+
+export interface SubscribeAiParams {
+  trainerId: string;
+  aiPlan: 'starter' | 'professional' | 'enterprise';
+}
+
+export class StripeSubscriptionService {
+  // Stripe Price IDs (these should be set from environment or config)
+  // In production, fetch from Stripe API or configuration service
+  private readonly PRICE_IDS = {
+    tier: {
+      starter: process.env.STRIPE_PRICE_STARTER || 'price_starter_monthly',
+      professional: process.env.STRIPE_PRICE_PROFESSIONAL || 'price_professional_monthly',
+      enterprise: process.env.STRIPE_PRICE_ENTERPRISE || 'price_enterprise_monthly',
+    },
+    ai: {
+      starter: process.env.STRIPE_PRICE_AI_STARTER || 'price_ai_starter_monthly',
+      professional: process.env.STRIPE_PRICE_AI_PROFESSIONAL || 'price_ai_professional_monthly',
+      enterprise: process.env.STRIPE_PRICE_AI_ENTERPRISE || 'price_ai_enterprise_monthly',
+    },
+  };
+
+  /**
+   * Create or get Stripe customer for trainer
+   */
+  private async getOrCreateStripeCustomer(trainerId: string): Promise<string> {
+    // Check if trainer already has a Stripe customer ID
+    const existingSubscription = await db.query.trainerSubscriptions.findFirst({
+      where: eq(trainerSubscriptions.trainerId, trainerId),
+    });
+
+    if (existingSubscription?.stripeCustomerId) {
+      return existingSubscription.stripeCustomerId;
+    }
+
+    // Get trainer email
+    const trainer = await db.query.users.findFirst({
+      where: eq(users.id, trainerId),
+    });
+
+    if (!trainer) {
+      throw new Error('Trainer not found');
+    }
+
+    // Create new Stripe customer
+    const customer = await stripe.customers.create({
+      email: trainer.email,
+      metadata: {
+        trainerId,
+        role: 'trainer',
+      },
+    });
+
+    return customer.id;
+  }
+
+  /**
+   * Create Checkout Session for new subscription
+   */
+  async createCheckoutSession(params: CreateCheckoutSessionParams): Promise<Stripe.Checkout.Session> {
+    const { trainerId, tier, successUrl, cancelUrl, trialPeriodDays = 14 } = params;
+
+    // Get or create Stripe customer
+    const stripeCustomerId = await this.getOrCreateStripeCustomer(trainerId);
+
+    // Get price ID for tier
+    const priceId = this.PRICE_IDS.tier[tier];
+
+    // Create Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      subscription_data: {
+        trial_period_days: trialPeriodDays,
+        metadata: {
+          trainerId,
+          tier,
+        },
+      },
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      allow_promotion_codes: true,
+      billing_address_collection: 'required',
+      metadata: {
+        trainerId,
+        tier,
+      },
+    });
+
+    return session;
+  }
+
+  /**
+   * Upgrade or downgrade subscription
+   */
+  async upgradeSubscription(params: UpgradeSubscriptionParams): Promise<Stripe.Subscription> {
+    const { trainerId, newTier, prorationBehavior = 'create_prorations' } = params;
+
+    // Get current subscription
+    const currentSubscription = await db.query.trainerSubscriptions.findFirst({
+      where: eq(trainerSubscriptions.trainerId, trainerId),
+    });
+
+    if (!currentSubscription) {
+      throw new Error('No active subscription found');
+    }
+
+    // Get current subscription items
+    const currentItems = await db.query.subscriptionItems.findMany({
+      where: and(
+        eq(subscriptionItems.subscriptionId, currentSubscription.id),
+        eq(subscriptionItems.kind, 'tier')
+      ),
+    });
+
+    if (currentItems.length === 0) {
+      throw new Error('No tier subscription item found');
+    }
+
+    const currentItem = currentItems[0];
+
+    // Get new price ID
+    const newPriceId = this.PRICE_IDS.tier[newTier];
+
+    // Update Stripe subscription
+    const updatedSubscription = await stripe.subscriptions.update(
+      currentSubscription.stripeSubscriptionId,
+      {
+        items: [
+          {
+            id: currentItem.stripeSubscriptionItemId,
+            price: newPriceId,
+          },
+        ],
+        proration_behavior: prorationBehavior,
+        metadata: {
+          trainerId,
+          tier: newTier,
+          previousTier: currentSubscription.tier,
+        },
+      }
+    );
+
+    // Update will be reflected in database via webhook
+    return updatedSubscription;
+  }
+
+  /**
+   * Schedule subscription cancellation at period end
+   */
+  async cancelSubscription(trainerId: string, cancelAtPeriodEnd: boolean = true): Promise<Stripe.Subscription> {
+    const subscription = await db.query.trainerSubscriptions.findFirst({
+      where: eq(trainerSubscriptions.trainerId, trainerId),
+    });
+
+    if (!subscription) {
+      throw new Error('No active subscription found');
+    }
+
+    const updated = await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+      cancel_at_period_end: cancelAtPeriodEnd,
+    });
+
+    // Update database
+    await db
+      .update(trainerSubscriptions)
+      .set({
+        cancelAtPeriodEnd,
+        updatedAt: new Date(),
+      })
+      .where(eq(trainerSubscriptions.id, subscription.id));
+
+    // Invalidate entitlements cache
+    await entitlementsService.invalidateCache(trainerId);
+
+    return updated;
+  }
+
+  /**
+   * Add AI subscription to existing tier subscription
+   */
+  async subscribeAi(params: SubscribeAiParams): Promise<Stripe.Subscription> {
+    const { trainerId, aiPlan } = params;
+
+    // Get current subscription
+    const subscription = await db.query.trainerSubscriptions.findFirst({
+      where: eq(trainerSubscriptions.trainerId, trainerId),
+    });
+
+    if (!subscription) {
+      throw new Error('No active tier subscription found. Must have active tier before adding AI.');
+    }
+
+    // Check if AI subscription already exists
+    const existingAiItem = await db.query.subscriptionItems.findFirst({
+      where: and(
+        eq(subscriptionItems.subscriptionId, subscription.id),
+        eq(subscriptionItems.kind, 'ai')
+      ),
+    });
+
+    if (existingAiItem) {
+      throw new Error('AI subscription already exists');
+    }
+
+    // Get AI price ID
+    const aiPriceId = this.PRICE_IDS.ai[aiPlan];
+
+    // Add AI subscription item to existing Stripe subscription
+    const updatedSubscription = await stripe.subscriptions.update(
+      subscription.stripeSubscriptionId,
+      {
+        items: [
+          {
+            price: aiPriceId,
+          },
+        ],
+        proration_behavior: 'create_prorations',
+        metadata: {
+          trainerId,
+          aiPlan,
+        },
+      }
+    );
+
+    // AI subscription item will be added to database via webhook
+
+    return updatedSubscription;
+  }
+
+  /**
+   * Cancel AI subscription (keep tier subscription)
+   */
+  async cancelAiSubscription(trainerId: string): Promise<Stripe.Subscription> {
+    // Get current subscription
+    const subscription = await db.query.trainerSubscriptions.findFirst({
+      where: eq(trainerSubscriptions.trainerId, trainerId),
+    });
+
+    if (!subscription) {
+      throw new Error('No active subscription found');
+    }
+
+    // Get AI subscription item
+    const aiItem = await db.query.subscriptionItems.findFirst({
+      where: and(
+        eq(subscriptionItems.subscriptionId, subscription.id),
+        eq(subscriptionItems.kind, 'ai')
+      ),
+    });
+
+    if (!aiItem) {
+      throw new Error('No AI subscription found');
+    }
+
+    // Remove AI item from Stripe subscription
+    const updatedSubscription = await stripe.subscriptions.update(
+      subscription.stripeSubscriptionId,
+      {
+        items: [
+          {
+            id: aiItem.stripeSubscriptionItemId,
+            deleted: true,
+          },
+        ],
+        proration_behavior: 'create_prorations',
+      }
+    );
+
+    // AI item removal will be reflected in database via webhook
+
+    return updatedSubscription;
+  }
+
+  /**
+   * Get Stripe subscription details
+   */
+  async getStripeSubscription(trainerId: string): Promise<Stripe.Subscription | null> {
+    const subscription = await db.query.trainerSubscriptions.findFirst({
+      where: eq(trainerSubscriptions.trainerId, trainerId),
+    });
+
+    if (!subscription) {
+      return null;
+    }
+
+    return await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
+  }
+
+  /**
+   * Create Stripe Billing Portal session
+   * Allows trainers to manage their subscription (update payment method, cancel, etc.)
+   */
+  async createBillingPortalSession(trainerId: string, returnUrl: string): Promise<Stripe.BillingPortal.Session> {
+    const subscription = await db.query.trainerSubscriptions.findFirst({
+      where: eq(trainerSubscriptions.trainerId, trainerId),
+    });
+
+    if (!subscription) {
+      throw new Error('No active subscription found');
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: subscription.stripeCustomerId,
+      return_url: returnUrl,
+    });
+
+    return session;
+  }
+
+  /**
+   * Get upcoming invoice for subscription changes (proration preview)
+   */
+  async getUpcomingInvoice(
+    trainerId: string,
+    newTier?: 'professional' | 'enterprise'
+  ): Promise<Stripe.Invoice | null> {
+    const subscription = await db.query.trainerSubscriptions.findFirst({
+      where: eq(trainerSubscriptions.trainerId, trainerId),
+    });
+
+    if (!subscription) {
+      return null;
+    }
+
+    // Get current tier item
+    const currentTierItem = await db.query.subscriptionItems.findFirst({
+      where: and(
+        eq(subscriptionItems.subscriptionId, subscription.id),
+        eq(subscriptionItems.kind, 'tier')
+      ),
+    });
+
+    if (!currentTierItem) {
+      return null;
+    }
+
+    if (newTier) {
+      // Preview invoice for tier change
+      const newPriceId = this.PRICE_IDS.tier[newTier];
+      return await stripe.invoices.retrieveUpcoming({
+        customer: subscription.stripeCustomerId,
+        subscription: subscription.stripeSubscriptionId,
+        subscription_items: [
+          {
+            id: currentTierItem.stripeSubscriptionItemId,
+            price: newPriceId,
+          },
+        ],
+      });
+    } else {
+      // Get next invoice without changes
+      return await stripe.invoices.retrieveUpcoming({
+        customer: subscription.stripeCustomerId,
+        subscription: subscription.stripeSubscriptionId,
+      });
+    }
+  }
+
+  /**
+   * Log payment event (called from webhook handler)
+   */
+  async logPaymentEvent(data: InsertPaymentLog): Promise<void> {
+    await db.insert(paymentLogs).values(data);
+  }
+}
+
+// Singleton instance
+export const stripeSubscriptionService = new StripeSubscriptionService();

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROI Calculator: How Much Will EvoFitMeals Save You? | Free Calculator</title>
+    <meta name="description" content="Calculate how much time and money you'll save with EvoFitMeals. See your break-even point and annual savings in seconds.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f9fafb; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+
+        /* Header */
+        .header { text-align: center; margin-bottom: 60px; }
+        .header h1 { font-size: 42px; font-weight: 700; margin-bottom: 20px; color: #1a1a1a; }
+        .header .subtitle { font-size: 20px; color: #666; max-width: 600px; margin: 0 auto; }
+
+        /* Calculator Card */
+        .calculator { background: white; border-radius: 16px; padding: 50px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 40px; }
+        .calculator h2 { font-size: 28px; margin-bottom: 30px; color: #1a1a1a; }
+
+        /* Form Group */
+        .form-group { margin-bottom: 30px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 12px; font-size: 16px; color: #374151; }
+        .form-group .help-text { font-size: 14px; color: #6b7280; margin-top: 6px; }
+        .form-group select, .form-group input { width: 100%; padding: 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; font-family: inherit; transition: border-color 0.3s; }
+        .form-group select:focus, .form-group input:focus { outline: none; border-color: #10b981; }
+
+        /* Slider */
+        .slider-container { position: relative; }
+        .slider { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 5px; background: #e5e7eb; outline: none; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #10b981; cursor: pointer; }
+        .slider::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #10b981; cursor: pointer; border: none; }
+        .slider-value { text-align: center; margin-top: 12px; font-size: 24px; font-weight: 700; color: #10b981; }
+
+        /* Calculate Button */
+        .calculate-btn { width: 100%; background: #10b981; color: white; padding: 18px; border: none; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer; transition: background 0.3s; margin-top: 30px; }
+        .calculate-btn:hover { background: #059669; }
+
+        /* Results Section */
+        .results { display: none; margin-top: 40px; }
+        .results.show { display: block; }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .result-card { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; border-radius: 12px; text-align: center; }
+        .result-card .label { font-size: 14px; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .result-card .value { font-size: 42px; font-weight: 700; margin-bottom: 8px; }
+        .result-card .subvalue { font-size: 16px; opacity: 0.9; }
+
+        /* Big ROI Card */
+        .roi-highlight { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 40px; border-radius: 12px; text-align: center; margin-bottom: 30px; }
+        .roi-highlight .label { font-size: 18px; opacity: 0.9; margin-bottom: 12px; }
+        .roi-highlight .value { font-size: 64px; font-weight: 700; margin-bottom: 12px; }
+        .roi-highlight .description { font-size: 18px; opacity: 0.9; }
+
+        /* Email Gate */
+        .email-gate { background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 40px; text-align: center; }
+        .email-gate h3 { font-size: 24px; margin-bottom: 16px; color: #065f46; }
+        .email-gate p { font-size: 16px; color: #047857; margin-bottom: 24px; }
+        .email-form { max-width: 500px; margin: 0 auto; display: flex; gap: 12px; }
+        .email-form input { flex: 1; padding: 14px; border: 2px solid #10b981; border-radius: 8px; font-size: 16px; }
+        .email-form button { background: #10b981; color: white; padding: 14px 32px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .email-form button:hover { background: #059669; }
+
+        /* CTA Section */
+        .cta-section { background: white; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .cta-section h3 { font-size: 28px; margin-bottom: 16px; }
+        .cta-section p { font-size: 18px; color: #666; margin-bottom: 30px; }
+        .cta-button { display: inline-block; background: #10b981; color: white; padding: 16px 40px; border-radius: 8px; text-decoration: none; font-size: 18px; font-weight: 600; }
+        .cta-button:hover { background: #059669; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 32px; }
+            .calculator { padding: 30px 20px; }
+            .result-card .value { font-size: 32px; }
+            .roi-highlight .value { font-size: 48px; }
+            .email-form { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>💰 Meal Planning ROI Calculator</h1>
+            <p class="subtitle">Calculate how much time and money EvoFitMeals will save you every week. See your break-even point and annual savings instantly.</p>
+        </div>
+
+        <!-- Calculator -->
+        <div class="calculator">
+            <h2>Your Current Situation</h2>
+
+            <!-- Question 1: Number of Clients -->
+            <div class="form-group">
+                <label for="clients">How many clients do you currently serve?</label>
+                <select id="clients">
+                    <option value="5">1-5 clients</option>
+                    <option value="10" selected>6-15 clients</option>
+                    <option value="20">16-30 clients</option>
+                    <option value="35">30+ clients</option>
+                </select>
+                <p class="help-text">Select your typical client load</p>
+            </div>
+
+            <!-- Question 2: Hours per Week -->
+            <div class="form-group">
+                <label for="hours">How many hours per week do you spend creating meal plans?</label>
+                <div class="slider-container">
+                    <input type="range" min="0" max="20" value="5" class="slider" id="hours">
+                    <div class="slider-value"><span id="hoursValue">5</span> hours/week</div>
+                </div>
+                <p class="help-text">Be honest—include research, calculations, and formatting time</p>
+            </div>
+
+            <!-- Question 3: Hourly Rate -->
+            <div class="form-group">
+                <label for="rate">What's your hourly rate (or what you could bill at)?</label>
+                <select id="rate">
+                    <option value="50">$50/hour</option>
+                    <option value="75" selected>$75/hour</option>
+                    <option value="100">$100/hour</option>
+                    <option value="125">$125/hour</option>
+                    <option value="150">$150/hour</option>
+                    <option value="200">$200/hour</option>
+                </select>
+                <p class="help-text">What could you earn in that time if you weren't doing meal plans?</p>
+            </div>
+
+            <!-- Question 4: Plan Tier -->
+            <div class="form-group">
+                <label for="tier">Which EvoFitMeals plan fits your needs?</label>
+                <select id="tier">
+                    <option value="199">Starter - $199 (9 clients)</option>
+                    <option value="299" selected>Professional - $299 (20 clients)</option>
+                    <option value="399">Enterprise - $399 (50 clients)</option>
+                </select>
+                <p class="help-text">One-time payment, use forever</p>
+            </div>
+
+            <!-- Calculate Button -->
+            <button class="calculate-btn" onclick="calculate()">Calculate My Savings 💰</button>
+
+            <!-- Results -->
+            <div class="results" id="results">
+                <!-- Weekly Savings -->
+                <div class="results-grid">
+                    <div class="result-card">
+                        <div class="label">Time Saved</div>
+                        <div class="value" id="timeSaved">0</div>
+                        <div class="subvalue">hours/week</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="label">Weekly Savings</div>
+                        <div class="value" id="weeklySavings">$0</div>
+                        <div class="subvalue">in opportunity cost</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="label">Annual Savings</div>
+                        <div class="value" id="annualSavings">$0</div>
+                        <div class="subvalue">per year</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="label">Break Even</div>
+                        <div class="value" id="breakEven">0</div>
+                        <div class="subvalue">weeks</div>
+                    </div>
+                </div>
+
+                <!-- Big ROI -->
+                <div class="roi-highlight">
+                    <div class="label">Your First-Year ROI</div>
+                    <div class="value" id="roiPercent">0%</div>
+                    <div class="description">That's <span id="roiMultiple">0</span>× your investment back in Year 1 alone</div>
+                </div>
+
+                <!-- Email Gate -->
+                <div class="email-gate">
+                    <h3>📧 Get Your Personalized ROI Report</h3>
+                    <p>Enter your email to receive a detailed PDF report with your savings breakdown, implementation tips, and a special discount code.</p>
+                    <form class="email-form" onsubmit="return submitEmail(event)">
+                        <input type="email" id="email" placeholder="your.email@example.com" required>
+                        <button type="submit">Get Free Report</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section">
+            <h3>Ready to Start Saving?</h3>
+            <p>Try EvoFitMeals free for 14 days. No credit card required. See the savings for yourself.</p>
+            <a href="/landing/index.html" class="cta-button">Start Free Trial</a>
+        </div>
+    </div>
+
+    <script>
+        // Update slider value display
+        const hoursSlider = document.getElementById('hours');
+        const hoursValue = document.getElementById('hoursValue');
+        hoursSlider.oninput = function() {
+            hoursValue.textContent = this.value;
+        };
+
+        // Calculate ROI
+        function calculate() {
+            // Get inputs
+            const hours = parseFloat(document.getElementById('hours').value);
+            const rate = parseFloat(document.getElementById('rate').value);
+            const tier = parseFloat(document.getElementById('tier').value);
+
+            // Calculations
+            const timeSaved = hours - 1; // Assume 1 hour/week with EvoFitMeals
+            const weeklySavings = timeSaved * rate;
+            const annualSavings = weeklySavings * 52;
+            const breakEven = Math.ceil(tier / weeklySavings);
+            const roi = ((annualSavings - tier) / tier * 100).toFixed(0);
+            const roiMultiple = (annualSavings / tier).toFixed(1);
+
+            // Update display
+            document.getElementById('timeSaved').textContent = timeSaved.toFixed(1);
+            document.getElementById('weeklySavings').textContent = '$' + weeklySavings.toFixed(0);
+            document.getElementById('annualSavings').textContent = '$' + annualSavings.toLocaleString();
+            document.getElementById('breakEven').textContent = breakEven;
+            document.getElementById('roiPercent').textContent = roi + '%';
+            document.getElementById('roiMultiple').textContent = roiMultiple;
+
+            // Show results
+            document.getElementById('results').classList.add('show');
+
+            // Scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Handle email submission
+        function submitEmail(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+
+            // In production, send to your email marketing platform
+            // For now, just show success message
+            alert('Success! Check your email for your personalized ROI report.\n\n(In production, this would trigger ConvertKit automation)');
+
+            // Track conversion
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'generate_lead', {
+                    'event_category': 'ROI Calculator',
+                    'event_label': 'Email Captured'
+                });
+            }
+
+            return false;
+        }
+
+        // Track calculator usage
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'page_view', {
+                'page_title': 'ROI Calculator',
+                'page_location': window.location.href
+            });
+        }
+    </script>
+</body>
+</html>

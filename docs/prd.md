@@ -395,6 +395,385 @@ so that the platform operates reliably for all users.
 
 ---
 
+## Epic 2: 3-Tier Payment System with Recipe Database Access
+
+**Epic Goal**: Implement a comprehensive 3-tier one-time payment system that monetizes the platform through Stripe Checkout, provides differentiated feature access across tiers, and implements progressive recipe database access with monthly growth.
+
+**Business Value**: Establishes recurring revenue through one-time lifetime payments, creates clear upgrade paths for customers, and differentiates platform value through tiered recipe access and feature sets.
+
+**Implementation Status**: ✅ COMPLETE (February 1, 2025)
+
+### Story 2.1: Stripe One-Time Payment Integration
+
+As a **trainer**,
+I want to purchase a tier through Stripe's secure checkout with a single lifetime payment,
+so that I can access tier-specific features without recurring billing.
+
+#### Acceptance Criteria
+
+1. System integrates with Stripe Checkout for one-time payments
+2. Three tier options available: Starter ($199), Professional ($299), Enterprise ($399)
+3. Stripe Checkout session creates redirect-based payment flow
+4. Successful payments redirect to success URL with confirmation
+5. Failed/canceled payments redirect to cancel URL
+6. Webhook receives and validates Stripe payment events
+7. Payment Intent IDs stored for audit trail and refund processing
+
+#### Integration Verification
+
+**IV1**: Verify Stripe webhook signature validation prevents unauthorized tier grants
+**IV2**: Confirm payment processing completes without impacting existing user authentication
+**IV3**: Validate one-time payment model correctly grants lifetime access
+
+### Story 2.2: Tier-Based Feature Gating
+
+As a **trainer**,
+I want features to be enabled/disabled based on my purchased tier,
+so that I can access appropriate functionality for my subscription level.
+
+#### Acceptance Criteria
+
+1. Server-side middleware enforces feature access (returns 403 for unauthorized)
+2. `requireFeature()` middleware validates tier entitlements on API calls
+3. Frontend `FeatureGate` component validates access before rendering
+4. Upgrade prompts displayed when accessing locked features
+5. Feature flags stored in entitlements service with Redis caching
+6. Cache invalidation occurs on tier purchases/upgrades
+7. Dynamic pricing endpoint provides tier information without authentication
+
+#### Integration Verification
+
+**IV1**: Verify frontend cannot bypass server-side feature restrictions
+**IV2**: Confirm Redis caching reduces database load for entitlement checks
+**IV3**: Validate feature access updates immediately after tier purchase
+
+### Story 2.3: Resource Usage Limits and Tracking
+
+As a **trainer**,
+I want my customer and meal plan usage tracked against my tier limits,
+so that the system enforces fair usage policies and prompts upgrades when needed.
+
+#### Acceptance Criteria
+
+1. `requireUsageLimit()` middleware prevents resource creation when limit reached
+2. `trackUsage()` middleware increments counters after successful operations
+3. Tier limits enforced: Starter (9 customers, 50 plans), Professional (20, 200), Enterprise (50, 500)
+4. Lifetime usage tracking persists across platform usage
+5. UsageLimitIndicator component displays real-time usage statistics
+6. Auto-refresh updates usage indicators every minute
+7. Upgrade prompts shown when approaching/reaching limits
+
+#### Integration Verification
+
+**IV1**: Verify usage counters accurately track resource creation
+**IV2**: Confirm limit enforcement prevents exceeded usage
+**IV3**: Validate usage statistics display correctly across all tiers
+
+### Story 2.4: Recipe Database Access Differentiation
+
+As a **trainer**,
+I want access to a tier-specific recipe database that grows monthly,
+so that I can offer varied meal plans appropriate to my tier level.
+
+#### Acceptance Criteria
+
+1. Recipe database access limits enforced: Starter (1,000), Professional (2,500), Enterprise (4,000)
+2. Monthly recipe additions: Starter (+25), Professional (+50), Enterprise (+100)
+3. Meal type varieties restricted by tier: 5/10/15+ types
+4. Recipe queries filtered by user's current tier
+5. Progressive access: Higher tiers see all lower-tier recipes
+6. Seasonal recipes available to Professional/Enterprise only
+7. Recipe access log tracks usage history
+
+#### Integration Verification
+
+**IV1**: Verify recipe queries correctly filter by tier access
+**IV2**: Confirm monthly recipe additions allocated to appropriate tiers
+**IV3**: Validate meal type filtering enforces tier restrictions
+
+### Story 2.5: Tier Upgrade Flow
+
+As a **trainer**,
+I want to upgrade to a higher tier by paying only the price difference,
+so that I can access more features without losing existing data.
+
+#### Acceptance Criteria
+
+1. Upgrade endpoint calculates price difference between tiers
+2. Upgrade preserves all existing customers, meal plans, and settings
+3. Recipe database access immediately increases to new tier
+4. Usage limits update to new tier thresholds
+5. Entitlements cache invalidated on successful upgrade
+6. Payment logs record upgrade transactions
+7. Row-level security maintains data isolation during upgrade
+
+#### Integration Verification
+
+**IV1**: Verify all existing data transfers correctly on upgrade
+**IV2**: Confirm recipe access expands to include new tier recipes
+**IV3**: Validate entitlements update immediately without logout required
+
+### Story 2.6: Entitlements Service with Redis Caching
+
+As a **system administrator**,
+I want tier entitlements cached with Redis to reduce database load,
+so that the platform performs efficiently at scale.
+
+#### Acceptance Criteria
+
+1. EntitlementsService caches tier data with 5-minute TTL
+2. Cache-aside pattern: Check Redis → Fallback to database → Cache result
+3. Cache invalidation on tier purchases, upgrades, or usage updates
+4. Cached data includes: tier level, features, limits, current usage
+5. Redis failure gracefully degrades to database-only operation
+6. Cache hit rate logged for monitoring
+7. Entitlement checks complete in <10ms with cache hit
+
+#### Integration Verification
+
+**IV1**: Verify Redis caching reduces database queries by ~85%
+**IV2**: Confirm cache invalidation maintains data consistency
+**IV3**: Validate graceful degradation when Redis unavailable
+
+### Story 2.7: Payment Audit Logging
+
+As a **system administrator**,
+I want all payment events logged for audit and compliance purposes,
+so that financial records are complete and traceable.
+
+#### Acceptance Criteria
+
+1. Payment logs table records all Stripe webhook events
+2. Log entries include: event type, amount, status, Payment Intent ID, metadata
+3. Successful payments logged with completion timestamp
+4. Failed payments logged with error reason codes
+5. Refunds recorded with original Payment Intent reference
+6. Admin dashboard displays payment history
+7. Export capability for financial reporting
+
+#### Integration Verification
+
+**IV1**: Verify all Stripe webhook events create corresponding log entries
+**IV2**: Confirm payment logs maintain referential integrity with tier purchases
+**IV3**: Validate admin dashboard correctly displays payment history
+
+### Story 2.8: Frontend Tier Selection Modal
+
+As a **trainer**,
+I want a clear comparison of all three tiers with dynamic pricing,
+so that I can make an informed purchase decision.
+
+#### Acceptance Criteria
+
+1. TierSelectionModal displays all three tiers side-by-side
+2. Dynamic pricing fetched from `/api/v1/public/pricing`
+3. Feature comparison shows all tier differences
+4. "Get Started" buttons redirect to Stripe Checkout
+5. Current tier badge displayed if user already purchased
+6. Upgrade pricing shown for existing tier holders
+7. Lifetime access badge prominently displayed
+
+#### Integration Verification
+
+**IV1**: Verify modal correctly identifies user's current tier
+**IV2**: Confirm Stripe Checkout redirect functions correctly
+**IV3**: Validate pricing updates dynamically without code changes
+
+### Story 2.9: Export Format Tier Restrictions
+
+As a **trainer**,
+I want export formats to be restricted based on my tier level,
+so that higher tiers provide more data export flexibility.
+
+#### Acceptance Criteria
+
+1. Starter tier: PDF export only
+2. Professional tier: PDF, CSV, and Excel export enabled
+3. Enterprise tier: All export formats including custom format builder
+4. Export middleware checks tier entitlements before generation
+5. Export buttons show/hide based on tier (locked badge for unavailable formats)
+6. Export requests return 403 if tier insufficient with upgrade prompt
+7. Export format selection UI reflects tier capabilities
+8. Export logs track format usage by tier
+
+#### Integration Verification
+
+**IV1**: Verify Starter tier receives 403 when attempting CSV export
+**IV2**: Confirm Professional tier can successfully export CSV and Excel
+**IV3**: Validate Enterprise tier custom export builder is functional
+
+---
+
+### Story 2.10: Analytics & Reporting Tier Differentiation
+
+As a **trainer**,
+I want analytics features differentiated by tier,
+so that higher tiers provide deeper business insights.
+
+#### Acceptance Criteria
+
+1. Starter tier: Basic statistics only (customer count, meal plan count, recipe usage)
+2. Professional tier: Analytics dashboard with charts, graphs, and trends
+3. Enterprise tier: Advanced analytics (predictions, AI-powered insights)
+4. Enterprise tier: Custom report builder with field selection
+5. Enterprise tier: Advanced data visualization (custom charts, export to BI tools)
+6. Analytics routes gated by `requireFeature('analytics_dashboard')` for Professional+
+7. Custom reports gated by `requireFeature('custom_reports')` for Enterprise
+8. UI components show/hide based on tier entitlements
+
+#### Integration Verification
+
+**IV1**: Verify Starter tier only sees basic stats page
+**IV2**: Confirm Professional tier can access analytics dashboard
+**IV3**: Validate Enterprise tier custom report builder generates correct reports
+
+---
+
+### Story 2.11: Bulk Operations & Workflow Automation
+
+As a **trainer**,
+I want bulk operations and automation tools based on my tier,
+so that higher tiers provide workflow efficiency.
+
+#### Acceptance Criteria
+
+1. Starter tier: Single recipe management only (no bulk operations)
+2. Professional tier: Bulk recipe operations (multi-select, batch edit, batch delete)
+3. Professional tier: Batch recipe import via CSV upload with preview
+4. Enterprise tier: Template library (basic → advanced → premium templates)
+5. Enterprise tier: Automation tools (auto-meal plan generation, scheduled tasks)
+6. Enterprise tier: Workflow automation panel with rule builder
+7. Bulk operation endpoints gated by `requireFeature('bulk_operations')` for Professional+
+8. Automation panel gated by `requireFeature('automation_tools')` for Enterprise
+
+#### Integration Verification
+
+**IV1**: Verify Starter tier bulk operations button shows locked state
+**IV2**: Confirm Professional tier can batch import recipes from CSV
+**IV3**: Validate Enterprise tier automation rules execute correctly
+
+---
+
+### Story 2.12: Branding & Customization System
+
+**PRIORITY: CRITICAL**
+
+As a **trainer**,
+I want to customize my branding based on my tier,
+so that I can present a professional or white-labeled experience to clients.
+
+#### Acceptance Criteria
+
+1. Professional tier: Logo upload to S3 storage (max 2MB, PNG/JPG/SVG)
+2. Professional tier: Custom color palette (primary, secondary, accent colors)
+3. Professional tier: Branding preview before save
+4. Professional tier: Branding applied to meal plan PDFs and exports
+5. Enterprise tier: White-label mode (removes all EvoFitMeals references)
+6. Enterprise tier: Custom domain configuration with DNS verification
+7. Database table: `trainer_branding_settings` with tier-based access
+8. API: `GET/PUT /api/v1/tiers/branding` (Professional+)
+9. API: `POST /api/v1/tiers/branding/logo` (Professional+)
+10. API: `POST /api/v1/tiers/branding/verify-domain` (Enterprise)
+11. Frontend: BrandingEditor component (Professional+)
+12. Frontend: WhiteLabelToggle component (Enterprise)
+13. Branding middleware enforces tier restrictions
+
+#### Integration Verification
+
+**IV1**: Verify Starter tier cannot access branding settings (403)
+**IV2**: Confirm Professional tier can upload logo and change colors
+**IV3**: Validate Enterprise tier white-label mode removes all EvoFitMeals branding
+**IV4**: Verify custom branding appears on generated PDFs
+
+---
+
+### Story 2.13: Storage Quotas by Tier
+
+As a **trainer**,
+I want storage quotas enforced based on my tier,
+so that storage costs are controlled and higher tiers provide more capacity.
+
+#### Acceptance Criteria
+
+1. Starter tier: 1GB storage quota
+2. Professional tier: 5GB storage quota
+3. Enterprise tier: 25GB storage quota
+4. Storage usage tracked per trainer in `trainer_storage_usage` table
+5. File upload blocked when quota exceeded with upgrade prompt
+6. Storage usage displayed in UsageLimitIndicator component
+7. Image upload middleware checks `checkStorageQuota()` before upload
+8. Storage tracking updated via `trackStorageUsage()` after successful upload
+9. Storage usage calculated from S3 file sizes
+10. Upgrade prompt when approaching storage limit (>80%)
+
+#### Integration Verification
+
+**IV1**: Verify file upload blocked when Starter tier exceeds 1GB quota
+**IV2**: Confirm Professional tier can upload files up to 5GB total
+**IV3**: Validate storage usage indicator displays correct quota and usage
+
+---
+
+### Story 2.14: Recipe Tier Filtering Technical Implementation
+
+**PRIORITY: CRITICAL**
+
+As a **trainer**,
+I want recipes filtered by my tier level automatically,
+so that I only see recipes I have access to based on my tier.
+
+#### Acceptance Criteria
+
+1. Recipe table has `tier_level` column (ENUM: starter, professional, enterprise)
+2. Recipe query middleware: `WHERE tier_level <= user.tier_level` (progressive access)
+3. Recipe count enforcement: Display accessible recipe count to user
+4. Monthly recipe allocation stored in `recipe_tier_access` table
+5. Cron job: Monthly script allocates new recipes to tiers (+25/+50/+100)
+6. Recipe seeding: Initial 1,000/2,500/4,000 recipes tagged by tier
+7. Admin recipe creator: Tier assignment dropdown when creating recipes
+8. Recipe search/filter respects tier access automatically
+9. Higher tiers see all lower-tier recipes (progressive access)
+10. Recipe allocation log tracks monthly additions per tier
+
+#### Integration Verification
+
+**IV1**: Verify Starter tier sees max 1,000 recipes
+**IV2**: Confirm Professional tier sees max 2,500 recipes (includes Starter recipes)
+**IV3**: Validate Enterprise tier sees max 4,000 recipes (includes all lower tiers)
+**IV4**: Verify monthly cron job allocates correct recipe counts
+
+---
+
+### Story 2.15: Meal Type Tier Enforcement
+
+**PRIORITY: CRITICAL**
+
+As a **trainer**,
+I want meal types restricted based on my tier,
+so that higher tiers provide more dietary variety.
+
+#### Acceptance Criteria
+
+1. Table: `recipe_type_categories` (name, tier_level, is_seasonal)
+2. Seed data: 17 meal types with tier assignments
+3. Starter tier: 5 meal types (Breakfast, Lunch, Dinner, Snack, Post-Workout)
+4. Professional tier: 10 meal types (Starter + Pre-Workout, Keto, Vegan, Paleo, High-Protein)
+5. Enterprise tier: 17 meal types (Professional + Gluten-Free, Low-Carb, Mediterranean, DASH, IF, Bodybuilding, Endurance)
+6. Recipe query: JOIN `recipe_type_categories` and filter by user tier
+7. Meal plan generator: Filter meal types by user tier in dropdown
+8. Recipe search: Meal type dropdown filtered by tier
+9. Frontend: Meal type badges show lock icon if tier insufficient
+10. Seasonal recipes flagged and restricted to Professional+ tiers
+
+#### Integration Verification
+
+**IV1**: Verify Starter tier meal type dropdown shows only 5 types
+**IV2**: Confirm Professional tier can select Keto, Vegan, Paleo meal types
+**IV3**: Validate Enterprise tier sees all 17 meal type options
+**IV4**: Verify seasonal recipes only appear for Professional and Enterprise tiers
+
+---
+
 ## Next Steps
 
 This comprehensive PRD provides the complete requirements foundation for the FitnessMealPlanner system. The documented user stories capture all existing functionality while establishing clear acceptance criteria and integration verification steps.

@@ -9,6 +9,7 @@ import { apiCostTracker } from '../services/apiCostTracker';
 import { progressTracker } from '../services/progressTracker';
 import { bmadRecipeService } from '../services/BMADRecipeService';
 import { sseManager } from '../services/utils/SSEManager';
+import { bmadImageMonitor } from '../services/monitoring/BMADImageGenerationMonitor';
 import { parseNaturalLanguageRecipeRequirements } from '../services/openai';
 import { intelligentMealPlanGenerator } from '../services/intelligentMealPlanGenerator';
 import { nanoid } from 'nanoid';
@@ -99,8 +100,9 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
 // Admin recipe generation with custom parameters (matches frontend expectations)
 adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
   try {
-    const { 
-      count, 
+    const {
+      count,
+      tierLevel, // Story 2.14: Tier assignment for generated recipes
       mealType,
       dietaryTag,
       maxPrepTime,
@@ -124,19 +126,21 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
     }
     
     // Create a progress tracking job
-    const jobId = progressTracker.createJob({ 
+    const jobId = progressTracker.createJob({
       totalRecipes: count,
-      metadata: { 
+      metadata: {
+        tierLevel, // Story 2.14: Track tier in job metadata
         mealType,
         dietaryTag,
         focusIngredient,
-        difficulty 
+        difficulty
       }
     });
-    
+
     // Map frontend parameters to backend format
     const generationOptions = {
       count,
+      tierLevel: tierLevel || 'starter', // Story 2.14: Default to starter tier if not specified
       mealTypes: mealType ? [mealType] : undefined,
       dietaryRestrictions: dietaryTag ? [dietaryTag] : undefined,
       targetCalories: maxCalories || minCalories ? (maxCalories + minCalories) / 2 : undefined,
@@ -584,6 +588,22 @@ adminRouter.get('/bmad-sse-stats', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('[SSE] Failed to fetch SSE stats:', error);
     res.status(500).json({ error: 'Failed to fetch SSE statistics' });
+  }
+});
+
+// Get image generation monitoring alerts
+adminRouter.get('/bmad-image-alerts', requireAdmin, async (req, res) => {
+  try {
+    const { limit, severity } = req.query;
+
+    const alerts = severity === 'critical'
+      ? bmadImageMonitor.getCriticalAlerts()
+      : bmadImageMonitor.getRecentAlerts(limit ? parseInt(limit as string) : 10);
+
+    res.json({ alerts });
+  } catch (error) {
+    console.error('[Monitor] Failed to fetch image generation alerts:', error);
+    res.status(500).json({ error: 'Failed to fetch monitoring alerts' });
   }
 });
 

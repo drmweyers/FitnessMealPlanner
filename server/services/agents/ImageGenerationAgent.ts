@@ -8,14 +8,16 @@ import { BaseAgent } from './BaseAgent';
 import { AgentResponse, RecipeImageMetadata } from './types';
 import OpenAI from 'openai';
 import crypto from 'crypto';
-import imghash from 'imghash';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const imghash = require('imghash');
 import { db } from '../../db';
 import { sql } from 'drizzle-orm';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 60000, // 1 minute timeout for image generation
-  maxRetries: 2
+  timeout: 120000, // 2 minutes timeout for image generation (DALL-E 3 can take 60-90s under load)
+  maxRetries: 3 // Increased from 2 to 3 for better reliability
 });
 
 interface ImageGenerationInput {
@@ -54,8 +56,8 @@ export class ImageGenerationAgent extends BaseAgent {
 
   constructor() {
     super('artist', {
-      retryLimit: 2,
-      backoffMs: 500,
+      retryLimit: 3, // Increased from 2 to 3 to match OpenAI client retries
+      backoffMs: 2000, // Increased from 500ms to 2s for better retry spacing
       fallbackBehavior: 'placeholder',
       notifyUser: true
     });
