@@ -15,6 +15,7 @@ import type { GenerationOptions, ChunkedGenerationResult, ProgressState } from '
 import { nanoid } from 'nanoid';
 import { storage } from '../storage';
 import { sseManager } from './utils/SSEManager';
+import { bmadImageMonitor } from './monitoring/BMADImageGenerationMonitor';
 
 interface BMADGenerationOptions extends GenerationOptions {
   enableImageGeneration?: boolean;
@@ -245,9 +246,17 @@ export class BMADRecipeService {
               sseManager.broadcastProgress(batchId, imagingProgress);
             }
 
+            console.log(`[BMAD] Preparing ${savedRecipes.length} recipes for image generation...`);
+            console.log('[BMAD] Sample recipe for image generation:', {
+              recipeId: savedRecipes[0]?.recipeId,
+              recipeName: savedRecipes[0]?.recipeName,
+              hasDescription: !!savedRecipes[0]?.recipeDescription,
+              hasMealTypes: !!savedRecipes[0]?.mealTypes
+            });
+
             const imageResponse = await this.imageAgent.generateBatchImages(
               savedRecipes.map((r: any) => ({
-                recipeId: r.recipeId,
+                recipeId: typeof r.recipeId === 'string' ? parseInt(r.recipeId, 10) : r.recipeId,
                 recipeName: r.recipeName,
                 recipeDescription: r.recipeDescription || '',
                 mealTypes: r.mealTypes || [],
@@ -256,11 +265,28 @@ export class BMADRecipeService {
               batchId
             );
 
+            console.log('[BMAD] Image generation response:', {
+              success: imageResponse.success,
+              totalGenerated: imageResponse.data?.totalGenerated,
+              totalFailed: imageResponse.data?.totalFailed,
+              placeholderCount: imageResponse.data?.placeholderCount,
+              errors: imageResponse.data?.errors
+            });
+
             if (imageResponse.success && imageResponse.data) {
               imagesGenerated += imageResponse.data.totalGenerated;
 
+              // Log if no images were generated
+              if (imageResponse.data.totalGenerated === 0) {
+                console.warn('[BMAD] WARNING: Zero images generated!');
+                console.warn('[BMAD] Errors:', imageResponse.data.errors);
+                allErrors.push(...imageResponse.data.errors);
+              }
+
               // Step 5: S3 Upload (if enabled)
-              if (options.enableS3Upload !== false) {
+              if (options.enableS3Upload !== false && imageResponse.data.images.length > 0) {
+                console.log(`[BMAD] Starting S3 upload for ${imageResponse.data.images.length} images...`);
+
                 const uploadResponse = await this.storageAgent.uploadBatchImages(
                   imageResponse.data.images.map(img => ({
                     recipeId: img.recipeId,
@@ -271,19 +297,52 @@ export class BMADRecipeService {
                   batchId
                 );
 
+                console.log('[BMAD] S3 upload response:', {
+                  success: uploadResponse.success,
+                  totalUploaded: uploadResponse.data?.totalUploaded,
+                  totalFailed: uploadResponse.data?.totalFailed,
+                  errors: uploadResponse.data?.errors
+                });
+
                 if (uploadResponse.success && uploadResponse.data) {
                   imagesUploaded += uploadResponse.data.totalUploaded;
 
+                  // Create mapping from recipeId (integer) to UUID
+                  const recipeIdToUuid = new Map<number, string>();
+                  for (const recipe of savedRecipes) {
+                    const numericId = typeof recipe.recipeId === 'string' ? parseInt(recipe.recipeId, 10) : recipe.recipeId;
+                    const uuidId = recipe.id || recipe.recipeId; // Use UUID if available
+                    recipeIdToUuid.set(numericId, String(uuidId));
+                  }
+
                   // Step 6: Update database with permanent URLs
+                  console.log(`[BMAD] Updating ${uploadResponse.data.uploads.length} recipes with permanent URLs...`);
+                  let updatedCount = 0;
                   for (const upload of uploadResponse.data.uploads) {
                     if (upload.wasUploaded) {
-                      await storage.updateRecipe(String(upload.recipeId), {
-                        imageUrl: upload.permanentImageUrl
-                      });
+                      const recipeUuid = recipeIdToUuid.get(upload.recipeId);
+                      if (recipeUuid) {
+                        console.log(`[BMAD] Updating recipe ${upload.recipeId} (UUID: ${recipeUuid}) with S3 URL: ${upload.permanentImageUrl}`);
+                        await storage.updateRecipe(recipeUuid, {
+                          imageUrl: upload.permanentImageUrl
+                        });
+                        updatedCount++;
+                      } else {
+                        console.error(`[BMAD] No UUID found for recipeId ${upload.recipeId}`);
+                      }
                     }
                   }
+                  console.log(`[BMAD] Updated ${updatedCount} recipes with S3 URLs`);
+                } else {
+                  console.error('[BMAD] S3 upload failed:', uploadResponse.error);
+                  allErrors.push(`S3 upload failed: ${uploadResponse.error}`);
                 }
+              } else if (options.enableS3Upload !== false) {
+                console.warn('[BMAD] Skipping S3 upload: no images to upload');
               }
+            } else {
+              console.error('[BMAD] Image generation failed:', imageResponse.error);
+              allErrors.push(`Image generation failed: ${imageResponse.error}`);
             }
           }
 
@@ -304,17 +363,55 @@ export class BMADRecipeService {
           const errorMsg = chunkError instanceof Error ? chunkError.message : String(chunkError);
           allErrors.push(`Chunk ${chunkIndex + 1}: ${errorMsg}`);
           console.error(`[BMAD] Chunk ${chunkIndex + 1} failed:`, chunkError);
+
+          // Broadcast chunk error via SSE so UI can display it
+          sseManager.broadcastError(batchId, {
+            error: `Recipe generation failed: ${errorMsg}`,
+            phase: 'error',
+            batchId,
+            chunkIndex: chunkIndex + 1
+          });
+
+          // Stop processing remaining chunks if critical error (like quota exceeded)
+          if (errorMsg.includes('quota') || errorMsg.includes('429')) {
+            console.error('[BMAD] Quota exceeded, stopping batch generation');
+            break;
+          }
         }
       }
 
       // Phase 3: Finalize
-      await this.progressAgent.updateProgress(batchId, { phase: 'complete' });
+      const hasErrors = allErrors.length > 0;
+      const hasRecipes = allSavedRecipes.length > 0;
+
+      // Set appropriate completion phase
+      if (hasRecipes && !hasErrors) {
+        await this.progressAgent.updateProgress(batchId, { phase: 'complete' });
+      } else if (hasRecipes && hasErrors) {
+        await this.progressAgent.updateProgress(batchId, {
+          phase: 'complete_with_errors',
+          recipesCompleted: allSavedRecipes.length,
+          totalRecipes: totalRecipes
+        });
+      } else {
+        // No recipes generated
+        await this.progressAgent.updateProgress(batchId, { phase: 'failed' });
+      }
 
       const finalProgress = this.progressAgent.getProgress(batchId);
 
-      // Broadcast completion via SSE
+      // Broadcast completion via SSE with error info
       if (finalProgress) {
-        sseManager.broadcastProgress(batchId, finalProgress);
+        if (hasErrors && !hasRecipes) {
+          // Generation completely failed
+          sseManager.broadcastError(batchId, {
+            error: allErrors.join('; '),
+            phase: 'failed',
+            batchId
+          });
+        } else {
+          sseManager.broadcastProgress(batchId, finalProgress);
+        }
       }
 
       const totalTime = Date.now() - startTime;
@@ -341,6 +438,20 @@ export class BMADRecipeService {
       console.log(`[BMAD] Complete! Generated ${allSavedRecipes.length}/${options.count} recipes in ${totalTime}ms`);
       console.log(`[BMAD] Images: ${imagesGenerated} generated, ${imagesUploaded} uploaded to S3`);
       console.log(`[BMAD] Nutrition: ${nutritionStats.validated} validated, ${nutritionStats.autoFixed} auto-fixed`);
+
+      // Monitor image generation health
+      const monitoringResult = bmadImageMonitor.monitorGenerationResult({
+        batchId,
+        savedRecipes: allSavedRecipes,
+        imagesGenerated,
+        imagesUploaded,
+        nutritionValidationStats: nutritionStats
+      });
+
+      // Log monitoring results
+      if (monitoringResult.alert) {
+        console.error(`[BMAD] ${monitoringResult.alert.severity.toUpperCase()}: ${monitoringResult.alert.message}`);
+      }
 
       // Broadcast final completion via SSE
       sseManager.broadcastCompletion(batchId, result);
