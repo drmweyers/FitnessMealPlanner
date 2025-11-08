@@ -6,6 +6,7 @@ export interface User {
   role: UserRole;
   name?: string;
   profilePicture?: string | null;
+  tierLevel?: 'starter' | 'professional' | 'enterprise'; // Story 2.14: User tier for recipe access
 }
 
 export interface LoginCredentials {

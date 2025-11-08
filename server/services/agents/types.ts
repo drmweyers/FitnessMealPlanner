@@ -124,10 +124,14 @@ export interface RecipeImageMetadata {
  * Saved recipe result from Database Orchestrator Agent
  */
 export interface SavedRecipeResult {
-  recipeId: number;
+  recipeId: string | number; // UUID string from database or number for compatibility
+  recipeName: string;
+  recipeDescription?: string;
+  mealTypes?: string[];
   success: boolean;
   error?: string;
-  recipe: ValidatedRecipe;
+  imageUrl?: string;
+  recipe?: ValidatedRecipe; // Optional - may not be included in all contexts
   imageMetadata?: RecipeImageMetadata;
 }
 

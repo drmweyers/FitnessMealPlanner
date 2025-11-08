@@ -14,6 +14,7 @@ export interface AdvancedSearchFilters {
   cookTime?: { min?: number; max?: number };
   difficulty?: string[];
   rating?: { min?: number };
+  tierLevel?: 'starter' | 'professional' | 'enterprise'; // Story 2.14: Tier filtering
   sortBy?: 'relevance' | 'rating' | 'newest' | 'prepTime' | 'calories';
   sortOrder?: 'asc' | 'desc';
   page?: number;
@@ -46,6 +47,7 @@ export class RecipeSearchService {
       cookTime,
       difficulty,
       rating,
+      tierLevel,
       sortBy = 'relevance',
       sortOrder = 'desc',
       page = 1,
@@ -58,6 +60,11 @@ export class RecipeSearchService {
     const conditions: any[] = [
       sql`${recipes.isApproved} = true` // Only approved recipes
     ];
+
+    // Story 2.14: Tier-based filtering (progressive access model)
+    if (tierLevel) {
+      conditions.push(sql`${recipes.tierLevel} <= ${tierLevel}::tier_level`);
+    }
 
     // Full-text search across name, description, and ingredients
     if (search && search.trim()) {

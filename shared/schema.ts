@@ -34,6 +34,13 @@ export const userRoleEnum = pgEnum("user_role", [
   "customer",
 ]);
 
+// Story 2.14: Tier level enum for progressive recipe access
+export const tierLevelEnum = pgEnum("tier_level", [
+  "starter",
+  "professional",
+  "enterprise",
+]);
+
 /**
  * Users Table
  *
@@ -238,11 +245,21 @@ export const recipes = pgTable("recipes", {
   imageUrl: varchar("image_url", { length: 500 }), // Generated or uploaded images
   sourceReference: varchar("source_reference", { length: 255 }), // Attribution for imported recipes
 
+  // Tier system fields (Story 2.14)
+  tierLevel: tierLevelEnum("tier_level").default("starter").notNull(), // Progressive access by tier
+  isSeasonal: boolean("is_seasonal").default(false).notNull(), // Seasonal recipes (Professional+)
+  allocatedMonth: varchar("allocated_month", { length: 7 }), // Monthly allocation tracking (YYYY-MM)
+
   // Metadata and workflow
   creationTimestamp: timestamp("creation_timestamp").defaultNow(),
   lastUpdatedTimestamp: timestamp("last_updated_timestamp").defaultNow(),
   isApproved: boolean("is_approved").default(false), // Content moderation flag
-});
+}, (table) => ({
+  tierLevelIdx: index("idx_recipes_tier_level").on(table.tierLevel),
+  tierApprovedIdx: index("idx_recipes_tier_approved").on(table.tierLevel, table.isApproved),
+  seasonalIdx: index("idx_recipes_seasonal").on(table.isSeasonal),
+  allocatedMonthIdx: index("idx_recipes_allocated_month").on(table.allocatedMonth),
+}));
 
 export const personalizedRecipes = pgTable("personalized_recipes", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -369,6 +386,9 @@ export const recipeFilterSchema = z.object({
   // Ingredient-based filters
   includeIngredients: z.array(z.string()).optional(), // Must contain these ingredients
   excludeIngredients: z.array(z.string()).optional(), // Must not contain these ingredients
+
+  // Story 2.14: Tier-based filtering (progressive access model)
+  tierLevel: z.enum(['starter', 'professional', 'enterprise']).optional(), // Filter by max tier level
 
   // Pagination and admin controls
   page: z.number().default(1),
@@ -1344,4 +1364,290 @@ export type UpdateGroceryListInput = z.infer<typeof updateGroceryListSchema>;
 export type GroceryListItemInput = z.infer<typeof groceryListItemSchema>;
 export type UpdateGroceryListItemInput = z.infer<typeof updateGroceryListItemSchema>;
 export type GenerateGroceryListFromMealPlanInput = z.infer<typeof generateGroceryListFromMealPlanSchema>;
+
+/**
+ * ========================================
+ * RECIPE TIER SYSTEM TABLES (Story 2.14)
+ * ========================================
+ */
+
+/**
+ * Recipe Tier Access Table
+ *
+ * Tracks monthly recipe allocations to each tier.
+ * Used for implementing the +25/+50/+100 monthly recipe additions.
+ */
+export const recipeTierAccess = pgTable("recipe_tier_access", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tier: tierLevelEnum("tier").notNull(),
+  allocationMonth: varchar("allocation_month", { length: 7 }).notNull(), // Format: 'YYYY-MM'
+  recipeCount: integer("recipe_count").default(0).notNull(),
+  allocationDate: timestamp("allocation_date").defaultNow().notNull(),
+}, (table) => ({
+  tierIdx: index("idx_recipe_tier_access_tier").on(table.tier),
+  monthIdx: index("idx_recipe_tier_access_month").on(table.allocationMonth),
+  tierMonthIdx: index("idx_recipe_tier_access_tier_month").on(table.tier, table.allocationMonth),
+  // Ensure one record per tier per month
+  uniqueTierMonth: index("recipe_tier_access_tier_month_unique").on(table.tier, table.allocationMonth),
+}));
+
+/**
+ * Recipe Type Categories Table
+ *
+ * Defines meal types available to each tier (5/10/17 types).
+ * Maps meal type names to minimum tier level required.
+ */
+export const recipeTypeCategories = pgTable("recipe_type_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 100 }).unique().notNull(),
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  tierLevel: tierLevelEnum("tier_level").notNull(),
+  isSeasonal: boolean("is_seasonal").default(false).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  tierIdx: index("idx_recipe_type_categories_tier").on(table.tierLevel),
+  seasonalIdx: index("idx_recipe_type_categories_seasonal").on(table.isSeasonal),
+}));
+
+// Type exports for tier system tables
+export type InsertRecipeTierAccess = typeof recipeTierAccess.$inferInsert;
+export type RecipeTierAccess = typeof recipeTierAccess.$inferSelect;
+
+export type InsertRecipeTypeCategory = typeof recipeTypeCategories.$inferInsert;
+export type RecipeTypeCategory = typeof recipeTypeCategories.$inferSelect;
+
+/**
+ * ========================================
+ * 3-TIER SUBSCRIPTION SYSTEM SCHEMA
+ * ========================================
+ *
+ * Monthly Stripe Subscriptions for trainer tiers + separate AI add-on subscriptions.
+ * Canonical Source: docs/TIER_SOURCE_OF_TRUTH.md v2.0
+ */
+
+// Subscription status enum
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "trialing",
+  "active",
+  "past_due",
+  "unpaid",
+  "canceled",
+]);
+
+// Subscription item kind enum
+export const subscriptionItemKindEnum = pgEnum("subscription_item_kind", [
+  "tier",
+  "ai",
+]);
+
+// Payment event type enum
+export const paymentEventTypeEnum = pgEnum("payment_event_type", [
+  "purchase",
+  "upgrade",
+  "downgrade",
+  "refund",
+  "chargeback",
+  "failed",
+]);
+
+// Payment status enum
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "pending",
+  "completed",
+  "failed",
+  "refunded",
+]);
+
+// Webhook event status enum
+export const webhookEventStatusEnum = pgEnum("webhook_event_status", [
+  "pending",
+  "processed",
+  "failed",
+]);
+
+/**
+ * Trainer Subscriptions Table
+ *
+ * Primary subscription record for each trainer.
+ * Stores Stripe subscription details and current tier status.
+ */
+export const trainerSubscriptions = pgTable("trainer_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  trainerId: uuid("trainer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }).notNull(),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }).notNull(),
+  tier: tierLevelEnum("tier").notNull(),
+  status: subscriptionStatusEnum("status").default("trialing").notNull(),
+  currentPeriodStart: timestamp("current_period_start").notNull(),
+  currentPeriodEnd: timestamp("current_period_end").notNull(),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false).notNull(),
+  trialEnd: timestamp("trial_end"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  trainerIdIdx: index("idx_trainer_subscriptions_trainer_id").on(table.trainerId),
+  trainerPeriodIdx: index("idx_trainer_subscriptions_trainer_period").on(table.trainerId, table.currentPeriodEnd),
+  statusIdx: index("idx_trainer_subscriptions_status").on(table.status),
+}));
+
+/**
+ * Subscription Items Table
+ *
+ * Tracks tier and AI subscriptions as separate items.
+ * Allows independent management of tier vs AI add-on.
+ */
+export const subscriptionItems = pgTable("subscription_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  subscriptionId: uuid("subscription_id")
+    .references(() => trainerSubscriptions.id, { onDelete: "cascade" })
+    .notNull(),
+  kind: subscriptionItemKindEnum("kind").notNull(),
+  stripePriceId: varchar("stripe_price_id", { length: 255 }).notNull(),
+  stripeSubscriptionItemId: varchar("stripe_subscription_item_id", { length: 255 }).notNull(),
+  status: subscriptionStatusEnum("status").default("active").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  subscriptionIdIdx: index("idx_subscription_items_subscription_id").on(table.subscriptionId),
+  kindIdx: index("idx_subscription_items_kind").on(table.kind),
+}));
+
+/**
+ * Tier Usage Tracking Table
+ *
+ * Usage counters per billing period for quota enforcement.
+ */
+export const tierUsageTracking = pgTable("tier_usage_tracking", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  trainerId: uuid("trainer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  customersCount: integer("customers_count").default(0).notNull(),
+  mealPlansCount: integer("meal_plans_count").default(0).notNull(),
+  aiGenerationsCount: integer("ai_generations_count").default(0).notNull(),
+  exportsCsvCount: integer("exports_csv_count").default(0).notNull(),
+  exportsExcelCount: integer("exports_excel_count").default(0).notNull(),
+  exportsPdfCount: integer("exports_pdf_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  trainerIdIdx: index("idx_tier_usage_tracking_trainer_id").on(table.trainerId),
+  trainerPeriodIdx: index("idx_tier_usage_tracking_trainer_period").on(table.trainerId, table.periodStart, table.periodEnd),
+  periodEndIdx: index("idx_tier_usage_tracking_period_end").on(table.trainerId, table.periodEnd),
+}));
+
+/**
+ * Payment Logs Table
+ *
+ * Immutable audit trail for all payment events.
+ */
+export const paymentLogs = pgTable("payment_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  trainerId: uuid("trainer_id")
+    .references(() => users.id, { onDelete: "set null" }),
+  eventType: paymentEventTypeEnum("event_type").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("usd").notNull(),
+  stripeInvoiceId: varchar("stripe_invoice_id", { length: 255 }),
+  stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
+  stripeChargeId: varchar("stripe_charge_id", { length: 255 }),
+  status: paymentStatusEnum("status").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, any>>().default({}),
+  occurredAt: timestamp("occurred_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  trainerIdIdx: index("idx_payment_logs_trainer_id").on(table.trainerId),
+  occurredAtIdx: index("idx_payment_logs_occurred_at").on(table.trainerId, table.occurredAt),
+  invoiceIdIdx: index("idx_payment_logs_invoice_id").on(table.stripeInvoiceId),
+}));
+
+/**
+ * Webhook Events Table
+ *
+ * Idempotent webhook processing store.
+ * Prevents duplicate processing of Stripe webhook events.
+ */
+export const webhookEvents = pgTable("webhook_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  eventId: varchar("event_id", { length: 255 }).unique().notNull(), // Stripe event ID
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  processedAt: timestamp("processed_at"),
+  status: webhookEventStatusEnum("status").default("pending").notNull(),
+  retryCount: integer("retry_count").default(0).notNull(),
+  errorMessage: text("error_message"),
+  payloadMetadata: jsonb("payload_metadata").$type<Record<string, any>>().default({}), // No PII
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  eventIdIdx: index("idx_webhook_events_event_id").on(table.eventId),
+  statusCreatedIdx: index("idx_webhook_events_status_created").on(table.status, table.createdAt),
+}));
+
+// Type exports for subscription system
+export type InsertTrainerSubscription = typeof trainerSubscriptions.$inferInsert;
+export type TrainerSubscription = typeof trainerSubscriptions.$inferSelect;
+
+export type InsertSubscriptionItem = typeof subscriptionItems.$inferInsert;
+export type SubscriptionItem = typeof subscriptionItems.$inferSelect;
+
+export type InsertTierUsageTracking = typeof tierUsageTracking.$inferInsert;
+export type TierUsageTracking = typeof tierUsageTracking.$inferSelect;
+
+export type InsertPaymentLog = typeof paymentLogs.$inferInsert;
+export type PaymentLog = typeof paymentLogs.$inferSelect;
+
+export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+
+// Extended types for frontend use
+export type TrainerSubscriptionWithUsage = TrainerSubscription & {
+  usage?: TierUsageTracking;
+  items?: SubscriptionItem[];
+};
+
+export type TierEntitlements = {
+  tier: "starter" | "professional" | "enterprise";
+  status: "trialing" | "active" | "past_due" | "unpaid" | "canceled";
+  features: {
+    analytics: boolean;
+    apiAccess: boolean;
+    bulkOperations: boolean;
+    customBranding: boolean;
+    exportFormats: ("pdf" | "csv" | "excel")[];
+  };
+  limits: {
+    customers: { max: number; used: number; percentage: number };
+    mealPlans: { max: number; used: number; percentage: number };
+  };
+  ai?: {
+    plan: "starter" | "professional" | "enterprise";
+    generationsRemaining: number;
+    resetDate: string;
+  };
+  billing: {
+    currentPeriodEnd: string;
+    cancelAtPeriodEnd: boolean;
+  };
+};
+
+// Validation schemas for subscription system
+export const createSubscriptionSchema = z.object({
+  tier: z.enum(["starter", "professional", "enterprise"]),
+});
+
+export const upgradeSubscriptionSchema = z.object({
+  tier: z.enum(["professional", "enterprise"]),
+});
+
+export const subscribeAiSchema = z.object({
+  plan: z.enum(["starter", "professional", "enterprise"]),
+});
+
+export type CreateSubscription = z.infer<typeof createSubscriptionSchema>;
+export type UpgradeSubscription = z.infer<typeof upgradeSubscriptionSchema>;
+export type SubscribeAi = z.infer<typeof subscribeAiSchema>;
 

@@ -1,0 +1,181 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - img
+  - heading "EvoFitMeals" [level=1]
+  - navigation:
+    - link "Admin":
+      - /url: /admin
+      - img
+      - text: Admin
+  - button:
+    - img
+  - button "AD":
+    - text: AD
+    - img
+- main:
+  - heading "Admin Dashboard" [level=1]
+  - paragraph: Manage recipes, users, and meal plan generation
+  - link "Analytics Dashboard":
+    - /url: /admin/analytics
+    - button "Analytics Dashboard":
+      - img
+      - text: Analytics Dashboard
+  - tablist:
+    - tab "Recipe Library" [selected]:
+      - img
+      - text: Recipe Library
+    - tab "Meal Plan Builder":
+      - img
+      - text: Meal Plan Builder
+    - tab "Bulk Generator":
+      - img
+      - text: Bulk Generator
+  - tabpanel "Recipe Library":
+    - heading "Recipe Library" [level=2]
+    - button "Generate Recipes":
+      - img
+      - text: Generate Recipes
+    - button "Review Queue (53)":
+      - img
+      - text: Review Queue (53)
+    - button "Export Data":
+      - img
+      - text: Export Data
+    - text: 
+    - textbox "Search recipes by name or ingredients..."
+    - button " Advanced Filters":
+      - text:  Advanced Filters
+      - img
+    - button "Cards":
+      - img
+      - text: Cards
+    - button "Table":
+      - img
+      - text: Table
+    - button "Select Mode":
+      - img
+      - text: Select Mode
+    - paragraph: Total Recipes
+    - paragraph: "2100"
+    - text: 
+    - paragraph: Approved
+    - paragraph: "2047"
+    - text: 
+    - paragraph: Pending Review
+    - paragraph: "53"
+    - text: 
+    - paragraph: Users
+    - paragraph: "0"
+    - text:  
+    - paragraph: Rice Cakes with Toppings
+    - button "Add to favorites":
+      - img
+    - text: Snack
+    - heading "Rice Cakes with Toppings" [level=3]
+    - text:  3 min  180 cal
+    - heading "Nutrition" [level=4]
+    - text: 180 Calories 10g Protein 24g Carbs 6g Fat 
+    - paragraph: Banana Protein Muffin
+    - button "Add to favorites":
+      - img
+    - text: Snack
+    - heading "Banana Protein Muffin" [level=3]
+    - text:  35 min  160 cal
+    - heading "Nutrition" [level=4]
+    - text: 160 Calories 12g Protein 22g Carbs 4g Fat 
+    - paragraph: Trail Mix
+    - button "Add to favorites":
+      - img
+    - text: Snack
+    - heading "Trail Mix" [level=3]
+    - text:  5 min  240 cal
+    - heading "Nutrition" [level=4]
+    - text: 240 Calories 10g Protein 24g Carbs 14g Fat 
+    - paragraph: Protein Bar
+    - button "Add to favorites":
+      - img
+    - text: Snack
+    - heading "Protein Bar" [level=3]
+    - text:  20 min  200 cal
+    - heading "Nutrition" [level=4]
+    - text: 200 Calories 15g Protein 20g Carbs 8g Fat 
+    - paragraph: Hummus Veggie Sticks
+    - button "Add to favorites":
+      - img
+    - text: Snack
+    - heading "Hummus Veggie Sticks" [level=3]
+    - text:  5 min  180 cal
+    - heading "Nutrition" [level=4]
+    - text: 180 Calories 8g Protein 22g Carbs 8g Fat 
+    - paragraph: Veggie Lasagna
+    - button "Add to favorites":
+      - img
+    - text: Dinner
+    - heading "Veggie Lasagna" [level=3]
+    - text:  75 min  380 cal
+    - heading "Nutrition" [level=4]
+    - text: 380 Calories 28g Protein 42g Carbs 12g Fat 
+    - paragraph: Pork Tenderloin with Brussels Sprouts
+    - button "Add to favorites":
+      - img
+    - text: Dinner
+    - heading "Pork Tenderloin with Brussels Sprouts" [level=3]
+    - text:  40 min  460 cal
+    - heading "Nutrition" [level=4]
+    - text: 460 Calories 48g Protein 28g Carbs 18g Fat 
+    - paragraph: Chicken Curry
+    - button "Add to favorites":
+      - img
+    - text: Dinner
+    - heading "Chicken Curry" [level=3]
+    - text:  50 min  520 cal
+    - heading "Nutrition" [level=4]
+    - text: 520 Calories 50g Protein 48g Carbs 16g Fat 
+    - paragraph: Cod with Quinoa
+    - button "Add to favorites":
+      - img
+    - text: Dinner
+    - heading "Cod with Quinoa" [level=3]
+    - text:  30 min  420 cal
+    - heading "Nutrition" [level=4]
+    - text: 420 Calories 48g Protein 40g Carbs 10g Fat 
+    - paragraph: Grilled Steak with Sweet Potato
+    - button "Add to favorites":
+      - img
+    - text: Dinner
+    - heading "Grilled Steak with Sweet Potato" [level=3]
+    - text:  30 min  580 cal
+    - heading "Nutrition" [level=4]
+    - text: 580 Calories 52g Protein 45g Carbs 22g Fat 
+    - paragraph: Cobb Salad
+    - button "Add to favorites":
+      - img
+    - text: Lunch
+    - heading "Cobb Salad" [level=3]
+    - text:  30 min  480 cal
+    - heading "Nutrition" [level=4]
+    - text: 480 Calories 45g Protein 18g Carbs 28g Fat 
+    - paragraph: Asian Chicken Lettuce Wraps
+    - button "Add to favorites":
+      - img
+    - text: Lunch
+    - heading "Asian Chicken Lettuce Wraps" [level=3]
+    - text:  27 min  320 cal
+    - heading "Nutrition" [level=4]
+    - text: "320 Calories 38g Protein 22g Carbs 10g Fat Page 1 of 171 Per page:"
+    - combobox
+    - text: "Go to:"
+    - spinbutton
+    - button "Back" [disabled]
+    - button "Next"
+- contentinfo:
+  - paragraph: © 2025 EvoFitMeals. All rights reserved.
+  - link "Privacy Policy":
+    - /url: /privacy
+  - link "Terms of Service":
+    - /url: /terms
+  - link "Contact":
+    - /url: /contact
+```

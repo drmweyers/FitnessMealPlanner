@@ -219,7 +219,7 @@ authRouter.post('/login', authRateLimiter, async (req: Request, res: Response) =
       expires: refreshTokenExpires,
     });
 
-    res.json({ 
+    res.json({
       status: 'success',
       data: {
         accessToken,
@@ -227,7 +227,8 @@ authRouter.post('/login', authRateLimiter, async (req: Request, res: Response) =
           id: user.id,
           email: user.email,
           role: user.role,
-          profilePicture: user.profilePicture
+          profilePicture: user.profilePicture,
+          tierLevel: user.tierLevel || 'starter' // Story 2.14: Include tier for recipe access
         }
       }
     });
@@ -351,7 +352,8 @@ authRouter.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
           id: user.id,
           email: user.email,
           role: user.role,
-          profilePicture: user.profilePicture
+          profilePicture: user.profilePicture,
+          tierLevel: user.tierLevel || 'starter' // Story 2.14: Include tier for recipe access
         }
       }
     });

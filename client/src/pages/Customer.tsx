@@ -26,6 +26,7 @@ import { useToast } from '../hooks/use-toast';
 import ProgressTracking from '../components/ProgressTracking';
 import GroceryListWrapper from '../components/GroceryListWrapper';
 import { DeleteAccountSection } from '../components/DeleteAccountSection';
+import { TierAccessBadge } from '../components/TierAccessBadge';
 
 // Enhanced MealPlan includes the flattened properties from the API
 interface EnhancedMealPlan extends MealPlan {
@@ -332,6 +333,10 @@ const Customer = ({ initialTab }: CustomerProps = {}) => {
             <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
               Track your progress and discover personalized meal plans crafted by expert trainers
             </p>
+            {/* Story 2.14: Display tier access information */}
+            <div className="mt-4 flex justify-center">
+              <TierAccessBadge />
+            </div>
           </div>
 
           {/* Tabs Component */}

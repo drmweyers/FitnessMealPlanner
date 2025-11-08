@@ -1,20 +1,20 @@
 # Hero Section
 
 ## Badge
-🚀 Used by 10,000+ Fitness Professionals
+💰 Pay Once. Plan Forever. Save $2,000+
 
 ## Headline
-Scale Your Nutrition Business
-with AI-Powered Meal Planning
+Turn Nutrition Coaching Into
+a Scalable Revenue Stream
 
 ## Subheadline
-Generate 500+ personalized recipes in 60 seconds. Save 20+ hours per week while managing 3X more clients. Transform how you deliver nutrition coaching.
+Automate custom meal plans in 60 seconds. Serve 3X more clients without working weekends. One-time payment—no monthly fees ever.
 
 ## Primary Button
-Start Your Free 14-Day Trial
+See How It Works
 
 ## Secondary Button
-Watch 2-Min Demo
+Calculate Your Savings
 
 ## Bottom Text
-No credit card required • Setup in 60 seconds
+$199-$399 one-time • Save $2,000+ vs subscriptions

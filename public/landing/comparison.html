@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvoFitMeals vs Competitors | Save $2,000+ vs Subscriptions</title>
+    <meta name="description" content="See how EvoFitMeals compares to Foodzilla, Eat This Much, and Strongr Fastr. One-time payment vs monthly subscriptions. Save $2,000+ over 10 years.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+        /* Header */
+        .header { text-align: center; margin-bottom: 60px; }
+        .header h1 { font-size: 42px; font-weight: 700; margin-bottom: 20px; color: #1a1a1a; }
+        .header .subtitle { font-size: 20px; color: #666; max-width: 700px; margin: 0 auto 30px; }
+        .header .savings-badge { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 24px; border-radius: 25px; font-weight: 600; font-size: 18px; }
+
+        /* Quick Comparison */
+        .quick-comparison { background: #f9fafb; border-radius: 12px; padding: 40px; margin-bottom: 60px; }
+        .quick-comparison h2 { font-size: 28px; margin-bottom: 30px; text-align: center; }
+        .comparison-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .comparison-card { background: white; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .comparison-card.winner { border: 3px solid #10b981; position: relative; }
+        .comparison-card.winner::before { content: '⭐ BEST VALUE'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 4px 16px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+        .comparison-card h3 { font-size: 20px; margin-bottom: 8px; }
+        .comparison-card .price { font-size: 32px; font-weight: 700; color: #10b981; margin: 16px 0; }
+        .comparison-card .price-detail { font-size: 14px; color: #666; margin-bottom: 16px; }
+        .comparison-card .savings { background: #fef3c7; color: #92400e; padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+        .comparison-card ul { list-style: none; }
+        .comparison-card li { padding: 8px 0; font-size: 14px; }
+        .comparison-card li::before { content: '✓ '; color: #10b981; font-weight: 700; }
+        .comparison-card.competitor li::before { content: '• '; color: #666; }
+
+        /* Feature Comparison Table */
+        .feature-table { margin-bottom: 60px; }
+        .feature-table h2 { font-size: 28px; margin-bottom: 30px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f9fafb; font-weight: 600; font-size: 14px; text-transform: uppercase; color: #666; }
+        td:first-child { font-weight: 500; }
+        .check { color: #10b981; font-weight: 700; font-size: 18px; }
+        .cross { color: #ef4444; font-weight: 700; font-size: 18px; }
+        .highlight { background: #f0fdf4; font-weight: 600; }
+
+        /* Savings Calculator */
+        .savings-section { background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 12px; padding: 60px 40px; text-align: center; margin-bottom: 60px; }
+        .savings-section h2 { font-size: 32px; margin-bottom: 20px; }
+        .savings-section .amount { font-size: 64px; font-weight: 700; margin: 20px 0; }
+        .savings-section .description { font-size: 18px; opacity: 0.9; margin-bottom: 30px; }
+        .savings-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 40px; }
+        .savings-item { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 20px; }
+        .savings-item .label { font-size: 14px; opacity: 0.8; margin-bottom: 8px; }
+        .savings-item .value { font-size: 28px; font-weight: 700; }
+
+        /* CTA Section */
+        .cta-section { text-align: center; background: #f9fafb; border-radius: 12px; padding: 60px 40px; }
+        .cta-section h2 { font-size: 32px; margin-bottom: 20px; }
+        .cta-section p { font-size: 18px; color: #666; max-width: 600px; margin: 0 auto 30px; }
+        .cta-button { display: inline-block; background: #10b981; color: white; padding: 16px 40px; border-radius: 8px; text-decoration: none; font-size: 18px; font-weight: 600; transition: background 0.3s; }
+        .cta-button:hover { background: #059669; }
+        .cta-secondary { display: inline-block; margin-left: 20px; color: #10b981; text-decoration: none; font-size: 18px; font-weight: 600; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 32px; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .savings-section .amount { font-size: 48px; }
+            .cta-secondary { display: block; margin: 20px 0 0 0; }
+            table { font-size: 14px; }
+            th, td { padding: 12px 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>EvoFitMeals vs Competitors</h1>
+            <p class="subtitle">See why thousands of fitness trainers choose EvoFitMeals over monthly subscription software. Same features. Better price. Forever.</p>
+            <div class="savings-badge">💰 Save $2,000+ Over 10 Years</div>
+        </div>
+
+        <!-- Quick Comparison -->
+        <div class="quick-comparison">
+            <h2>At a Glance: Pricing Comparison</h2>
+            <div class="comparison-grid">
+                <!-- EvoFitMeals -->
+                <div class="comparison-card winner">
+                    <h3>EvoFitMeals</h3>
+                    <div class="price">$199</div>
+                    <div class="price-detail">One-time payment<br>Use forever</div>
+                    <div class="savings">Save $2,161 over 10 years vs Foodzilla</div>
+                    <ul>
+                        <li>Unlimited clients</li>
+                        <li>AI meal generation</li>
+                        <li>Branded PDFs</li>
+                        <li>Progress tracking</li>
+                        <li>No monthly fees ever</li>
+                    </ul>
+                </div>
+
+                <!-- Foodzilla -->
+                <div class="comparison-card competitor">
+                    <h3>Foodzilla</h3>
+                    <div class="price">$18/mo</div>
+                    <div class="price-detail">$216/year<br>$2,160 over 10 years</div>
+                    <ul>
+                        <li>5 clients (Starter)</li>
+                        <li>Template-based</li>
+                        <li>Branded PDFs</li>
+                        <li>Basic tracking</li>
+                        <li>Monthly fees forever</li>
+                    </ul>
+                </div>
+
+                <!-- Eat This Much -->
+                <div class="comparison-card competitor">
+                    <h3>Eat This Much</h3>
+                    <div class="price">$9/mo</div>
+                    <div class="price-detail">$108/year<br>$1,080 over 10 years</div>
+                    <ul>
+                        <li>Individual focus</li>
+                        <li>AI meal planning</li>
+                        <li>Generic PDFs</li>
+                        <li>No client management</li>
+                        <li>Not built for trainers</li>
+                    </ul>
+                </div>
+
+                <!-- Strongr Fastr -->
+                <div class="comparison-card competitor">
+                    <h3>Strongr Fastr</h3>
+                    <div class="price">$13/mo</div>
+                    <div class="price-detail">$156/year<br>$1,560 over 10 years</div>
+                    <ul>
+                        <li>Individual focus</li>
+                        <li>AI meal planning</li>
+                        <li>No PDF export</li>
+                        <li>No client management</li>
+                        <li>Bodybuilding-focused</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Comparison Table -->
+        <div class="feature-table">
+            <h2>Complete Feature Comparison</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th class="highlight">EvoFitMeals</th>
+                        <th>Foodzilla</th>
+                        <th>Eat This Much</th>
+                        <th>Strongr Fastr</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Pricing Model</td>
+                        <td class="highlight">One-time ($199-$399)</td>
+                        <td>Monthly ($18)</td>
+                        <td>Monthly ($9)</td>
+                        <td>Monthly ($13)</td>
+                    </tr>
+                    <tr>
+                        <td>10-Year Cost</td>
+                        <td class="highlight">$199</td>
+                        <td>$2,160</td>
+                        <td>$1,080</td>
+                        <td>$1,560</td>
+                    </tr>
+                    <tr>
+                        <td>AI Meal Generation</td>
+                        <td class="highlight"><span class="check">✓</span> Advanced</td>
+                        <td><span class="cross">✗</span> Templates</td>
+                        <td><span class="check">✓</span> Basic</td>
+                        <td><span class="check">✓</span> Basic</td>
+                    </tr>
+                    <tr>
+                        <td>Client Management</td>
+                        <td class="highlight"><span class="check">✓</span> Unlimited</td>
+                        <td><span class="check">✓</span> 5-Unlimited</td>
+                        <td><span class="cross">✗</span> No</td>
+                        <td><span class="cross">✗</span> No</td>
+                    </tr>
+                    <tr>
+                        <td>Progress Tracking</td>
+                        <td class="highlight"><span class="check">✓</span> Photos + Measurements</td>
+                        <td><span class="check">✓</span> Basic</td>
+                        <td><span class="cross">✗</span> No</td>
+                        <td><span class="cross">✗</span> No</td>
+                    </tr>
+                    <tr>
+                        <td>PDF Export</td>
+                        <td class="highlight"><span class="check">✓</span> Branded</td>
+                        <td><span class="check">✓</span> Branded</td>
+                        <td><span class="check">✓</span> Generic</td>
+                        <td><span class="cross">✗</span> No</td>
+                    </tr>
+                    <tr>
+                        <td>Grocery Lists</td>
+                        <td class="highlight"><span class="check">✓</span> Auto-generated</td>
+                        <td><span class="check">✓</span> Yes</td>
+                        <td><span class="check">✓</span> Yes</td>
+                        <td><span class="check">✓</span> Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Target User</td>
+                        <td class="highlight">Fitness Trainers</td>
+                        <td>Nutritionists</td>
+                        <td>Individuals</td>
+                        <td>Individuals</td>
+                    </tr>
+                    <tr>
+                        <td>Learning Curve</td>
+                        <td class="highlight">15 minutes</td>
+                        <td>30+ minutes</td>
+                        <td>10 minutes</td>
+                        <td>10 minutes</td>
+                    </tr>
+                    <tr>
+                        <td>Free Trial</td>
+                        <td class="highlight"><span class="check">✓</span> 14 days</td>
+                        <td><span class="check">✓</span> 1 client</td>
+                        <td><span class="cross">✗</span> Limited</td>
+                        <td><span class="cross">✗</span> Limited</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Savings Calculator -->
+        <div class="savings-section">
+            <h2>Your Savings with EvoFitMeals</h2>
+            <div class="amount">$2,161</div>
+            <p class="description">That's how much you save over 10 years vs Foodzilla ($18/month). All while getting better features and never worrying about monthly fees again.</p>
+
+            <div class="savings-breakdown">
+                <div class="savings-item">
+                    <div class="label">vs Foodzilla</div>
+                    <div class="value">$2,161</div>
+                </div>
+                <div class="savings-item">
+                    <div class="label">vs Strongr Fastr</div>
+                    <div class="value">$1,361</div>
+                </div>
+                <div class="savings-item">
+                    <div class="label">vs Eat This Much</div>
+                    <div class="value">$881</div>
+                </div>
+                <div class="savings-item">
+                    <div class="label">Break Even</div>
+                    <div class="value">11 months</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Why Choose EvoFitMeals -->
+        <div style="margin-bottom: 60px;">
+            <h2 style="text-align: center; font-size: 28px; margin-bottom: 40px;">Why Trainers Choose EvoFitMeals</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h3 style="font-size: 20px; margin-bottom: 16px; color: #10b981;">💰 No Subscription Fatigue</h3>
+                    <p style="color: #666;">Pay once. Use forever. Never worry about monthly fees eating into your profits. Your first 2-3 clients pay for the software—everything after is pure profit.</p>
+                </div>
+                <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h3 style="font-size: 20px; margin-bottom: 16px; color: #10b981;">🎯 Built for Trainers</h3>
+                    <p style="color: #666;">Unlike individual-focused apps, EvoFitMeals is designed for professionals managing multiple clients. Client management, progress tracking, and branded PDFs included.</p>
+                </div>
+                <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h3 style="font-size: 20px; margin-bottom: 16px; color: #10b981;">⚡ Better AI Technology</h3>
+                    <p style="color: #666;">Advanced AI generates truly personalized meal plans in 60 seconds. Competitors use generic templates. We use OpenAI's latest models for variety and customization.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section">
+            <h2>Ready to Save $2,000+?</h2>
+            <p>Join thousands of fitness trainers who ditched monthly subscriptions for EvoFitMeals. Try it free for 14 days—no credit card required.</p>
+            <a href="/landing/index.html" class="cta-button">Start Free Trial</a>
+            <a href="#" class="cta-secondary">Calculate Your ROI →</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { storage } from '../storage';
 import { requireAuth } from '../middleware/auth';
 import { recipeSearchService } from '../services/recipeSearchService';
+import { attachRecipeTierFilter, getUserTierLevel } from '../middleware/tierEnforcement';
 import { db } from "../db";
 import { 
   recipeRatings, 
@@ -27,12 +28,16 @@ const getRecipesSchema = z.object({
 });
 
 // GET /api/recipes - Fetch public, approved recipes
-recipeRouter.get('/', async (req, res) => {
+// Story 2.14: Apply tier filtering for progressive recipe access
+recipeRouter.get('/', attachRecipeTierFilter, async (req, res) => {
   try {
     const query = getRecipesSchema.parse(req.query);
+    const userTier = getUserTierLevel(req);
+
     const { recipes, total } = await storage.searchRecipes({
       ...query,
       approved: true, // Public users only see approved recipes
+      tierLevel: userTier, // Story 2.14: Filter by user's tier level
     });
     res.json({ recipes, total });
   } catch (error) {
@@ -71,10 +76,12 @@ recipeRouter.get('/:id', async (req, res) => {
 });
 
 // Enhanced recipe search with comprehensive filtering
-recipeRouter.get('/search', async (req, res) => {
+// Story 2.14: Apply tier filtering for progressive recipe access
+recipeRouter.get('/search', attachRecipeTierFilter, async (req, res) => {
   try {
     console.log('[Recipe Search API] Received search request:', req.query);
-    
+    const userTier = getUserTierLevel(req);
+
     const filters = {
       search: req.query.search as string,
       mealTypes: req.query.mealTypes ? (req.query.mealTypes as string).split(',') : undefined,
@@ -106,23 +113,24 @@ recipeRouter.get('/search', async (req, res) => {
       sortBy: req.query.sortBy as string,
       sortOrder: req.query.sortOrder as 'asc' | 'desc',
       page: req.query.page ? Number(req.query.page) : 1,
-      limit: Math.min(Number(req.query.limit) || 20, 50) // Cap at 50 for performance
+      limit: Math.min(Number(req.query.limit) || 20, 50), // Cap at 50 for performance
+      tierLevel: userTier // Story 2.14: Filter by user's tier level
     };
 
     const results = await recipeSearchService.searchRecipes(filters);
-    
-    console.log(`[Recipe Search API] Returning ${results.recipes.length} recipes out of ${results.total} total`);
-    
+
+    console.log(`[Recipe Search API] Returning ${results.recipes.length} recipes out of ${results.total} total (tier: ${userTier})`);
+
     res.json({
       success: true,
       data: results
     });
   } catch (error) {
     console.error('[Recipe Search API] Search failed:', error);
-    res.status(400).json({ 
+    res.status(400).json({
       success: false,
       error: 'Invalid search parameters',
-      message: error.message 
+      message: error.message
     });
   }
 });

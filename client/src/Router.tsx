@@ -21,6 +21,7 @@ import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import SharedMealPlanView from "./components/SharedMealPlanView";
 import MacroTrackingDashboard from "./components/MacroTrackingDashboard";
 import GroceryListWrapper from "./components/GroceryListWrapper";
+import HybridPricing from "./pages/HybridPricing";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -57,6 +58,7 @@ export default function Router() {
         <Route path="/register" component={RegisterPage} />
         <Route path="/forgot-password" component={ForgotPasswordPage} />
         <Route path="/reset-password" component={ResetPasswordPage} />
+        <Route path="/pricing" component={HybridPricing} />
         <Route path="/">
           <Redirect to="/login" />
         </Route>
@@ -82,7 +84,10 @@ export default function Router() {
               return <Trainer />;
           }
         }} />
-        
+
+        {/* Public/Common Routes */}
+        <Route path="/pricing" component={HybridPricing} />
+
         {/* Admin Routes */}
         <Route path="/admin" component={() => (
           <ProtectedRoute requiredRole="admin">

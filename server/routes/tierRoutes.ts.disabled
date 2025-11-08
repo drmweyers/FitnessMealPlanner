@@ -1,0 +1,390 @@
+/**
+ * @fileoverview Tier Subscription Routes Module
+ *
+ * API endpoints for 3-tier subscription system management.
+ * Canonical Source: docs/TIER_SOURCE_OF_TRUTH.md v2.0
+ *
+ * Public Routes:
+ * - GET /api/v1/public/pricing - Dynamic pricing information
+ *
+ * Trainer Routes (Auth Required):
+ * - POST /api/v1/tiers/purchase - Create Checkout Session
+ * - POST /api/v1/tiers/upgrade - Upgrade subscription
+ * - POST /api/v1/tiers/cancel - Cancel subscription
+ * - GET /api/v1/tiers/current - Get current subscription
+ * - GET /api/v1/tiers/usage - Get usage statistics
+ * - GET /api/v1/tiers/billing-portal - Get billing portal URL
+ * - POST /api/v1/tiers/ai/subscribe - Add AI subscription
+ * - POST /api/v1/tiers/ai/cancel - Cancel AI subscription
+ *
+ * Webhook Route:
+ * - POST /api/v1/webhooks/stripe - Process Stripe webhooks
+ *
+ * @module tierRoutes
+ */
+
+import { Router, Request, Response } from 'express';
+import { requireAuth, requireRole } from '../middleware/auth';
+import { z } from 'zod';
+import { stripeSubscriptionService } from '../services/StripeSubscriptionService';
+import { stripeWebhookHandler } from '../services/StripeWebhookHandler';
+import { entitlementsService } from '../services/EntitlementsService';
+
+const tierRouter = Router();
+
+// ==================== PUBLIC ROUTES ====================
+
+/**
+ * GET /api/v1/public/pricing
+ * Dynamic pricing information (no authentication required)
+ */
+tierRouter.get('/public/pricing', async (req: Request, res: Response) => {
+  try {
+    // In production, this would fetch from Stripe API or configuration service
+    // For now, return static pricing structure
+    const pricing = {
+      tiers: {
+        starter: {
+          name: 'Starter',
+          stripePriceId: process.env.STRIPE_PRICE_STARTER || 'price_starter_monthly',
+          amount: 19900, // $199.00 in cents
+          currency: 'usd',
+          interval: 'month',
+          features: [
+            '9 customers',
+            '50 meal plans',
+            'PDF export only',
+            'Basic support',
+          ],
+          limits: {
+            customers: 9,
+            mealPlans: 50,
+          },
+        },
+        professional: {
+          name: 'Professional',
+          stripePriceId: process.env.STRIPE_PRICE_PROFESSIONAL || 'price_professional_monthly',
+          amount: 29900, // $299.00 in cents
+          currency: 'usd',
+          interval: 'month',
+          features: [
+            '20 customers',
+            '200 meal plans',
+            'CSV & PDF export',
+            'Analytics dashboard',
+            'Bulk operations',
+            'Custom branding',
+            'Priority support',
+          ],
+          limits: {
+            customers: 20,
+            mealPlans: 200,
+          },
+        },
+        enterprise: {
+          name: 'Enterprise',
+          stripePriceId: process.env.STRIPE_PRICE_ENTERPRISE || 'price_enterprise_monthly',
+          amount: 39900, // $399.00 in cents
+          currency: 'usd',
+          interval: 'month',
+          features: [
+            'Unlimited customers',
+            'Unlimited meal plans',
+            'All export formats',
+            'Advanced analytics',
+            'API access',
+            'White-label customization',
+            'Dedicated support',
+          ],
+          limits: {
+            customers: -1, // unlimited
+            mealPlans: -1, // unlimited
+          },
+        },
+      },
+      ai: {
+        starter: {
+          name: 'AI Starter',
+          stripePriceId: process.env.STRIPE_PRICE_AI_STARTER || 'price_ai_starter_monthly',
+          amount: 4900, // $49.00 in cents
+          currency: 'usd',
+          interval: 'month',
+          features: ['100 AI generations/month'],
+          limits: {
+            aiGenerations: 100,
+          },
+        },
+        professional: {
+          name: 'AI Professional',
+          stripePriceId: process.env.STRIPE_PRICE_AI_PROFESSIONAL || 'price_ai_professional_monthly',
+          amount: 9900, // $99.00 in cents
+          currency: 'usd',
+          interval: 'month',
+          features: ['500 AI generations/month'],
+          limits: {
+            aiGenerations: 500,
+          },
+        },
+        enterprise: {
+          name: 'AI Enterprise',
+          stripePriceId: process.env.STRIPE_PRICE_AI_ENTERPRISE || 'price_ai_enterprise_monthly',
+          amount: 19900, // $199.00 in cents
+          currency: 'usd',
+          interval: 'month',
+          features: ['Unlimited AI generations'],
+          limits: {
+            aiGenerations: -1, // unlimited
+          },
+        },
+      },
+      trial: {
+        enabled: true,
+        days: 14,
+      },
+    };
+
+    res.json(pricing);
+  } catch (error: any) {
+    console.error('Error fetching pricing:', error);
+    res.status(500).json({ error: 'Failed to fetch pricing information' });
+  }
+});
+
+// ==================== TRAINER ROUTES ====================
+
+/**
+ * POST /api/v1/tiers/purchase
+ * Create Stripe Checkout Session for new subscription
+ */
+const purchaseSchema = z.object({
+  tier: z.enum(['starter', 'professional', 'enterprise']),
+  successUrl: z.string().url(),
+  cancelUrl: z.string().url(),
+  trialPeriodDays: z.number().optional(),
+});
+
+tierRouter.post('/purchase', requireAuth, requireRole(['trainer']), async (req: Request, res: Response) => {
+  try {
+    const { tier, successUrl, cancelUrl, trialPeriodDays } = purchaseSchema.parse(req.body);
+    const trainerId = req.user!.id;
+
+    const session = await stripeSubscriptionService.createCheckoutSession({
+      trainerId,
+      tier,
+      successUrl,
+      cancelUrl,
+      trialPeriodDays,
+    });
+
+    res.json({ url: session.url });
+  } catch (error: any) {
+    console.error('Error creating checkout session:', error);
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
+/**
+ * POST /api/v1/tiers/upgrade
+ * Upgrade subscription to higher tier
+ */
+const upgradeSchema = z.object({
+  tier: z.enum(['professional', 'enterprise']),
+  prorationBehavior: z.enum(['create_prorations', 'none']).optional(),
+});
+
+tierRouter.post('/upgrade', requireAuth, requireRole(['trainer']), async (req: Request, res: Response) => {
+  try {
+    const { tier, prorationBehavior } = upgradeSchema.parse(req.body);
+    const trainerId = req.user!.id;
+
+    const subscription = await stripeSubscriptionService.upgradeSubscription({
+      trainerId,
+      newTier: tier,
+      prorationBehavior,
+    });
+
+    res.json({ subscription: { id: subscription.id, status: subscription.status } });
+  } catch (error: any) {
+    console.error('Error upgrading subscription:', error);
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/v1/tiers/cancel
+ * Cancel subscription (scheduled at period end)
+ */
+const cancelSchema = z.object({
+  cancelAtPeriodEnd: z.boolean().default(true),
+});
+
+tierRouter.post('/cancel', requireAuth, requireRole(['trainer']), async (req: Request, res: Response) => {
+  try {
+    const { cancelAtPeriodEnd } = cancelSchema.parse(req.body);
+    const trainerId = req.user!.id;
+
+    const subscription = await stripeSubscriptionService.cancelSubscription(trainerId, cancelAtPeriodEnd);
+
+    res.json({ subscription: { id: subscription.id, cancelAtPeriodEnd: subscription.cancel_at_period_end } });
+  } catch (error: any) {
+    console.error('Error canceling subscription:', error);
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/v1/tiers/current
+ * Get current subscription and entitlements
+ */
+tierRouter.get('/current', requireAuth, requireRole(['trainer']), async (req: Request, res: Response) => {
+  try {
+    const trainerId = req.user!.id;
+
+    const entitlements = await entitlementsService.getEntitlements(trainerId);
+
+    if (!entitlements) {
+      return res.status(404).json({ error: 'No active subscription found' });
+    }
+
+    res.json(entitlements);
+  } catch (error: any) {
+    console.error('Error fetching subscription:', error);
+    res.status(500).json({ error: 'Failed to fetch subscription' });
+  }
+});
+
+/**
+ * GET /api/v1/tiers/usage
+ * Get usage statistics for current billing period
+ */
+tierRouter.get('/usage', requireAuth, requireRole(['trainer']), async (req: Request, res: Response) => {
+  try {
+    const trainerId = req.user!.id;
+
+    const entitlements = await entitlementsService.getEntitlements(trainerId);
+
+    if (!entitlements) {
+      return res.status(404).json({ error: 'No active subscription found' });
+    }
+
+    res.json({
+      limits: entitlements.limits,
+      billing: entitlements.billing,
+    });
+  } catch (error: any) {
+    console.error('Error fetching usage:', error);
+    res.status(500).json({ error: 'Failed to fetch usage' });
+  }
+});
+
+/**
+ * GET /api/v1/tiers/billing-portal
+ * Get Stripe Billing Portal URL
+ */
+const billingPortalSchema = z.object({
+  returnUrl: z.string().url(),
+});
+
+tierRouter.post('/billing-portal', requireAuth, requireRole(['trainer']), async (req: Request, res: Response) => {
+  try {
+    const { returnUrl } = billingPortalSchema.parse(req.body);
+    const trainerId = req.user!.id;
+
+    const session = await stripeSubscriptionService.createBillingPortalSession(trainerId, returnUrl);
+
+    res.json({ url: session.url });
+  } catch (error: any) {
+    console.error('Error creating billing portal session:', error);
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/v1/tiers/ai/subscribe
+ * Add AI subscription to existing tier subscription
+ */
+const subscribeAiSchema = z.object({
+  plan: z.enum(['starter', 'professional', 'enterprise']),
+});
+
+tierRouter.post('/ai/subscribe', requireAuth, requireRole(['trainer']), async (req: Request, res: Response) => {
+  try {
+    const { plan } = subscribeAiSchema.parse(req.body);
+    const trainerId = req.user!.id;
+
+    const subscription = await stripeSubscriptionService.subscribeAi({
+      trainerId,
+      aiPlan: plan,
+    });
+
+    res.json({ subscription: { id: subscription.id, status: subscription.status } });
+  } catch (error: any) {
+    console.error('Error subscribing to AI:', error);
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/v1/tiers/ai/cancel
+ * Cancel AI subscription (keep tier subscription)
+ */
+tierRouter.post('/ai/cancel', requireAuth, requireRole(['trainer']), async (req: Request, res: Response) => {
+  try {
+    const trainerId = req.user!.id;
+
+    const subscription = await stripeSubscriptionService.cancelAiSubscription(trainerId);
+
+    res.json({ subscription: { id: subscription.id, status: subscription.status } });
+  } catch (error: any) {
+    console.error('Error canceling AI subscription:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ==================== WEBHOOK ROUTE ====================
+
+/**
+ * POST /api/v1/webhooks/stripe
+ * Stripe webhook receiver (no authentication - validated by signature)
+ */
+tierRouter.post('/webhooks/stripe', async (req: Request, res: Response) => {
+  const signature = req.headers['stripe-signature'] as string;
+
+  if (!signature) {
+    return res.status(400).json({ error: 'Missing stripe-signature header' });
+  }
+
+  try {
+    // Construct and verify event
+    const event = stripeWebhookHandler.constructEvent(req.body, signature);
+
+    // Process event (idempotent)
+    const result = await stripeWebhookHandler.handleEvent(event);
+
+    if (result.success) {
+      res.json({ received: true, processed: result.processed });
+    } else {
+      res.status(500).json({ error: 'Webhook processing failed', details: result.error });
+    }
+  } catch (error: any) {
+    console.error('Webhook signature verification failed:', error);
+    res.status(400).json({ error: 'Webhook signature verification failed' });
+  }
+});
+
+export default tierRouter;

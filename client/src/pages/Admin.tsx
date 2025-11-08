@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Check, X, BarChart3, Eye, Download, ChefHat, Utensils, Calendar, Bot, Settings } from "lucide-react";
+import { Check, X, BarChart3, Eye, Download, Utensils, Calendar, Bot } from "lucide-react";
 import { Link } from "wouter";
 import { 
   Pagination, 
@@ -23,13 +23,11 @@ import RecipeCard from "../components/RecipeCard";
 import RecipeTable from "../components/RecipeTable";
 import ViewToggle, { ViewType } from "../components/ViewToggle";
 import RecipeModal from "../components/RecipeModal";
-import RecipeGenerationModal from "../components/RecipeGenerationModal";
 import PendingRecipesTable from "../components/PendingRecipesTable";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import BulkDeleteToolbar from "../components/BulkDeleteToolbar";
 import ExportJSONModal from "../components/ExportJSONModal";
 import BMADRecipeGenerator from "../components/BMADRecipeGenerator";
-import AdminRecipeGenerator from "../components/AdminRecipeGenerator";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Admin() {
@@ -44,13 +42,12 @@ export default function Admin() {
     return savedViewType === 'table' ? 'table' : 'cards';
   });
   
-  const [filters, setFilters] = useState<RecipeFilter>({ 
-    page: 1, 
+  const [filters, setFilters] = useState<RecipeFilter>({
+    page: 1,
     limit: viewType === 'table' ? 20 : 12, // More items for table view
-    approved: true 
+    approved: true
   });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [showRecipeGenerationModal, setShowRecipeGenerationModal] = useState(false);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   
@@ -274,14 +271,6 @@ export default function Admin() {
               <h2 className="text-2xl font-bold text-slate-900">Recipe Library</h2>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button
-                  onClick={() => setShowRecipeGenerationModal(true)}
-                  className="bg-primary hover:bg-primary/90"
-                  data-testid="admin-generate-recipes"
-                >
-                  <ChefHat className="mr-2 h-4 w-4" />
-                  Generate Recipes
-                </Button>
-                <Button
                   onClick={() => setShowPendingModal(true)}
                   variant="outline"
                   className="border-secondary text-secondary hover:bg-secondary hover:text-white"
@@ -301,9 +290,6 @@ export default function Admin() {
                 </Button>
               </div>
             </div>
-
-            {/* AI Recipe Generator with Parse Button */}
-            <AdminRecipeGenerator />
 
             {/* Search and Filters */}
             <div className="space-y-4">
@@ -561,14 +547,6 @@ export default function Admin() {
             queryClient.invalidateQueries({ queryKey: ["admin-recipes"] });
             queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
           }}
-        />
-      )}
-
-      {/* Recipe Generation Modal */}
-      {showRecipeGenerationModal && (
-        <RecipeGenerationModal
-          isOpen={showRecipeGenerationModal}
-          onClose={() => setShowRecipeGenerationModal(false)}
         />
       )}
 

@@ -1,0 +1,325 @@
+/**
+ * Usage Enforcement Middleware
+ *
+ * Enforces usage limits for meal plan generation based on:
+ * - Payment type (subscription, onetime, grandfather)
+ * - Tier level (starter, professional, enterprise)
+ * - Monthly usage tracking
+ *
+ * Usage Limits:
+ * - Subscription tiers: UNLIMITED (always allowed)
+ * - One-time tiers: LIMITED (20/50/150 plans per month)
+ * - Grandfathered users: UNLIMITED (legacy customers)
+ */
+
+import { Request, Response, NextFunction } from 'express';
+import { db } from '../db';
+import { users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
+
+// Usage limits for one-time payment tiers
+const ONETIME_USAGE_LIMITS = {
+  starter: 20,
+  professional: 50,
+  enterprise: 150,
+};
+
+interface UsageCheckResult {
+  allowed: boolean;
+  reason?: string;
+  currentUsage?: number;
+  limit?: number;
+  resetDate?: Date;
+  upgradeUrl?: string;
+}
+
+/**
+ * Check if user can generate a meal plan based on their payment type and usage
+ */
+export async function checkUsageLimit(userId: string): Promise<UsageCheckResult> {
+  try {
+    // Get user payment and usage information
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        paymentType: users.paymentType,
+        subscriptionStatus: users.subscriptionStatus,
+        subscriptionTier: users.subscriptionTier,
+        onetimeTier: users.onetimeTier,
+        isGrandfathered: users.isGrandfathered,
+        mealPlansGeneratedThisMonth: users.mealPlansGeneratedThisMonth,
+        usageLimit: users.usageLimit,
+        usageResetDate: users.usageResetDate,
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    if (!user) {
+      return {
+        allowed: false,
+        reason: 'User not found',
+      };
+    }
+
+    // CASE 1: Grandfathered users - unlimited access
+    if (user.isGrandfathered) {
+      return {
+        allowed: true,
+        currentUsage: user.mealPlansGeneratedThisMonth || 0,
+        limit: null, // unlimited
+      };
+    }
+
+    // CASE 2: Active subscription - unlimited access
+    if (user.paymentType === 'subscription' && user.subscriptionStatus === 'active') {
+      return {
+        allowed: true,
+        currentUsage: user.mealPlansGeneratedThisMonth || 0,
+        limit: null, // unlimited
+      };
+    }
+
+    // CASE 3: Trialing subscription - unlimited access (during trial)
+    if (user.paymentType === 'subscription' && user.subscriptionStatus === 'trialing') {
+      return {
+        allowed: true,
+        currentUsage: user.mealPlansGeneratedThisMonth || 0,
+        limit: null, // unlimited during trial
+      };
+    }
+
+    // CASE 4: One-time payment - limited usage
+    if (user.paymentType === 'onetime') {
+      const tier = user.onetimeTier;
+      const limit = user.usageLimit || ONETIME_USAGE_LIMITS[tier as keyof typeof ONETIME_USAGE_LIMITS];
+      const currentUsage = user.mealPlansGeneratedThisMonth || 0;
+
+      if (currentUsage >= limit) {
+        return {
+          allowed: false,
+          reason: 'Monthly meal plan generation limit reached',
+          currentUsage,
+          limit,
+          resetDate: user.usageResetDate || new Date(),
+          upgradeUrl: '/pricing?upgrade=true',
+        };
+      }
+
+      // Calculate warning threshold (80% of limit)
+      const warningThreshold = Math.floor(limit * 0.8);
+
+      return {
+        allowed: true,
+        currentUsage,
+        limit,
+        resetDate: user.usageResetDate || new Date(),
+        ...(currentUsage >= warningThreshold && {
+          upgradeUrl: '/pricing?upgrade=true',
+        }),
+      };
+    }
+
+    // CASE 5: Past due subscription - block access
+    if (user.paymentType === 'subscription' && user.subscriptionStatus === 'past_due') {
+      return {
+        allowed: false,
+        reason: 'Subscription payment failed. Please update your payment method.',
+        upgradeUrl: '/pricing?update-payment=true',
+      };
+    }
+
+    // CASE 6: Canceled subscription - block access
+    if (user.paymentType === 'subscription' && user.subscriptionStatus === 'canceled') {
+      return {
+        allowed: false,
+        reason: 'Subscription has been canceled. Reactivate to continue generating meal plans.',
+        upgradeUrl: '/pricing?reactivate=true',
+      };
+    }
+
+    // CASE 7: No payment type set (shouldn't happen, but handle gracefully)
+    return {
+      allowed: false,
+      reason: 'No active payment plan. Please select a plan to continue.',
+      upgradeUrl: '/pricing',
+    };
+  } catch (error) {
+    console.error('Error checking usage limit:', error);
+    // Fail open for errors (allow access but log the error)
+    return {
+      allowed: true,
+      reason: 'Usage check failed - allowing access',
+    };
+  }
+}
+
+/**
+ * Increment usage counter after successful meal plan generation
+ */
+export async function incrementUsage(userId: string): Promise<void> {
+  try {
+    await db
+      .update(users)
+      .set({
+        mealPlansGeneratedThisMonth: db.raw('meal_plans_generated_this_month + 1'),
+      })
+      .where(eq(users.id, userId));
+  } catch (error) {
+    console.error('Error incrementing usage:', error);
+    // Don't throw - usage tracking failure shouldn't block generation
+  }
+}
+
+/**
+ * Reset monthly usage counters (called by scheduler)
+ */
+export async function resetMonthlyUsage(): Promise<void> {
+  try {
+    const now = new Date();
+    const nextResetDate = new Date(now);
+    nextResetDate.setMonth(nextResetDate.getMonth() + 1);
+
+    await db
+      .update(users)
+      .set({
+        mealPlansGeneratedThisMonth: 0,
+        usageResetDate: nextResetDate,
+      })
+      .where(eq(users.paymentType, 'onetime')); // Only reset one-time payment users
+
+    console.log(`✅ Monthly usage reset completed for one-time payment users`);
+  } catch (error) {
+    console.error('Error resetting monthly usage:', error);
+    throw error;
+  }
+}
+
+/**
+ * Express middleware to enforce usage limits on meal plan generation endpoints
+ */
+export async function enforceUsageLimit(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const user = (req as any).user;
+
+    if (!user || !user.id) {
+      res.status(401).json({
+        status: 'error',
+        code: 'UNAUTHORIZED',
+        message: 'Authentication required',
+      });
+      return;
+    }
+
+    // Check usage limit
+    const usageCheck = await checkUsageLimit(user.id);
+
+    if (!usageCheck.allowed) {
+      // Send 429 Too Many Requests with usage information
+      res.status(429).json({
+        status: 'error',
+        code: 'USAGE_LIMIT_EXCEEDED',
+        message: usageCheck.reason || 'Usage limit exceeded',
+        data: {
+          currentUsage: usageCheck.currentUsage,
+          limit: usageCheck.limit,
+          resetDate: usageCheck.resetDate,
+          upgradeUrl: usageCheck.upgradeUrl,
+        },
+      });
+      return;
+    }
+
+    // Attach usage info to request for downstream use
+    (req as any).usageInfo = {
+      currentUsage: usageCheck.currentUsage,
+      limit: usageCheck.limit,
+      resetDate: usageCheck.resetDate,
+      upgradeUrl: usageCheck.upgradeUrl,
+    };
+
+    next();
+  } catch (error) {
+    console.error('Usage enforcement middleware error:', error);
+    // Fail open - allow request to proceed but log error
+    next();
+  }
+}
+
+/**
+ * Middleware to track successful meal plan generation
+ * Place this AFTER the generation succeeds
+ */
+export async function trackMealPlanGeneration(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const user = (req as any).user;
+
+  if (user && user.id) {
+    // Increment usage counter (async, don't wait)
+    incrementUsage(user.id).catch((error) =>
+      console.error('Failed to increment usage:', error)
+    );
+  }
+
+  next();
+}
+
+/**
+ * Get usage statistics for a user (for dashboard display)
+ */
+export async function getUserUsageStats(userId: string) {
+  try {
+    const [user] = await db
+      .select({
+        paymentType: users.paymentType,
+        subscriptionTier: users.subscriptionTier,
+        onetimeTier: users.onetimeTier,
+        isGrandfathered: users.isGrandfathered,
+        currentUsage: users.mealPlansGeneratedThisMonth,
+        usageLimit: users.usageLimit,
+        resetDate: users.usageResetDate,
+        subscriptionStatus: users.subscriptionStatus,
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    if (!user) {
+      return null;
+    }
+
+    // Calculate usage percentage
+    let usagePercentage = 0;
+    let isUnlimited = false;
+
+    if (user.isGrandfathered || user.paymentType === 'subscription') {
+      isUnlimited = true;
+    } else if (user.paymentType === 'onetime' && user.usageLimit) {
+      usagePercentage = Math.min(
+        100,
+        Math.round(((user.currentUsage || 0) / user.usageLimit) * 100)
+      );
+    }
+
+    return {
+      paymentType: user.paymentType,
+      tier: user.paymentType === 'subscription' ? user.subscriptionTier : user.onetimeTier,
+      isUnlimited,
+      currentUsage: user.currentUsage || 0,
+      limit: user.usageLimit,
+      usagePercentage,
+      resetDate: user.resetDate,
+      subscriptionStatus: user.subscriptionStatus,
+      warningLevel: usagePercentage >= 80 ? 'high' : usagePercentage >= 60 ? 'medium' : 'low',
+    };
+  } catch (error) {
+    console.error('Error getting usage stats:', error);
+    return null;
+  }
+}

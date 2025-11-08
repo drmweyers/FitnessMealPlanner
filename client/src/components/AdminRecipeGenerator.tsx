@@ -98,9 +98,9 @@ export default function AdminRecipeGenerator() {
     localStorage.setItem('currentJobId', jobId);
     localStorage.setItem('jobStartTime', Date.now().toString());
 
-    console.log(`[SSE] Connecting to progress stream for job ${jobId}`);
+    console.log(`[SSE] Connecting to BMAD progress stream for batch ${jobId}`);
 
-    const eventSource = new EventSource(`/api/admin/recipe-progress-stream/${jobId}`);
+    const eventSource = new EventSource(`/api/admin/bmad-progress-stream/${jobId}`);
     eventSourceRef.current = eventSource;
 
     eventSource.onmessage = (event) => {
@@ -241,13 +241,33 @@ export default function AdminRecipeGenerator() {
 
   const generateRecipes = useMutation({
     mutationFn: async (data: AdminRecipeGeneration): Promise<GenerationResult> => {
-      const response = await fetch('/api/admin/generate-recipes', {
+      // Transform request to BMAD format
+      const bmadRequest = {
+        count: data.count,
+        mealTypes: data.mealType ? [data.mealType] : undefined,
+        dietaryTags: data.dietaryTag ? [data.dietaryTag] : undefined,
+        fitnessGoals: ['muscle_gain'], // Default fitness goal
+        maxPrepTime: data.maxPrepTime,
+        maxCalories: data.maxCalories,
+        minCalories: data.minCalories,
+        minProtein: data.minProtein,
+        maxProtein: data.maxProtein,
+        minCarbs: data.minCarbs,
+        maxCarbs: data.maxCarbs,
+        minFat: data.minFat,
+        maxFat: data.maxFat,
+        difficulty: data.difficulty,
+        enableImageGeneration: true,  // CRITICAL: Enable AI image generation
+        enableS3Upload: true,          // CRITICAL: Enable S3 upload for permanent images
+      };
+
+      const response = await fetch('/api/admin/generate-bmad', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(data),
+        body: JSON.stringify(bmadRequest),
       });
 
       if (!response.ok) {
@@ -274,12 +294,12 @@ export default function AdminRecipeGenerator() {
       // Use smart cache management for recipe generation
       cacheManager.handleRecipeGeneration(data.count || 0);
 
-      // Connect to SSE for real-time progress (Fix #2)
-      if (data.jobId) {
-        console.log('[Recipe Generation] Connecting to SSE with jobId:', data.jobId);
-        connectToProgressStream(data.jobId);
+      // Connect to SSE for real-time progress (BMAD uses batchId)
+      if (data.batchId) {
+        console.log('[BMAD Recipe Generation] Connecting to SSE with batchId:', data.batchId);
+        connectToProgressStream(data.batchId);
       } else {
-        console.warn('[Recipe Generation] No jobId received, cannot track progress');
+        console.warn('[BMAD Recipe Generation] No batchId received, cannot track progress');
         // Fallback: show generic progress message
         setGenerationProgress("Recipe generation in progress...");
       }

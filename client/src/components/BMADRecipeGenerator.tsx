@@ -28,8 +28,6 @@ import {
   Wand2,
   ChefHat,
   Target,
-  FileText,
-  Calendar,
   Utensils,
   Clock
 } from "lucide-react";
@@ -39,8 +37,14 @@ const bmadGenerationSchema = z.object({
   // Recipe Generation
   count: z.number().min(1).max(100).default(10),
 
-  // Basic Information
-  description: z.string().optional(),
+  // Focus Ingredient
+  focusIngredient: z.string().optional(),
+
+  // Difficulty Level
+  difficultyLevel: z.string().optional(),
+
+  // Recipe Preferences
+  recipePreferences: z.string().optional(),
 
   // Meal Plan Parameters
   fitnessGoal: z.string().optional(),
@@ -106,13 +110,6 @@ interface BMADGenerationResult {
     s3Upload: boolean;
   };
 }
-
-const mealTypeOptions = [
-  { value: "breakfast", label: "Breakfast" },
-  { value: "lunch", label: "Lunch" },
-  { value: "dinner", label: "Dinner" },
-  { value: "snack", label: "Snack" },
-];
 
 const fitnessGoalOptions = [
   { value: "weight_loss", label: "Weight Loss" },
@@ -571,42 +568,92 @@ export default function BMADRecipeGenerator() {
                 )}
               />
 
-            {/* Meal Types */}
-            <FormField
-              control={form.control}
-              name="mealTypes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Utensils className="h-4 w-4" />
-                    Recipe Types to Generate
-                  </FormLabel>
-                  <div className="grid grid-cols-2 gap-2">
-                    {mealTypeOptions.map((option) => (
-                      <div key={option.value} className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={field.value?.includes(option.value)}
-                          onCheckedChange={(checked) => {
-                            const current = field.value || [];
-                            if (checked) {
-                              field.onChange([...current, option.value]);
-                            } else {
-                              field.onChange(current.filter((v) => v !== option.value));
-                            }
-                          }}
-                          disabled={isGenerating}
-                        />
-                        <Label className="text-sm font-normal">{option.label}</Label>
-                      </div>
-                    ))}
-                  </div>
-                  <FormDescription>
-                    Select one or more meal categories for recipe generation
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* Focus Ingredient */}
+              <FormField
+                control={form.control}
+                name="focusIngredient"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <ChefHat className="h-4 w-4" />
+                      Focus Ingredient (Optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="e.g., chicken, salmon, tofu"
+                        {...field}
+                        disabled={isGenerating}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Main ingredient to feature in recipes
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Difficulty Level */}
+              <FormField
+                control={form.control}
+                name="difficultyLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      Difficulty Level (Optional)
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={isGenerating}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any Difficulty" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="any">Any Difficulty</SelectItem>
+                        <SelectItem value="easy">Easy</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Recipe complexity and cooking skill required
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Recipe Preferences */}
+              <FormField
+                control={form.control}
+                name="recipePreferences"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Wand2 className="h-4 w-4" />
+                      Recipe Preferences (Optional)
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="e.g., quick meals, family-friendly, budget-conscious, one-pot dishes"
+                        {...field}
+                        disabled={isGenerating}
+                        className="min-h-[80px]"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Additional preferences or requirements for recipe generation
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Fitness Goal */}
               <FormField
@@ -641,116 +688,7 @@ export default function BMADRecipeGenerator() {
                 )}
               />
 
-              {/* Daily Calorie Target */}
-              <FormField
-                control={form.control}
-                name="dailyCalorieTarget"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      Daily Calorie Goal (Optional)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 2000"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        disabled={isGenerating}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Total daily calorie target for complete meal plan (not per recipe)
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Description */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Description (Optional)
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Additional notes or requirements..."
-                        {...field}
-                        disabled={isGenerating}
-                        className="min-h-[80px]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Number of Days */}
-              <FormField
-                control={form.control}
-                name="days"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Number of Days (Optional)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 7"
-                        min={1}
-                        max={30}
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        disabled={isGenerating}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Meals Per Day */}
-              <FormField
-                control={form.control}
-                name="mealsPerDay"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Utensils className="h-4 w-4" />
-                      Meals Per Day (Optional)
-                    </FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      value={field.value?.toString()}
-                      disabled={isGenerating}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select meals per day" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {[2, 3, 4, 5, 6].map((num) => (
-                          <SelectItem key={num} value={num.toString()}>
-                            {num} meals
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Max Ingredients */}
+              {/* Maximum Number of Ingredients */}
               <FormField
                 control={form.control}
                 name="maxIngredients"
@@ -758,7 +696,7 @@ export default function BMADRecipeGenerator() {
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
                       <ChefHat className="h-4 w-4" />
-                      Max Ingredients (Optional)
+                      Maximum Number of Ingredients (Optional)
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -810,29 +748,62 @@ export default function BMADRecipeGenerator() {
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Filter Preferences</Label>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {/* Dietary Filter */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Meal Type - moved from checkboxes to here */}
+                  <FormField
+                    control={form.control}
+                    name="mealTypes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Meal Type</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            if (value === "all") {
+                              field.onChange([]);
+                            } else {
+                              field.onChange([value]);
+                            }
+                          }}
+                          value={field.value?.[0] || "all"}
+                          disabled={isGenerating}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="All Meals" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="all">All Meals</SelectItem>
+                            <SelectItem value="breakfast">Breakfast</SelectItem>
+                            <SelectItem value="lunch">Lunch</SelectItem>
+                            <SelectItem value="dinner">Dinner</SelectItem>
+                            <SelectItem value="snack">Snack</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Dietary Focus */}
                   <FormField
                     control={form.control}
                     name="dietaryTag"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Utensils className="h-4 w-4" />
-                          Diet Type
-                        </FormLabel>
+                        <FormLabel>Dietary Focus</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value}
+                          value={field.value || "all"}
                           disabled={isGenerating}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Any" />
+                              <SelectValue placeholder="All Diets" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="any">No Restriction</SelectItem>
+                            <SelectItem value="all">All Diets</SelectItem>
                             <SelectItem value="vegetarian">Vegetarian</SelectItem>
                             <SelectItem value="vegan">Vegan</SelectItem>
                             <SelectItem value="keto">Keto</SelectItem>
@@ -845,9 +816,6 @@ export default function BMADRecipeGenerator() {
                             <SelectItem value="dairy_free">Dairy Free</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription className="text-xs">
-                          Filter generated recipes by dietary preference
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -859,10 +827,7 @@ export default function BMADRecipeGenerator() {
                     name="maxPrepTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          Max Prep Time
-                        </FormLabel>
+                        <FormLabel>Max Prep Time</FormLabel>
                         <Select
                           onValueChange={(value) => field.onChange(value === "any" ? undefined : parseInt(value))}
                           value={field.value?.toString() || "any"}
@@ -870,11 +835,11 @@ export default function BMADRecipeGenerator() {
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Any" />
+                              <SelectValue placeholder="Any Time" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="any">Any</SelectItem>
+                            <SelectItem value="any">Any Time</SelectItem>
                             <SelectItem value="15">15 min</SelectItem>
                             <SelectItem value="30">30 min</SelectItem>
                             <SelectItem value="45">45 min</SelectItem>
@@ -892,10 +857,7 @@ export default function BMADRecipeGenerator() {
                     name="maxCalories"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Activity className="h-4 w-4" />
-                          Max Calories Per Recipe
-                        </FormLabel>
+                        <FormLabel>Max Calories</FormLabel>
                         <Select
                           onValueChange={(value) => field.onChange(value === "any" ? undefined : parseInt(value))}
                           value={field.value?.toString() || "any"}
@@ -903,20 +865,17 @@ export default function BMADRecipeGenerator() {
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Any" />
+                              <SelectValue placeholder="Any Amount" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="any">Any</SelectItem>
+                            <SelectItem value="any">Any Amount</SelectItem>
                             <SelectItem value="300">300 cal</SelectItem>
                             <SelectItem value="500">500 cal</SelectItem>
                             <SelectItem value="700">700 cal</SelectItem>
                             <SelectItem value="1000">1000 cal</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription>
-                          Maximum allowed calories for each individual recipe
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

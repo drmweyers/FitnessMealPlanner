@@ -4,7 +4,9 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Badge } from "../components/ui/badge";
 import { useAuth } from "../contexts/AuthContext";
+import { useTierInfo } from "../hooks/useTierInfo";
 import SearchFilters from "../components/SearchFilters";
 import RecipeCard from "../components/RecipeCard";
 import RecipeCardWithAssignment from "../components/RecipeCardWithAssignment";
@@ -16,10 +18,12 @@ import MealPlanGenerator from "../components/MealPlanGenerator";
 import CustomerManagement from "../components/CustomerManagement";
 import TrainerMealPlans from "../components/TrainerMealPlans";
 import ManualMealPlanCreator from "../components/ManualMealPlanCreator";
+import Settings from "../components/Settings";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Trainer() {
   const { user } = useAuth();
+  const { accessibleRecipeCount, tierName } = useTierInfo();
   const [location, navigate] = useLocation();
   const [filters, setFilters] = useState<RecipeFilter>({ 
     page: 1, 
@@ -35,6 +39,7 @@ export default function Trainer() {
     if (location === '/trainer/manual-meal-plan') return 'manual-plan';
     if (location === '/trainer/customers') return 'customers';
     if (location === '/trainer/meal-plans') return 'saved-plans';
+    if (location === '/trainer/settings') return 'settings';
     return 'recipes';
   };
 
@@ -51,6 +56,9 @@ export default function Trainer() {
         break;
       case 'saved-plans':
         navigate('/trainer/meal-plans');
+        break;
+      case 'settings':
+        navigate('/trainer/settings');
         break;
       default:
         navigate('/trainer');
@@ -95,9 +103,10 @@ export default function Trainer() {
       </div>
 
       <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6 sm:mb-8 h-auto p-1 gap-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-6 mb-6 sm:mb-8 h-auto p-1 gap-1">
           <TabsTrigger
             value="recipes"
+            data-testid="recipes-link"
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
             <i className="fas fa-book-open text-sm sm:text-base"></i>
@@ -106,6 +115,7 @@ export default function Trainer() {
           </TabsTrigger>
           <TabsTrigger
             value="meal-plan"
+            data-testid="meal-plans-link"
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
           >
             <i className="fas fa-utensils text-sm sm:text-base"></i>
@@ -137,11 +147,38 @@ export default function Trainer() {
             <span className="hidden lg:inline">Customers</span>
             <span className="lg:hidden">Customers</span>
           </TabsTrigger>
+          <TabsTrigger
+            value="settings"
+            data-testid="settings-link"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+          >
+            <i className="fas fa-cog text-sm sm:text-base"></i>
+            <span className="hidden lg:inline">Settings</span>
+            <span className="lg:hidden">Settings</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="recipes" className="space-y-4 sm:space-y-6">
           {/* Search and Filters */}
           <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+
+          {/* Recipe Count Display - Story 2.14 */}
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-2 rounded-full">
+                <i className="fas fa-book-open text-blue-600 text-lg"></i>
+              </div>
+              <div>
+                <p className="text-sm text-slate-600">Available Recipes in {tierName} Tier</p>
+                <p className="text-2xl font-bold text-slate-900" data-testid="recipe-count">
+                  {accessibleRecipeCount.toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <Badge variant="outline" className="bg-white">
+              {tierName} Access
+            </Badge>
+          </div>
 
           {/* View Toggle */}
           <div className="flex flex-col sm:flex-row sm:justify-end mb-4 sm:mb-6 gap-3 sm:gap-0">
@@ -283,6 +320,10 @@ export default function Trainer() {
 
         <TabsContent value="saved-plans">
           <TrainerMealPlans />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Settings />
         </TabsContent>
 
       </Tabs>

@@ -322,6 +322,84 @@ This document supplements existing project architecture by defining how new comp
 
 ---
 
+## 3-Tier Payment System Architecture
+
+**Implementation Status**: ✅ COMPLETE (February 1, 2025)
+**System Type**: One-Time Payment with Lifetime Access
+**Payment Provider**: Stripe Checkout
+
+### Overview
+
+The 3-Tier Payment System provides a flexible monetization model with three tiers (Starter, Professional, Enterprise) offering different feature sets and resource limits. The system uses Stripe for payment processing with one-time payments granting lifetime access to tier features.
+
+### Tier Configuration
+
+| Tier | Price | Customers | Meal Plans | Recipe Access | Monthly New Recipes | Meal Types |
+|------|-------|-----------|------------|---------------|---------------------|------------|
+| **Starter** | $199 | 9 | 50 | 1,000 meals | +25/month | 5 types |
+| **Professional** | $299 | 20 | 200 | 2,500 meals | +50/month | 10 types |
+| **Enterprise** | $399 | 50 | 500 | 4,000 meals | +100/month | 15+ types |
+
+### Database Schema
+
+**Core Tables:**
+- `trainer_tier_purchases` - One-time payment records
+- `tier_usage_tracking` - Lifetime usage counters
+- `payment_logs` - Payment audit trail
+- `recipe_tier_access` - Recipe count configuration per tier
+- `recipe_type_categories` - Meal type to tier mapping
+
+**Row-Level Security**: Applied to all tier tables for data isolation
+
+### Backend Services
+
+1. **EntitlementsService** - Redis-cached tier/feature checks (5-min TTL)
+2. **StripePaymentService** - Checkout session creation, upgrade pricing
+3. **StripeWebhookHandler** - Payment event processing, tier grants
+
+### API Endpoints
+
+- `GET /api/v1/public/pricing` - Dynamic pricing (unauthenticated)
+- `POST /api/v1/tiers/purchase` - Create Stripe Checkout
+- `POST /api/v1/tiers/upgrade` - Upgrade to higher tier
+- `GET /api/v1/tiers/current` - Current tier/entitlements (cached)
+- `GET /api/v1/tiers/usage` - Lifetime usage statistics
+- `POST /api/v1/webhooks/stripe` - Stripe webhook processor
+
+### Middleware
+
+- `requireFeature(featureName)` - Feature gating with 403 on unauthorized
+- `requireUsageLimit(resourceType)` - Limit enforcement before creation
+- `trackUsage(resourceType)` - Usage increment after operations
+
+### Frontend Components
+
+- **TierSelectionModal** - 3-tier display, dynamic pricing, Stripe redirect
+- **UsageLimitIndicator** - Real-time usage display, auto-refresh, upgrade prompts
+- **FeatureGate** - Server-validated feature restrictions
+
+### Feature Distribution
+
+**Recipe Database Access:**
+- Starter: 1,000 meals (+25/month), 5 meal types
+- Professional: 2,500 meals (+50/month), 10 meal types + seasonal
+- Enterprise: 4,000 meals (+100/month priority), 15+ meal types + exclusive
+
+**Meal Types by Tier:**
+- Starter (5): Breakfast, Lunch, Dinner, Snack, Post-Workout
+- Professional (10): +Pre-Workout, Keto, Vegan, Paleo, High-Protein
+- Enterprise (15+): +Gluten-Free, Low-Carb, Mediterranean, DASH, IF, Bodybuilding, Endurance
+
+### Reference Documentation
+
+Complete 3-tier system documentation:
+- `TIER_COMPARISON_TABLE.md` - Feature comparison
+- `TIER_COMPARISON.md` - Comprehensive comparison
+- `TIER_SUMMARY.md` - Complete system summary
+- `TODO_URGENT.md` - Implementation status
+
+---
+
 ## Next Steps
 
 ### Story Manager Handoff

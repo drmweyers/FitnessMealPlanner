@@ -467,11 +467,20 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(recipes.isApproved, filters.approved));
     }
 
+    // Story 2.14: Tier-based filtering (progressive access model)
+    // Higher tiers can access all lower tier recipes
+    // starter: only 'starter' tier recipes
+    // professional: 'starter' + 'professional' tier recipes
+    // enterprise: all recipes ('starter' + 'professional' + 'enterprise')
+    if (filters.tierLevel) {
+      conditions.push(sql`${recipes.tierLevel} <= ${filters.tierLevel}::tier_level`);
+    }
+
     if (filters.search) {
       const searchTerm = `%${filters.search.toLowerCase()}%`;
       conditions.push(
         sql`(
-          LOWER(${recipes.name}) LIKE ${searchTerm} OR 
+          LOWER(${recipes.name}) LIKE ${searchTerm} OR
           LOWER(${recipes.description}) LIKE ${searchTerm} OR
           LOWER(${recipes.ingredientsJson}::text) LIKE ${searchTerm}
         )`

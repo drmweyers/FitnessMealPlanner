@@ -13,7 +13,7 @@
 3. **"The Professional Meal Planning Platform That Grows With You"**
 
 ### Subheadline
-"Join 10,000+ fitness professionals using AI to deliver personalized nutrition plans that get results. Save 15+ hours per week while managing 3X more clients."
+"Join thousands of fitness professionals using AI to deliver personalized nutrition plans that get results. Save 15+ hours per week while serving 3× more clients."
 
 ### CTA Buttons
 - Primary: "Start Free 14-Day Trial"
@@ -37,13 +37,13 @@ There's a better way."
 **Copy:**
 "EvoFitMeals combines OpenAI's most advanced models with professional nutrition science to generate personalized meal plans in minutes, not hours. 
 
-• Generate 500+ unique recipes instantly
+• Generate 500+ unique recipes in ~60 seconds
 • Automatically balance macros for any fitness goal
-• Ensure compliance with 8+ dietary restrictions
+• Support 8+ dietary protocols
 • Export professional PDFs your clients will love"
 
 ### Section 3: Social Proof
-**Headline:** "Trusted by 10,000+ Fitness Professionals"
+**Headline:** "Trusted by thousands of Fitness Professionals"
 
 **Testimonial Carousel:**
 1. "Tripled my client base in 6 months" - Sarah M., CPT
@@ -55,7 +55,7 @@ There's a better way."
 
 **Feature Cards:**
 - **AI Recipe Generation**: "500+ recipes in 60 seconds"
-- **Client Management**: "Handle 100+ clients effortlessly"
+- **Client Management**: "Scale to 200+ clients without hiring"
 - **Progress Tracking**: "Monitor success in real-time"
 - **Professional Export**: "Branded PDFs that impress"
 
@@ -63,9 +63,9 @@ There's a better way."
 **Headline:** "Invest in Your Growth"
 
 **Pricing Tiers:**
-- **Starter**: $47/month - "Perfect for new trainers"
-- **Professional**: $97/month - "For growing practices"
-- **Enterprise**: $297/month - "For teams and gyms"
+- **Starter**: $199 one-time - "Perfect for new trainers" (9 clients, saves $2,000+ over 10 years vs subscriptions)
+- **Professional**: $299 one-time - "For growing practices" (20 clients, most popular tier)
+- **Enterprise**: $399 one-time - "For teams and gyms" (50 clients, unlimited features)
 
 ---
 
@@ -137,7 +137,7 @@ What would you do with an extra 19 hours per week?"
 **Post 2: Feature Highlight**
 "Generate 500 recipes in 60 seconds? ✅
 Balance macros automatically? ✅
-Support 8+ dietary restrictions? ✅
+Support 8+ dietary protocols? ✅
 Export branded PDFs? ✅
 
 Your nutrition business, supercharged."
@@ -160,7 +160,7 @@ Your nutrition business, supercharged."
 
 EvoFitMeals uses AI to generate personalized nutrition plans in minutes.
 
-500 recipes. 8 dietary protocols. Unlimited clients.
+500 recipes. 8 dietary protocols. Scale to 200+ clients.
 
 Start your free trial at evofitmeals.com"
 
@@ -186,7 +186,7 @@ What took you hours now takes minutes."
 **Headline 1:** "AI Meal Planning Software"
 **Headline 2:** "Save 20 Hours Per Week"
 **Headline 3:** "Free 14-Day Trial"
-**Description:** "Generate 500+ personalized recipes instantly. Manage unlimited clients. Professional PDF exports. Join 10,000+ trainers."
+**Description:** "Generate 500+ personalized recipes in ~60 seconds. Scale to 200+ clients. Professional PDF exports. Join thousands of trainers."
 
 ### Display Ads
 
@@ -201,14 +201,14 @@ What took you hours now takes minutes."
 ### Above the Fold
 **Headline:** "The Only Meal Planning Platform That Scales With Your Business"
 
-**Subheadline:** "Generate unlimited personalized meal plans in minutes, not hours. Handle 10X more clients without hiring staff."
+**Subheadline:** "Generate personalized meal plans in minutes, not hours. Scale to 200+ clients without hiring staff."
 
 **Bullet Points:**
 • 500+ AI-generated recipes per batch
 • Supports 8+ dietary protocols
 • Professional PDF exports with your branding
 • Track client progress in real-time
-• Sub-100ms response times
+• Generates full plans in minutes; 500+ recipes in ~60 seconds
 
 **CTA:** "Start Your 14-Day Free Trial"
 **Trust Badge:** "No credit card required • Cancel anytime"
@@ -231,7 +231,7 @@ What took you hours now takes minutes."
 ### Objection Handling
 
 **"It's too expensive"**
-"I understand. Let me ask - how many hours do you spend on meal planning each week? At 20 hours, that's $1,000 of your time at $50/hour. EvoFitMeals costs $97 and gives you those 20 hours back. It's not an expense—it's an investment that pays for itself in 2 hours."
+"I understand. Let me ask - how many hours do you spend on meal planning each week? At 20 hours, that's $1,000 of your time at $50/hour. EvoFitMeals is a one-time payment of $199-$399 and gives you those 20 hours back every single week. It pays for itself in less than one week."
 
 **"I like creating plans manually"**
 "That's great! Many of our users felt the same way. They now use EvoFitMeals to handle the repetitive parts—generating recipes and calculating macros—while they focus on the personalization and coaching that only they can provide."
@@ -248,7 +248,7 @@ What took you hours now takes minutes."
 
 "EvoFitMeals Revolutionizes Nutrition Coaching with AI-Powered Platform"
 
-[City, Date] — EvoFitMeals, the leading AI-powered meal planning platform for fitness professionals, today announced it has helped over 10,000 trainers collectively save 200,000 hours per month while managing 3X more clients.
+[City, Date] — EvoFitMeals, the leading AI-powered meal planning platform for fitness professionals, today announced it has helped over 10,000 trainers collectively save 200,000 hours per month while managing 3× more clients.
 
 "We're not replacing nutrition coaches—we're giving them superpowers," says [Founder Name]. "Our platform handles the time-consuming parts of meal planning so coaches can focus on what matters: transforming lives."
 
@@ -281,7 +281,7 @@ What took you hours now takes minutes."
 
 ### Always Emphasize:
 1. **Time Savings**: "Save 20+ hours per week"
-2. **Scale**: "Manage 3X more clients"
+2. **Scale**: "Manage 3× more clients"
 3. **Quality**: "Professional, personalized results"
 4. **ROI**: "Pays for itself with just 2 clients"
 5. **Support**: "We're here to help you succeed"
