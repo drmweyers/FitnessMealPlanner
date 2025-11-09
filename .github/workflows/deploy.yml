@@ -1,16 +1,10 @@
-name: Build and Deploy to DigitalOcean
-# Automated deployment workflow for FitnessMealPlanner
+name: Build and Deploy to DigitalOcean (DISABLED)
+# DISABLED: DigitalOcean now deploys directly from GitHub via App Spec
+# This workflow is no longer needed as of Nov 9, 2025
+# See URGENT_PRODUCTION_DEPLOYMENT_FIX.md for details
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - 'feature/**'
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_dispatch:  # Only allow manual trigger, disable auto-run
 
 env:
   REGISTRY: registry.digitalocean.com

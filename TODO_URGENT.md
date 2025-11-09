@@ -1,7 +1,40 @@
 # TODO URGENT - Critical Development Priorities
 **Created:** 2025-09-24
-**Updated:** January 2025
+**Updated:** November 8, 2025
 **Priority:** CRITICAL - Top Priority Items
+
+---
+
+## 🚨 PRODUCTION DEPLOYMENT FIX - HIGHEST PRIORITY (November 8, 2025)
+
+**Status:** ⚠️ CRITICAL - Production deploying OLD code from October 28
+**Business Impact:** BMAD Bulk Generator updates (Nov 7) NOT live on evofitmeals.com
+**Estimated Time:** 10-15 minutes to fix + 7-10 minutes deployment
+
+### Problem
+- Production currently deploys from **DigitalOcean Container Registry** (outdated image from Oct 28-29)
+- Latest code changes (BMAD Bulk Generator form updates) from **November 7** are NOT deployed
+- Docker push fails due to proxy/network blocking - cannot update container registry
+
+### Solution
+**Switch App Spec to deploy from GitHub instead of Container Registry**
+
+### Instructions
+See detailed step-by-step guide: **`URGENT_PRODUCTION_DEPLOYMENT_FIX.md`**
+
+### Quick Summary
+1. Go to: https://cloud.digitalocean.com/apps/600abc04-b784-426c-8799-0c09f8b9a958
+2. Settings → App Spec → Edit
+3. Replace `image:` section with `github:` configuration
+4. Save and authorize GitHub access
+5. Wait 7-10 minutes for deployment
+6. Verify latest code is live
+
+### Verification After Fix
+- [ ] Recipe Library tab - NO "Generate Recipes" button
+- [ ] BMAD Bulk Generator - HAS "Focus Ingredient", "Difficulty Level", "Recipe Preferences" fields
+- [ ] BMAD Bulk Generator - NO "Daily Calorie Goal", "Description", "Days", "Meals Per Day" fields
+- [ ] Deployment logs show November 7-8 dates (not Oct 28-29)
 
 ---
 
