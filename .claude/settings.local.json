@@ -172,7 +172,11 @@
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitmeal\" npx drizzle-kit push)",
       "WebSearch",
       "Bash(DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/fitmeal\" npm run db:push)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(for branch in main qa-ready qa-ready-clean Mark-Feature-QA devops feature/performance-optimization)",
+      "Bash(for branch in main qa-ready qa-ready-clean Mark-Feature-QA)",
+      "Bash(git show:*)",
+      "Bash(git remote:*)"
     ],
     "deny": [],
     "ask": [],
