@@ -21,8 +21,10 @@ import {
 
 import {
   recipes,
+  recipeInteractions,
   users,
   type Recipe,
+  type TrackInteraction,
 } from '../../shared/schema.js';
 
 interface ServiceResult<T> {
@@ -293,6 +295,58 @@ export class FavoritesService {
       return {
         success: false,
         error: 'Database error occurred while fetching favorites',
+      };
+    }
+  }
+
+  /**
+   * Track user interactions with recipes (views, ratings, etc.)
+   */
+  async trackInteraction(
+    userId: string,
+    interaction: TrackInteraction
+  ): Promise<ServiceResult<void>> {
+    try {
+      const { recipeId, interactionType, interactionValue, sessionId, metadata } = interaction;
+
+      // Search interactions currently do not associate with a specific recipe
+      if (!recipeId) {
+        return {
+          success: true,
+        };
+      }
+
+      // Ensure recipe exists to avoid FK violations and provide clear error
+      const recipeExists = await db
+        .select({ id: recipes.id })
+        .from(recipes)
+        .where(eq(recipes.id, recipeId))
+        .limit(1);
+
+      if (recipeExists.length === 0) {
+        return {
+          success: false,
+          error: 'Recipe not found',
+        };
+      }
+
+      await db.insert(recipeInteractions).values({
+        userId,
+        recipeId,
+        interactionType,
+        interactionValue,
+        sessionId,
+        metadata: metadata ?? {},
+      });
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error('Error tracking interaction:', error);
+      return {
+        success: false,
+        error: 'Database error occurred while tracking interaction',
       };
     }
   }
