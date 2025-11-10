@@ -1,5 +1,8 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { dirname, join } from "path";
+import os from "os";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
@@ -33,6 +36,41 @@ const normalizeCertificate = (rawCertificate: string): string => {
   return `${header}\n${chunkedBody}\n${footer}\n`;
 };
 
+const materializeCertificate = (certificate: string): string | undefined => {
+  const writeCertificateToPath = (targetPath: string): string | undefined => {
+    try {
+      mkdirSync(dirname(targetPath), { recursive: true });
+      writeFileSync(targetPath, certificate, { encoding: "utf-8" });
+      return targetPath;
+    } catch (error) {
+      console.warn(`Failed to write CA certificate to ${targetPath}:`, error);
+      return undefined;
+    }
+  };
+
+  const existingPath = process.env.NODE_EXTRA_CA_CERTS;
+  if (existingPath) {
+    if (existsSync(existingPath)) {
+      return existingPath;
+    }
+
+    const writtenPath = writeCertificateToPath(existingPath);
+    if (writtenPath) {
+      return writtenPath;
+    }
+  }
+
+  const fallbackPath = join(os.tmpdir(), "fitnessmealplanner-ca.pem");
+  const writtenFallback = writeCertificateToPath(fallbackPath);
+
+  if (writtenFallback) {
+    process.env.NODE_EXTRA_CA_CERTS = writtenFallback;
+    return writtenFallback;
+  }
+
+  return undefined;
+};
+
 const getSslConfig = () => {
   const sslMode = process.env.DB_SSL_MODE?.toLowerCase();
   const databaseUrl = process.env.DATABASE_URL ?? "";
@@ -46,7 +84,14 @@ const getSslConfig = () => {
 
   if (caCertificate) {
     console.log("Using DATABASE_CA_CERT for SSL verification");
-    return { rejectUnauthorized: true, ca: normalizeCertificate(caCertificate) };
+    const normalized = normalizeCertificate(caCertificate);
+    const materializedPath = materializeCertificate(normalized);
+
+    if (materializedPath) {
+      console.log(`CA certificate materialized at: ${materializedPath}`);
+    }
+
+    return { rejectUnauthorized: true, ca: normalized };
   }
 
   if (isDevelopment) {
@@ -78,6 +123,11 @@ const getSslConfig = () => {
 
   if (caCertificateFile) {
     console.log(`Using NODE_EXTRA_CA_CERTS: ${caCertificateFile}`);
+    if (!existsSync(caCertificateFile)) {
+      console.warn(
+        `NODE_EXTRA_CA_CERTS points to ${caCertificateFile}, but the file is missing.`,
+      );
+    }
     return { rejectUnauthorized: true };
   }
 
