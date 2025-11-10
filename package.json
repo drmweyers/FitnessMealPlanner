@@ -259,7 +259,6 @@
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
-    "@rollup/rollup-linux-x64-gnu": "^4.24.0",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/ejs": "^3.1.5",
@@ -304,6 +303,7 @@
     "vite": "^5.4.14"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.9"
+    "bufferutil": "^4.0.9",
+    "@rollup/rollup-linux-x64-gnu": "4.40.1"
   }
 }
