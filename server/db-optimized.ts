@@ -15,12 +15,44 @@ console.log(
 );
 console.log(`Database mode: ${isDevelopment ? "Development" : "Production"}`);
 
+const normalizeCertificate = (rawCertificate: string): string => {
+  const trimmed = rawCertificate.trim();
+
+  if (!trimmed.startsWith("-----BEGIN CERTIFICATE-----")) {
+    return trimmed;
+  }
+
+  const header = "-----BEGIN CERTIFICATE-----";
+  const footer = "-----END CERTIFICATE-----";
+  const body = trimmed
+    .replace(header, "")
+    .replace(footer, "")
+    .replace(/[\s\r\n]+/g, "");
+
+  const chunkedBody = body.match(/.{1,64}/g)?.join("\n") ?? body;
+  return `${header}\n${chunkedBody}\n${footer}\n`;
+};
+
 const getSslConfig = () => {
+  const sslMode = process.env.DB_SSL_MODE?.toLowerCase();
+  const databaseUrl = process.env.DATABASE_URL ?? "";
+  const caCertificate = process.env.DATABASE_CA_CERT;
+  const caCertificateFile = process.env.NODE_EXTRA_CA_CERTS;
+
+  if (sslMode === "disable") {
+    console.log("DB_SSL_MODE=disable detected - SSL disabled");
+    return false;
+  }
+
+  if (caCertificate) {
+    console.log("Using DATABASE_CA_CERT for SSL verification");
+    return { rejectUnauthorized: true, ca: normalizeCertificate(caCertificate) };
+  }
+
   if (isDevelopment) {
     // In development, we're typically using a local PostgreSQL container
     console.log("Database SSL mode: Development - using relaxed SSL settings");
 
-    const databaseUrl = process.env.DATABASE_URL!;
     if (
       databaseUrl.includes("localhost") ||
       databaseUrl.includes("postgres:5432")
@@ -29,26 +61,37 @@ const getSslConfig = () => {
       return false;
     }
 
+    if (sslMode === "require") {
+      console.log(
+        "DB_SSL_MODE=require detected - enforcing SSL with relaxed certificate validation",
+      );
+    }
+
     console.log(
       "Remote development database - SSL enabled with relaxed validation",
     );
     return { rejectUnauthorized: false };
-  } else {
-    // Production: Use simple SSL configuration
-    // NODE_EXTRA_CA_CERTS (set by Docker startup script) handles the certificate
-    console.log("Database SSL mode: Production - using standard SSL");
-
-    if (process.env.NODE_EXTRA_CA_CERTS) {
-      console.log(
-        `Using NODE_EXTRA_CA_CERTS: ${process.env.NODE_EXTRA_CA_CERTS}`,
-      );
-      // Node.js will automatically trust the CA certificate file
-      return { rejectUnauthorized: true };
-    } else {
-      console.log("No NODE_EXTRA_CA_CERTS found, SSL is disabled for this connection.");
-      return false; // Explicitly disable SSL
-    }
   }
+
+  // Production environments
+  console.log("Database SSL mode: Production - using standard SSL");
+
+  if (caCertificateFile) {
+    console.log(`Using NODE_EXTRA_CA_CERTS: ${caCertificateFile}`);
+    return { rejectUnauthorized: true };
+  }
+
+  if (sslMode === "require") {
+    console.warn(
+      "DB_SSL_MODE=require but no CA certificate provided. Falling back to relaxed SSL validation.",
+    );
+    return { rejectUnauthorized: false };
+  }
+
+  console.log(
+    "No CA certificate provided. SSL validation disabled for this connection.",
+  );
+  return false;
 };
 
 /**
