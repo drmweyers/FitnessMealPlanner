@@ -1,11 +1,97 @@
 # TODO URGENT - Critical Development Priorities
 **Created:** 2025-09-24
-**Updated:** November 8, 2025
+**Updated:** November 9, 2025
 **Priority:** CRITICAL - Top Priority Items
 
 ---
 
-## 🚨 PRODUCTION DEPLOYMENT FIX - HIGHEST PRIORITY (November 8, 2025)
+## 🚨 MAILGUN EMAIL SETUP - HIGHEST PRIORITY (November 9, 2025)
+
+**Status:** ⚠️ CRITICAL - MUST COMPLETE TOMORROW SESSION
+**Business Impact:** Trainers cannot invite customers - core feature blocked
+**Estimated Time:** 80 minutes (10 steps, guided process)
+**Email Address:** hello@evofit.io
+**Guide:** `docs/MAILGUN_SETUP_GUIDE.md`
+
+### Problem
+- Current email system uses Resend with unverified domain
+- Domain `bcinnovationlabs.com` is NOT verified
+- Trainers cannot send customer invitations to external emails
+- Only works with test domain `onboarding@resend.dev`
+
+### Solution
+**Replace Resend with Mailgun using new `hello@evofit.io` email**
+
+### 10-Step Implementation Plan
+
+**✅ Steps Completed:**
+- [x] Comprehensive setup guide created (docs/MAILGUN_SETUP_GUIDE.md)
+- [x] Documentation added to BMAD process
+- [x] Step-by-step instructions with 3 provider options (GoDaddy, Namecheap, Cloudflare)
+
+**⏳ Steps to Complete Tomorrow:**
+- [ ] **Step 1:** Create Mailgun account and verify email (15 min)
+- [ ] **Step 2:** Add evofit.io domain to Mailgun (5 min)
+- [ ] **Step 3:** Copy DNS records from Mailgun dashboard (5 min)
+- [ ] **Step 4:** Add DNS records to domain provider (30 min)
+- [ ] **Step 5:** Verify DNS records in Mailgun - wait 15 min (17 min total)
+- [ ] **Step 6:** Copy Mailgun API key and save it (5 min)
+- [ ] **Step 7:** Update .env file with Mailgun credentials (2 min)
+- [ ] **Step 8:** Install Mailgun npm package (1 min)
+- [ ] **Step 9:** Update emailService.ts to use Mailgun (20 min)
+- [ ] **Step 10:** Test email sending with Mailgun (10 min)
+
+### Quick Start for Tomorrow Session
+
+**FIRST ACTION:**
+1. Open guide: `docs/MAILGUN_SETUP_GUIDE.md`
+2. Go to Mailgun signup: https://signup.mailgun.com/new/signup
+3. Follow Step 1 instructions exactly
+
+**USER WILL NEED:**
+- Access to domain provider where evofit.io was purchased (GoDaddy/Namecheap/Cloudflare)
+- Credit card for Mailgun verification (won't be charged - free tier)
+- 80 minutes of uninterrupted time
+
+### Files to Reference
+- **Setup Guide:** `docs/MAILGUN_SETUP_GUIDE.md` (850+ lines, comprehensive)
+- **Current Email Service:** `server/services/emailService.ts` (line 1-855)
+- **Invitation Routes:** `server/invitationRoutes.ts` (line 1-403)
+- **Environment Example:** `.env.example` (line 22-24)
+
+### Success Criteria
+- ✅ Mailgun account created with verified domain
+- ✅ All 5 DNS records added and verified
+- ✅ API credentials saved to .env file
+- ✅ emailService.ts updated to use Mailgun
+- ✅ Test email successfully sent to external address
+- ✅ Trainer can send customer invitation
+- ✅ Customer receives invitation email from hello@evofit.io
+
+### Expected Environment Variables After Completion
+```env
+# Mailgun Email Configuration
+MAILGUN_API_KEY=key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+MAILGUN_DOMAIN=evofit.io
+MAILGUN_API_BASE_URL=https://api.mailgun.net/v3
+FROM_EMAIL=EvoFitMeals <hello@evofit.io>
+```
+
+### Testing After Implementation
+```bash
+# 1. Restart dev environment
+docker-compose --profile dev restart
+
+# 2. Test email sending
+# Login as trainer → Send invitation → Check customer inbox
+
+# 3. Verify Mailgun logs
+# Go to Mailgun dashboard → Sending → Logs
+```
+
+---
+
+## 🚨 PRODUCTION DEPLOYMENT FIX - SECOND PRIORITY (November 8, 2025)
 
 **Status:** ⚠️ CRITICAL - Production deploying OLD code from October 28
 **Business Impact:** BMAD Bulk Generator updates (Nov 7) NOT live on evofitmeals.com

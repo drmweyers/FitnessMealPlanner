@@ -132,6 +132,7 @@
     "db:generate": "drizzle-kit generate",
     "migrate": "tsx scripts/runMigration.ts",
     "migrate:assign-orphaned-plans": "tsx server/scripts/assign-orphaned-meal-plans.ts",
+    "migrate:assign-recipe-tiers": "tsx scripts/assign-recipe-tiers.ts",
     "db:push": "drizzle-kit push",
     "create-admin": "tsx scripts/createFirstAdmin.ts",
     "docker:dev": "docker-compose --profile dev up -d",
