@@ -13,6 +13,7 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import { recipeRouter } from './routes/recipes';
 import { mealTypeRouter } from './routes/mealTypes';
+import { brandingRouter } from './routes/branding';
 import { mealPlanRouter } from './routes/mealPlan';
 import { mealPlanSharingRouter } from './routes/mealPlanSharing';
 import authRouter from './authRoutes';
@@ -187,6 +188,7 @@ app.use('/api', privacyProtection);
 app.use('/api/invitations', invitationRouter);
 app.use('/api/recipes', recipeRouter); // Remove requireAuth to allow public access to approved recipes
 app.use('/api/meal-types', mealTypeRouter); // Story 2.15: Meal type tier filtering
+app.use('/api/branding', brandingRouter); // Story 2.12: Branding & customization (Professional+)
 // app.use('/api/ratings', ratingsRouter); // Recipe rating endpoints REMOVED - feature deleted
 app.use('/api/admin', requireAdmin, adminRouter);
 app.use('/api/export', requireAdmin, exportRouter);
