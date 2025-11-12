@@ -23,6 +23,7 @@ import {
   integer,
   boolean,
   decimal,
+  bigint,
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
