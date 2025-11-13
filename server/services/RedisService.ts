@@ -54,14 +54,67 @@ export class RedisService {
 
     this.defaultTTL = defaultTTL;
 
-    // Create Redis client
+    // Determine if we should use TLS (common for production Redis)
+    const isProduction = process.env.NODE_ENV === 'production';
+    const requireTLS = process.env.REDIS_TLS === 'true' || 
+                       (url && (url.startsWith('rediss://') || url.includes('tls=true')));
+
+    // Create Redis client with comprehensive configuration
     if (url) {
-      this.client = createClient({ url });
+      this.client = createClient({
+        url,
+        socket: {
+          // Socket timeouts and keepalive
+          connectTimeout: 30000, // 30 seconds to establish connection
+          keepAlive: 5000, // Send keepalive every 5 seconds
+          reconnectStrategy: (retries) => {
+            console.log(`[RedisService] Reconnection attempt ${retries}`);
+            if (retries > 10) {
+              console.error('[RedisService] Max reconnection attempts reached');
+              return new Error('Max reconnection attempts reached');
+            }
+            // Exponential backoff: 100ms, 200ms, 400ms, 800ms, etc., max 3s
+            return Math.min(retries * 100, 3000);
+          },
+          // TLS configuration for production
+          ...(requireTLS && {
+            tls: true,
+            rejectUnauthorized: false // Some hosted Redis services use self-signed certs
+          })
+        },
+        password,
+        database,
+        // Disable offline queue to fail fast if disconnected
+        disableOfflineQueue: false,
+        // Keep connection alive
+        pingInterval: 5000
+      });
     } else {
       this.client = createClient({
-        socket: { host, port },
+        socket: {
+          host,
+          port,
+          // Socket timeouts and keepalive
+          connectTimeout: 30000,
+          keepAlive: 5000,
+          reconnectStrategy: (retries) => {
+            console.log(`[RedisService] Reconnection attempt ${retries}`);
+            if (retries > 10) {
+              console.error('[RedisService] Max reconnection attempts reached');
+              return new Error('Max reconnection attempts reached');
+            }
+            return Math.min(retries * 100, 3000);
+          },
+          // TLS for production
+          ...(requireTLS && {
+            tls: true,
+            rejectUnauthorized: false
+          })
+        },
         password,
-        database
+        database,
+        disableOfflineQueue: false,
+        pingInterval: 5000
       });
     }
 
@@ -92,7 +145,15 @@ export class RedisService {
 
   async connect(): Promise<void> {
     if (!this.isConnected) {
-      await this.client.connect();
+      try {
+        console.log('[RedisService] Connecting to Redis...');
+        await this.client.connect();
+        console.log('[RedisService] Successfully connected to Redis');
+      } catch (error) {
+        console.error('[RedisService] Failed to connect to Redis:', error);
+        // Don't throw - let the fallback cache handle it
+        this.isConnected = false;
+      }
     }
   }
 
@@ -114,12 +175,18 @@ export class RedisService {
         await this.connect();
       }
       
-      const result = await operation();
-      this.updateMetrics(startTime);
-      return result;
+      // Only try operation if connected
+      if (this.isConnected) {
+        const result = await operation();
+        this.updateMetrics(startTime);
+        return result;
+      } else {
+        // Not connected, use fallback immediately
+        throw new Error('Redis not connected');
+      }
     } catch (error) {
       this.metrics.errorCount++;
-      console.warn('Redis operation failed, using fallback:', error);
+      console.warn('[RedisService] Operation failed, using fallback cache:', error instanceof Error ? error.message : error);
       
       if (fallbackOperation) {
         return fallbackOperation();
