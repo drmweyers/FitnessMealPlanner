@@ -24,7 +24,8 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { apiRequest } from '../lib/queryClient';
-import { Sparkles, Check, AlertCircle, ArrowRight, ArrowLeft, Plus, X, Info } from 'lucide-react';
+import { Sparkles, Check, AlertCircle, ArrowRight, ArrowLeft, Plus, X, Info, Utensils } from 'lucide-react';
+import { MealTypeDropdown } from './MealTypeDropdown';
 
 type MealCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 type NutritionMode = 'per-meal' | 'daily-total' | 'none';
@@ -64,6 +65,7 @@ export default function ManualMealPlanCreator() {
   // Form state
   const [mealText, setMealText] = useState('');
   const [planName, setPlanName] = useState('');
+  const [selectedMealType, setSelectedMealType] = useState<string | undefined>(undefined);
   const [meals, setMeals] = useState<ManualMealEntry[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [nutritionMode, setNutritionMode] = useState<NutritionMode>('none');
@@ -136,6 +138,7 @@ export default function ManualMealPlanCreator() {
       setTimeout(() => {
         setMealText('');
         setPlanName('');
+        setSelectedMealType(undefined);
         setMeals([]);
         setIsPreview(false);
         setNutritionMode('none');
@@ -397,6 +400,22 @@ Meal 3
                 onChange={(e) => setPlanName(e.target.value)}
                 placeholder="e.g., John's Weekly Plan, Bulking Phase 1"
                 className="mt-2"
+              />
+            </div>
+
+            {/* Meal Type Filter (Optional) */}
+            <div>
+              <Label className="text-base font-semibold flex items-center gap-2">
+                <Utensils className="h-4 w-4" />
+                Meal Type (Optional - Tier Filtered)
+              </Label>
+              <p className="text-sm text-muted-foreground mt-1 mb-2">
+                Categorize this plan by meal type. Locked types require tier upgrade.
+              </p>
+              <MealTypeDropdown
+                value={selectedMealType}
+                onChange={setSelectedMealType}
+                placeholder="Select meal type (optional)"
               />
             </div>
 

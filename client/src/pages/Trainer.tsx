@@ -19,6 +19,7 @@ import CustomerManagement from "../components/CustomerManagement";
 import TrainerMealPlans from "../components/TrainerMealPlans";
 import ManualMealPlanCreator from "../components/ManualMealPlanCreator";
 import Settings from "../components/Settings";
+import { RecipeCountDisplay } from "../components/RecipeCountDisplay";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Trainer() {
@@ -100,6 +101,11 @@ export default function Trainer() {
         <p className="text-sm sm:text-base text-slate-600">
           Browse recipes and create meal plans for your clients.
         </p>
+      </div>
+
+      {/* Tier Recipe Count Display */}
+      <div className="mb-6 sm:mb-8">
+        <RecipeCountDisplay />
       </div>
 
       <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">

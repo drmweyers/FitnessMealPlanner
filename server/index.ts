@@ -14,6 +14,7 @@ import session from 'express-session';
 import { recipeRouter } from './routes/recipes';
 import { mealTypeRouter } from './routes/mealTypes';
 import { brandingRouter } from './routes/branding';
+import { entitlementsRouter } from './routes/entitlements';
 import { mealPlanRouter } from './routes/mealPlan';
 import { mealPlanSharingRouter } from './routes/mealPlanSharing';
 import authRouter from './authRoutes';
@@ -37,6 +38,7 @@ import { emailPreferencesRouter } from './routes/emailPreferences';
 import { emailAnalyticsRouter } from './routes/emailAnalytics';
 import { groceryListsRouter } from './routes/groceryLists';
 import { exportRouter } from './routes/export';
+import { paymentRouter } from './routes/payment'; // Stripe payment integration
 // TEMPORARILY DISABLED - Stripe integration incomplete
 // import tierRouter from './routes/tierRoutes';
 // import subscriptionRouter from './routes/subscriptionRoutes';
@@ -189,6 +191,7 @@ app.use('/api/invitations', invitationRouter);
 app.use('/api/recipes', recipeRouter); // Remove requireAuth to allow public access to approved recipes
 app.use('/api/meal-types', mealTypeRouter); // Story 2.15: Meal type tier filtering
 app.use('/api/branding', brandingRouter); // Story 2.12: Branding & customization (Professional+)
+app.use('/api/entitlements', entitlementsRouter); // Tier and feature entitlements
 // app.use('/api/ratings', ratingsRouter); // Recipe rating endpoints REMOVED - feature deleted
 app.use('/api/admin', requireAdmin, adminRouter);
 app.use('/api/export', requireAdmin, exportRouter);
@@ -213,6 +216,9 @@ app.use('/api/admin/analytics', adminAnalyticsRouter);
 app.use('/api/progress-summaries', progressSummariesRouter);
 app.use('/api/email-preferences', emailPreferencesRouter);
 app.use('/api/email-analytics', emailAnalyticsRouter);
+
+// Payment routes (Stripe integration - 8 endpoints)
+app.use('/api', paymentRouter);
 
 // 3-Tier Subscription System Routes
 // TEMPORARILY DISABLED - Stripe integration incomplete

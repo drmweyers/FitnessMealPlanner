@@ -24,6 +24,7 @@ import {
 import { cn } from '../lib/utils';
 import MobileNavigation from './MobileNavigation';
 import OfflineBanner from './OfflineBanner';
+import { TierBadge } from './TierBadge';
 
 interface LayoutProps {
   children: ReactNode;
@@ -119,6 +120,13 @@ const Layout = ({ children }: LayoutProps) => {
 
             {/* Right side items */}
             <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
+              {/* Tier Badge - Only for trainers */}
+              {user?.role === 'trainer' && (
+                <div className="hidden md:block">
+                  <TierBadge size="sm" />
+                </div>
+              )}
+
               {/* Notifications - Hidden on small screens */}
               <button className="hidden sm:block p-2 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors duration-200">
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5" />

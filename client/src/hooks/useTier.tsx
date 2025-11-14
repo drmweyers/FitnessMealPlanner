@@ -52,9 +52,28 @@ const TIER_FEATURES: Record<TierLevel, TierInfo['features']> = {
 export function useTier() {
   const { user } = useUser();
 
-  // For now, default to 'starter' tier
-  // TODO: Fetch actual tier from subscription API when available
-  const tier: TierLevel = 'starter';
+  // Fetch tier from subscription API (only for trainers)
+  const { data: tierData, isLoading } = useQuery({
+    queryKey: ['user-tier', user?.id],
+    queryFn: async () => {
+      // Only fetch for trainers
+      if (user?.role !== 'trainer') {
+        return { tier: 'starter' as TierLevel };
+      }
+
+      const response = await fetch('/api/entitlements');
+      if (!response.ok) {
+        // Default to starter if API fails
+        return { tier: 'starter' as TierLevel };
+      }
+      const data = await response.json();
+      return { tier: (data.tier || 'starter') as TierLevel };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const tier: TierLevel = tierData?.tier || 'starter';
 
   return {
     tier,
@@ -62,6 +81,7 @@ export function useTier() {
     isStarter: tier === 'starter',
     isProfessional: tier === 'professional',
     isEnterprise: tier === 'enterprise',
+    isLoading,
     canAccess: (requiredTier: TierLevel) => {
       const tierOrder: Record<TierLevel, number> = {
         starter: 1,

@@ -10,8 +10,10 @@ import { useTierInfo } from '@/hooks/useTierInfo';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChefHat, TrendingUp, Crown, Zap } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ChefHat, TrendingUp, Crown, Zap, CreditCard, Palette } from 'lucide-react';
 import { TierSelectionModal } from '@/components/tiers/TierSelectionModal';
+import BrandingSettings from '@/components/BrandingSettings';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -26,8 +28,21 @@ export default function Settings() {
 
   return (
     <div className="space-y-6">
-      {/* Current Tier Section */}
-      <Card>
+      <Tabs defaultValue="subscription" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="subscription" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Subscription
+          </TabsTrigger>
+          <TabsTrigger value="branding" className="flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            Branding
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="subscription" className="space-y-6 mt-6">
+          {/* Current Tier Section */}
+          <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -227,17 +242,23 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Tier Selection Modal */}
-      <TierSelectionModal
-        open={showTierModal}
-        onClose={() => setShowTierModal(false)}
-        currentTier={tierLevel}
-        onSuccess={() => {
-          setShowTierModal(false);
-          // Reload page to refresh tier information
-          window.location.reload();
-        }}
-      />
+          {/* Tier Selection Modal */}
+          <TierSelectionModal
+            open={showTierModal}
+            onClose={() => setShowTierModal(false)}
+            currentTier={tierLevel}
+            onSuccess={() => {
+              setShowTierModal(false);
+              // Reload page to refresh tier information
+              window.location.reload();
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="branding" className="mt-6">
+          <BrandingSettings />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
