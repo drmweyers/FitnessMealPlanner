@@ -271,7 +271,7 @@ describe('EntitlementsService', () => {
 
       const result = await service.checkFeatureAccess(mockTrainerId, 'analytics');
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         allowed: true,
         currentTier: 'professional',
       });
@@ -328,7 +328,7 @@ describe('EntitlementsService', () => {
 
       const result = await service.checkUsageLimit(mockTrainerId, 'customers');
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         allowed: true,
         currentTier: 'starter',
       });

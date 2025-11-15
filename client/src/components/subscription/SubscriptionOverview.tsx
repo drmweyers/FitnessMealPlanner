@@ -177,17 +177,14 @@ export function SubscriptionOverview() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Customers Usage */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle>Customers</CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink">
+                  <Users className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <CardTitle className="text-base sm:text-lg truncate">Customers</CardTitle>
                 </div>
-                <Badge variant="outline">
-                  {subscription.limits.customers.used} /{' '}
-                  {subscription.limits.customers.max === -1
-                    ? '∞'
-                    : subscription.limits.customers.max}
+                <Badge variant="outline" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm">
+                  {subscription.limits.customers.used}/{subscription.limits.customers.max === -1 ? '∞' : subscription.limits.customers.max}
                 </Badge>
               </div>
             </CardHeader>
@@ -196,7 +193,7 @@ export function SubscriptionOverview() {
                 value={subscription.limits.customers.percentage}
                 className="h-2"
               />
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                 {subscription.limits.customers.max === -1
                   ? 'Unlimited customers'
                   : `${Math.round(subscription.limits.customers.percentage)}% used`}
@@ -206,17 +203,14 @@ export function SubscriptionOverview() {
 
           {/* Meal Plans Usage */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
-                  <CardTitle>Meal Plans</CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink">
+                  <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <CardTitle className="text-base sm:text-lg truncate">Meal Plans</CardTitle>
                 </div>
-                <Badge variant="outline">
-                  {subscription.limits.mealPlans.used} /{' '}
-                  {subscription.limits.mealPlans.max === -1
-                    ? '∞'
-                    : subscription.limits.mealPlans.max}
+                <Badge variant="outline" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm">
+                  {subscription.limits.mealPlans.used}/{subscription.limits.mealPlans.max === -1 ? '∞' : subscription.limits.mealPlans.max}
                 </Badge>
               </div>
             </CardHeader>
@@ -225,7 +219,7 @@ export function SubscriptionOverview() {
                 value={subscription.limits.mealPlans.percentage}
                 className="h-2"
               />
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                 {subscription.limits.mealPlans.max === -1
                   ? 'Unlimited meal plans'
                   : `${Math.round(subscription.limits.mealPlans.percentage)}% used`}

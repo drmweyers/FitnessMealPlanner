@@ -183,7 +183,8 @@
       "Bash(python3:*)",
       "Bash(bash:*)",
       "Bash(git reset:*)",
-      "Bash(rmdir:*)"
+      "Bash(rmdir:*)",
+      "Bash(stripe:*)"
     ],
     "deny": [],
     "ask": [],
