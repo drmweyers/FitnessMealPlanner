@@ -6,7 +6,6 @@
  */
 
 import { useState } from 'react';
-import { Layout } from '../components/Layout';
 import { SubscriptionOverview } from '../components/subscription/SubscriptionOverview';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -24,7 +23,7 @@ import {
   Calendar,
   DollarSign,
 } from 'lucide-react';
-import { Navigate } from 'wouter';
+import { Redirect } from 'wouter';
 
 interface BillingHistory {
   id: string;
@@ -42,24 +41,23 @@ export default function Billing() {
 
   // Only trainers can access billing page
   if (user && user.role !== 'trainer') {
-    return <Navigate to="/" />;
+    return <Redirect to="/" />;
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Redirect to="/login" />;
   }
 
   return (
-    <Layout>
-      <div className="container max-w-7xl mx-auto py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Billing & Subscription</h1>
-          <p className="text-muted-foreground">
-            Manage your subscription, payment methods, and billing history
-          </p>
-        </div>
+    <div className="container max-w-7xl mx-auto py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Billing & Subscription</h1>
+        <p className="text-muted-foreground">
+          Manage your subscription, payment methods, and billing history
+        </p>
+      </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-auto">
             <TabsTrigger value="overview">
               <CreditCard className="h-4 w-4 mr-2" />
@@ -90,8 +88,7 @@ export default function Billing() {
             <BillingHistorySection />
           </TabsContent>
         </Tabs>
-      </div>
-    </Layout>
+    </div>
   );
 }
 
