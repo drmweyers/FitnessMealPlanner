@@ -82,7 +82,33 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.use(express.json({ 
+// Stripe webhook endpoint - MUST be registered before JSON parser
+// This endpoint needs raw body for signature verification
+app.post(
+  '/api/v1/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'] as string;
+
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature header' });
+    }
+
+    try {
+      const { stripePaymentService } = await import('./services/StripePaymentService');
+      const rawBody = req.body.toString('utf8');
+      const result = await stripePaymentService.handleWebhook(rawBody, signature);
+      res.json({ received: true, eventId: result.event?.id });
+    } catch (error: any) {
+      console.error('[Webhook] Error:', error);
+      res.status(400).json({
+        error: error.message || 'Webhook processing failed',
+      });
+    }
+  }
+);
+
+app.use(express.json({
   limit: '500kb' // Standard payload limit
 }));
 app.use(express.urlencoded({ 

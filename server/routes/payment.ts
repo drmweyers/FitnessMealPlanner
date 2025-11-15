@@ -77,32 +77,9 @@ paymentRouter.post(
 );
 
 /**
- * POST /api/v1/stripe/webhook
- * Handle Stripe webhook events
+ * NOTE: Webhook handler moved to server/index.ts to ensure raw body parsing
+ * POST /api/v1/stripe/webhook is registered directly in index.ts before JSON parser
  */
-paymentRouter.post('/v1/stripe/webhook', async (req: Request, res: Response) => {
-  const signature = req.headers['stripe-signature'] as string;
-
-  if (!signature) {
-    return res.status(400).json({ error: 'Missing stripe-signature header' });
-  }
-
-  try {
-    const payload = req.body;
-
-    // If body is already parsed as JSON, stringify it
-    const rawBody = typeof payload === 'string' ? payload : JSON.stringify(payload);
-
-    const result = await stripePaymentService.handleWebhook(rawBody, signature);
-
-    res.json({ received: true, eventId: result.event?.id });
-  } catch (error: any) {
-    console.error('[Webhook] Error:', error);
-    res.status(400).json({
-      error: error.message || 'Webhook processing failed',
-    });
-  }
-});
 
 /**
  * POST /api/v1/tiers/billing-portal

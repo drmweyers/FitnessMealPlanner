@@ -155,11 +155,12 @@ export class StripePaymentService {
     await db.insert(paymentLogs).values({
       trainerId,
       stripeCustomerId: customer.id,
-      eventType: 'checkout.session.created',
+      eventType: 'purchase',
       amount: pricing.amount,
       currency: pricing.currency,
       status: 'pending',
       metadata: { sessionId: session.id, tier },
+      occurredAt: new Date(),
     });
 
     return {
@@ -352,11 +353,12 @@ export class StripePaymentService {
     await db.insert(paymentLogs).values({
       trainerId,
       stripeCustomerId: session.customer as string,
-      eventType: 'checkout.session.completed',
+      eventType: 'purchase',
       amount: pricing.amount,
       currency: pricing.currency,
       status: 'succeeded',
       metadata: { sessionId: session.id, tier },
+      occurredAt: new Date(),
     });
 
     // Invalidate entitlements cache
@@ -469,11 +471,12 @@ export class StripePaymentService {
     await db.insert(paymentLogs).values({
       trainerId: subscription.trainerId,
       stripeCustomerId: customerId,
-      eventType: 'invoice.payment_succeeded',
+      eventType: 'purchase',
       amount: invoice.amount_paid,
       currency: invoice.currency,
       status: 'succeeded',
       metadata: { invoiceId: invoice.id },
+      occurredAt: new Date(),
     });
   }
 
@@ -496,11 +499,12 @@ export class StripePaymentService {
     await db.insert(paymentLogs).values({
       trainerId: subscription.trainerId,
       stripeCustomerId: customerId,
-      eventType: 'invoice.payment_failed',
+      eventType: 'purchase',
       amount: invoice.amount_due,
       currency: invoice.currency,
       status: 'failed',
       metadata: { invoiceId: invoice.id },
+      occurredAt: new Date(),
     });
 
     // Update subscription status to past_due

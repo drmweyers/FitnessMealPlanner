@@ -1,9 +1,13 @@
 import { Page, expect } from '@playwright/test';
 
-export async function loginAsTrainer(page: Page) {
+export async function loginAsTrainer(
+  page: Page,
+  email: string = 'trainer.test@evofitmeals.com',
+  password: string = 'TestTrainer123!'
+) {
   // Navigate to login page
   await page.goto('/', { waitUntil: 'networkidle' });
-  
+
   // Check if already logged in
   const isLoggedIn = await page.locator('[data-testid="user-menu"]').isVisible();
   if (isLoggedIn) {
@@ -11,26 +15,26 @@ export async function loginAsTrainer(page: Page) {
     await page.goto('/trainer', { waitUntil: 'networkidle' });
     return;
   }
-  
+
   // Look for login form or login button
   const hasLoginForm = await page.locator('[data-testid="login-form"]').isVisible();
   const hasLoginButton = await page.locator('text=Login').isVisible();
-  
+
   if (hasLoginButton && !hasLoginForm) {
     await page.click('text=Login');
     await page.waitForSelector('[data-testid="login-form"]');
   }
-  
-  // Fill in trainer credentials
-  await page.fill('[data-testid="email-input"]', 'testtrainer@example.com');
-  await page.fill('[data-testid="password-input"]', 'TrainerPassword123!');
-  
+
+  // Fill in trainer credentials (use official test credentials by default)
+  await page.fill('[data-testid="email-input"]', email);
+  await page.fill('[data-testid="password-input"]', password);
+
   // Submit login form
   await page.click('[data-testid="login-submit"]');
-  
+
   // Wait for successful login and redirect to trainer page
   await page.waitForURL(/.*trainer.*/, { timeout: 10000 });
-  
+
   // Verify we're logged in as trainer
   await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
 }
@@ -61,28 +65,33 @@ export async function loginAsAdmin(page: Page) {
   await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
 }
 
-export async function loginAsCustomer(page: Page) {
+export async function loginAsCustomer(
+  page: Page,
+  email: string = 'customer.test@evofitmeals.com',
+  password: string = 'TestCustomer123!'
+) {
   await page.goto('/', { waitUntil: 'networkidle' });
-  
+
   const isLoggedIn = await page.locator('[data-testid="user-menu"]').isVisible();
   if (isLoggedIn) {
     await page.goto('/customer', { waitUntil: 'networkidle' });
     return;
   }
-  
+
   const hasLoginForm = await page.locator('[data-testid="login-form"]').isVisible();
   const hasLoginButton = await page.locator('text=Login').isVisible();
-  
+
   if (hasLoginButton && !hasLoginForm) {
     await page.click('text=Login');
     await page.waitForSelector('[data-testid="login-form"]');
   }
-  
-  await page.fill('[data-testid="email-input"]', 'testcustomer@example.com');
-  await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-  
+
+  // Fill in customer credentials (use official test credentials by default)
+  await page.fill('[data-testid="email-input"]', email);
+  await page.fill('[data-testid="password-input"]', password);
+
   await page.click('[data-testid="login-submit"]');
-  
+
   await page.waitForURL(/.*customer.*/, { timeout: 10000 });
   await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
 }
