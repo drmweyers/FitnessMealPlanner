@@ -80,8 +80,10 @@ COPY --from=builder /app/tailwind.config.ts ./
 # Copy migration files
 COPY --from=builder /app/drizzle.config.ts ./
 
-# Copy built client files (vite with root:client outputs to client/client/dist due to outDir config)
-COPY --from=builder /app/client/client/dist ./client/dist
+# Copy built client files (vite outputs to dist/public as per vite.config.ts)
+# Server expects React app at server/public/
+COPY --from=builder /app/dist/public ./server/public
+COPY --from=builder /app/dist/index.js ./dist/index.js
 
 # Verify all critical files are present
 RUN echo "🔍 Verifying production files..." && \
@@ -89,7 +91,8 @@ RUN echo "🔍 Verifying production files..." && \
     ls -la server/index.ts && \
     ls -la shared/ && \
     ls -la scripts/ && \
-    ls -la client/dist/ && \
+    ls -la server/public/ && \
+    ls -la dist/index.js && \
     echo "✅ All critical files present"
 
 # Create startup script for SSL + migrations
@@ -117,7 +120,7 @@ RUN echo '#!/bin/bash' > /app/start.sh && \
     echo 'ls -la server/index.ts && echo "✅ server entry point found" || echo "❌ server/index.ts missing"' >> /app/start.sh && \
     echo 'ls -la shared/ && echo "✅ shared directory found" || echo "❌ shared directory missing"' >> /app/start.sh && \
     echo 'ls -la scripts/ && echo "✅ scripts directory found" || echo "❌ scripts directory missing"' >> /app/start.sh && \
-    echo 'ls -la client/dist/index.html && echo "✅ client build found" || echo "❌ client build missing"' >> /app/start.sh && \
+    echo 'ls -la server/public/index.html && echo "✅ client build found" || echo "❌ client build missing"' >> /app/start.sh && \
     echo 'ls -la drizzle.config.ts && echo "✅ drizzle config found" || echo "❌ drizzle config missing"' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
     echo '# Run database migrations' >> /app/start.sh && \

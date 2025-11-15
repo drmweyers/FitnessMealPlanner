@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { getFetch } from './utils/fetch.js';
 
 const execAsync = promisify(exec);
 
@@ -488,8 +489,8 @@ export class SelfHealingSystem {
 
   private async testRouteHealth(route: string): Promise<boolean> {
     try {
-      const fetch = (await import('node-fetch')).default;
-      const response = await fetch(`http://localhost:4000${route}`, { timeout: 5000 });
+      const fetch = await getFetch();
+      const response = await fetch(`http://localhost:4000${route}`, { timeout: 5000 } as any);
       return response.status === 200;
     } catch (error) {
       return false;

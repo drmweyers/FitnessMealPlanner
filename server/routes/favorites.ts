@@ -19,6 +19,10 @@ import {
   type UpdateCollection,
   type AddToCollection
 } from '../../shared/schema-favorites';
+import {
+  trackInteractionSchema,
+  type TrackInteraction,
+} from '../../shared/schema';
 
 const router = Router();
 const favoritesService = getFavoritesService();
@@ -262,6 +266,41 @@ router.get(
           isFavorited,
           recipeId
         }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// POST /api/favorites/interactions - Track recipe interaction
+router.post(
+  '/interactions',
+  requireAuth,
+  favoritesRateLimit,
+  validateRequest(trackInteractionSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id;
+      const interaction: TrackInteraction = req.body;
+
+      const result = await favoritesService.trackInteraction(userId, interaction);
+
+      if (!result.success) {
+        return res.status(400).json({
+          status: 'error',
+          code: 'INTERACTION_ERROR',
+          message: result.error || 'Failed to record interaction',
+        });
+      }
+
+      res.status(201).json({
+        status: 'success',
+        data: {
+          interactionType: interaction.interactionType,
+          recipeId: interaction.recipeId ?? null,
+        },
+        message: 'Interaction recorded',
       });
     } catch (error) {
       next(error);

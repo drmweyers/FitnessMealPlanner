@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
-import fetch from 'node-fetch';
 import { fileURLToPath } from 'url';
+import { fetchWithFallback } from './utils/fetch.js';
 
 // ES module compatible dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -84,7 +84,7 @@ export class RouteFailoverSystem {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      const response = await fetch(`http://localhost:${this.port}${route}`, {
+      const response = await fetchWithFallback(`http://localhost:${this.port}${route}`, {
         signal: controller.signal as any,
         headers: {
           'User-Agent': 'FitnessMealPlanner-HealthCheck/1.0'

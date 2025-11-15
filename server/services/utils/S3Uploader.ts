@@ -1,9 +1,9 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
-import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 import { Readable } from 'stream';
 import { s3Config } from './S3Config'; // Import the new centralized config
+import { fetchWithFallback } from '../../utils/fetch.js';
 
 // Create a single, reusable S3 client instance
 const s3Client = new S3Client({
@@ -24,7 +24,7 @@ const s3Client = new S3Client({
  */
 export async function uploadImageToS3(imageUrl: string, recipeName: string): Promise<string> {
     try {
-        const response = await fetch(imageUrl);
+        const response = await fetchWithFallback(imageUrl);
         if (!response.ok || !response.body) {
             throw new Error(`Failed to fetch image stream from URL: ${response.statusText}`);
         }
