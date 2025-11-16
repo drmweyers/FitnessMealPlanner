@@ -51,7 +51,6 @@ export const getGroceryListByMealPlan = async (req: Request, res: Response) => {
         name: groceryLists.name,
         mealPlanId: groceryLists.mealPlanId,
         customerId: groceryLists.customerId,
-        isActive: groceryLists.isActive,
         createdAt: groceryLists.createdAt,
         updatedAt: groceryLists.updatedAt,
       })
@@ -103,7 +102,6 @@ export const getCustomerGroceryLists = async (req: Request, res: Response) => {
         name: groceryLists.name,
         mealPlanId: groceryLists.mealPlanId,
         customerId: groceryLists.customerId,
-        isActive: groceryLists.isActive,
         createdAt: groceryLists.createdAt,
         updatedAt: groceryLists.updatedAt,
         mealPlanData: personalizedMealPlans.mealPlanData,
@@ -228,15 +226,13 @@ export const generateGroceryItemsFromMealPlan = async (req: Request, res: Respon
           .insert(groceryListItems)
           .values({
             groceryListId,
-            name: ingredient.name,
-            quantity: ingredient.quantity,
-            unit: ingredient.unit,
+            name: ingredient.normalizedName,
+            quantity: Math.ceil(ingredient.parsedQuantity.quantity),
+            unit: ingredient.parsedQuantity.unit,
             category: ingredient.category as any,
             isChecked: false,
-            priority: 'medium' as any,
-            notes: ingredient.recipes ? `For: ${ingredient.recipes.join(', ')}` : undefined,
-            recipeId: ingredient.recipeId,
-            recipeName: ingredient.recipeName
+            priority: ingredient.priority as any,
+            notes: ingredient.recipeNames?.length > 0 ? `For: ${ingredient.recipeNames.join(', ')}` : ingredient.notes,
           })
           .returning()
           .onConflictDoNothing();
@@ -280,7 +276,6 @@ async function createGroceryListForMealPlan(
       customerId,
       mealPlanId,
       name: `${planName} - Grocery List`,
-      isActive: true
     })
     .returning();
 
