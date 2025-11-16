@@ -8,7 +8,7 @@
  * - Custom domain (Enterprise)
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -43,7 +43,7 @@ export default function BrandingSettings() {
   const [customDomain, setCustomDomain] = useState<string>('');
 
   // Fetch branding settings
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading } = useQuery<BrandingSettings>({
     queryKey: ['branding-settings'],
     queryFn: async () => {
       const response = await fetch('/api/branding', {
@@ -53,13 +53,17 @@ export default function BrandingSettings() {
       const data = await response.json();
       return data.data as BrandingSettings;
     },
-    onSuccess: (data) => {
-      setPrimaryColor(data.primaryColor || '');
-      setSecondaryColor(data.secondaryColor || '');
-      setAccentColor(data.accentColor || '');
-      setCustomDomain(data.customDomain || '');
-    },
   });
+
+  // Update local state when settings are loaded (replaces onSuccess from React Query v4)
+  useEffect(() => {
+    if (settings) {
+      setPrimaryColor(settings.primaryColor || '');
+      setSecondaryColor(settings.secondaryColor || '');
+      setAccentColor(settings.accentColor || '');
+      setCustomDomain(settings.customDomain || '');
+    }
+  }, [settings]);
 
   // Upload logo mutation
   const uploadLogoMutation = useMutation({
@@ -349,7 +353,7 @@ export default function BrandingSettings() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {settings?.logoUrl && (
+          {settings && settings.logoUrl && (
             <div className="flex items-center gap-4 p-4 border rounded-lg bg-slate-50">
               <img
                 src={settings.logoUrl}
@@ -561,7 +565,7 @@ export default function BrandingSettings() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {settings?.customDomain && (
+          {settings && settings.customDomain && (
             <div className="flex items-center gap-3 p-4 border rounded-lg bg-slate-50">
               <Globe className="h-5 w-5 text-slate-600" />
               <div className="flex-1">

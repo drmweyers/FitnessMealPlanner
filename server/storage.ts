@@ -700,7 +700,7 @@ export class DatabaseStorage implements IStorage {
       .update(trainerMealPlans)
       .set({
         ...updates,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(trainerMealPlans.id, id))
       .returning();
@@ -726,8 +726,20 @@ export class DatabaseStorage implements IStorage {
 
     // Trigger automatic grocery list generation after successful assignment
     try {
-      const { onMealPlanAssigned } = await import('./utils/mealPlanEvents.js');
-      await onMealPlanAssigned(mealPlanId, customerId);
+      const { onMealPlanAssigned, createMealPlanEvent, MealPlanEventType } = await import('./utils/mealPlanEvents.js');
+
+      // Fetch meal plan data for the event
+      const mealPlan = await this.getTrainerMealPlan(mealPlanId);
+
+      // Create proper event object
+      const event = createMealPlanEvent(
+        MealPlanEventType.ASSIGNED,
+        mealPlanId,
+        customerId,
+        mealPlan.mealPlanData
+      );
+
+      await onMealPlanAssigned(event);
       console.log(`[Storage] Triggered automatic grocery list generation for customer ${customerId} from meal plan ${mealPlanId}`);
     } catch (error) {
       // Log error but don't fail the assignment
@@ -879,44 +891,37 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(recipeFavorites)
       .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getUserFavorites(userId: string, options: { page?: number; limit?: number; search?: string }) {
     const { page = 1, limit = 20, search } = options;
     const offset = (page - 1) * limit;
 
+    // Build where conditions
+    const whereConditions = search
+      ? and(eq(recipeFavorites.userId, userId), like(recipes.name, `%${search}%`))
+      : eq(recipeFavorites.userId, userId);
+
     // Build the query with recipe details
-    let query = db
+    const favorites = await db
       .select({
         favorite: recipeFavorites,
         recipe: recipes,
       })
       .from(recipeFavorites)
       .innerJoin(recipes, eq(recipeFavorites.recipeId, recipes.id))
-      .where(eq(recipeFavorites.userId, userId));
-
-    if (search) {
-      query = query.where(like(recipes.name, `%${search}%`));
-    }
-
-    const favorites = await query
+      .where(whereConditions)
       .orderBy(desc(recipeFavorites.favoriteDate))
       .limit(limit)
       .offset(offset);
 
     // Get total count
-    const totalQuery = db
+    const [{ count: total }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(recipeFavorites)
       .innerJoin(recipes, eq(recipeFavorites.recipeId, recipes.id))
-      .where(eq(recipeFavorites.userId, userId));
-
-    if (search) {
-      totalQuery.where(like(recipes.name, `%${search}%`));
-    }
-
-    const [{ count: total }] = await totalQuery;
+      .where(whereConditions);
 
     return {
       favorites: favorites.map(f => ({
@@ -991,7 +996,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Get recipes in this collection
-    const recipes = await db
+    const recipesList = await db
       .select({
         recipe: recipes,
         collectionRecipe: collectionRecipes,
@@ -1003,7 +1008,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       ...collection,
-      recipes: recipes.map(r => ({
+      recipes: recipesList.map(r => ({
         ...r.recipe,
         addedDate: r.collectionRecipe.addedDate,
         notes: r.collectionRecipe.notes,
@@ -1052,7 +1057,7 @@ export class DatabaseStorage implements IStorage {
       .delete(collectionRecipes)
       .where(and(eq(collectionRecipes.collectionId, collectionId), eq(collectionRecipes.recipeId, recipeId)));
 
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async updateRecipeCollection(userId: string, collectionId: string, updates: any) {
@@ -1070,7 +1075,7 @@ export class DatabaseStorage implements IStorage {
       .delete(recipeCollections)
       .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
 
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Recipe Interactions & Analytics
@@ -1146,7 +1151,15 @@ export class DatabaseStorage implements IStorage {
     const last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    let query = db
+    // Build where conditions
+    const whereConditions = category
+      ? and(
+          eq(recipes.isApproved, true),
+          sql`${recipes.mealTypes} @> ${JSON.stringify([category])}`
+        )
+      : eq(recipes.isApproved, true);
+
+    return await db
       .select({
         recipe: recipes,
         recentViews: sql<number>`count(case when ${recipeInteractions.interactionDate} >= ${last7Days} then 1 end)`,
@@ -1156,13 +1169,7 @@ export class DatabaseStorage implements IStorage {
       .from(recipes)
       .leftJoin(recipeInteractions, eq(recipeInteractions.recipeId, recipes.id))
       .leftJoin(recipeFavorites, eq(recipeFavorites.recipeId, recipes.id))
-      .where(eq(recipes.isApproved, true));
-
-    if (category) {
-      query = query.where(sql`${recipes.mealTypes} @> ${JSON.stringify([category])}`);
-    }
-
-    return await query
+      .where(whereConditions)
       .groupBy(recipes.id)
       .orderBy(desc(sql`count(case when ${recipeInteractions.interactionDate} >= ${last7Days} then 1 end)`))
       .limit(limit);

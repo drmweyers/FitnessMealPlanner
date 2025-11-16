@@ -252,6 +252,12 @@ export interface GroceryList {
   createdAt: string;
   updatedAt: string;
   items?: GroceryListItem[];
+  // Computed properties added by API
+  itemCount?: number;
+  checkedCount?: number;
+  mealPlanName?: string | null;
+  isStandalone?: boolean;
+  data?: any; // For any additional data
 }
 
 /**

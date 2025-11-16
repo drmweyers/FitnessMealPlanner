@@ -188,7 +188,9 @@
       "Bash(npm:*)",
       "Bash(cp:*)",
       "Bash(for:*)",
-      "Bash(do echo \"=== $skill ===\")"
+      "Bash(do echo \"=== $skill ===\")",
+      "Bash(npm update:*)",
+      "Bash(npm outdated:*)"
     ],
     "deny": [],
     "ask": [],
