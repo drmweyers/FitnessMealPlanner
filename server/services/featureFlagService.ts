@@ -478,6 +478,7 @@ export class FeatureFlagService extends EventEmitter {
             timestamp: Date.now(),
           },
         };
+      }
 
       default:
         return {
