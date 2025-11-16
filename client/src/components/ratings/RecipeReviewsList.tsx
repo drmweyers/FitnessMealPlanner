@@ -205,7 +205,7 @@ export default function RecipeReviewsList({
                           <span>•</span>
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {formatDate(review.createdAt)}
+                            {review.createdAt ? formatDate(review.createdAt.toString()) : 'Unknown date'}
                           </div>
                         </div>
                       </div>

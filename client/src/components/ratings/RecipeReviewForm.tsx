@@ -172,7 +172,7 @@ export default function RecipeReviewForm({
             <Checkbox
               id="showAdvanced"
               checked={showAdvanced}
-              onCheckedChange={setShowAdvanced}
+              onCheckedChange={(checked) => setShowAdvanced(checked === true)}
               disabled={isSubmitting}
             />
             <Label htmlFor="showAdvanced" className="text-sm cursor-pointer">

@@ -149,23 +149,23 @@ export default function RatingDisplay({
       )}
 
       {/* Additional Stats */}
-      {(summary.totalReviews > 0 || summary.helpfulCount > 0) && (
+      {(summary.totalReviews > 0 || (summary.helpfulCount ?? 0) > 0) && (
         <div className="flex gap-4 text-gray-600">
           {summary.totalReviews > 0 && (
             <span className={config.text}>
               {summary.totalReviews} {summary.totalReviews === 1 ? 'review' : 'reviews'}
             </span>
           )}
-          
-          {summary.helpfulCount > 0 && (
+
+          {(summary.helpfulCount ?? 0) > 0 && (
             <span className={config.text}>
               {summary.helpfulCount} found helpful
             </span>
           )}
-          
-          {summary.wouldCookAgainCount > 0 && totalRatings > 0 && (
+
+          {(summary.wouldCookAgainCount ?? 0) > 0 && totalRatings > 0 && (
             <span className={config.text}>
-              {Math.round((summary.wouldCookAgainCount / totalRatings) * 100)}% would cook again
+              {Math.round(((summary.wouldCookAgainCount ?? 0) / totalRatings) * 100)}% would cook again
             </span>
           )}
         </div>

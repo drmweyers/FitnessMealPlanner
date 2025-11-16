@@ -261,10 +261,14 @@ function RecipeCard({
               </div>
             ) : engagementData?.avgRating ? (
               <RatingDisplay
-                rating={engagementData.avgRating}
-                totalRatings={engagementData.totalRatings || 0}
+                summary={{
+                  averageRating: engagementData.avgRating,
+                  totalRatings: engagementData.totalRatings || 0,
+                  distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                  helpfulCount: null,
+                  wouldCookAgainCount: null
+                }}
                 size="sm"
-                showReviewCount={true}
                 className="justify-start"
               />
             ) : null}

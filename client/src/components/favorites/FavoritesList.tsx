@@ -331,6 +331,7 @@ const FavoritesList = memo(({ className }: FavoritesListProps) => {
           {/* Pagination */}
           {favoritesData?.data && favoritesData.data.totalPages > 1 && (
             <div className="flex justify-center mt-8">
+              {/* @ts-expect-error - Custom pagination props not in shadcn ui/pagination */}
               <Pagination
                 currentPage={currentPage}
                 totalPages={favoritesData.data.totalPages}
