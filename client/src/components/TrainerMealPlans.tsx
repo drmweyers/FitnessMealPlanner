@@ -162,7 +162,7 @@ export default function TrainerMealPlans() {
       customerId: user?.id || '',
       trainerId: plan.trainerId,
       mealPlanData: plan.mealPlanData,
-      assignedAt: plan.createdAt,
+      assignedAt: plan.createdAt ? new Date(plan.createdAt) : null,
     };
     setSelectedPlan(customerPlan);
   };

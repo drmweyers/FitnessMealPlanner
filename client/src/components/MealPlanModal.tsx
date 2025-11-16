@@ -237,7 +237,7 @@ export default function MealPlanModal({ mealPlan, onClose }: MealPlanModalProps)
                               const isManual = !!meal.manual;
                               const recipe = meal.recipe;
                               const mealName = isManual ? meal.manual : (recipe?.name || 'Unknown');
-                              const mealImage = isManual ? meal.imageUrl : (recipe?.imageUrl || "/api/placeholder/60/60");
+                              const mealImage = isManual ? "/api/placeholder/60/60" : (recipe?.imageUrl || "/api/placeholder/60/60");
                               const mealDescription = isManual ? 'Manual meal entry' : (recipe?.description || "Delicious and nutritious meal");
 
                               return (
