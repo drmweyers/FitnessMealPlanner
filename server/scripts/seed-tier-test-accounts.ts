@@ -27,22 +27,22 @@ async function seedTierTestAccounts() {
         email: 'trainer.starter@test.com',
         password: 'TestPass123!',
         name: 'Starter Trainer',
-        role: 'trainer' as const,
-        tierLevel: 'starter' as const
+        role: 'trainer' as const
+        // tierLevel removed - tier system not implemented
       },
       {
         email: 'trainer.professional@test.com',
         password: 'TestPass123!',
         name: 'Professional Trainer',
-        role: 'trainer' as const,
-        tierLevel: 'professional' as const
+        role: 'trainer' as const
+        // tierLevel removed - tier system not implemented
       },
       {
         email: 'trainer.enterprise@test.com',
         password: 'TestPass123!',
         name: 'Enterprise Trainer',
-        role: 'trainer' as const,
-        tierLevel: 'enterprise' as const
+        role: 'trainer' as const
+        // tierLevel removed - tier system not implemented
       }
     ];
 
@@ -52,19 +52,19 @@ async function seedTierTestAccounts() {
       const existing = await db.select().from(users).where(eq(users.email, account.email));
 
       if (existing.length > 0) {
-        console.log(`✅ Account already exists: ${account.email} (${account.tierLevel})`);
-        // Update to ensure correct tier level and password
+        console.log(`✅ Account already exists: ${account.email}`);
+        // Update to ensure correct password
         const hashedPassword = await bcrypt.hash(account.password, 10);
         await db.update(users)
           .set({
             password: hashedPassword,
             name: account.name,
             role: account.role,
-            tierLevel: account.tierLevel,
+            // tierLevel removed - tier system not implemented
             updatedAt: new Date()
           })
           .where(eq(users.email, account.email));
-        console.log(`   Updated tier level to ${account.tierLevel} for ${account.email}`);
+        console.log(`   Updated account for ${account.email}`);
       } else {
         // Create new account
         const hashedPassword = await bcrypt.hash(account.password, 10);
@@ -73,11 +73,11 @@ async function seedTierTestAccounts() {
           password: hashedPassword,
           name: account.name,
           role: account.role,
-          tierLevel: account.tierLevel,
+          // tierLevel removed - tier system not implemented
           createdAt: new Date(),
           updatedAt: new Date()
         });
-        console.log(`✅ Created new account: ${account.email} (${account.tierLevel})`);
+        console.log(`✅ Created new account: ${account.email}`);
       }
     }
 

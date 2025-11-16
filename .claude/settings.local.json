@@ -190,7 +190,8 @@
       "Bash(for:*)",
       "Bash(do echo \"=== $skill ===\")",
       "Bash(npm update:*)",
-      "Bash(npm outdated:*)"
+      "Bash(npm outdated:*)",
+      "Bash(cut:*)"
     ],
     "deny": [],
     "ask": [],

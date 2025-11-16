@@ -151,13 +151,8 @@ export class SchedulerService {
 
             for (const user of allUsers) {
               try {
-                // Determine allocation amount based on tier
-                let monthlyAllocation = 25; // Default for starter
-                if (user.tierLevel === 'professional') {
-                  monthlyAllocation = 50;
-                } else if (user.tierLevel === 'enterprise') {
-                  monthlyAllocation = 100;
-                }
+                // Fixed allocation for all users (tier system not implemented)
+                const monthlyAllocation = 25; // Default allocation for all users
 
                 // Check if user has an existing allocation record
                 const existingAccess = await db.select()
@@ -176,7 +171,7 @@ export class SchedulerService {
                   // Create new allocation record
                   await db.insert(recipeTierAccess).values({
                     userId: user.id,
-                    tierLevel: user.tierLevel || 'starter',
+                    // tierLevel removed - tier system not implemented
                     monthlyAllocation,
                     lastAllocationDate: now
                   });
@@ -378,13 +373,8 @@ export class SchedulerService {
 
           for (const user of allUsers) {
             try {
-              // Determine allocation amount based on tier
-              let monthlyAllocation = 25; // Default for starter
-              if (user.tierLevel === 'professional') {
-                monthlyAllocation = 50;
-              } else if (user.tierLevel === 'enterprise') {
-                monthlyAllocation = 100;
-              }
+              // Fixed allocation for all users (tier system not implemented)
+              const monthlyAllocation = 25; // Default allocation for all users
 
               // Check if user has an existing allocation record
               const existingAccess = await db.select()
@@ -403,7 +393,7 @@ export class SchedulerService {
                 // Create new allocation record
                 await db.insert(recipeTierAccess).values({
                   userId: user.id,
-                  tierLevel: user.tierLevel || 'starter',
+                  // tierLevel removed - tier system not implemented
                   monthlyAllocation,
                   lastAllocationDate: now
                 });
