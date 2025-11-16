@@ -126,6 +126,7 @@
     "test:continuous:all": "tsx test/continuous-testing/continuous-test-agent.ts --all-tests",
     "test:continuous:verify": "tsx test/continuous-testing/verify-setup.ts",
     "check": "tsc",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:client": "eslint client/",
@@ -200,6 +201,7 @@
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",
+    "docx": "^9.5.1",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.39.3",
     "drizzle-zod": "^0.7.1",
@@ -253,7 +255,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
     "@faker-js/faker": "^10.0.0",
-    "@playwright/test": "^1.54.2",
+    "@playwright/test": "^1.56.1",
     "@replit/vite-plugin-cartographer": "^0.2.7",
     "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
     "@tailwindcss/typography": "^0.5.15",
@@ -286,14 +288,14 @@
     "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
     "drizzle-kit": "^0.30.4",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.27.0",
     "eslint": "^9.38.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.0",
     "eslint-plugin-react-refresh": "^0.4.24",
     "node-fetch": "^3.3.2",
     "pixelmatch": "^7.1.0",
-    "playwright": "^1.54.1",
+    "playwright": "^1.56.1",
     "pngjs": "^7.0.0",
     "postcss": "^8.5.6",
     "postgres": "^3.4.7",
@@ -303,7 +305,7 @@
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",
-    "vite": "^5.4.14"
+    "vite": "^5.4.21"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9"

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, height=630">
+    <title>Facebook Post - EvoFitMeals</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&family=Crimson+Pro:wght@600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 630px;
+            overflow: hidden;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .canvas {
+            width: 1200px;
+            height: 630px;
+            background: #3CDBB1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 70px;
+        }
+
+        /* Geometric patterns */
+        .pattern {
+            position: absolute;
+            inset: 0;
+            opacity: 0.1;
+            background-image:
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,0,0,0.1) 35px, rgba(0,0,0,0.1) 70px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(0,0,0,0.1) 35px, rgba(0,0,0,0.1) 70px);
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            background: white;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            max-width: 1000px;
+            text-align: center;
+        }
+
+        .pre-headline {
+            font-size: 24px;
+            color: #9333EA;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+        }
+
+        .headline {
+            font-size: 58px;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #0F0E0B;
+            margin-bottom: 30px;
+            letter-spacing: -0.02em;
+        }
+
+        .highlight {
+            color: #9333EA;
+            position: relative;
+            display: inline-block;
+        }
+
+        .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            height: 12px;
+            background: #F5C842;
+            z-index: -1;
+        }
+
+        .subheadline {
+            font-size: 28px;
+            color: #756E6B;
+            margin-bottom: 40px;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-bottom: 40px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 56px;
+            font-weight: 800;
+            color: #9333EA;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 18px;
+            color: #756E6B;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .cta {
+            background: #9333EA;
+            color: white;
+            padding: 22px 50px;
+            font-size: 26px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            box-shadow: 0 10px 30px rgba(147,51,234,0.3);
+        }
+
+        .logo {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .logo-icon {
+            font-size: 36px;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas">
+        <div class="pattern"></div>
+
+        <div class="logo">
+            <span class="logo-icon">🍴</span>
+            <span>EvoFitMeals</span>
+        </div>
+
+        <div class="content">
+            <div class="pre-headline">For Fitness Professionals</div>
+            <div class="headline">Save <span class="highlight">64 Hours</span> Every Month</div>
+            <div class="subheadline">AI-powered meal planning that scales your nutrition coaching</div>
+
+            <div class="stats-row">
+                <div class="stat">
+                    <div class="stat-number">80%</div>
+                    <div class="stat-label">Time Reduction</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">$46K</div>
+                    <div class="stat-label">Annual Savings</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">+6</div>
+                    <div class="stat-label">Extra Clients</div>
+                </div>
+            </div>
+
+            <div class="cta">Calculate Your ROI →</div>
+        </div>
+    </div>
+
+    <!-- Instructions for screenshot -->
+    <div style="position: fixed; top: -9999px;">
+        To create the Facebook post image:
+        1. Open this file in Chrome/Firefox
+        2. Set dimensions to 1200x630
+        3. Take screenshot using DevTools
+    </div>
+</body>
+</html>

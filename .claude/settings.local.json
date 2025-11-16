@@ -184,7 +184,11 @@
       "Bash(bash:*)",
       "Bash(git reset:*)",
       "Bash(rmdir:*)",
-      "Bash(stripe:*)"
+      "Bash(stripe:*)",
+      "Bash(npm:*)",
+      "Bash(cp:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $skill ===\")"
     ],
     "deny": [],
     "ask": [],

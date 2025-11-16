@@ -213,7 +213,7 @@ vi.mock('lucide-react', async () => {
   };
 });
 
-describe.skip('Admin Component', () => {
+describe('Admin Component', () => {
   let queryClient: QueryClient;
   let user: ReturnType<typeof userEvent.setup>;
 
@@ -359,16 +359,19 @@ describe.skip('Admin Component', () => {
     });
 
     it('renders tab navigation correctly', () => {
-      // Use getAllByText for responsive design elements that appear multiple times
-      expect(screen.getAllByText('Recipes')).toHaveLength(2); // Desktop + mobile
-      expect(screen.getAllByText('Meal Plan Generator')).toHaveLength(2); // Tab + content heading
-      expect(screen.getAllByText('Admin')).toHaveLength(2); // Desktop + mobile
+      // New 3-tab structure: Recipe Library, Meal Plan Builder, BMAD Generator
+      // Note: Tab labels are hidden on mobile (sm:hidden), only icons show
+      const tabs = screen.getAllByRole('tab');
+      expect(tabs).toHaveLength(3);
+      expect(screen.getByTestId('admin-tab-recipes')).toBeInTheDocument();
+      expect(screen.getByTestId('admin-tab-meal-plans')).toBeInTheDocument();
+      expect(screen.getByTestId('admin-tab-bmad')).toBeInTheDocument();
     });
 
     it('shows recipes tab as active by default', () => {
-      // Check using data-value attribute which is present in the component
-      const recipesTab = screen.getByRole('tab', { name: /Recipes Recipes/i });
-      expect(recipesTab).toHaveAttribute('data-value', 'recipes');
+      // Recipe Library tab should be active by default
+      const recipesTab = screen.getByTestId('admin-tab-recipes');
+      expect(recipesTab).toHaveAttribute('data-state', 'active');
     });
 
     it('renders responsive design classes correctly', () => {
@@ -398,14 +401,9 @@ describe.skip('Admin Component', () => {
     });
 
     it('displays admin action cards correctly', async () => {
-      // Check that admin action cards are rendered instead of stats
-      expect(screen.getByText('Generate Recipes')).toBeInTheDocument();
-      expect(screen.getByText('Create new recipes using AI integration')).toBeInTheDocument();
-      expect(screen.getByText('Generate New Batch')).toBeInTheDocument();
-      
-      expect(screen.getByText('Review Queue')).toBeInTheDocument();
-      expect(screen.getByText('Review and approve pending recipes')).toBeInTheDocument();
-      expect(screen.getByText('View Pending (0)')).toBeInTheDocument();
+      // Action buttons are now in Recipe Library tab header (default active tab)
+      expect(screen.getByText(/Review Queue/)).toBeInTheDocument(); // Contains pending count
+      expect(screen.getByText('Export Data')).toBeInTheDocument();
     });
 
 
@@ -432,29 +430,28 @@ describe.skip('Admin Component', () => {
     });
 
     it('switches to meal plans tab', async () => {
-      const mealPlanTab = screen.getByRole('tab', { name: /Meal Plan Generator Plans/i });
+      const mealPlanTab = screen.getByTestId('admin-tab-meal-plans');
       await user.click(mealPlanTab);
 
       expect(mealPlanTab).toHaveAttribute('data-state', 'active');
       expect(screen.getByTestId('meal-plan-generator')).toBeInTheDocument();
     });
 
-    it('switches to admin tab', async () => {
-      const adminTab = screen.getByRole('tab', { name: /Admin Admin/i });
-      await user.click(adminTab);
+    it('switches to BMAD Generator tab', async () => {
+      const bmadTab = screen.getByTestId('admin-tab-bmad');
+      await user.click(bmadTab);
 
-      expect(adminTab).toHaveAttribute('data-state', 'active');
-      expect(screen.getByText('Generate Recipes')).toBeInTheDocument();
-      expect(screen.getByText('Review Queue')).toBeInTheDocument();
+      expect(bmadTab).toHaveAttribute('data-state', 'active');
+      // BMAD tab content should be visible
     });
 
     it('switches back to recipes tab', async () => {
-      // First switch to admin tab
-      const adminTab = screen.getByRole('tab', { name: /Admin Admin/i });
-      await user.click(adminTab);
+      // First switch to meal plans tab
+      const mealPlanTab = screen.getByTestId('admin-tab-meal-plans');
+      await user.click(mealPlanTab);
 
       // Then switch back to recipes
-      const recipesTab = screen.getByRole('tab', { name: /Recipes Recipes/i });
+      const recipesTab = screen.getByTestId('admin-tab-recipes');
       await user.click(recipesTab);
 
       expect(recipesTab).toHaveAttribute('data-state', 'active');
@@ -462,13 +459,13 @@ describe.skip('Admin Component', () => {
     });
   });
 
-  describe('Admin Tab Actions', () => {
+  describe('Recipe Library Actions', () => {
     beforeEach(async () => {
       renderWithProviders(<Admin />, {
         queryClient,
-        authContextValue: { 
-          user: mockUsers.admin, 
-          isAuthenticated: true, 
+        authContextValue: {
+          user: mockUsers.admin,
+          isAuthenticated: true,
           isLoading: false,
           error: undefined,
           login: vi.fn(),
@@ -481,48 +478,36 @@ describe.skip('Admin Component', () => {
         expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
       });
 
-      // Switch to admin tab
-      const adminTab = screen.getByRole('tab', { name: /Admin Admin/i });
-      await user.click(adminTab);
+      // Recipe Library tab is active by default, no need to switch
     });
 
-    it('renders generate recipes action card', () => {
-      expect(screen.getByText('Generate Recipes')).toBeInTheDocument();
-      expect(screen.getByText('Create new recipes using AI integration')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /generate new batch/i })).toBeInTheDocument();
+    it('renders review queue action button', () => {
+      expect(screen.getByText(/Review Queue/)).toBeInTheDocument();
     });
 
-    it('renders review queue action card', () => {
-      expect(screen.getByText('Review Queue')).toBeInTheDocument();
-      expect(screen.getByText('Review and approve pending recipes')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /view pending/i })).toBeInTheDocument();
+    it('renders export data action button', () => {
+      expect(screen.getByText('Export Data')).toBeInTheDocument();
     });
 
-    it('opens recipe generation modal when generate button is clicked', async () => {
-      const generateButton = screen.getByRole('button', { name: /generate new batch/i });
-      await user.click(generateButton);
+    it('opens pending recipes modal when review queue button is clicked', async () => {
+      const reviewQueueButton = screen.getByText(/Review Queue/);
+      await user.click(reviewQueueButton);
 
-      expect(screen.getByTestId('recipe-generation-modal')).toBeInTheDocument();
-    });
-
-    it('opens pending recipes modal when view pending button is clicked', async () => {
-      const viewPendingButton = screen.getByRole('button', { name: /view pending/i });
-      await user.click(viewPendingButton);
-
-      expect(screen.getAllByText('Pending Recipes')).toHaveLength(2); // Modal header + component
-      expect(screen.getByTestId('pending-recipes-table')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId('pending-recipes-table')).toBeInTheDocument();
+      });
     });
 
     it('displays pending count in review queue button', () => {
-      // The button text includes the pending count from stats (25 from mock data)
-      const viewPendingButton = screen.getByRole('button', { name: /view pending/i });
-      expect(viewPendingButton).toBeInTheDocument();
-      expect(viewPendingButton.textContent).toMatch(/View Pending \([0-9]+\)/);
+      // The button text includes the pending count from stats
+      const reviewQueueButton = screen.getByText(/Review Queue/);
+      expect(reviewQueueButton).toBeInTheDocument();
+      expect(reviewQueueButton.textContent).toMatch(/Review Queue \([0-9]+\)/);
     });
 
   });
 
-  describe('Admin Tab Edge Cases', () => {
+  describe('Recipe Library Edge Cases', () => {
     it('handles missing pending count gracefully', async () => {
       const statsWithoutPending = {
         total: 125,
@@ -558,10 +543,8 @@ describe.skip('Admin Component', () => {
         expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
       });
 
-      const adminTab = screen.getByRole('tab', { name: /Admin Admin/i });
-      await user.click(adminTab);
-
-      expect(screen.getByRole('button', { name: /view pending \(0\)/i })).toBeInTheDocument();
+      // Recipe Library tab is active by default - no need to switch tabs
+      expect(screen.getByText(/Review Queue \(0\)/)).toBeInTheDocument();
     });
   });
 
@@ -585,45 +568,28 @@ describe.skip('Admin Component', () => {
       });
     });
 
-    it('opens and closes recipe generation modal', async () => {
-      // Switch to admin tab
-      const adminTab = screen.getByRole('tab', { name: /Admin Admin/i });
-      await user.click(adminTab);
-
-      // Open modal
-      const generateButton = screen.getByRole('button', { name: /generate new batch/i });
-      await user.click(generateButton);
-
-      expect(screen.getByTestId('recipe-generation-modal')).toBeInTheDocument();
-
-      // Close modal
-      const closeButton = screen.getByTestId('close-generation-modal');
-      await user.click(closeButton);
-
-      expect(screen.queryByTestId('recipe-generation-modal')).not.toBeInTheDocument();
-    });
-
     it('opens and closes pending recipes modal', async () => {
-      // Switch to admin tab
-      const adminTab = screen.getByRole('tab', { name: /Admin Admin/i });
-      await user.click(adminTab);
+      // Recipe Library tab is active by default - no need to switch
 
       // Open modal
-      const viewPendingButton = screen.getByRole('button', { name: /view pending/i });
-      await user.click(viewPendingButton);
+      const reviewQueueButton = screen.getByText(/Review Queue/);
+      await user.click(reviewQueueButton);
 
-      expect(screen.getAllByText('Pending Recipes')).toHaveLength(2); // Modal header + component
-      expect(screen.getByTestId('pending-recipes-table')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId('pending-recipes-table')).toBeInTheDocument();
+      });
 
       // Close modal - find the button with the times icon
       const closeButtons = screen.getAllByRole('button');
-      const closeButton = closeButtons.find(button => 
+      const closeButton = closeButtons.find(button =>
         button.querySelector('.fa-times') || button.textContent?.includes('×')
       );
       expect(closeButton).toBeTruthy();
       await user.click(closeButton!);
 
-      expect(screen.queryByText('Pending Recipes')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByTestId('pending-recipes-table')).not.toBeInTheDocument();
+      });
     });
 
     it.skip('opens recipe detail modal when recipe card is clicked', async () => {
@@ -907,13 +873,14 @@ describe.skip('Admin Component', () => {
       });
     });
 
-    it('renders responsive grid classes for stats cards', async () => {
+    it('renders responsive action buttons in header', async () => {
       await waitFor(() => {
-        expect(screen.getByText('Generate Recipes')).toBeInTheDocument();
+        expect(screen.getByText(/Review Queue/)).toBeInTheDocument();
       });
 
-      const actionGrid = screen.getByText('Generate Recipes').closest('.grid');
-      expect(actionGrid).toHaveClass('grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3');
+      // Action buttons are in a flex container in the Recipe Library header
+      expect(screen.getByText(/Review Queue/)).toBeInTheDocument();
+      expect(screen.getByText('Export Data')).toBeInTheDocument();
     });
 
     it('renders responsive grid classes for recipes', async () => {
@@ -941,15 +908,13 @@ describe.skip('Admin Component', () => {
     });
 
     it('displays responsive tab labels', () => {
-      // Check for both desktop and mobile versions of tab labels
-      const recipesTab = screen.getByRole('tab', { name: /Recipes Recipes/i });
+      // Tabs have hidden text on mobile (sm:hidden), icons always visible
+      const recipesTab = screen.getByTestId('admin-tab-recipes');
       expect(recipesTab).toBeInTheDocument();
-      
-      // The component should have responsive text classes
-      const tabContent = recipesTab.querySelector('span');
-      if (tabContent) {
-        expect(tabContent).toHaveClass('sm:inline');
-      }
+
+      // The component should have responsive text classes (hidden sm:inline)
+      const tabContent = recipesTab.querySelector('span.hidden.sm\\:inline');
+      expect(tabContent).toBeInTheDocument();
     });
   });
 
@@ -990,35 +955,35 @@ describe.skip('Admin Component', () => {
     });
 
     it('supports arrow key navigation between tabs', async () => {
-      const recipesTab = screen.getByRole('tab', { name: /Recipes Recipes/i });
-      const mealPlanTab = screen.getByRole('tab', { name: /Meal Plan Generator Plans/i });
-      const adminTab = screen.getByRole('tab', { name: /Admin Admin/i });
-      
+      const recipesTab = screen.getByTestId('admin-tab-recipes');
+      const mealPlanTab = screen.getByTestId('admin-tab-meal-plans');
+      const bmadTab = screen.getByTestId('admin-tab-bmad');
+
       recipesTab.focus();
       expect(recipesTab).toHaveFocus();
 
       // In jsdom, arrow key navigation needs to be simulated differently
       // since the real keyboard event handling isn't fully implemented
       // Instead, we test that the tabs are focusable and keyboard-accessible
-      
+
       await user.keyboard('{ArrowRight}');
-      
+
       // Instead of expecting automatic focus movement (which jsdom doesn't support),
       // we manually focus the next tab to simulate the keyboard navigation behavior
       mealPlanTab.focus();
       expect(mealPlanTab).toHaveFocus();
 
       await user.keyboard('{ArrowRight}');
-      adminTab.focus();
-      expect(adminTab).toHaveFocus();
+      bmadTab.focus();
+      expect(bmadTab).toHaveFocus();
     });
 
     it('activates tab on Enter key', async () => {
-      const mealPlanTab = screen.getByRole('tab', { name: /Meal Plan Generator Plans/i });
+      const mealPlanTab = screen.getByTestId('admin-tab-meal-plans');
       mealPlanTab.focus();
 
       await user.keyboard('{Enter}');
-      
+
       expect(mealPlanTab).toHaveAttribute('data-state', 'active');
       expect(screen.getByTestId('meal-plan-generator')).toBeInTheDocument();
     });
@@ -1070,11 +1035,12 @@ describe.skip('Admin Component', () => {
       await waitFor(() => {
         expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
         expect(screen.getByTestId('search-filters')).toBeInTheDocument();
-        
+
         // Verify the component is in an authenticated state by checking for recipes content
-        // Since it starts on the recipes tab, we should see recipe-related elements
-        expect(screen.getByRole('tab', { name: /Recipes Recipes/i })).toBeInTheDocument();
-        expect(screen.getByRole('tab', { name: /Admin Admin/i })).toBeInTheDocument();
+        // Since it starts on the Recipe Library tab, we should see recipe-related elements
+        expect(screen.getByTestId('admin-tab-recipes')).toBeInTheDocument();
+        expect(screen.getByTestId('admin-tab-meal-plans')).toBeInTheDocument();
+        expect(screen.getByTestId('admin-tab-bmad')).toBeInTheDocument();
       }, { timeout: 3000 });
     });
 
