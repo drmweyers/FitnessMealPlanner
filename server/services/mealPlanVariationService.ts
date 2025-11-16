@@ -406,8 +406,8 @@ export class MealPlanVariationService {
           day: meal.day,
           mealNumber: meal.mealNumber,
           originalRecipe: {
-            id: meal.recipe.id,
-            name: meal.recipe.name
+            id: meal.recipe?.id || '',
+            name: meal.recipe?.name || ''
           },
           newRecipe: {
             id: seasonalAlternative.id,
@@ -489,8 +489,8 @@ export class MealPlanVariationService {
           day: meal.day,
           mealNumber: meal.mealNumber,
           originalRecipe: {
-            id: meal.recipe.id,
-            name: meal.recipe.name
+            id: meal.recipe?.id || '',
+            name: meal.recipe?.name || ''
           },
           newRecipe: {
             id: cuisineAlternative.id,
@@ -572,8 +572,8 @@ export class MealPlanVariationService {
           day: meal.day,
           mealNumber: meal.mealNumber,
           originalRecipe: {
-            id: meal.recipe.id,
-            name: meal.recipe.name
+            id: meal.recipe?.id || '',
+            name: meal.recipe?.name || ''
           },
           newRecipe: {
             id: adjustedRecipe.id,
@@ -629,20 +629,21 @@ export class MealPlanVariationService {
         meal.day === change.day && meal.mealNumber === change.mealNumber
       );
       
-      if (mealIndex >= 0) {
+      if (mealIndex >= 0 && variedMealPlan.meals[mealIndex].recipe) {
         // Find the new recipe from our available recipes
         // In a full implementation, you'd fetch the full recipe data
-        variedMealPlan.meals[mealIndex].recipe.id = change.newRecipe.id;
-        variedMealPlan.meals[mealIndex].recipe.name = change.newRecipe.name;
+        const recipe = variedMealPlan.meals[mealIndex].recipe!;
+        recipe.id = change.newRecipe.id;
+        recipe.name = change.newRecipe.name;
         // Update nutritional values based on delta
-        variedMealPlan.meals[mealIndex].recipe.caloriesKcal += change.nutritionalDelta.calories;
-        const currentProtein = parseFloat(variedMealPlan.meals[mealIndex].recipe.proteinGrams);
-        const currentCarbs = parseFloat(variedMealPlan.meals[mealIndex].recipe.carbsGrams);  
-        const currentFat = parseFloat(variedMealPlan.meals[mealIndex].recipe.fatGrams);
-        
-        variedMealPlan.meals[mealIndex].recipe.proteinGrams = (currentProtein + change.nutritionalDelta.protein).toString();
-        variedMealPlan.meals[mealIndex].recipe.carbsGrams = (currentCarbs + change.nutritionalDelta.carbs).toString();
-        variedMealPlan.meals[mealIndex].recipe.fatGrams = (currentFat + change.nutritionalDelta.fat).toString();
+        recipe.caloriesKcal += change.nutritionalDelta.calories;
+        const currentProtein = parseFloat(recipe.proteinGrams);
+        const currentCarbs = parseFloat(recipe.carbsGrams);
+        const currentFat = parseFloat(recipe.fatGrams);
+
+        recipe.proteinGrams = (currentProtein + change.nutritionalDelta.protein).toString();
+        recipe.carbsGrams = (currentCarbs + change.nutritionalDelta.carbs).toString();
+        recipe.fatGrams = (currentFat + change.nutritionalDelta.fat).toString();
       }
     });
     
@@ -737,8 +738,8 @@ export class MealPlanVariationService {
           day: meal.day,
           mealNumber: meal.mealNumber,
           originalRecipe: {
-            id: meal.recipe.id,
-            name: meal.recipe.name
+            id: meal.recipe?.id || '',
+            name: meal.recipe?.name || ''
           },
           newRecipe: {
             id: alternative.id,
@@ -1023,7 +1024,7 @@ export class MealPlanVariationService {
   }
 
   private selectRandomMeals(mealPlan: MealPlan, count: number): number[] {
-    const indices = [];
+    const indices: number[] = [];
     const totalMeals = mealPlan.meals.length;
     
     while (indices.length < count && indices.length < totalMeals) {
@@ -1083,8 +1084,8 @@ export class MealPlanVariationService {
 
   private analyzeMealPlanDifficulty(mealPlan: MealPlan): number {
     // Analyze average difficulty of current meal plan
-    const totalPrepTime = mealPlan.meals.reduce((sum, meal) => 
-      sum + (meal.recipe.prepTimeMinutes || 0) + (meal.recipe.cookTimeMinutes || 0), 0
+    const totalPrepTime = mealPlan.meals.reduce((sum, meal) =>
+      sum + (meal.recipe?.prepTimeMinutes || 0) + (meal.recipe?.cookTimeMinutes || 0), 0
     );
     const avgPrepTime = totalPrepTime / mealPlan.meals.length;
     
@@ -1125,7 +1126,7 @@ export class MealPlanVariationService {
     
     // Select meals that would benefit most from difficulty adjustment
     const mealDifficulties = mealPlan.meals.map((meal, index) => {
-      const totalTime = (meal.recipe.prepTimeMinutes || 0) + (meal.recipe.cookTimeMinutes || 0);
+      const totalTime = (meal.recipe?.prepTimeMinutes || 0) + (meal.recipe?.cookTimeMinutes || 0);
       return { index, difficulty: totalTime / 60 };
     });
     

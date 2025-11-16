@@ -53,76 +53,84 @@ export class RecipeQualityScorer {
    */
   private scoreNutritionalBalance(recipe: Recipe): number {
     let score = 100;
-    const nutrition = recipe.nutrition;
-    
-    if (!nutrition) return 0;
-    
+
+    // Use actual recipe nutrition properties
+    const calories = recipe.caloriesKcal || 0;
+    const protein = parseFloat(recipe.proteinGrams || '0');
+    const carbs = parseFloat(recipe.carbsGrams || '0');
+    const fat = parseFloat(recipe.fatGrams || '0');
+
+    if (calories === 0) return 0;
+
     // Check protein ratio (should be 15-35% of calories)
-    const proteinCalories = (nutrition.protein || 0) * 4;
-    const totalCalories = nutrition.calories || 1;
+    const proteinCalories = protein * 4;
+    const totalCalories = calories || 1;
     const proteinRatio = proteinCalories / totalCalories;
-    
+
     if (proteinRatio < 0.15) {
       score -= 20; // Too low protein
     } else if (proteinRatio > 0.40) {
       score -= 10; // Too high protein
     }
-    
+
     // Check carb ratio (should be 40-60% of calories)
-    const carbCalories = (nutrition.carbs || 0) * 4;
+    const carbCalories = carbs * 4;
     const carbRatio = carbCalories / totalCalories;
-    
+
     if (carbRatio < 0.30) {
       score -= 15; // Too low carbs
     } else if (carbRatio > 0.65) {
       score -= 10; // Too high carbs
     }
-    
+
     // Check fat ratio (should be 20-35% of calories)
-    const fatCalories = (nutrition.fat || 0) * 9;
+    const fatCalories = fat * 9;
     const fatRatio = fatCalories / totalCalories;
-    
+
     if (fatRatio < 0.15) {
       score -= 15; // Too low fat
     } else if (fatRatio > 0.40) {
       score -= 10; // Too high fat
     }
-    
-    // Check fiber content (should be at least 5g per 500 calories)
-    const fiberPerCalorie = (nutrition.fiber || 0) / (totalCalories / 500);
-    if (fiberPerCalorie < 3) {
-      score -= 15; // Low fiber
-    }
-    
-    // Check sodium (should be under 600mg per serving for most meals)
-    if (nutrition.sodium && nutrition.sodium > 800) {
-      score -= 10; // High sodium
-    } else if (nutrition.sodium && nutrition.sodium > 1000) {
-      score -= 20; // Very high sodium
-    }
-    
-    // Check sugar (should be under 10g added sugar)
-    if (nutrition.sugar && nutrition.sugar > 15) {
-      score -= 10; // High sugar
-    }
-    
+
+    // Note: fiberGrams, sodiumMg, and sugarGrams are not in the current recipe schema
+    // These checks are commented out until those fields are added to the schema
+
+    // // Check fiber content (should be at least 5g per 500 calories)
+    // const fiberPerCalorie = fiber / (totalCalories / 500);
+    // if (fiberPerCalorie < 3) {
+    //   score -= 15; // Low fiber
+    // }
+
+    // // Check sodium (should be under 600mg per serving for most meals)
+    // if (sodium > 800) {
+    //   score -= 10; // High sodium
+    // } else if (sodium > 1000) {
+    //   score -= 20; // Very high sodium
+    // }
+
+    // // Check sugar (should be under 10g added sugar)
+    // if (sugar > 15) {
+    //   score -= 10; // High sugar
+    // }
+
     return Math.max(0, Math.min(100, score));
   }
-  
+
   /**
    * Score ingredient diversity (0-100)
    */
   private scoreIngredientDiversity(recipe: Recipe): number {
-    const ingredients = recipe.ingredients || [];
-    
+    const ingredients = recipe.ingredientsJson || [];
+
     if (ingredients.length === 0) return 0;
-    
+
     // Count unique ingredients (normalize similar items)
     const uniqueIngredients = new Set(
       ingredients
-        .map(i => i.item?.toLowerCase().trim())
+        .map((i: any) => i.name?.toLowerCase().trim())
         .filter(Boolean)
-        .map(item => {
+        .map((item: any) => {
           // Normalize common variations
           return item!
             .replace(/\s+/g, ' ')
@@ -208,27 +216,31 @@ export class RecipeQualityScorer {
    * Score instruction clarity (0-100)
    */
   private scoreInstructionClarity(recipe: Recipe): number {
-    const instructions = recipe.instructions || [];
-    
+    // Parse instructionsText into array (split by newlines, filter empty)
+    const instructions = (recipe.instructionsText || '')
+      .split('\n')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
     if (instructions.length === 0) return 0;
-    
+
     let score = 100;
     let issues = 0;
-    
+
     // Check for minimum instructions
     if (instructions.length < 3) {
       score -= 20;
       issues++;
     }
-    
+
     // Check each instruction
-    instructions.forEach((instruction, index) => {
+    instructions.forEach((instruction: string, index: number) => {
       // Too brief
       if (instruction.length < 20) {
         score -= 5;
         issues++;
       }
-      
+
       // Too verbose
       if (instruction.length > 300) {
         score -= 3;
@@ -266,9 +278,9 @@ export class RecipeQualityScorer {
    * Score preparation complexity (0-100)
    */
   private scorePreparationComplexity(recipe: Recipe): number {
-    const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-    const instructionCount = recipe.instructions?.length || 0;
-    const ingredientCount = recipe.ingredients?.length || 0;
+    const totalTime = (recipe.prepTimeMinutes || 0) + (recipe.cookTimeMinutes || 0);
+    const instructionCount = (recipe.instructionsText || '').split('\n').filter(s => s.trim().length > 0).length;
+    const ingredientCount = recipe.ingredientsJson?.length || 0;
     
     let score = 100;
     
@@ -324,17 +336,14 @@ export class RecipeQualityScorer {
     // Nutritional balance feedback
     if (scores.nutritionalBalance < 60) {
       warnings.push('Poor nutritional balance');
-      const nutrition = recipe.nutrition;
-      if (nutrition) {
-        if ((nutrition.protein || 0) * 4 / (nutrition.calories || 1) < 0.15) {
+      const calories = recipe.caloriesKcal || 0;
+      const protein = parseFloat(recipe.proteinGrams || '0');
+
+      if (calories > 0) {
+        if (protein * 4 / calories < 0.15) {
           suggestions.push('Increase protein content to at least 15% of calories');
         }
-        if (!nutrition.fiber || nutrition.fiber < 3) {
-          suggestions.push('Add more fiber-rich ingredients (vegetables, whole grains)');
-        }
-        if (nutrition.sodium && nutrition.sodium > 800) {
-          suggestions.push('Reduce sodium content by using herbs and spices instead of salt');
-        }
+        // Note: fiberGrams and sodiumMg checks removed (not in schema)
       }
     } else if (scores.nutritionalBalance >= 80) {
       strengths.push('Excellent nutritional balance');
@@ -359,7 +368,7 @@ export class RecipeQualityScorer {
     
     // Complexity feedback
     if (scores.preparationComplexity < 60) {
-      if ((recipe.prepTime || 0) + (recipe.cookTime || 0) > 90) {
+      if ((recipe.prepTimeMinutes || 0) + (recipe.cookTimeMinutes || 0) > 90) {
         warnings.push('Recipe may be too complex');
         suggestions.push('Consider simplifying or breaking into make-ahead components');
       } else {
