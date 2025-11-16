@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1080">
+    <title>Instagram Post - EvoFitMeals ROI Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Crimson+Pro:wght@600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1080px;
+            height: 1080px;
+            overflow: hidden;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .canvas {
+            width: 1080px;
+            height: 1080px;
+            background: linear-gradient(135deg, #9333EA 0%, #7E22CE 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px;
+        }
+
+        /* Geometric background elements */
+        .bg-circle {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            top: -200px;
+            right: -200px;
+        }
+
+        .bg-square {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(61,219,177,0.15);
+            bottom: -150px;
+            left: -150px;
+            transform: rotate(45deg);
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            color: white;
+        }
+
+        .number {
+            font-size: 180px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 20px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .number-suffix {
+            font-size: 80px;
+            vertical-align: super;
+        }
+
+        .headline {
+            font-size: 58px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .subheadline {
+            font-size: 36px;
+            font-weight: 600;
+            font-family: 'Crimson Pro', serif;
+            opacity: 0.95;
+            margin-bottom: 50px;
+            line-height: 1.4;
+        }
+
+        .cta {
+            background: #F5C842;
+            color: #0F0E0B;
+            padding: 25px 60px;
+            font-size: 32px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .logo {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 40px;
+        }
+
+        .badge {
+            position: absolute;
+            top: 60px;
+            right: 60px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas">
+        <div class="bg-circle"></div>
+        <div class="bg-square"></div>
+
+        <div class="badge">AI-POWERED</div>
+
+        <div class="content">
+            <div class="number">64<span class="number-suffix">hrs</span></div>
+            <div class="headline">Saved Per Month</div>
+            <div class="subheadline">Stop spending weekends on meal plans.<br>Let AI do the heavy lifting.</div>
+            <div class="cta">Calculate Yours →</div>
+        </div>
+
+        <div class="logo">
+            <span class="logo-icon">🍴</span>
+            <span>EvoFitMeals</span>
+        </div>
+    </div>
+
+    <!-- Instructions for screenshot -->
+    <div style="position: fixed; top: -9999px;">
+        To create the Instagram post image:
+        1. Open this file in Chrome/Firefox
+        2. Press F12 to open DevTools
+        3. Toggle device toolbar (Ctrl+Shift+M)
+        4. Set dimensions to 1080x1080
+        5. Right-click canvas > Screenshot Node
+        OR use a screenshot tool to capture the 1080x1080 area
+    </div>
+</body>
+</html>

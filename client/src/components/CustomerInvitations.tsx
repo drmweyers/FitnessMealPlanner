@@ -51,6 +51,9 @@ export default function CustomerInvitations() {
   // Send invitation mutation
   const sendInvitationMutation = useMutation({
     mutationFn: async (data: { customerEmail: string; message?: string }) => {
+      console.log('🚀 Starting invitation send mutation:', data);
+      console.log('🔑 Auth token exists:', !!localStorage.getItem('token'));
+
       const response = await fetch('/api/invitations/send', {
         method: 'POST',
         headers: {
@@ -60,12 +63,17 @@ export default function CustomerInvitations() {
         body: JSON.stringify(data),
       });
 
+      console.log('📡 Response status:', response.status, response.statusText);
+
       if (!response.ok) {
         const error = await response.json();
+        console.error('❌ Response error:', error);
         throw new Error(error.message || 'Failed to send invitation');
       }
 
-      return response.json();
+      const result = await response.json();
+      console.log('✅ Success response:', result);
+      return result;
     },
     onSuccess: (data) => {
       // Handle both success and warning responses
@@ -107,8 +115,11 @@ export default function CustomerInvitations() {
   });
 
   const handleSendInvitation = (e: React.FormEvent) => {
+    console.log('📝 Form submitted');
     e.preventDefault();
+
     if (!customerEmail.trim()) {
+      console.warn('⚠️ No email entered');
       toast({
         title: "Error",
         description: "Please enter a customer email address.",
@@ -117,6 +128,7 @@ export default function CustomerInvitations() {
       return;
     }
 
+    console.log('✉️ Calling mutation with email:', customerEmail.trim());
     sendInvitationMutation.mutate({
       customerEmail: customerEmail.trim(),
       message: message.trim() || undefined,

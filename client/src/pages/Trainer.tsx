@@ -18,7 +18,8 @@ import MealPlanGenerator from "../components/MealPlanGenerator";
 import CustomerManagement from "../components/CustomerManagement";
 import TrainerMealPlans from "../components/TrainerMealPlans";
 import ManualMealPlanCreator from "../components/ManualMealPlanCreator";
-import Settings from "../components/Settings";
+// Settings component removed - settings tab hidden for trainers
+import { RecipeCountDisplay } from "../components/RecipeCountDisplay";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Trainer() {
@@ -39,7 +40,7 @@ export default function Trainer() {
     if (location === '/trainer/manual-meal-plan') return 'manual-plan';
     if (location === '/trainer/customers') return 'customers';
     if (location === '/trainer/meal-plans') return 'saved-plans';
-    if (location === '/trainer/settings') return 'settings';
+    // Settings tab removed for trainers
     return 'recipes';
   };
 
@@ -57,9 +58,7 @@ export default function Trainer() {
       case 'saved-plans':
         navigate('/trainer/meal-plans');
         break;
-      case 'settings':
-        navigate('/trainer/settings');
-        break;
+      // Settings tab removed for trainers
       default:
         navigate('/trainer');
     }
@@ -102,8 +101,13 @@ export default function Trainer() {
         </p>
       </div>
 
+      {/* Tier Recipe Count Display */}
+      <div className="mb-6 sm:mb-8">
+        <RecipeCountDisplay />
+      </div>
+
       <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-6 mb-6 sm:mb-8 h-auto p-1 gap-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6 sm:mb-8 h-auto p-1 gap-1">
           <TabsTrigger
             value="recipes"
             data-testid="recipes-link"
@@ -147,15 +151,7 @@ export default function Trainer() {
             <span className="hidden lg:inline">Customers</span>
             <span className="lg:hidden">Customers</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="settings"
-            data-testid="settings-link"
-            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
-          >
-            <i className="fas fa-cog text-sm sm:text-base"></i>
-            <span className="hidden lg:inline">Settings</span>
-            <span className="lg:hidden">Settings</span>
-          </TabsTrigger>
+          {/* Settings tab hidden for trainers - was causing 404 errors */}
         </TabsList>
 
         <TabsContent value="recipes" className="space-y-4 sm:space-y-6">
@@ -322,9 +318,7 @@ export default function Trainer() {
           <TrainerMealPlans />
         </TabsContent>
 
-        <TabsContent value="settings">
-          <Settings />
-        </TabsContent>
+        {/* Settings tab content hidden for trainers - was causing 404 errors */}
 
       </Tabs>
 

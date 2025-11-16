@@ -46,3 +46,4 @@ token.txt
 .env.local
 coverage/
 dev-env-variables.txt
+current-app-spec.yaml

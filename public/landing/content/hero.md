@@ -4,17 +4,17 @@
 💰 Pay Once. Plan Forever. Save $2,000+
 
 ## Headline
-Turn Nutrition Coaching Into
-a Scalable Revenue Stream
+Pay Once.
+Plan Forever.
 
 ## Subheadline
-Automate custom meal plans in 60 seconds. Serve 3X more clients without working weekends. One-time payment—no monthly fees ever.
+Generate custom meal plans in 60 seconds. One-time payment. No monthly fees. Ever.
 
 ## Primary Button
-See How It Works
+Get Lifetime Access
 
 ## Secondary Button
-Calculate Your Savings
+See Pricing
 
 ## Bottom Text
-$199-$399 one-time • Save $2,000+ vs subscriptions
+$199-$399 one-time • Lifetime access • No subscriptions

@@ -40,6 +40,68 @@
 - **Restart containers**: `docker-compose --profile dev restart`
 - **Rebuild after dependencies change**: `docker-compose --profile dev up -d --build`
 
+## 🚀 MARKETING STRATEGY SYSTEM
+
+**Status:** ✅ FULLY OPERATIONAL - All 6 Skills Loaded
+**Location:** `marketing-sales-assets/strategies-tactics/`
+**Last Updated:** November 15, 2025
+
+### Quick Access for PM & Marketing Agents
+
+**📖 Strategic Reference:** `docs/marketing/MARKETING_STRATEGY_REFERENCE.md`
+
+This comprehensive marketing system provides AI-powered growth strategies:
+
+#### 1. Alex Hormozi Constraint Analysis ⭐ ALWAYS USE FIRST
+- **Skill:** `hormozi-constraint-analysis` (loaded in ~/.claude/skills/)
+- **Purpose:** Identify THE ONE constraint limiting business growth
+- **Framework:** Theory of Constraints + ICE Prioritization
+- **When:** BEFORE recommending any marketing tactics
+
+**PM Agent Instruction:** Always run constraint analysis before creating marketing PRDs.
+
+#### 2. Five Tactical Growth Skills (Loaded & Ready)
+- **paid-media-creative-testing** - Ad generation, campaign management
+- **seo-answer-engine-optimization** - Organic traffic, keyword research
+- **content-repurposing-flywheel** - 70+ social posts/week from one piece
+- **outreach-automation** - Lead generation, cold email at scale
+- **internal-tooling-vibe-coding** - Custom tools, automation workflows
+
+**Marketing Agent:** Use skills based on identified constraint.
+
+### How PM Agent Should Use This
+
+```bash
+# When user requests marketing features:
+1. Run: hormozi-constraint-analysis skill
+2. Identify: Constraint (Traffic/Conversion/Price/Churn)
+3. Recommend: Feature aligned with constraint
+4. Apply: ICE Framework (Impact × Confidence × Ease)
+5. Create: PRD with constraint-aligned goals
+```
+
+**Example:**
+```
+User: "Should we build a mobile app?"
+
+PM Response:
+1. Run constraint analysis
+2. Find constraint = Traffic (not mobile UX)
+3. Recommend: Paid media OR SEO (not mobile app)
+4. ICE Score: Paid media (648) vs Mobile app (96)
+5. Create PRD: "Paid Media Campaign" instead
+```
+
+### Complete Documentation
+- **Playbooks:** `marketing-sales-assets/strategies-tactics/documents/`
+  - `alex-hormozi-playbook.md` (50+ pages)
+  - `growth-hacking-playbook.md` (100+ pages)
+- **Skills:** Loaded in `~/.claude/skills/` (6 skills)
+- **Agent:** `marketing-sales-assets/strategies-tactics/agents/marketing-strategy-agent.md`
+- **PM Reference:** `docs/marketing/MARKETING_STRATEGY_REFERENCE.md`
+
+---
+
 ## Repository Layout
 ```
 /
@@ -58,6 +120,13 @@
 │   ├── middleware/     # Express middleware
 │   ├── utils/          # Backend utilities
 │   └── views/          # EJS templates (for PDFs)
+├── marketing-sales-assets/  # Marketing strategy system ⭐ NEW
+│   └── strategies-tactics/
+│       ├── documents/   # Downloadable playbooks
+│       ├── skills/      # Claude Skills (loaded)
+│       └── agents/      # Marketing Strategy Agent
+├── docs/
+│   └── marketing/       # Marketing strategy reference ⭐ NEW
 ├── test/               # Test suites
 ├── docker-compose.yml  # Docker configuration
 ├── package.json        # Root package configuration
@@ -236,7 +305,7 @@ npx playwright test test/e2e/awesome-testing-protocol.spec.ts --ui
 
 ---
 
-## 🔄 Role Interaction Testing Protocol (NEW - January 2025)
+## 🔄 Role Interaction Testing Protocol (January 2025)
 
 **Purpose:** Comprehensive testing of interactions between Admin, Trainer, and Customer roles
 **Trigger Phrase:** "run interaction testing protocol" or "run role interaction tests"
@@ -325,7 +394,7 @@ This protocol was created using **BMAD multi-agent workflow methodology**:
 
 ---
 
-## 🤖 Continuous Testing Framework (NEW - January 2025)
+## 🤖 Continuous Testing Framework (January 2025)
 
 ### Overview
 FitnessMealPlanner now includes a **Claude-powered autonomous testing agent** that continuously monitors and tests the Meal Plan Generator system without requiring external API calls.
@@ -537,7 +606,7 @@ See `BMAD_IMPLEMENTATION_STATUS.md` for full details.
 
 ## BMAD Software Development Process
 
-### Current BMAD Status (January 12, 2025)
+### Current BMAD Status (November 15, 2025)
 **IMPORTANT**: When asked "where are we with the BMAD process", refer to this section.
 
 The project is using the **BMAD Method** (Agile AI-Driven Development) for systematic feature development:
@@ -1006,7 +1075,7 @@ Then use these commands within Claude Code:
 ## 🤖 BMAD-METHOD INTEGRATION
 
 **Status:** ✅ BMAD v4.44.0 Installed
-**Last Updated:** October 13, 2025
+**Last Updated:** November 15, 2025
 **Global CTO Guidance:** C:\Users\drmwe\Claude\CLAUDE.md
 
 ### Quick Reference
@@ -1615,4 +1684,4 @@ Use this to decide if BMAD brownfield process is needed:
 ---
 
 **BMAD Integration Complete for FitnessMealPlanner**
-**Version:** 1.1.0 | **Updated:** October 13, 2025 | **Brownfield Strategy Added**
+**Version:** 1.1.0 | **Updated:** November 15, 2025 | **Brownfield Strategy Added**

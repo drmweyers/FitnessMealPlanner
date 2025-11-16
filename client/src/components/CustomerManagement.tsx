@@ -16,12 +16,13 @@ import { useToast } from '../hooks/use-toast';
 import { apiRequest } from '../lib/queryClient';
 import { SimplePDFExportButton } from './PDFExportButton';
 import CustomerDetailView from './CustomerDetailView';
-import { 
-  Users, 
-  Plus, 
-  Calendar, 
-  Target, 
-  ChefHat, 
+import CustomerInvitations from './CustomerInvitations';
+import {
+  Users,
+  Plus,
+  Calendar,
+  Target,
+  ChefHat,
   Search,
   MoreVertical,
   Trash2,
@@ -401,6 +402,9 @@ export default function CustomerManagement() {
           {customers.length} Customer{customers.length !== 1 ? 's' : ''}
         </Badge>
       </div>
+
+      {/* Customer Invitations Section */}
+      <CustomerInvitations />
 
       {/* Search */}
       <div className="relative">

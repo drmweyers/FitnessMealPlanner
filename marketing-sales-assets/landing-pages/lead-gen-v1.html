@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EvoFitMeals - AI-Powered Meal Planning for Fitness Professionals</title>
+    <meta name="description" content="Save 64 hours per month on meal planning. AI-powered nutrition coaching for trainers who want to scale.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --purple: #9333EA;
+            --purple-dark: #7E22CE;
+            --green: #3CDBB1;
+            --yellow: #F5C842;
+            --black: #0F0E0B;
+            --white: #FAFAFA;
+            --gray: #756E6B;
+        }
+
+        body {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            background: var(--white);
+            color: var(--black);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .serif {
+            font-family: 'Crimson Pro', Georgia, serif;
+        }
+
+        /* Grain texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDUiLz48L3N2Zz4=');
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Hero Section - Asymmetric Layout */
+        .hero {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-left {
+            background: var(--purple);
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+        }
+
+        .hero-right {
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .hero-number {
+            font-size: 8rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.2);
+            line-height: 1;
+            margin-bottom: 1rem;
+            font-family: 'Crimson Pro', serif;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--white);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 2rem;
+            font-family: 'Crimson Pro', serif;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--yellow);
+            color: var(--black);
+            padding: 1.25rem 2.5rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            align-self: flex-start;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.3);
+            transition: left 0.5s ease;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .stat {
+            border-left: 3px solid var(--purple);
+            padding-left: 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--purple);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Benefits Section - Diagonal Layout */
+        .benefits {
+            padding: 6rem 4rem;
+            background: var(--white);
+            position: relative;
+        }
+
+        .benefits::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: 0;
+            width: 40%;
+            height: 400px;
+            background: var(--green);
+            transform: rotate(-5deg);
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            letter-spacing: -0.02em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-title span {
+            font-family: 'Crimson Pro', serif;
+            font-style: italic;
+            color: var(--purple);
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .benefit {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .benefit.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .benefit-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .benefit-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .benefit-text {
+            color: var(--gray);
+            line-height: 1.8;
+        }
+
+        /* ROI Calculator Section - Full Width Color Block */
+        .calculator-section {
+            background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+            padding: 6rem 4rem;
+            color: var(--white);
+            text-align: center;
+        }
+
+        .calculator-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .calculator-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+        }
+
+        .calculator-embed {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .calculator-link {
+            display: inline-block;
+            background: var(--yellow);
+            color: var(--black);
+            padding: 1.5rem 3rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+        }
+
+        .calculator-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        /* Email Capture - Minimalist */
+        .email-capture {
+            background: var(--black);
+            padding: 6rem 4rem;
+            text-align: center;
+        }
+
+        .email-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 1rem;
+        }
+
+        .email-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray);
+            margin-bottom: 3rem;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .email-form {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .email-input {
+            flex: 1;
+            padding: 1.25rem 1.5rem;
+            font-size: 1.125rem;
+            border: 2px solid var(--gray);
+            background: transparent;
+            color: var(--white);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .email-input::placeholder {
+            color: var(--gray);
+        }
+
+        .email-button {
+            padding: 1.25rem 2.5rem;
+            background: var(--green);
+            color: var(--black);
+            border: none;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+        }
+
+        .email-button:hover {
+            background: var(--yellow);
+            transform: translateY(-2px);
+        }
+
+        /* Social Proof - Editorial Style */
+        .social-proof {
+            padding: 6rem 4rem;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .testimonials {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonial {
+            background: white;
+            padding: 3rem;
+            border-left: 5px solid var(--purple);
+            position: relative;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.6s ease;
+        }
+
+        .testimonial.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .testimonial-quote {
+            font-size: 1.5rem;
+            font-family: 'Crimson Pro', serif;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            color: var(--black);
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--purple);
+        }
+
+        .testimonial-role {
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+
+        /* Footer - Brutalist */
+        .footer {
+            background: var(--black);
+            color: var(--white);
+            padding: 4rem;
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .footer-text {
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 968px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-left {
+                clip-path: none;
+                padding: 3rem 2rem;
+            }
+
+            .hero-right {
+                padding: 3rem 2rem;
+            }
+
+            .hero-number {
+                font-size: 5rem;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .benefits-grid,
+            .testimonials {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .section-title,
+            .calculator-title,
+            .email-title {
+                font-size: 2rem;
+            }
+
+            .email-form {
+                flex-direction: column;
+            }
+
+            .benefits,
+            .calculator-section,
+            .email-capture,
+            .social-proof {
+                padding: 4rem 2rem;
+            }
+        }
+
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-left">
+            <div class="hero-number">64</div>
+            <h1 class="hero-title">Hours Saved Per Month</h1>
+            <p class="hero-subtitle serif">AI-powered meal planning for fitness professionals who want to scale</p>
+            <a href="#calculator" class="cta-button">Calculate Your ROI</a>
+        </div>
+        <div class="hero-right">
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-number">80%</div>
+                    <div class="stat-label">Time Reduction</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">$46K</div>
+                    <div class="stat-label">Avg. Annual Savings</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Trainers Trust Us</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">4.9</div>
+                    <div class="stat-label">Rating (★★★★★)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="benefits reveal">
+        <h2 class="section-title">Why trainers <span>choose</span> EvoFitMeals</h2>
+        <div class="benefits-grid">
+            <div class="benefit">
+                <span class="benefit-icon">🤖</span>
+                <h3 class="benefit-title">AI-Powered Generation</h3>
+                <p class="benefit-text">Create personalized meal plans in seconds, not hours. Our AI understands macros, preferences, and goals.</p>
+            </div>
+            <div class="benefit">
+                <span class="benefit-icon">⚡</span>
+                <h3 class="benefit-title">Scale Your Business</h3>
+                <p class="benefit-text">Serve more clients without burning out. Reclaim 64+ hours monthly to focus on training and growth.</p>
+            </div>
+            <div class="benefit">
+                <span class="benefit-icon">💰</span>
+                <h3 class="benefit-title">Increase Revenue</h3>
+                <p class="benefit-text">Take on 6+ additional clients with saved time. Add $800+/month in new revenue without extra effort.</p>
+            </div>
+            <div class="benefit">
+                <span class="benefit-icon">📊</span>
+                <h3 class="benefit-title">Professional Dashboards</h3>
+                <p class="benefit-text">Track client progress, manage meal plans, and monitor nutrition compliance from one powerful dashboard.</p>
+            </div>
+            <div class="benefit">
+                <span class="benefit-icon">🎯</span>
+                <h3 class="benefit-title">Precision Nutrition</h3>
+                <p class="benefit-text">Hit macro targets perfectly every time. Adjust for dietary restrictions, allergies, and preferences automatically.</p>
+            </div>
+            <div class="benefit">
+                <span class="benefit-icon">📱</span>
+                <h3 class="benefit-title">Client Mobile App</h3>
+                <p class="benefit-text">Your clients get a beautiful mobile experience with grocery lists, recipes, and progress tracking.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROI Calculator Section -->
+    <section id="calculator" class="calculator-section reveal">
+        <h2 class="calculator-title">See Your Potential Savings</h2>
+        <p class="calculator-subtitle">Calculate exactly how much time and money EvoFitMeals will save your business</p>
+        <div class="calculator-embed">
+            <a href="../calculators/roi-calculator-v1.html" target="_blank" class="calculator-link">Launch ROI Calculator →</a>
+            <p style="margin-top: 2rem; opacity: 0.8;">Free calculation • No credit card required • Instant results</p>
+        </div>
+    </section>
+
+    <!-- Social Proof Section -->
+    <section class="social-proof reveal">
+        <h2 class="section-title" style="text-align: center; margin-bottom: 4rem;">Trusted by <span>fitness professionals</span> nationwide</h2>
+        <div class="testimonials">
+            <div class="testimonial">
+                <p class="testimonial-quote">"EvoFitMeals gave me my weekends back. I used to spend 8-10 hours every Sunday creating meal plans. Now it takes me 30 minutes."</p>
+                <div class="testimonial-author">Sarah Chen</div>
+                <div class="testimonial-role">Personal Trainer, Los Angeles</div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-quote">"I doubled my client roster without hiring help. The AI is incredibly accurate with macros and my clients love the variety in their plans."</p>
+                <div class="testimonial-author">Marcus Rodriguez</div>
+                <div class="testimonial-role">Nutrition Coach, Miami</div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-quote">"The ROI was obvious from day one. I calculated I was spending $600/month in time creating plans. EvoFitMeals pays for itself 10x over."</p>
+                <div class="testimonial-author">Jessica Park</div>
+                <div class="testimonial-role">Gym Owner, Seattle</div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-quote">"My clients are seeing better results because the meal plans are so precise. The grocery list feature alone has been a game-changer for compliance."</p>
+                <div class="testimonial-author">David Thompson</div>
+                <div class="testimonial-role">Online Coach, Austin</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Email Capture Section -->
+    <section class="email-capture reveal">
+        <h2 class="email-title">Start Saving Time Today</h2>
+        <p class="email-subtitle serif">Get instant access + free ROI report showing your exact savings</p>
+        <form class="email-form" id="emailForm">
+            <input type="email" class="email-input" placeholder="your@email.com" required id="emailInput">
+            <button type="submit" class="email-button">Get Started</button>
+        </form>
+        <p style="color: var(--gray); margin-top: 2rem; font-size: 0.875rem;">No credit card required • 14-day free trial • Cancel anytime</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-logo">🍴 EvoFitMeals</div>
+        <p class="footer-text">AI-Powered Meal Planning for Fitness Professionals</p>
+        <p class="footer-text">&copy; 2025 EvoFitMeals. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Scroll reveal animation
+        function reveal() {
+            const reveals = document.querySelectorAll('.reveal, .benefit, .testimonial');
+
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('active');
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', reveal);
+        reveal(); // Check on load
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Email form submission
+        document.getElementById('emailForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+
+            // In production, send to your email service
+            alert(`Thank you! We've sent your ROI report to ${email}. Check your inbox!`);
+
+            // Optional: Redirect to calculator
+            // window.location.href = '../calculators/roi-calculator-v1.html';
+        });
+
+        // Parallax effect on hero
+        window.addEventListener('scroll', function() {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero-left');
+            if (hero) {
+                hero.style.transform = `translateY(${scrolled * 0.3}px)`;
+            }
+        });
+    </script>
+</body>
+</html>
