@@ -37,7 +37,8 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
       minCarbs,
       maxCarbs,
       minFat,
-      maxFat
+      maxFat,
+      requireUniqueImages // 🎨 NEW: Force unique image generation
     } = req.body;
     
     // Validate required count parameter
@@ -75,6 +76,7 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
       maxCarbs,
       minFat,
       maxFat,
+      requireUniqueImages, // 🎨 Force unique image generation
       jobId // Pass jobId to track progress
     };
     
