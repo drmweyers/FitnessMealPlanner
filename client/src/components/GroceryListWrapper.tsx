@@ -73,8 +73,8 @@ const GroceryListWrapper: React.FC<GroceryListWrapperProps> = ({
 
     // Sort by items count (desc) and then by name
     filtered.sort((a, b) => {
-      const aItems = parseInt(a.itemCount) || 0;
-      const bItems = parseInt(b.itemCount) || 0;
+      const aItems = a.itemCount ?? 0;
+      const bItems = b.itemCount ?? 0;
       if (aItems !== bItems) return bItems - aItems;
       return (a.name || '').localeCompare(b.name || '');
     });
@@ -103,7 +103,7 @@ const GroceryListWrapper: React.FC<GroceryListWrapperProps> = ({
     if (!listsLoading && Array.isArray(groceryLists) && groceryLists.length > 0 && !selectedListId) {
       // Prioritize lists with items
       const listsWithItems = groceryLists.filter(list =>
-        list && list.id && list.name && parseInt(list.itemCount) > 0
+        list && list.id && list.name && (list.itemCount ?? 0) > 0
       );
       const validLists = groceryLists.filter(list =>
         list && list.id && list.name
@@ -298,7 +298,7 @@ const GroceryListWrapper: React.FC<GroceryListWrapperProps> = ({
                             <span className="truncate">{list.name || 'Unnamed List'}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            {parseInt(list.itemCount) > 0 && (
+                            {(list.itemCount ?? 0) > 0 && (
                               <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                                 {list.itemCount}
                               </span>
