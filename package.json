@@ -199,6 +199,7 @@
     "connect-pg-simple": "^10.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",
     "docx": "^9.5.1",
@@ -224,12 +225,14 @@
     "mailgun.js": "^12.1.1",
     "multer": "^2.0.2",
     "nanoid": "^5.1.5",
+    "node-fetch": "^3.3.2",
     "openai": "^4.52.7",
     "openid-client": "^6.6.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
     "pg": "^8.16.3",
+    "puppeteer": "^24.15.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
@@ -298,8 +301,6 @@
     "playwright": "^1.56.1",
     "pngjs": "^7.0.0",
     "postcss": "^8.5.6",
-    "postgres": "^3.4.7",
-    "puppeteer": "^24.15.0",
     "react-router-dom": "^7.8.2",
     "supertest": "^7.1.4",
     "tailwindcss": "^3.4.17",
@@ -308,6 +309,7 @@
     "vite": "^5.4.21"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.9"
+    "bufferutil": "^4.0.9",
+    "@rollup/rollup-linux-x64-gnu": "4.40.1"
   }
 }

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { getFetch } from './utils/fetch.js';
 
 interface HealthStatus {
   route: string;
@@ -174,7 +175,7 @@ export class HealthMonitor extends EventEmitter {
     const startTime = Date.now();
 
     try {
-      const fetch = (await import('node-fetch')).default;
+      const fetch = await getFetch();
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
 
@@ -357,7 +358,7 @@ export class HealthMonitor extends EventEmitter {
 
   private async sendSlackAlert(type: string, severity: string, message: string, data: any): Promise<void> {
     try {
-      const fetch = (await import('node-fetch')).default;
+      const fetch = await getFetch();
 
       const payload = {
         text: `🔔 FitnessMealPlanner Alert`,

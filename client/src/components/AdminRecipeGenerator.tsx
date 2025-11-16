@@ -103,7 +103,8 @@ export default function AdminRecipeGenerator() {
     const eventSource = new EventSource(`/api/admin/bmad-progress-stream/${jobId}`);
     eventSourceRef.current = eventSource;
 
-    eventSource.onmessage = (event) => {
+    // 🔧 FIX: Listen for typed 'progress' events, not just default messages
+    eventSource.addEventListener('progress', (event) => {
       try {
         const progress = JSON.parse(event.data);
         console.log('[SSE] Progress update:', progress);
@@ -119,6 +120,17 @@ export default function AdminRecipeGenerator() {
           });
           eventSource.close();
           return;
+        }
+
+        // 🎯 UX FIX: Handle validation warnings
+        if (progress.warning) {
+          console.warn('[SSE] Validation warning:', progress.warning);
+          toast({
+            title: "⚠️ Validation Issue",
+            description: progress.warning,
+            variant: "destructive",
+            duration: 10000, // Show for 10 seconds so user can read
+          });
         }
 
         // Update progress percentage
@@ -174,18 +186,34 @@ export default function AdminRecipeGenerator() {
 
           // Show completion toast
           if (progress.currentStep === 'complete') {
-            toast({
-              title: "Generation Complete",
-              description: `Successfully generated ${progress.completed} recipes${progress.failed > 0 ? `, ${progress.failed} failed` : ''}`,
-            });
+            // 🎯 UX FIX: Show warnings if any recipes failed
+            if (progress.failed > 0 && progress.errors && progress.errors.length > 0) {
+              toast({
+                title: `⚠️ ${progress.completed} Recipes Generated (${progress.failed} Failed)`,
+                description: progress.errors[0], // Show first error
+                variant: "default",
+                duration: 10000,
+              });
+            } else {
+              toast({
+                title: "Generation Complete",
+                description: `Successfully generated ${progress.completed} recipes`,
+              });
+            }
 
             // CRITICAL FIX: Invalidate ALL recipe queries to refresh UI
             invalidateRecipeQueries(queryClient, 'AdminRecipe-Generation-Complete');
           } else {
+            // 🎯 UX FIX: Show detailed error message
+            const errorMessage = progress.errors && progress.errors.length > 0 
+              ? progress.errors[0] 
+              : `Failed after ${progress.completed} recipes`;
+            
             toast({
-              title: "Generation Failed",
-              description: `Failed after ${progress.completed} recipes. ${progress.errors?.length || 0} errors logged.`,
+              title: "❌ Generation Failed",
+              description: errorMessage,
               variant: "destructive",
+              duration: 15000, // 15 seconds to read error
             });
           }
 
@@ -196,8 +224,61 @@ export default function AdminRecipeGenerator() {
       } catch (error) {
         console.error('[SSE] Failed to parse progress update:', error);
       }
-    };
+    });
 
+    // 🔧 FIX: Listen for 'error' events
+    eventSource.addEventListener('error', (event: any) => {
+      try {
+        if (event.data) {
+          const errorData = JSON.parse(event.data);
+          console.error('[SSE] Error event:', errorData);
+          setIsGenerating(false);
+          toast({
+            title: "Generation Error",
+            description: errorData.error || "An error occurred",
+            variant: "destructive",
+            duration: 15000,
+          });
+          eventSource.close();
+          eventSourceRef.current = null;
+        }
+      } catch (e) {
+        console.error('[SSE] Failed to parse error event:', e);
+      }
+    });
+
+    // 🔧 FIX: Listen for 'complete' events
+    eventSource.addEventListener('complete', (event: any) => {
+      try {
+        const result = JSON.parse(event.data);
+        console.log('[SSE] Complete event:', result);
+        setIsGenerating(false);
+        setProgressPercentage(100);
+        
+        toast({
+          title: "Generation Complete",
+          description: `Generated ${result.totalRecipes || 0} recipes`,
+        });
+        
+        invalidateRecipeQueries(queryClient, 'AdminRecipe-Generation-Complete');
+        eventSource.close();
+        eventSourceRef.current = null;
+      } catch (e) {
+        console.error('[SSE] Failed to parse complete event:', e);
+      }
+    });
+
+    // 🔧 FIX: Listen for 'connected' events
+    eventSource.addEventListener('connected', (event: any) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('[SSE] Connected:', data);
+      } catch (e) {
+        console.error('[SSE] Failed to parse connected event:', e);
+      }
+    });
+
+    // Handle connection errors
     eventSource.onerror = (error) => {
       console.error('[SSE] Connection error:', error);
       setIsGenerating(false);

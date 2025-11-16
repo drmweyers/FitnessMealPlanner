@@ -183,6 +183,35 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private supportsTierFiltering: boolean | null = null;
+
+  private async ensureTierFilteringSupport(): Promise<boolean> {
+    if (this.supportsTierFiltering !== null) {
+      return this.supportsTierFiltering;
+    }
+
+    try {
+      const result = await db.execute(
+        sql`SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'recipes' AND column_name = 'tier_level' LIMIT 1`
+      );
+
+      this.supportsTierFiltering = Array.isArray((result as any)?.rows)
+        ? (result as any).rows.length > 0
+        : false;
+    } catch (error) {
+      console.warn("[DatabaseStorage] Failed to verify tier_level column support:", error);
+      this.supportsTierFiltering = false;
+    }
+
+    if (!this.supportsTierFiltering) {
+      console.warn(
+        "[DatabaseStorage] tier_level column not detected. Tier-based recipe filtering is disabled until the migration runs."
+      );
+    }
+
+    return this.supportsTierFiltering;
+  }
+
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -472,8 +501,14 @@ export class DatabaseStorage implements IStorage {
     // starter: only 'starter' tier recipes
     // professional: 'starter' + 'professional' tier recipes
     // enterprise: all recipes ('starter' + 'professional' + 'enterprise')
-    if (filters.tierLevel) {
+    const tierFilteringSupported = await this.ensureTierFilteringSupport();
+
+    if (filters.tierLevel && tierFilteringSupported) {
       conditions.push(sql`${recipes.tierLevel} <= ${filters.tierLevel}::tier_level`);
+    } else if (filters.tierLevel && !tierFilteringSupported) {
+      console.warn(
+        "[DatabaseStorage] tier_level filter requested but column is missing. Skipping filter."
+      );
     }
 
     if (filters.search) {

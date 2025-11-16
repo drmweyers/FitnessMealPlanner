@@ -1081,13 +1081,23 @@ export const rateRecipeSchema = z.object({
   rating: z.number().min(1).max(5),
 });
 
-export const trackInteractionSchema = z.object({
-  recipeId: z.string().uuid(),
-  interactionType: z.enum(['view', 'rate', 'cook', 'share', 'search']),
-  interactionValue: z.number().optional(),
-  sessionId: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
-});
+export const trackInteractionSchema = z
+  .object({
+    recipeId: z.string().uuid().optional(),
+    interactionType: z.enum(['view', 'rate', 'cook', 'share', 'search']),
+    interactionValue: z.number().optional(),
+    sessionId: z.string().optional(),
+    metadata: z.record(z.any()).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.interactionType !== 'search' && !data.recipeId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['recipeId'],
+        message: 'recipeId is required for interactions other than search',
+      });
+    }
+  });
 
 export type CreateFavorite = z.infer<typeof createFavoriteSchema>;
 export type CreateCollection = z.infer<typeof createCollectionSchema>;

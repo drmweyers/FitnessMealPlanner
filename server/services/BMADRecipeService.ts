@@ -186,14 +186,49 @@ export class BMADRecipeService {
                 totalAutoFixed: number;
                 totalFailed: number;
                 validatedRecipes: any[];
+                validationErrors?: string[];
               };
               nutritionStats.validated += validationData.totalValidated;
               nutritionStats.autoFixed += validationData.totalAutoFixed;
               nutritionStats.failed += validationData.totalFailed;
+              
+              // 🎯 UX FIX: Capture validation errors and communicate to user
+              if (validationData.totalFailed > 0) {
+                const validationError = `⚠️ ${validationData.totalFailed} recipe(s) failed validation constraints:\n` +
+                  `- Min Protein: ${constraints.minProtein || 'none'}g\n` +
+                  `- Max Protein: ${constraints.maxProtein || 'none'}g\n` +
+                  `- Max Calories: ${constraints.maxCalories || 'none'}\n` +
+                  `- Suggestion: Adjust your nutritional constraints to more realistic values.`;
+                
+                allErrors.push(validationError);
+                console.warn(`[BMAD] ${validationError}`);
+                
+                // Broadcast validation warning to frontend
+                sseManager.broadcastProgress(batchId, {
+                  phase: 'validating',
+                  warning: validationError,
+                  recipesCompleted: allSavedRecipes.length,
+                  totalRecipes: strategy.totalRecipes
+                } as any);
+              }
+              
               // Use validated recipes for database save
               if (validationData.validatedRecipes && validationData.validatedRecipes.length > 0) {
                 validatedRecipes = validationData.validatedRecipes;
                 console.log(`[BMAD] Using ${validatedRecipes.length} validated recipes for database save`);
+              } else if (validationData.totalFailed > 0) {
+                // 🎯 UX FIX: If all recipes failed validation, add clear error message
+                const constraintSummary = [
+                  constraints.minProtein && `minProtein: ${constraints.minProtein}g`,
+                  constraints.maxProtein && `maxProtein: ${constraints.maxProtein}g`,
+                  constraints.maxCalories && `maxCalories: ${constraints.maxCalories}`,
+                  constraints.minCarbs && `minCarbs: ${constraints.minCarbs}g`,
+                  constraints.maxCarbs && `maxCarbs: ${constraints.maxCarbs}g`,
+                ].filter(Boolean).join(', ');
+                
+                allErrors.push(
+                  `❌ All recipes rejected by validation. Your constraints may be too restrictive: ${constraintSummary}`
+                );
               }
             }
           }
@@ -389,13 +424,12 @@ export class BMADRecipeService {
         await this.progressAgent.updateProgress(batchId, { phase: 'complete' });
       } else if (hasRecipes && hasErrors) {
         await this.progressAgent.updateProgress(batchId, {
-          phase: 'complete_with_errors',
+          phase: 'complete',
           recipesCompleted: allSavedRecipes.length,
-          totalRecipes: totalRecipes
         });
       } else {
         // No recipes generated
-        await this.progressAgent.updateProgress(batchId, { phase: 'failed' });
+        await this.progressAgent.updateProgress(batchId, { phase: 'error' });
       }
 
       const finalProgress = this.progressAgent.getProgress(batchId);
@@ -421,7 +455,8 @@ export class BMADRecipeService {
         strategy,
         savedRecipes: allSavedRecipes.map(r => ({
           recipeId: r.recipeId,
-          success: r.success,
+          recipeName: r.recipeName || r.recipe?.name || 'Unknown',
+          success: r.success !== false,
           error: r.error,
           recipe: r as any,
           imageMetadata: undefined

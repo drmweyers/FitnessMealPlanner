@@ -26,6 +26,7 @@ interface GenerationOptions {
   minFat?: number;
   maxFat?: number;
   jobId?: string; // For progress tracking with SSE
+  requireUniqueImages?: boolean; // Force unique image generation (blocking, with retries)
 }
 
 interface GenerationResult {
@@ -112,7 +113,7 @@ export class RecipeGeneratorService {
 
       const results = await Promise.allSettled(
         generatedRecipes.map((recipe, index) =>
-          this.processSingleRecipe(recipe, jobId, index + 1, options.count, options.tierLevel)
+          this.processSingleRecipe(recipe, jobId, index + 1, options.count, options.tierLevel, options.requireUniqueImages)
         )
       );
       
@@ -188,13 +189,17 @@ export class RecipeGeneratorService {
    * Issue: Recipe generation was hanging at 80% due to blocking image generation
    * Solution: Save recipes with placeholder images, generate actual images in background
    * ==========================================
+   * 🎨 NEW: requireUniqueImages flag for admin-forced unique image generation
+   * When enabled: Blocks until unique image is generated (with aggressive retries)
+   * ==========================================
    */
   private async processSingleRecipe(
     recipe: GeneratedRecipe,
     jobId?: string,
     currentIndex?: number,
     totalRecipes?: number,
-    tierLevel?: 'starter' | 'professional' | 'enterprise' // Story 2.14: Tier assignment parameter
+    tierLevel?: 'starter' | 'professional' | 'enterprise', // Story 2.14: Tier assignment parameter
+    requireUniqueImages?: boolean // Force blocking image generation with retries
   ): Promise<{ success: boolean; error?: string; recipeId?: number }> {
     try {
       const validation = await this.validateRecipe(recipe);
@@ -211,11 +216,25 @@ export class RecipeGeneratorService {
         progressTracker.markStepComplete(jobId, 'storing');
       }
 
-      // ✅ Use placeholder image immediately - DON'T WAIT for image generation
-      // This allows recipe to be saved quickly (< 5 seconds)
-      const imageUrl = PLACEHOLDER_IMAGE_URL;
+      let imageUrl = PLACEHOLDER_IMAGE_URL;
 
-      // ✅ Save recipe to database FIRST
+      // 🎨 NEW: If requireUniqueImages is enabled, generate image BEFORE saving (blocking)
+      if (requireUniqueImages) {
+        console.log(`🎨 [UNIQUE IMAGE MODE] Generating unique image for "${recipe.name}" before saving...`);
+        try {
+          imageUrl = await this.generateUniqueImageWithRetries(recipe, 5); // 5 aggressive retries
+          console.log(`✅ [UNIQUE IMAGE MODE] Successfully generated unique image for "${recipe.name}"`);
+        } catch (error) {
+          const errorMsg = `Failed to generate unique image for "${recipe.name}": ${error}`;
+          console.error(`❌ [UNIQUE IMAGE MODE] ${errorMsg}`);
+          if (jobId) {
+            progressTracker.recordFailure(jobId, errorMsg, recipe.name);
+          }
+          return { success: false, error: errorMsg };
+        }
+      }
+
+      // ✅ Save recipe to database (with either unique image or placeholder)
       const result = await this.storeRecipe({ ...recipe, imageUrl }, tierLevel || 'starter');
 
       if (result.success) {
@@ -224,8 +243,8 @@ export class RecipeGeneratorService {
           progressTracker.recordSuccess(jobId, recipe.name);
         }
 
-        // ✅ Generate actual image in BACKGROUND (fire and forget)
-        if (result.recipeId) {
+        // ✅ Only use background generation if NOT requiring unique images
+        if (!requireUniqueImages && result.recipeId) {
           this.generateImageInBackground(result.recipeId, recipe).catch(error => {
             console.error(`Background image generation failed for ${recipe.name}:`, error);
             // Don't fail the recipe - it's already saved with placeholder
@@ -358,6 +377,51 @@ export class RecipeGeneratorService {
 
       return permanentUrl;
     });
+  }
+
+  /**
+   * 🎨 NEW: Generate unique image with aggressive retries (blocking, for admin use)
+   * This method ensures a unique image is ALWAYS generated, or throws an error
+   */
+  private async generateUniqueImageWithRetries(recipe: GeneratedRecipe, maxRetries: number = 5): Promise<string> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🎨 [UNIQUE IMAGE] Attempt ${attempt}/${maxRetries} for "${recipe.name}"...`);
+
+        // Generate image with extended timeout and longer wait for DALL-E 3
+        const imageUrl = await this.withTimeout(
+          this.getOrGenerateImage(recipe),
+          IMAGE_GENERATION_TIMEOUT_MS + IMAGE_UPLOAD_TIMEOUT_MS,
+          null // Don't use fallback - we want to catch timeout
+        );
+
+        // Validate we got a real image (not placeholder or null)
+        if (imageUrl && imageUrl !== PLACEHOLDER_IMAGE_URL) {
+          console.log(`✅ [UNIQUE IMAGE] Success on attempt ${attempt}/${maxRetries} for "${recipe.name}"`);
+          return imageUrl; // Success!
+        } else if (imageUrl === PLACEHOLDER_IMAGE_URL) {
+          throw new Error('Placeholder image returned instead of unique generated image');
+        } else {
+          throw new Error('No image URL returned from generation');
+        }
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.error(`❌ [UNIQUE IMAGE] Attempt ${attempt}/${maxRetries} failed for "${recipe.name}":`, lastError.message);
+
+        // Wait before retry with exponential backoff
+        if (attempt < maxRetries) {
+          const backoffMs = Math.min(2000 * Math.pow(2, attempt - 1), 30000); // 2s, 4s, 8s, 16s, 30s
+          console.log(`⏸️  [UNIQUE IMAGE] Waiting ${backoffMs}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+        }
+      }
+    }
+
+    // All retries failed - throw error to fail recipe generation
+    const errorMsg = `Failed to generate unique image after ${maxRetries} attempts: ${lastError?.message}`;
+    throw new Error(errorMsg);
   }
 
   private async generateImageInBackground(recipeId: number, recipe: GeneratedRecipe): Promise<void> {

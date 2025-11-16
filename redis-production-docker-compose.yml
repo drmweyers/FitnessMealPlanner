@@ -145,6 +145,9 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis-primary:6379/0
       - REDIS_SESSION_DB=redis://:${REDIS_PASSWORD}@redis-primary:6379/1
       - REDIS_CACHE_DB=redis://:${REDIS_PASSWORD}@redis-primary:6379/2
+      # Note: If using external managed Redis (DigitalOcean, AWS, etc.), use rediss:// and set REDIS_TLS=true
+      # - REDIS_URL=rediss://default:${REDIS_PASSWORD}@your-managed-redis-host:25061
+      # - REDIS_TLS=true
       - SESSION_STORE=redis
       - CACHE_ENABLED=true
       - REDIS_SENTINEL_ENDPOINTS=redis-sentinel-1:26379,redis-sentinel-2:26379
