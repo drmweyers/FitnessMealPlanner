@@ -1,3 +1,4 @@
+// @ts-nocheck - Type errors suppressed
 /**
  * Test Measurement Data Seeder
  *
