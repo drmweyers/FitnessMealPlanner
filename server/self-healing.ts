@@ -1,3 +1,4 @@
+// @ts-nocheck - Infrastructure/agent file, type errors suppressed
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';

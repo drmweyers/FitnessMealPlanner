@@ -172,7 +172,7 @@ const FavoriteButton = memo(({
         </span>
       )}
 
-      <style jsx>{`
+      <style>{`
         @keyframes float-up {
           0% {
             opacity: 1;

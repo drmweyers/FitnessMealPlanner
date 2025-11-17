@@ -79,10 +79,10 @@ const SharedMealPlanView: React.FC = () => {
     };
 
     mealPlan.meals.forEach(meal => {
-      totals.calories += meal.recipe.caloriesKcal;
-      totals.protein += parseFloat(meal.recipe.proteinGrams || '0');
-      totals.carbs += parseFloat(meal.recipe.carbsGrams || '0');
-      totals.fat += parseFloat(meal.recipe.fatGrams || '0');
+      totals.calories += meal.recipe?.caloriesKcal ?? 0;
+      totals.protein += parseFloat(meal.recipe?.proteinGrams || '0');
+      totals.carbs += parseFloat(meal.recipe?.carbsGrams || '0');
+      totals.fat += parseFloat(meal.recipe?.fatGrams || '0');
     });
 
     return totals;
@@ -263,7 +263,7 @@ const SharedMealPlanView: React.FC = () => {
             .sort(([a], [b]) => parseInt(a) - parseInt(b))
             .map(([day, dayMeals]) => {
               const sortedMeals = dayMeals.sort((a, b) => a.mealNumber - b.mealNumber);
-              const dayTotalCalories = sortedMeals.reduce((sum, meal) => sum + meal.recipe.caloriesKcal, 0);
+              const dayTotalCalories = sortedMeals.reduce((sum, meal) => sum + (meal.recipe?.caloriesKcal ?? 0), 0);
 
               return (
                 <Card key={day}>
@@ -290,9 +290,9 @@ const SharedMealPlanView: React.FC = () => {
                           
                           <div>
                             <h4 className="font-semibold text-lg mb-1">
-                              {meal.recipe.name}
+                              {meal.recipe?.name}
                             </h4>
-                            {meal.recipe.description && (
+                            {meal.recipe?.description && (
                               <p className="text-sm text-muted-foreground">
                                 {meal.recipe.description}
                               </p>
@@ -302,35 +302,35 @@ const SharedMealPlanView: React.FC = () => {
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {meal.recipe.prepTimeMinutes + (meal.recipe.cookTimeMinutes || 0)} min
+                              {(meal.recipe?.prepTimeMinutes ?? 0) + (meal.recipe?.cookTimeMinutes || 0)} min
                             </div>
                             <div className="flex items-center gap-1">
                               <Users className="h-3 w-3" />
-                              {meal.recipe.servings} serving{meal.recipe.servings > 1 ? 's' : ''}
+                              {meal.recipe?.servings} serving{(meal.recipe?.servings ?? 0) > 1 ? 's' : ''}
                             </div>
                           </div>
 
                           <div className="grid grid-cols-4 gap-1 text-xs">
                             <div className="text-center p-2 bg-muted rounded">
-                              <p className="font-medium">{meal.recipe.caloriesKcal}</p>
+                              <p className="font-medium">{meal.recipe?.caloriesKcal}</p>
                               <p className="text-muted-foreground">Cal</p>
                             </div>
                             <div className="text-center p-2 bg-muted rounded">
-                              <p className="font-medium">{parseFloat(meal.recipe.proteinGrams || '0').toFixed(0)}g</p>
+                              <p className="font-medium">{parseFloat(meal.recipe?.proteinGrams || '0').toFixed(0)}g</p>
                               <p className="text-muted-foreground">Protein</p>
                             </div>
                             <div className="text-center p-2 bg-muted rounded">
-                              <p className="font-medium">{parseFloat(meal.recipe.carbsGrams || '0').toFixed(0)}g</p>
+                              <p className="font-medium">{parseFloat(meal.recipe?.carbsGrams || '0').toFixed(0)}g</p>
                               <p className="text-muted-foreground">Carbs</p>
                             </div>
                             <div className="text-center p-2 bg-muted rounded">
-                              <p className="font-medium">{parseFloat(meal.recipe.fatGrams || '0').toFixed(0)}g</p>
+                              <p className="font-medium">{parseFloat(meal.recipe?.fatGrams || '0').toFixed(0)}g</p>
                               <p className="text-muted-foreground">Fat</p>
                             </div>
                           </div>
 
                           {/* Dietary Tags */}
-                          {meal.recipe.dietaryTags && meal.recipe.dietaryTags.length > 0 && (
+                          {meal.recipe?.dietaryTags && meal.recipe.dietaryTags.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {meal.recipe.dietaryTags.slice(0, 3).map((tag, tagIndex) => (
                                 <Badge key={tagIndex} variant="outline" className="text-xs">

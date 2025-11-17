@@ -501,6 +501,7 @@ export default function RecipeGenerationModalOptimized({
           {generationState.isGenerating && generationState.currentJobId && (
             <RecipeGenerationProgress
               jobId={generationState.currentJobId}
+              totalRecipes={debouncedFormState.recipeCount}
               onComplete={handleGenerationComplete}
               onError={handleGenerationError}
             />

@@ -176,8 +176,8 @@ const MacroTrackingDashboard: React.FC<MacroTrackingDashboardProps> = ({
   const chartData = useMemo(() => {
     if (activeTab === 'daily') {
       return macroData.slice(-7).map(d => ({
+        ...d,
         date: format(new Date(d.date), 'MMM dd'),
-        ...d
       }));
     } else if (activeTab === 'weekly') {
       // Group by weeks

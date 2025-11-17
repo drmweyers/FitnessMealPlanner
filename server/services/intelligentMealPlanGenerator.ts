@@ -339,10 +339,10 @@ export class IntelligentMealPlanGeneratorService extends MealPlanGeneratorServic
       let dailyProtein = 0, dailyCarbs = 0, dailyFat = 0, dailyCalories = 0;
       
       dayMeals.forEach(meal => {
-        dailyCalories += meal.recipe.caloriesKcal;
-        dailyProtein += parseFloat(meal.recipe.proteinGrams);
-        dailyCarbs += parseFloat(meal.recipe.carbsGrams);
-        dailyFat += parseFloat(meal.recipe.fatGrams);
+        dailyCalories += meal.recipe?.caloriesKcal || 0;
+        dailyProtein += parseFloat(meal.recipe?.proteinGrams || '0');
+        dailyCarbs += parseFloat(meal.recipe?.carbsGrams || '0');
+        dailyFat += parseFloat(meal.recipe?.fatGrams || '0');
       });
       
       // Check if day needs optimization
@@ -366,8 +366,10 @@ export class IntelligentMealPlanGeneratorService extends MealPlanGeneratorServic
     // Track recipe usage frequency
     const recipeUsage = new Map<string, number>();
     mealPlan.meals.forEach(meal => {
-      const count = recipeUsage.get(meal.recipe.id) || 0;
-      recipeUsage.set(meal.recipe.id, count + 1);
+      if (meal.recipe) {
+        const count = recipeUsage.get(meal.recipe.id) || 0;
+        recipeUsage.set(meal.recipe.id, count + 1);
+      }
     });
     
     // Identify over-used recipes
@@ -395,7 +397,7 @@ export class IntelligentMealPlanGeneratorService extends MealPlanGeneratorServic
     if (preferences.dislikedIngredients.length > 0) {
       let replacements = 0;
       for (const meal of mealPlan.meals) {
-        const hasDislikedIngredient = meal.recipe.ingredientsJson?.some((ingredient: any) =>
+        const hasDislikedIngredient = meal.recipe?.ingredientsJson?.some((ingredient: any) =>
           preferences.dislikedIngredients.some(disliked =>
             ingredient.name.toLowerCase().includes(disliked.toLowerCase())
           )
@@ -429,14 +431,14 @@ export class IntelligentMealPlanGeneratorService extends MealPlanGeneratorServic
     if (!profile) return mealPlan;
     
     // Add meal timing recommendations based on fitness goal
-    const optimizedPlan = { ...mealPlan };
-    
+    const optimizedPlan: any = { ...mealPlan };
+
     // Add timing recommendations
     optimizedPlan.mealTimingRecommendations = this.generateMealTimingRecommendations(
       profile.mealTimingPreferences,
       mealPlan.mealsPerDay
     );
-    
+
     // Add pre/post workout meal suggestions if applicable
     if (goalKey === 'muscle_gain' || goalKey === 'athletic_performance') {
       optimizedPlan.workoutNutritionTips = this.generateWorkoutNutritionTips(goalKey);
@@ -488,7 +490,7 @@ export class IntelligentMealPlanGeneratorService extends MealPlanGeneratorServic
    * Generate workout-specific nutrition tips
    */
   private generateWorkoutNutritionTips(goalKey: string) {
-    const tips = {
+    const tips: Record<string, any> = {
       'muscle_gain': {
         preWorkout: 'Consume 20-40g carbs 30-60 minutes before training',
         postWorkout: 'Have 25-40g protein within 2 hours post-workout',
@@ -500,7 +502,7 @@ export class IntelligentMealPlanGeneratorService extends MealPlanGeneratorServic
         postWorkout: 'Consume 1.2g carbs per kg body weight within 6 hours'
       }
     };
-    
+
     return tips[goalKey] || null;
   }
 
@@ -509,7 +511,7 @@ export class IntelligentMealPlanGeneratorService extends MealPlanGeneratorServic
    */
   private enhanceMealPrepInstructions(mealPlan: MealPlan): MealPlan {
     // Use existing meal prep generation but add intelligent enhancements
-    const enhancedPlan = { ...mealPlan };
+    const enhancedPlan: any = { ...mealPlan }; // Type as any to allow extra properties for enhancement metadata
     
     if (enhancedPlan.startOfWeekMealPrep) {
       // Add intelligent batch cooking suggestions

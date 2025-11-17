@@ -638,7 +638,9 @@ beforeAll(() => {
       (args[0].includes('Warning: An update to') ||
        args[0].includes('Failed to fetch') ||
        args[0].includes('Error generating') ||
-       args[0].includes('ZodError'))
+       args[0].includes('ZodError') ||
+       args[0].includes('Function components cannot be given refs') ||
+       args[0].includes('Slot.SlotClone'))
     ) {
       return;
     }

@@ -228,7 +228,6 @@ authRouter.post('/login', authRateLimiter, async (req: Request, res: Response) =
           email: user.email,
           role: user.role,
           profilePicture: user.profilePicture,
-          tierLevel: user.tierLevel || 'starter' // Story 2.14: Include tier for recipe access
         }
       }
     });
@@ -353,7 +352,6 @@ authRouter.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
           email: user.email,
           role: user.role,
           profilePicture: user.profilePicture,
-          tierLevel: user.tierLevel || 'starter' // Story 2.14: Include tier for recipe access
         }
       }
     });
@@ -527,9 +525,9 @@ authRouter.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login?error=oauth_failed' }),
   async (req: Request, res: Response) => {
     try {
-      const user = req.user;
+      const user = req.user as { id: string; email: string; role: 'admin' | 'trainer' | 'customer'; name: string | null; googleId: string | null; profilePicture: string | null; password: string | null; createdAt: Date | null; updatedAt: Date | null; };
       console.log('Google OAuth callback - user:', user);
-      
+
       if (!user) {
         console.error('No user returned from Google OAuth');
         return res.redirect('/login?error=no_user');
@@ -584,15 +582,15 @@ authRouter.get('/google/:role', (req: Request, res: Response, next: NextFunction
   const { role } = req.params;
   
   if (!['trainer', 'customer'].includes(role)) {
-    return res.status(400).json({ 
-      status: 'error', 
+    return res.status(400).json({
+      status: 'error',
       message: 'Invalid role specified',
       code: 'INVALID_ROLE'
     });
   }
 
   // Store the intended role in session
-  (req.session as ExtendedSession).intendedRole = role;
+  (req.session as ExtendedSession).intendedRole = role as 'trainer' | 'customer';
   
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });

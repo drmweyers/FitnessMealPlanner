@@ -36,7 +36,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     // Check role-based access and redirect to user's home page
     if (requiredRole && user?.role !== requiredRole) {
       // Redirect to user's proper dashboard based on their role
-      switch (user.role) {
+      switch (user?.role) {
         case 'admin':
           navigate('/admin');
           break;

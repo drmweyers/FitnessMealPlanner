@@ -383,7 +383,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       console.log('[Save to Library] Using endpoint:', endpoint);
       console.log('[Save to Library] Meal plan data:', {
         planName: generatedPlan.mealPlan.planName,
-        daysCount: generatedPlan.mealPlan.days.length,
+        daysCount: generatedPlan.mealPlan.days,
         notes,
         tags,
       });
@@ -791,7 +791,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         
         if (meal) {
           addRect(cellX, cellY, cellWidth, cellHeight, mealTypeColors[mealType as keyof typeof mealTypeColors]);
-          let recipeName = cleanText(meal.recipe.name || '');
+          let recipeName = cleanText(meal.recipe?.name || '');
           if (recipeName.length > 12) recipeName = recipeName.substring(0, 12) + '...';
           
           addText(recipeName, cellX + cellWidth / 2, cellY + 15, {
@@ -818,7 +818,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     const ingredientMap = new Map<string, { amount: number; unit: string; name: string }>();
     
     mealPlan.meals.forEach(meal => {
-      meal.recipe.ingredientsJson?.forEach(ingredient => {
+      meal.recipe?.ingredientsJson?.forEach(ingredient => {
         const key = `${ingredient.name.toLowerCase()}_${ingredient.unit}`;
         if (ingredientMap.has(key)) {
           const existing = ingredientMap.get(key)!;
@@ -1077,7 +1077,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
           
           const dayIngredients = new Set<string>();
           dayMeals.forEach(meal => {
-            meal.recipe.ingredientsJson?.slice(0, 5).forEach(ingredient => {
+            meal.recipe?.ingredientsJson?.slice(0, 5).forEach(ingredient => {
               dayIngredients.add(cleanText(ingredient.name || ''));
             });
           });

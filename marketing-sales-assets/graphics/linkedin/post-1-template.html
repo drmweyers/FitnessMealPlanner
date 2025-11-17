@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, height=627">
+    <title>LinkedIn Post - EvoFitMeals ROI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&family=Crimson+Pro:wght@600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1200px;
+            height: 627px;
+            overflow: hidden;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .canvas {
+            width: 1200px;
+            height: 627px;
+            background: white;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .left {
+            background: linear-gradient(135deg, #9333EA 0%, #7E22CE 100%);
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            top: -200px;
+            right: -200px;
+        }
+
+        .content-left {
+            position: relative;
+            z-index: 10;
+        }
+
+        .headline {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            letter-spacing: -0.02em;
+        }
+
+        .subheadline {
+            font-size: 28px;
+            font-family: 'Crimson Pro', serif;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+
+        .logo {
+            position: absolute;
+            bottom: 40px;
+            left: 60px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            font-size: 36px;
+        }
+
+        .right {
+            background: #F8F9FA;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .stat {
+            background: white;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .stat-number {
+            font-size: 64px;
+            font-weight: 800;
+            color: #9333EA;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 18px;
+            color: #756E6B;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .cta {
+            background: #F5C842;
+            color: #0F0E0B;
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(245,200,66,0.3);
+        }
+
+        .badge {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas">
+        <div class="left">
+            <div class="badge">FOR TRAINERS</div>
+            <div class="content-left">
+                <div class="headline">Stop Wasting Weekends on Meal Plans</div>
+                <div class="subheadline">AI-powered nutrition coaching that saves you 64+ hours monthly</div>
+            </div>
+            <div class="logo">
+                <span class="logo-icon">🍴</span>
+                <span>EvoFitMeals</span>
+            </div>
+        </div>
+
+        <div class="right">
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-number">80%</div>
+                    <div class="stat-label">Time Saved</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">$46K</div>
+                    <div class="stat-label">Avg Savings/Year</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Trainers</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">4.9★</div>
+                    <div class="stat-label">Rating</div>
+                </div>
+            </div>
+            <div class="cta">Calculate Your ROI →</div>
+        </div>
+    </div>
+
+    <!-- Instructions for screenshot -->
+    <div style="position: fixed; top: -9999px;">
+        To create the LinkedIn post image:
+        1. Open this file in Chrome/Firefox
+        2. Set dimensions to 1200x627
+        3. Take screenshot using DevTools
+    </div>
+</body>
+</html>

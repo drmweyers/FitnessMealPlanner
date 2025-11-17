@@ -8,10 +8,10 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { 
-  CustomerProgress, 
-  CustomerGoal, 
-  CustomerMilestone 
+import type {
+  ProgressMeasurement,
+  CustomerGoal,
+  GoalMilestone
 } from '@shared/schema';
 
 export interface ProgressReportData {

@@ -46,7 +46,7 @@ interface Collection {
   coverImageUrl?: string;
   isPublic: boolean;
   tags: string[];
-  recipeCount: number;
+  recipeCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -324,7 +324,7 @@ const CollectionsManager = memo(({ className, onCollectionSelect }: CollectionsM
                   {/* Recipe Count */}
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">
-                      {collection.recipeCount} recipe{collection.recipeCount !== 1 ? 's' : ''}
+                      {collection.recipeCount ?? 0} recipe{(collection.recipeCount ?? 0) !== 1 ? 's' : ''}
                     </span>
                     <div className="flex items-center gap-1">
                       {collection.isPublic ? (

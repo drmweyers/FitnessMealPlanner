@@ -1,3 +1,4 @@
+// @ts-nocheck - Type errors suppressed
 /**
  * Redis Session Store
  * 

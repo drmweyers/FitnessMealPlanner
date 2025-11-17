@@ -308,6 +308,7 @@ export const getGroceryList = async (req: Request, res: Response) => {
       .select({
         id: groceryLists.id,
         customerId: groceryLists.customerId,
+        mealPlanId: groceryLists.mealPlanId,
         name: groceryLists.name,
         createdAt: groceryLists.createdAt,
         updatedAt: groceryLists.updatedAt,
@@ -536,6 +537,10 @@ export const addGroceryListItem = async (req: Request, res: Response) => {
     const newItem: InsertGroceryListItem = {
       groceryListId: id,
       ...validation.data,
+      // Convert estimatedPrice from number to string for database
+      estimatedPrice: validation.data.estimatedPrice !== undefined
+        ? validation.data.estimatedPrice.toFixed(2)
+        : undefined,
     };
 
     const [createdItem] = await db
@@ -593,9 +598,17 @@ export const updateGroceryListItem = async (req: Request, res: Response) => {
       });
     }
 
+    // Convert estimatedPrice from number to string for database
+    const updateData = {
+      ...validation.data,
+      estimatedPrice: validation.data.estimatedPrice !== undefined
+        ? validation.data.estimatedPrice.toFixed(2)
+        : undefined,
+    };
+
     const [updatedItem] = await db
       .update(groceryListItems)
-      .set(validation.data)
+      .set(updateData)
       .where(
         and(
           eq(groceryListItems.id, itemId),
@@ -894,7 +907,7 @@ export const generateEnhancedGroceryListFromMealPlan = async (req: Request, res:
       if (roundUpQuantities) {
         groceryItems = groceryItems.map(item => ({
           ...item,
-          quantity: Math.ceil(item.quantity)
+          quantity: Math.ceil(item.quantity ?? 1)
         }));
       }
     } else {

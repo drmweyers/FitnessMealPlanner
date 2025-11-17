@@ -220,14 +220,14 @@ export class NutritionalOptimizerService {
    */
   private identifyOptimizationTargets(mealPlan: MealPlan, constraints: NutritionalConstraints) {
     const nutrition = this.calculateNutrition(mealPlan);
-    const targets = [];
-    
+    const targets: Array<{ mealIndex: number; reason: string; priority: number }> = [];
+
     // Check for meals that are outside optimal ranges
     mealPlan.meals.forEach((meal, index) => {
-      const mealCalories = meal.recipe.caloriesKcal;
-      const mealProtein = parseFloat(meal.recipe.proteinGrams);
-      const mealCarbs = parseFloat(meal.recipe.carbsGrams);
-      const mealFat = parseFloat(meal.recipe.fatGrams);
+      const mealCalories = meal.recipe?.caloriesKcal || 0;
+      const mealProtein = parseFloat(meal.recipe?.proteinGrams || '0');
+      const mealCarbs = parseFloat(meal.recipe?.carbsGrams || '0');
+      const mealFat = parseFloat(meal.recipe?.fatGrams || '0');
       
       const avgCaloriesPerMeal = (constraints.caloriesMin + constraints.caloriesMax) / 2 / mealPlan.mealsPerDay;
       const calorieDeviation = Math.abs(mealCalories - avgCaloriesPerMeal) / avgCaloriesPerMeal;
@@ -432,11 +432,11 @@ export class NutritionalOptimizerService {
     const candidateCuisine = candidateTags.find(tag => 
       cuisineTags.includes(tag.toLowerCase())
     );
-    const currentCuisine = currentTags.find(tag => 
+    const currentCuisine = currentTags.find(tag =>
       cuisineTags.includes(tag.toLowerCase())
     );
-    
-    return candidateCuisine && currentCuisine && candidateCuisine !== currentCuisine;
+
+    return !!(candidateCuisine && currentCuisine && candidateCuisine !== currentCuisine);
   }
 
   /**
@@ -487,12 +487,12 @@ export class NutritionalOptimizerService {
    */
   private calculateNutrition(mealPlan: MealPlan) {
     let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
-    
+
     mealPlan.meals.forEach(meal => {
-      totalCalories += meal.recipe.caloriesKcal;
-      totalProtein += parseFloat(meal.recipe.proteinGrams || '0');
-      totalCarbs += parseFloat(meal.recipe.carbsGrams || '0');
-      totalFat += parseFloat(meal.recipe.fatGrams || '0');
+      totalCalories += meal.recipe?.caloriesKcal || 0;
+      totalProtein += parseFloat(meal.recipe?.proteinGrams || '0');
+      totalCarbs += parseFloat(meal.recipe?.carbsGrams || '0');
+      totalFat += parseFloat(meal.recipe?.fatGrams || '0');
     });
     
     const dailyCalories = totalCalories / mealPlan.days;

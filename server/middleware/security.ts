@@ -70,7 +70,7 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
  * Input validation and sanitization middleware
  */
 export const inputValidation = (req: Request, res: Response, next: NextFunction) => {
-  const suspicious = [];
+  const suspicious: string[] = [];
 
   // Check for potentially dangerous patterns
   const checkForSuspiciousContent = (obj: any, path = ''): void => {

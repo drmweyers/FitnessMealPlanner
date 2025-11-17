@@ -106,28 +106,28 @@ export class RecipeSearchService {
 
     if (protein) {
       if (protein.min !== undefined) {
-        conditions.push(gte(recipes.proteinGrams, protein.min));
+        conditions.push(sql`${recipes.proteinGrams}::decimal >= ${protein.min}`);
       }
       if (protein.max !== undefined) {
-        conditions.push(lte(recipes.proteinGrams, protein.max));
+        conditions.push(sql`${recipes.proteinGrams}::decimal <= ${protein.max}`);
       }
     }
 
     if (carbs) {
       if (carbs.min !== undefined) {
-        conditions.push(gte(recipes.carbsGrams, carbs.min));
+        conditions.push(sql`${recipes.carbsGrams}::decimal >= ${carbs.min}`);
       }
       if (carbs.max !== undefined) {
-        conditions.push(lte(recipes.carbsGrams, carbs.max));
+        conditions.push(sql`${recipes.carbsGrams}::decimal <= ${carbs.max}`);
       }
     }
 
     if (fat) {
       if (fat.min !== undefined) {
-        conditions.push(gte(recipes.fatGrams, fat.min));
+        conditions.push(sql`${recipes.fatGrams}::decimal >= ${fat.min}`);
       }
       if (fat.max !== undefined) {
-        conditions.push(lte(recipes.fatGrams, fat.max));
+        conditions.push(sql`${recipes.fatGrams}::decimal <= ${fat.max}`);
       }
     }
 
@@ -269,8 +269,8 @@ export class RecipeSearchService {
       ]);
 
       const metadata = {
-        availableMealTypes: mealTypes.map((row: any) => row.meal_type).filter(Boolean),
-        availableDietaryTags: dietaryTags.map((row: any) => row.tag).filter(Boolean)
+        availableMealTypes: (mealTypes as any).rows?.map((row: any) => row.meal_type).filter(Boolean) || [],
+        availableDietaryTags: (dietaryTags as any).rows?.map((row: any) => row.tag).filter(Boolean) || []
       };
 
       console.log(`[Recipe Search] Metadata: ${metadata.availableMealTypes.length} meal types, ${metadata.availableDietaryTags.length} dietary tags`);
@@ -316,8 +316,8 @@ export class RecipeSearchService {
 
       return {
         totalApprovedRecipes: Number(totalRecipes[0].count),
-        mealTypeDistribution: mealTypeStats,
-        averageNutrition: avgNutrition[0]
+        mealTypeDistribution: (mealTypeStats as any).rows || [],
+        averageNutrition: (avgNutrition as any).rows?.[0] || null
       };
     } catch (error) {
       console.error('[Recipe Search] Failed to get statistics:', error);

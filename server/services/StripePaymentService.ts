@@ -21,7 +21,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2024-06-20',
 });
 
 export type TierLevel = 'starter' | 'professional' | 'enterprise';
@@ -236,21 +236,30 @@ export class StripePaymentService {
 
     // Check for duplicate webhook processing
     const existingEvent = await db.query.webhookEvents.findFirst({
-      where: (events, { eq }) => eq(events.stripeEventId, event.id),
+      where: (events, { eq }) => eq(events.eventId, event.id),
     });
 
-    if (existingEvent && existingEvent.processed) {
+    if (existingEvent && existingEvent.status === 'processed') {
       console.log(`[Webhook] Duplicate event ${event.id} - already processed`);
       return { received: true, event };
     }
 
-    // Log webhook event
-    await db.insert(webhookEvents).values({
-      stripeEventId: event.id,
-      eventType: event.type,
-      eventData: event.data.object as any,
-      processed: false,
-    });
+    // Log webhook event (handle duplicates gracefully)
+    await db
+      .insert(webhookEvents)
+      .values({
+        eventId: event.id,
+        eventType: event.type,
+        payloadMetadata: event.data.object as any,
+        status: 'pending',
+      })
+      .onConflictDoUpdate({
+        target: webhookEvents.eventId,
+        set: {
+          eventType: event.type,
+          payloadMetadata: event.data.object as any,
+        },
+      });
 
     // Process event
     try {
@@ -259,16 +268,16 @@ export class StripePaymentService {
       // Mark as processed
       await db
         .update(webhookEvents)
-        .set({ processed: true, processedAt: new Date() })
-        .where((events, { eq }) => eq(events.stripeEventId, event.id));
+        .set({ status: 'processed', processedAt: new Date() })
+        .where((events, { eq }) => eq(events.eventId, event.id));
     } catch (error: any) {
       console.error(`[Webhook] Failed to process event ${event.id}:`, error);
 
       // Log error
       await db
         .update(webhookEvents)
-        .set({ error: error.message })
-        .where((events, { eq }) => eq(events.stripeEventId, event.id));
+        .set({ status: 'failed', errorMessage: error.message })
+        .where((events, { eq }) => eq(events.eventId, event.id));
 
       throw error;
     }

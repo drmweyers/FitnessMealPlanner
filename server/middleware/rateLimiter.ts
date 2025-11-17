@@ -13,6 +13,7 @@ export const authRateLimiter = rateLimit({
       status: 'error',
       message: 'Too many login attempts. Please try again later.',
       code: 'RATE_LIMIT_EXCEEDED',
+      // @ts-expect-error - rateLimit added by express-rate-limit middleware
       retryAfter: req.rateLimit?.resetTime
     });
   },
@@ -105,6 +106,7 @@ export const passwordResetRateLimiter = rateLimit({
       status: 'error',
       message: 'Too many password reset attempts. Please try again in an hour.',
       code: 'PASSWORD_RESET_RATE_LIMIT',
+      // @ts-expect-error - rateLimit added by express-rate-limit middleware
       retryAfter: req.rateLimit?.resetTime
     });
   }

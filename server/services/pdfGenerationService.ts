@@ -12,11 +12,8 @@ import { db } from '../db';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import {
   users,
-  customerProfiles,
-  trainerCustomers,
   recipes,
-  mealPlans,
-  mealPlanMeals,
+  trainerMealPlans,
   personalizedMealPlans,
   progressMeasurements,
   customerGoals,
@@ -276,7 +273,7 @@ export class PdfGenerationService {
       // This would need proper joins based on actual schema
       return {
         ...mealPlan,
-        name: mealPlan.planName || 'Meal Plan',
+        name: mealPlan.mealPlanData.planName || 'Meal Plan',
         meals: [] // Would fetch actual meals here
       };
     } catch (error) {
@@ -307,21 +304,20 @@ export class PdfGenerationService {
       const customer = customerResult[0];
 
       // Fetch progress entries
-      let progressQuery = db
-        .select()
-        .from(progressMeasurements)
-        .where(eq(progressMeasurements.customerId, customerId));
+      const progressConditions: any[] = [eq(progressMeasurements.customerId, customerId)];
 
       if (dateRange) {
-        progressQuery = progressQuery.where(
-          and(
-            sql`${progressMeasurements.measuredAt} >= ${dateRange.start}`,
-            sql`${progressMeasurements.measuredAt} <= ${dateRange.end}`
-          )
+        progressConditions.push(
+          sql`${progressMeasurements.measurementDate} >= ${dateRange.start}`,
+          sql`${progressMeasurements.measurementDate} <= ${dateRange.end}`
         );
       }
 
-      const progressEntries = await progressQuery.orderBy(desc(progressMeasurements.measuredAt));
+      const progressEntries = await db
+        .select()
+        .from(progressMeasurements)
+        .where(and(...progressConditions))
+        .orderBy(desc(progressMeasurements.measurementDate));
 
       // Fetch goals
       const goals = await db
@@ -342,7 +338,7 @@ export class PdfGenerationService {
         .select()
         .from(progressPhotos)
         .where(eq(progressPhotos.customerId, customerId))
-        .orderBy(desc(progressPhotos.uploadedAt));
+        .orderBy(desc(progressPhotos.photoDate));
 
       return {
         customerName: customer.email,
@@ -585,7 +581,7 @@ export class PdfGenerationService {
       }
 
       // Generate PDF with timeout
-      const pdfBuffer = await page.pdf({
+      const pdfData = await page.pdf({
         format: options.format as any,
         landscape: options.orientation === 'landscape',
         printBackground: true,
@@ -602,7 +598,7 @@ export class PdfGenerationService {
         timeout
       });
 
-      return pdfBuffer;
+      return Buffer.from(pdfData);
 
     } finally {
       await page.close();
