@@ -8,7 +8,7 @@
  */
 
 import { db } from '../db';
-import { trainerMealPlans, mealPlanAssignments, users } from '@shared/schema';
+import { trainerMealPlans, mealPlanAssignments, users, personalizedMealPlans } from '@shared/schema';
 import { eq, isNull, sql } from 'drizzle-orm';
 import * as readline from 'readline';
 
@@ -70,13 +70,14 @@ async function getOrphanedPlans(): Promise<OrphanedPlan[]> {
 
 async function getTrainerCustomers(trainerId: string): Promise<Customer[]> {
   const customers = await db
-    .select({
+    .selectDistinct({
       id: users.id,
       email: users.email,
       name: users.name,
     })
-    .from(users)
-    .where(eq(users.trainerId, trainerId));
+    .from(personalizedMealPlans)
+    .innerJoin(users, eq(personalizedMealPlans.customerId, users.id))
+    .where(eq(personalizedMealPlans.trainerId, trainerId));
 
   return customers.map(c => ({
     id: c.id,

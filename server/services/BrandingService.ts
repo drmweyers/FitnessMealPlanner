@@ -196,7 +196,7 @@ class BrandingService {
       .where(eq(trainerBrandingSettings.trainerId, trainerId))
       .returning();
 
-    return updatedSettings.customDomainVerified;
+    return updatedSettings.customDomainVerified ?? false;
   }
 
   /**

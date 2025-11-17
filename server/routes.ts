@@ -254,12 +254,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Import recipe generator service
-      const { generateRecipeBatch } = await import('./services/recipeGenerator');
-      const recipes = await generateRecipeBatch(count);
+      const { recipeGenerator } = await import('./services/recipeGenerator');
+      const result = await recipeGenerator.generateAndStoreRecipes({ count });
 
       res.json({
-        message: `Successfully generated ${recipes.length} recipes`,
-        recipes
+        message: `Successfully generated ${result.success} recipes (${result.failed} failed)`,
+        success: result.success,
+        failed: result.failed,
+        errors: result.errors
       });
     } catch (error) {
       console.error("Error generating recipes:", error);

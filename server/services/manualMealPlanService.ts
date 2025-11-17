@@ -65,6 +65,7 @@ export interface ManualMealPlan {
   creationMethod: 'manual';
   isManual: true;
   createdAt: string;
+  assignedAt?: string;
 }
 
 /**
@@ -406,6 +407,15 @@ export class ManualMealPlanService {
 
       // Optional nutrition data
       manualNutrition: meal.manualNutrition,
+
+      // Required nutrition object for ManualMealPlan interface
+      nutrition: {
+        calories: meal.manualNutrition?.calories ?? 0,
+        protein: meal.manualNutrition?.protein ?? 0,
+        carbs: meal.manualNutrition?.carbs ?? 0,
+        fat: meal.manualNutrition?.fat ?? 0,
+        fiber: 0, // Default fiber value
+      },
 
       // Legacy fields for compatibility
       ...meal,

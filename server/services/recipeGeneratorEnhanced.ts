@@ -124,14 +124,15 @@ export class EnhancedRecipeGenerator {
       prompt += `. Dietary restrictions: ${params.dietaryRestrictions.join(', ')}`;
     }
     
-    // Use the existing recipe generator
-    const recipe = await recipeGenerator.generateRecipe(prompt);
-    
-    if (!recipe) {
-      throw new Error('Failed to generate recipe');
-    }
-    
-    return recipe;
+    // TODO: This needs refactoring - generateAndStoreRecipes doesn't return recipes
+    // It only stores them and returns success/failure counts
+    // For now, throwing error to indicate this feature needs implementation
+    throw new Error(
+      'EnhancedRecipeGenerator.generateRecipe is not implemented. ' +
+      'The underlying recipeGenerator.generateAndStoreRecipes() does not return recipes. ' +
+      'This needs to be refactored to either query the database for the latest recipe or ' +
+      'modify generateAndStoreRecipes to return the generated recipes.'
+    );
   }
   
   /**
