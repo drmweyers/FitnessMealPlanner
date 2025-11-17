@@ -262,8 +262,8 @@ export class CacheInvalidationService extends EventEmitter {
 
       descriptor.value = async function (...args: any[]) {
         let result;
-        let error;
-        
+        let error: unknown;
+
         try {
           result = await originalMethod.apply(this, args);
         } catch (err) {
@@ -276,7 +276,7 @@ export class CacheInvalidationService extends EventEmitter {
               trigger: `method:${target.constructor.name}.${propertyKey}`,
               data: result,
               timestamp: Date.now(),
-              metadata: { args, error: error?.message },
+              metadata: { args, error: error instanceof Error ? error.message : String(error) },
             };
 
             if (options.delay && options.delay > 0) {

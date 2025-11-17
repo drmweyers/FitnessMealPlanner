@@ -239,7 +239,12 @@
       "Bash(server/routes/recipes.ts )",
       "Bash(server/routes/export.ts )",
       "Bash(server/routes/accountDeletion.ts )",
-      "Bash(server/index.ts)"
+      "Bash(server/index.ts)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp:*)",
+      "mcp__github__search_repositories",
+      "mcp__digitalocean__apps-get-info",
+      "mcp__digitalocean__apps-get-deployment-status"
     ],
     "deny": [],
     "ask": [],

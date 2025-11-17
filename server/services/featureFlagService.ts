@@ -355,7 +355,7 @@ export class FeatureFlagService extends EventEmitter {
     // Get flag from cache or memory
     let flag = await this.getCachedFlag(flagId);
     if (!flag) {
-      flag = this.flags.get(flagId);
+      flag = this.flags.get(flagId) ?? null;
     }
 
     if (!flag) {

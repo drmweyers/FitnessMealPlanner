@@ -262,11 +262,16 @@ function RecipeCard({
             ) : engagementData?.avgRating ? (
               <RatingDisplay
                 summary={{
-                  averageRating: engagementData.avgRating,
+                  id: crypto.randomUUID(),
+                  recipeId: recipe.id,
+                  averageRating: engagementData.avgRating.toFixed(2),
                   totalRatings: engagementData.totalRatings || 0,
-                  distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                  totalReviews: 0,
+                  ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
                   helpfulCount: null,
-                  wouldCookAgainCount: null
+                  wouldCookAgainCount: null,
+                  averageDifficulty: null,
+                  lastUpdated: null
                 }}
                 size="sm"
                 className="justify-start"

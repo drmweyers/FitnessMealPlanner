@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuItem,
 } from '../ui/dropdown-menu';
-import { Pagination } from '../ui/pagination';
+import { CustomPagination } from '../ui/custom-pagination';
 
 interface FavoritesListProps {
   className?: string;
@@ -331,8 +331,7 @@ const FavoritesList = memo(({ className }: FavoritesListProps) => {
           {/* Pagination */}
           {favoritesData?.data && favoritesData.data.totalPages > 1 && (
             <div className="flex justify-center mt-8">
-              {/* @ts-expect-error - Custom pagination props not in shadcn ui/pagination */}
-              <Pagination
+              <CustomPagination
                 currentPage={currentPage}
                 totalPages={favoritesData.data.totalPages}
                 onPageChange={setCurrentPage}

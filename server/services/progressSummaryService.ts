@@ -349,7 +349,7 @@ export class ProgressSummaryService {
       // Get favorite recipes added this week
       const weeklyFavorites = await db
         .select({
-          recipeName: sql`'Recipe'`
+          recipeName: sql<string>`'Recipe'`
         })
         .from(recipeFavorites)
         .where(
