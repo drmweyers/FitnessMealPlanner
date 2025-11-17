@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-// @ts-nocheck - Type errors suppressed
->>>>>>> 7b06368c452285bf41ed3cfc2bcfdcb1c0a61ff7
 import { emailAnalyticsService } from './emailAnalyticsService';
 
 // Mailgun configuration

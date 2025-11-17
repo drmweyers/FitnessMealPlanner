@@ -8,11 +8,7 @@
  * - Custom domain (Enterprise)
  */
 
-<<<<<<< HEAD
-import { useState } from 'react';
-=======
 import { useState, useEffect } from 'react';
->>>>>>> 7b06368c452285bf41ed3cfc2bcfdcb1c0a61ff7
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';

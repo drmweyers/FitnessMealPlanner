@@ -5,14 +5,17 @@
  * Displays on dashboard to highlight tier value
  */
 
+import { useState } from 'react';
 import { useTier, useRecipeCount } from '@/hooks/useTier';
 import { ChefHat, TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TierSelectionModal } from './tiers/TierSelectionModal';
 
 export function RecipeCountDisplay() {
   const { tier, features } = useTier();
   const { data: actualCount, isLoading } = useRecipeCount();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const maxRecipes = features.recipeCount;
   const currentCount = actualCount || 0;
@@ -67,12 +70,21 @@ export function RecipeCountDisplay() {
                 {tier === 'starter' ? 'Professional' : 'Enterprise'}
               </span>
             </div>
-            <button className="text-sm font-medium text-primary hover:underline">
+            <button 
+              onClick={() => setShowUpgradeModal(true)}
+              className="text-sm font-medium text-primary hover:underline"
+            >
               Upgrade
             </button>
           </div>
         )}
       </CardContent>
+
+      <TierSelectionModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentTier={tier}
+      />
     </Card>
   );
 }

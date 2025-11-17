@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Check, Crown, Zap, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface UpgradePromptProps {
   open: boolean;
@@ -59,6 +60,7 @@ const TIER_FEATURES: Record<TierLevel, string[]> = {
 
 export function UpgradePrompt({ open, onOpenChange, feature, requiredTier }: UpgradePromptProps) {
   const { tier } = useTier();
+  const { toast } = useToast();
 
   const targetTierData = TIER_PRICING[requiredTier];
   const targetFeatures = TIER_FEATURES[requiredTier];
@@ -118,7 +120,39 @@ export function UpgradePrompt({ open, onOpenChange, feature, requiredTier }: Upg
 
           {/* CTA Buttons */}
           <div className="flex gap-3">
-            <Button className="flex-1" size="lg">
+            <Button 
+              className="flex-1" 
+              size="lg"
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/v1/tiers/purchase', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                      tier: requiredTier,
+                      successUrl: `${window.location.origin}${window.location.pathname}?purchase=success`,
+                      cancelUrl: `${window.location.origin}${window.location.pathname}?purchase=canceled`,
+                    }),
+                  });
+
+                  if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to create checkout session');
+                  }
+
+                  const { url } = await response.json();
+                  window.location.href = url;
+                } catch (error: any) {
+                  console.error('Purchase error:', error);
+                  toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: error.message || 'Failed to start checkout process',
+                  });
+                }
+              }}
+            >
               Upgrade Now
             </Button>
             <Button
