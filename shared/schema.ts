@@ -23,6 +23,7 @@ import {
   integer,
   boolean,
   decimal,
+  bigint,
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -1549,6 +1550,66 @@ export const tierUsageTracking = pgTable("tier_usage_tracking", {
   trainerIdIdx: index("idx_tier_usage_tracking_trainer_id").on(table.trainerId),
   trainerPeriodIdx: index("idx_tier_usage_tracking_trainer_period").on(table.trainerId, table.periodStart, table.periodEnd),
   periodEndIdx: index("idx_tier_usage_tracking_period_end").on(table.trainerId, table.periodEnd),
+}));
+
+/**
+ * Trainer Branding Settings Table (Story 2.12)
+ *
+ * Professional+ trainers can customize branding.
+ * Enterprise trainers can enable white-label mode.
+ */
+export const trainerBrandingSettings = pgTable("trainer_branding_settings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  trainerId: uuid("trainer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull()
+    .unique(),
+
+  // Logo (Professional+)
+  logoUrl: text("logo_url"),
+  logoFileSize: bigint("logo_file_size", { mode: "number" }).default(0),
+  logoUploadedAt: timestamp("logo_uploaded_at"),
+
+  // Color customization (Professional+)
+  primaryColor: varchar("primary_color", { length: 7 }), // Hex color
+  secondaryColor: varchar("secondary_color", { length: 7 }),
+  accentColor: varchar("accent_color", { length: 7 }),
+
+  // White-label settings (Enterprise only)
+  whiteLabelEnabled: boolean("white_label_enabled").default(false),
+  customDomain: varchar("custom_domain", { length: 255 }),
+  customDomainVerified: boolean("custom_domain_verified").default(false),
+  domainVerificationToken: varchar("domain_verification_token", { length: 64 }),
+  domainVerifiedAt: timestamp("domain_verified_at"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  trainerIdIdx: index("idx_branding_trainer_id").on(table.trainerId),
+  whiteLabelIdx: index("idx_branding_white_label").on(table.whiteLabelEnabled),
+  customDomainIdx: index("idx_branding_custom_domain").on(table.customDomain),
+}));
+
+/**
+ * Branding Audit Log Table (Story 2.12)
+ *
+ * Tracks all branding changes for compliance and support.
+ */
+export const brandingAuditLog = pgTable("branding_audit_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  trainerId: uuid("trainer_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  action: varchar("action", { length: 50 }).notNull(),
+  fieldChanged: varchar("field_changed", { length: 100 }),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  changedAt: timestamp("changed_at").defaultNow().notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }), // IPv6 compatible
+  userAgent: text("user_agent"),
+}, (table) => ({
+  trainerChangedAtIdx: index("idx_branding_audit_trainer").on(table.trainerId, table.changedAt),
+  actionChangedAtIdx: index("idx_branding_audit_action").on(table.action, table.changedAt),
 }));
 
 /**

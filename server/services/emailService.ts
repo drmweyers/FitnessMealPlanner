@@ -1,8 +1,9 @@
-import { Resend } from 'resend';
 import { emailAnalyticsService } from './emailAnalyticsService';
 
-// Initialize Resend (with fallback for testing)
-const resend = new Resend(process.env.RESEND_API_KEY || 'test-key');
+// Mailgun configuration
+const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
+const MAILGUN_API_BASE_URL = process.env.MAILGUN_API_BASE_URL || 'https://api.mailgun.net';
 
 export interface InvitationEmailData {
   customerEmail: string;
@@ -62,43 +63,16 @@ export class EmailService {
    * Get the appropriate FROM email address based on environment and configuration
    */
   private getFromEmailAddress(): string {
-    // In development or when domain is not verified, use resend.dev for testing
-    const customFromEmail = process.env.FROM_EMAIL;
-    
-    // For development, prefer the resend.dev address as it's always available
-    if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-      return customFromEmail || 'EvoFitMeals <onboarding@resend.dev>';
-    }
-    
-    // For production, try to use verified domain or fall back to resend.dev
-    const accountOwnerEmail = process.env.ACCOUNT_OWNER_EMAIL || 'evofitmeals@bcinnovationlabs.com';
-    
-    // If we have a custom FROM_EMAIL and it's not the default resend.dev, use it
-    if (customFromEmail && !customFromEmail.includes('onboarding@resend.dev')) {
-      return customFromEmail;
-    }
-    
-    // For production without verified domain, fall back to resend.dev
-    return 'EvoFitMeals <onboarding@resend.dev>';
+    // Use FROM_EMAIL from environment or default to invites@evofitmeals.com
+    return process.env.FROM_EMAIL || 'EvoFit Meals <invites@evofitmeals.com>';
   }
 
   /**
    * Check if email address can receive emails in current environment
-   * In Resend testing mode, only account owner email can receive emails
+   * Mailgun can send to any valid email address once domain is verified
    */
   private canReceiveEmail(emailAddress: string): boolean {
-    const accountOwnerEmail = process.env.ACCOUNT_OWNER_EMAIL || 'evofitmeals@bcinnovationlabs.com';
-    
-    // In development, we can only send to account owner's email or common test domains
-    if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-      return emailAddress === accountOwnerEmail || 
-             emailAddress.includes('@gmail.com') ||
-             emailAddress.includes('@hotmail.com') ||
-             emailAddress.includes('@outlook.com') ||
-             emailAddress.includes('@yahoo.com');
-    }
-    
-    // In production, assume all emails can be delivered (proper domain verification should be in place)
+    // Mailgun can send to any valid email address
     return true;
   }
 
@@ -107,18 +81,14 @@ export class EmailService {
    */
   async sendInvitationEmail(data: InvitationEmailData): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      if (!process.env.RESEND_API_KEY) {
-        console.warn('RESEND_API_KEY not configured. Email sending disabled.');
+      if (!MAILGUN_API_KEY) {
+        console.warn('MAILGUN_API_KEY not configured. Email sending disabled.');
         return { success: false, error: 'Email service not configured - missing API key' };
       }
 
-      // Check if this email can receive emails in current environment
-      if (!this.canReceiveEmail(data.customerEmail)) {
-        const accountOwnerEmail = process.env.ACCOUNT_OWNER_EMAIL || 'evofitmeals@bcinnovationlabs.com';
-        return { 
-          success: false, 
-          error: `Email delivery restricted in testing mode. Can only send to: ${accountOwnerEmail} or common email providers (Gmail, Outlook, Yahoo).` 
-        };
+      if (!MAILGUN_DOMAIN) {
+        console.warn('MAILGUN_DOMAIN not configured. Email sending disabled.');
+        return { success: false, error: 'Email service not configured - missing domain' };
       }
 
       // Get appropriate FROM email address
@@ -133,48 +103,52 @@ export class EmailService {
         day: 'numeric'
       });
 
-      const { data: emailData, error } = await resend.emails.send({
-        from: fromEmail,
-        to: [data.customerEmail],
-        subject: `You're invited to join ${data.trainerName}'s meal planning program`,
-        html: this.createInvitationEmailTemplate(data, expirationDate),
-        text: this.createInvitationEmailText(data, expirationDate),
+      // Create form data for Mailgun API
+      const formData = new URLSearchParams();
+      formData.append('from', fromEmail);
+      formData.append('to', data.customerEmail);
+      formData.append('subject', `You're invited to join ${data.trainerName}'s meal planning program`);
+      formData.append('html', this.createInvitationEmailTemplate(data, expirationDate));
+      formData.append('text', this.createInvitationEmailText(data, expirationDate));
+
+      // Send via Mailgun API
+      const mailgunUrl = `${MAILGUN_API_BASE_URL}/v3/${MAILGUN_DOMAIN}/messages`;
+      console.log('🔧 Mailgun API URL:', mailgunUrl);
+      console.log('🔧 MAILGUN_API_BASE_URL:', MAILGUN_API_BASE_URL);
+      console.log('🔧 MAILGUN_DOMAIN:', MAILGUN_DOMAIN);
+      const response = await fetch(mailgunUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`api:${MAILGUN_API_KEY}`).toString('base64')}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
       });
 
-      if (error) {
-        console.error('Failed to send invitation email:', error);
-        
-        // Provide more specific error messages based on error type
-        let errorMessage = error.message || 'Unknown email service error';
-        
-        if (error.message?.includes('domain is not verified')) {
-          errorMessage = `Email domain verification required. The domain for ${data.customerEmail} is not verified in Resend.`;
-        } else if (error.message?.includes('You can only send testing emails')) {
-          errorMessage = `Email delivery restricted to verified addresses. Cannot send to ${data.customerEmail} in testing mode.`;
-        } else if (error.message?.includes('rate limit')) {
-          errorMessage = 'Email rate limit exceeded. Please try again later.';
-        }
-        
-        return { success: false, error: errorMessage };
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Mailgun API error:', errorText);
+        throw new Error(`Mailgun API error: ${response.statusText}`);
       }
 
-      console.log(`Invitation email sent successfully to ${data.customerEmail}, messageId: ${emailData?.id}`);
-      
+      const result = await response.json();
+      console.log(`Invitation email sent successfully to ${data.customerEmail}, messageId: ${result.id}`);
+
       // Log successful send
       await emailAnalyticsService.logEmailSent({
         emailType: 'invitation',
         subject: `You're invited to join ${data.trainerName}'s meal planning program`,
         recipientEmail: data.customerEmail,
         status: 'sent',
-        messageId: emailData?.id
+        messageId: result.id
       });
-      
-      return { success: true, messageId: emailData?.id };
+
+      return { success: true, messageId: result.id };
 
     } catch (error) {
       console.error('Error sending invitation email:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
+
       // Log failed send
       await emailAnalyticsService.logEmailSent({
         emailType: 'invitation',
@@ -183,10 +157,10 @@ export class EmailService {
         status: 'failed',
         errorMessage
       });
-      
-      return { 
-        success: false, 
-        error: `Email service error: ${errorMessage}` 
+
+      return {
+        success: false,
+        error: `Email service error: ${errorMessage}`
       };
     }
   }

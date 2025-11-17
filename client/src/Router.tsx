@@ -22,6 +22,7 @@ import SharedMealPlanView from "./components/SharedMealPlanView";
 import MacroTrackingDashboard from "./components/MacroTrackingDashboard";
 import GroceryListWrapper from "./components/GroceryListWrapper";
 import HybridPricing from "./pages/HybridPricing";
+import Billing from "./pages/Billing";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -87,6 +88,11 @@ export default function Router() {
 
         {/* Public/Common Routes */}
         <Route path="/pricing" component={HybridPricing} />
+        <Route path="/billing" component={() => (
+          <ProtectedRoute requiredRole="trainer">
+            <Billing />
+          </ProtectedRoute>
+        )} />
 
         {/* Admin Routes */}
         <Route path="/admin" component={() => (

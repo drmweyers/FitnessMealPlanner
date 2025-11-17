@@ -177,7 +177,14 @@
       "Bash(for branch in main qa-ready qa-ready-clean Mark-Feature-QA)",
       "Bash(git show:*)",
       "Bash(git remote:*)",
-      "Bash(ssh-keygen:*)"
+      "Bash(ssh-keygen:*)",
+      "Bash(https://api.mailgun.net/v3/evofitmeals.com/messages )",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2MTY0NzQ1LTJhM2MtNGI2Zi04NjVhLTgzOGQwMDRjMDkzMiIsImVtYWlsIjoidHJhaW5lci50ZXN0QGV2b2ZpdG1lYWxzLmNvbSIsInJvbGUiOiJ0cmFpbmVyIiwiaWF0IjoxNzYzMDc5ODc0LCJleHAiOjE3NjMwODA3NzQsImF1ZCI6IkZpdG5lc3NNZWFsUGxhbm5lci1DbGllbnQiLCJpc3MiOiJGaXRuZXNzTWVhbFBsYW5uZXIifQ.DuWrAE-bqIAF4IrrFnA18tI6BzoVTVTO_g9QcpbJ9Kw\")",
+      "Bash(python3:*)",
+      "Bash(bash:*)",
+      "Bash(git reset:*)",
+      "Bash(rmdir:*)",
+      "Bash(stripe:*)"
     ],
     "deny": [],
     "ask": [],

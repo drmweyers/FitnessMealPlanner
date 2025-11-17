@@ -78,6 +78,7 @@ import EvoFitPDFExport from "./EvoFitPDFExport";
 import html2canvas from "html2canvas";
 import RecipeModal from "./RecipeModal";
 import MealPlanAssignment from "./MealPlanAssignment";
+import { MealTypeDropdown } from "./MealTypeDropdown";
 
 /**
  * Type definition for meal plan generation results
@@ -1403,6 +1404,31 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                             </SelectContent>
                           </Select>
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="mealType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 text-sm sm:text-base">
+                          <Utensils className="h-4 w-4" />
+                          Meal Type (Tier Filtered)
+                        </FormLabel>
+                        <FormControl>
+                          <MealTypeDropdown
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Select meal type"
+                            className="text-sm sm:text-base"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                          Filter recipes by meal type - locked types require tier upgrade
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

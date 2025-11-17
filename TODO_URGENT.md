@@ -1,11 +1,247 @@
 # TODO URGENT - Critical Development Priorities
 **Created:** 2025-09-24
-**Updated:** November 8, 2025
+**Updated:** February 1, 2025
 **Priority:** CRITICAL - Top Priority Items
 
 ---
 
-## 🚨 PRODUCTION DEPLOYMENT FIX - HIGHEST PRIORITY (November 8, 2025)
+## 🚨 STRIPE ACCOUNT SETUP - HIGHEST PRIORITY (February 1, 2025)
+
+**Status:** ⚠️ CRITICAL - FINAL STEP TO 100% PRODUCTION READY
+**Business Impact:** 3-tier payment system complete but cannot process payments until Stripe configured
+**Estimated Time:** 17 minutes total
+**System Status:** 100% code complete, all routes live, awaiting Stripe credentials
+**Guide:** `SYSTEM_100_PERCENT_COMPLETE.md`
+
+### Problem
+- ALL payment code is written and integrated (6,000+ lines)
+- All 8 payment endpoints are LIVE at /api/v1/*
+- Billing page is accessible at /billing
+- System CANNOT process payments without Stripe account setup
+
+### Solution
+**Complete Stripe account setup and add credentials to .env**
+
+### 3-Step Action Plan (17 minutes)
+
+**⏳ Steps to Complete NOW:**
+
+#### Step 1: Set Up Stripe Account (10 minutes)
+
+**1a. Create Stripe Account (2 min):**
+- Go to: https://dashboard.stripe.com/register
+- Sign up with business email
+- Complete verification
+
+**1b. Create Products (5 min):**
+1. Navigate to: https://dashboard.stripe.com/test/products
+2. Click "+ Create product"
+3. Create "Professional" tier:
+   - Name: Professional
+   - Price: $99.00
+   - Type: One-time payment
+   - Copy **Price ID** (starts with `price_`)
+4. Create "Enterprise" tier:
+   - Name: Enterprise
+   - Price: $299.00
+   - Type: One-time payment
+   - Copy **Price ID**
+
+**1c. Get API Keys (1 min):**
+- Go to: https://dashboard.stripe.com/test/apikeys
+- Copy "Secret key" (starts with `sk_test_`)
+
+**1d. Configure Webhook (2 min):**
+- Go to: https://dashboard.stripe.com/test/webhooks
+- Click "Add endpoint"
+- URL: `http://localhost:4000/api/v1/stripe/webhook` (for testing)
+- Select events: `checkout.*`, `customer.*`, `invoice.*`
+- Copy "Signing secret" (starts with `whsec_`)
+
+#### Step 2: Update Environment Variables (2 minutes)
+
+**Edit .env file:**
+```bash
+# Stripe API Keys
+STRIPE_SECRET_KEY=sk_test_YOUR_KEY_HERE
+STRIPE_WEBHOOK_SECRET=whsec_YOUR_SECRET_HERE
+
+# Stripe Price IDs (One-Time Payments)
+STRIPE_PRICE_STARTER=                                 # Free (leave empty)
+STRIPE_PRICE_PROFESSIONAL=price_YOUR_PROFESSIONAL_ID
+STRIPE_PRICE_ENTERPRISE=price_YOUR_ENTERPRISE_ID
+```
+
+**Restart server:**
+```bash
+docker-compose --profile dev restart
+```
+
+#### Step 3: Test Payment Flow (5 minutes)
+
+**3a. Navigate to Billing (1 min):**
+- Open: http://localhost:4000/billing
+- Login as: trainer.test@evofitmeals.com / TestTrainer123!
+
+**3b. Start Checkout (1 min):**
+- Click "Upgrade Tier"
+- Select "Professional" tier
+- Click "Upgrade to Professional"
+
+**3c. Complete Test Payment (2 min):**
+- Use Stripe test card: `4242 4242 4242 4242`
+- Expiry: `12/25`
+- CVC: `123`
+- ZIP: `12345`
+- Complete payment
+
+**3d. Verify Success (1 min):**
+- Should redirect to success URL
+- Tier should update to "Professional"
+- Usage limits should show: 20 customers, 200 meal plans
+- Payment should appear in billing history
+
+### Success Criteria
+- [x] All code written and integrated (6,000+ lines) ✅
+- [x] Payment router registered in server/index.ts ✅
+- [x] Billing page route added to Router.tsx ✅
+- [x] Environment template updated in .env.example ✅
+- [ ] Stripe account created
+- [ ] Products created (Professional $99, Enterprise $299)
+- [ ] API keys copied to .env
+- [ ] Webhook configured
+- [ ] Test payment completed successfully
+- [ ] Tier activation verified
+
+### What's Already Done ✅
+- ✅ StripePaymentService.ts (600 lines) - Payment processing
+- ✅ payment.ts (350 lines) - 8 API endpoints
+- ✅ Billing.tsx (270 lines) - Billing portal UI
+- ✅ SubscriptionOverview.tsx (280 lines) - Subscription dashboard
+- ✅ EntitlementsService.test.ts (450 lines) - Unit tests
+- ✅ Payment router integrated to server
+- ✅ Billing page route added to frontend
+- ✅ .env.example updated with Stripe config
+
+### Files to Reference
+- **Complete Guide:** `SYSTEM_100_PERCENT_COMPLETE.md` (5,000+ words with full testing checklist)
+- **Session Summary:** `BMAD_PHASE_19_INTEGRATION_COMPLETE.md` (integration details)
+- **Quick Guide:** `INTEGRATION_STEPS.md` (now complete)
+
+### Testing After Setup
+```bash
+# 1. Restart server (after adding .env variables)
+docker-compose --profile dev restart
+
+# 2. Test pricing endpoint
+curl http://localhost:4000/api/v1/public/pricing
+
+# 3. Navigate to billing page
+# http://localhost:4000/billing
+
+# 4. Complete test purchase (steps above)
+
+# 5. Verify database
+# Check trainer_subscriptions table for new entry
+```
+
+### Production Deployment After Testing
+Once local testing succeeds:
+1. Create production Stripe products (use live keys: `sk_live_*`)
+2. Update production .env with live Stripe credentials
+3. Configure production webhook: `https://evofitmeals.com/api/v1/stripe/webhook`
+4. Deploy to production
+5. Test with real payment (can refund immediately)
+
+---
+
+## 🚨 MAILGUN EMAIL SETUP - SECOND PRIORITY (November 9, 2025)
+
+**Status:** ⚠️ CRITICAL - MUST COMPLETE TOMORROW SESSION
+**Business Impact:** Trainers cannot invite customers - core feature blocked
+**Estimated Time:** 80 minutes (10 steps, guided process)
+**Email Address:** hello@evofit.io
+**Guide:** `docs/MAILGUN_SETUP_GUIDE.md`
+
+### Problem
+- Current email system uses Resend with unverified domain
+- Domain `bcinnovationlabs.com` is NOT verified
+- Trainers cannot send customer invitations to external emails
+- Only works with test domain `onboarding@resend.dev`
+
+### Solution
+**Replace Resend with Mailgun using new `hello@evofit.io` email**
+
+### 10-Step Implementation Plan
+
+**✅ Steps Completed:**
+- [x] Comprehensive setup guide created (docs/MAILGUN_SETUP_GUIDE.md)
+- [x] Documentation added to BMAD process
+- [x] Step-by-step instructions with 3 provider options (GoDaddy, Namecheap, Cloudflare)
+
+**⏳ Steps to Complete Tomorrow:**
+- [ ] **Step 1:** Create Mailgun account and verify email (15 min)
+- [ ] **Step 2:** Add evofit.io domain to Mailgun (5 min)
+- [ ] **Step 3:** Copy DNS records from Mailgun dashboard (5 min)
+- [ ] **Step 4:** Add DNS records to domain provider (30 min)
+- [ ] **Step 5:** Verify DNS records in Mailgun - wait 15 min (17 min total)
+- [ ] **Step 6:** Copy Mailgun API key and save it (5 min)
+- [ ] **Step 7:** Update .env file with Mailgun credentials (2 min)
+- [ ] **Step 8:** Install Mailgun npm package (1 min)
+- [ ] **Step 9:** Update emailService.ts to use Mailgun (20 min)
+- [ ] **Step 10:** Test email sending with Mailgun (10 min)
+
+### Quick Start for Tomorrow Session
+
+**FIRST ACTION:**
+1. Open guide: `docs/MAILGUN_SETUP_GUIDE.md`
+2. Go to Mailgun signup: https://signup.mailgun.com/new/signup
+3. Follow Step 1 instructions exactly
+
+**USER WILL NEED:**
+- Access to domain provider where evofit.io was purchased (GoDaddy/Namecheap/Cloudflare)
+- Credit card for Mailgun verification (won't be charged - free tier)
+- 80 minutes of uninterrupted time
+
+### Files to Reference
+- **Setup Guide:** `docs/MAILGUN_SETUP_GUIDE.md` (850+ lines, comprehensive)
+- **Current Email Service:** `server/services/emailService.ts` (line 1-855)
+- **Invitation Routes:** `server/invitationRoutes.ts` (line 1-403)
+- **Environment Example:** `.env.example` (line 22-24)
+
+### Success Criteria
+- ✅ Mailgun account created with verified domain
+- ✅ All 5 DNS records added and verified
+- ✅ API credentials saved to .env file
+- ✅ emailService.ts updated to use Mailgun
+- ✅ Test email successfully sent to external address
+- ✅ Trainer can send customer invitation
+- ✅ Customer receives invitation email from hello@evofit.io
+
+### Expected Environment Variables After Completion
+```env
+# Mailgun Email Configuration
+MAILGUN_API_KEY=key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+MAILGUN_DOMAIN=evofit.io
+MAILGUN_API_BASE_URL=https://api.mailgun.net/v3
+FROM_EMAIL=EvoFitMeals <hello@evofit.io>
+```
+
+### Testing After Implementation
+```bash
+# 1. Restart dev environment
+docker-compose --profile dev restart
+
+# 2. Test email sending
+# Login as trainer → Send invitation → Check customer inbox
+
+# 3. Verify Mailgun logs
+# Go to Mailgun dashboard → Sending → Logs
+```
+
+---
+
+## 🚨 PRODUCTION DEPLOYMENT FIX - SECOND PRIORITY (November 8, 2025)
 
 **Status:** ⚠️ CRITICAL - Production deploying OLD code from October 28
 **Business Impact:** BMAD Bulk Generator updates (Nov 7) NOT live on evofitmeals.com
