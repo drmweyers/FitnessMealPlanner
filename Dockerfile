@@ -88,13 +88,51 @@ RUN npm run build && \
 # Production stage - ENSURE drizzle.config.ts is copied
 FROM base AS prod
 
+# Install Puppeteer system dependencies (Chromium and required libraries)
+RUN apt-get update && apt-get install -y \
+    # Puppeteer/Chromium dependencies
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libdbus-1-3 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
+    libatspi2.0-0 \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy package.json first
 COPY package*.json ./
 
-# Install dependencies
+# Install production dependencies (puppeteer should be in dependencies)
 RUN npm ci --only=production && \
     npm install drizzle-kit && \
     echo "✅ Dependencies installed"
+
+# Verify Puppeteer is installed (it's in dependencies, so should be available)
+RUN echo "🔍 Verifying Puppeteer installation..." && \
+    if [ ! -d "node_modules/puppeteer" ]; then \
+        echo "❌ WARNING: Puppeteer not found in node_modules!" && \
+        echo "📦 Installing puppeteer explicitly..." && \
+        npm install puppeteer@^24.15.0 && \
+        echo "✅ Puppeteer installed"; \
+    else \
+        echo "✅ Puppeteer found in node_modules"; \
+    fi && \
+    echo "🔍 Testing Puppeteer import..." && \
+    node -e "const p = require('puppeteer'); console.log('✅ Puppeteer imported successfully');" && \
+    echo "✅ Puppeteer verification complete"
 
 # Copy built application
 COPY --from=builder /app/dist/index.js ./dist/index.js
