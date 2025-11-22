@@ -127,10 +127,17 @@ class AnalyticsService {
         FROM recipes
       `);
       
-      const mealPlanCountResult = await db.execute(sql`
+      // Count meal plans from both trainer_meal_plans and personalized_meal_plans
+      const trainerMealPlanResult = await db.execute(sql`
         SELECT COUNT(*) as total
-        FROM meal_plans
+        FROM trainer_meal_plans
       `);
+      const personalizedMealPlanResult = await db.execute(sql`
+        SELECT COUNT(*) as total
+        FROM personalized_meal_plans
+      `);
+      const totalMealPlans = (parseInt(trainerMealPlanResult.rows[0]?.total || '0', 10) + 
+                              parseInt(personalizedMealPlanResult.rows[0]?.total || '0', 10));
 
       // Process user data
       const userCounts = userCountResult.rows as { role: string; count: string }[];
@@ -154,8 +161,7 @@ class AnalyticsService {
       const pendingRecipes = parseInt(recipeData?.pending || '0');
 
       // Process meal plan data
-      const mealPlanData = mealPlanCountResult.rows[0] as { total: string };
-      const totalMealPlans = parseInt(mealPlanData?.total || '0');
+      // totalMealPlans already calculated above from both tables
 
       // Construct metrics object with real data where available
       const metrics: SystemMetrics = {
@@ -221,9 +227,9 @@ class AnalyticsService {
   async getUserActivity(limit = 50): Promise<UserActivity[]> {
     try {
       const result = await db.execute(sql`
-        SELECT id, email, role, last_login
+        SELECT id, email, role, updated_at as last_active
         FROM users
-        ORDER BY last_login DESC
+        ORDER BY updated_at DESC
         LIMIT ${limit}
       `);
 
@@ -231,14 +237,14 @@ class AnalyticsService {
         id: string; 
         email: string; 
         role: string; 
-        last_login: Date | null;
+        last_active: Date | null;
       }[];
 
       return users.map(user => ({
         userId: user.id,
         email: user.email,
         role: user.role,
-        lastActive: user.last_login || new Date(),
+        lastActive: user.last_active || new Date(),
         sessionCount: Math.floor(Math.random() * 50) + 1, // Mock data
         totalDuration: Math.floor(Math.random() * 1000) + 100, // Mock data
         actions: ['login', 'view_recipes', 'create_meal_plan'] // Mock data

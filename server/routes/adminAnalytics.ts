@@ -20,12 +20,11 @@ import {
   users,
   recipes,
   recipeInteractions,
-  
-  recipeFavorites,
-  
-  
   personalizedMealPlans
 } from '../../shared/schema';
+import {
+  recipeFavorites
+} from '../../shared/schema-favorites';
 
 const router = Router();
 const trendingService = getTrendingService();
@@ -493,7 +492,7 @@ async function getContentMetrics(startDate: Date) {
       newRecipes: sql<number>`count(case when ${recipes.creationTimestamp} >= ${startDate} then 1 end)`,
       averageRating: sql<number>`(select avg(${recipeInteractions.interactionValue}) from ${recipeRatings})`,
       totalRatings: sql<number>`(select count(*) from ${recipeRatings} where ${recipeInteractions.interactionDate} >= ${startDate})`,
-      totalFavorites: sql<number>`(select count(*) from ${recipeFavorites} where ${recipeFavorites.favoritedAt} >= ${startDate})`
+      totalFavorites: sql<number>`(select count(*) from ${recipeFavorites} where ${recipeFavorites.createdAt} >= ${startDate})`
     })
     .from(recipes);
 

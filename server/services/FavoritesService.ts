@@ -9,6 +9,7 @@
 import { db } from '../db.js';
 import { getRedisService } from './RedisService.js';
 import { eq, and, count, desc, sql } from 'drizzle-orm';
+// Use schema-favorites.ts - the actual database has favorite_type column
 import {
   recipeFavorites,
   favoriteCollections,
@@ -19,6 +20,12 @@ import {
   type CreateCollection,
   type AddToCollection,
 } from '../../shared/schema-favorites.js';
+
+// AddRecipeToCollection type
+type AddRecipeToCollection = {
+  recipeId: string;
+  notes?: string;
+};
 
 import {
   recipes,
@@ -119,6 +126,7 @@ export class FavoritesService {
       const [favorite] = await db.insert(recipeFavorites).values({
         userId,
         recipeId: favoriteData.recipeId,
+        favoriteType: favoriteData.favoriteType || 'standard',
         notes: favoriteData.notes,
       }).returning();
 
@@ -246,7 +254,8 @@ export class FavoritesService {
         userId: recipeFavorites.userId,
         recipeId: recipeFavorites.recipeId,
         notes: recipeFavorites.notes,
-        favoritedAt: recipeFavorites.favoritedAt,
+        favoriteType: recipeFavorites.favoriteType,
+        createdAt: recipeFavorites.createdAt,
         recipe: {
           id: recipes.id,
           name: recipes.name,
@@ -263,7 +272,7 @@ export class FavoritesService {
       .from(recipeFavorites)
       .innerJoin(recipes, eq(recipeFavorites.recipeId, recipes.id))
       .where(eq(recipeFavorites.userId, userId))
-      .orderBy(desc(recipeFavorites.favoritedAt))
+      .orderBy(desc(recipeFavorites.createdAt))
       .limit(limit)
       .offset(offset);
 
@@ -410,7 +419,8 @@ export class FavoritesService {
         name: collectionData.name,
         description: collectionData.description,
         isPublic: collectionData.isPublic || false,
-        color: collectionData.color || '#3B82F6',
+        colorTheme: collectionData.colorTheme || 'blue',
+        coverImageUrl: collectionData.coverImageUrl,
       }).returning();
 
       // Invalidate collections cache
@@ -579,7 +589,7 @@ export class FavoritesService {
       .from(collectionRecipes)
       .innerJoin(recipes, eq(collectionRecipes.recipeId, recipes.id))
       .where(eq(collectionRecipes.collectionId, collectionId))
-      .orderBy(desc(collectionRecipes.addedAt));
+      .orderBy(desc(collectionRecipes.addedDate));
 
       return {
         success: true,

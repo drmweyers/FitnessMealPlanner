@@ -3,13 +3,15 @@ import {
   users,
   progressMeasurements,
   customerGoals,
-  recipeFavorites,
   recipeInteractions,
   recipeRatings,
   personalizedMealPlans,
   userActivitySessions,
   emailPreferences
 } from '@shared/schema';
+import {
+  recipeFavorites,
+} from '@shared/schema-favorites';
 import { emailService, type ProgressSummaryEmailData } from './emailService';
 import { eq, and, gte, lte, count, desc, sql } from 'drizzle-orm';
 
@@ -355,8 +357,8 @@ export class ProgressSummaryService {
         .where(
           and(
             eq(recipeFavorites.userId, customerId),
-            gte(recipeFavorites.favoriteDate, weekStartDate),
-            lte(recipeFavorites.favoriteDate, weekEndDate)
+            gte(recipeFavorites.createdAt, weekStartDate),
+            lte(recipeFavorites.createdAt, weekEndDate)
           )
         );
 
@@ -397,8 +399,8 @@ export class ProgressSummaryService {
         .where(
           and(
             eq(recipeFavorites.userId, customerId),
-            gte(recipeFavorites.favoriteDate, weekStartDate),
-            lte(recipeFavorites.favoriteDate, weekEndDate)
+            gte(recipeFavorites.createdAt, weekStartDate),
+            lte(recipeFavorites.createdAt, weekEndDate)
           )
         );
 

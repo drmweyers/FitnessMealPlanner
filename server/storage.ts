@@ -21,7 +21,6 @@ import {
   customerInvitations,
   trainerMealPlans,
   mealPlanAssignments,
-  recipeFavorites,
   recipeCollections,
   collectionRecipes,
   recipeInteractions,
@@ -42,7 +41,6 @@ import {
   type InsertTrainerMealPlan,
   type TrainerMealPlanWithAssignments,
   type MealPlanAssignment,
-  type RecipeFavorite,
   type RecipeCollection,
   type CollectionRecipe,
   type RecipeInteraction,
@@ -56,6 +54,10 @@ import {
   passwordResetTokens,
   refreshTokens,
 } from "@shared/schema";
+import {
+  recipeFavorites,
+  type RecipeFavorite,
+} from "@shared/schema-favorites";
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
 import { inArray } from "drizzle-orm";
@@ -930,7 +932,7 @@ export class DatabaseStorage implements IStorage {
       .from(recipeFavorites)
       .innerJoin(recipes, eq(recipeFavorites.recipeId, recipes.id))
       .where(whereConditions)
-      .orderBy(desc(recipeFavorites.favoriteDate))
+      .orderBy(desc(recipeFavorites.createdAt))
       .limit(limit)
       .offset(offset);
 
@@ -944,7 +946,7 @@ export class DatabaseStorage implements IStorage {
     return {
       favorites: favorites.map(f => ({
         ...f.recipe,
-        favoriteDate: f.favorite.favoriteDate,
+        createdAt: f.favorite.createdAt,
         notes: f.favorite.notes,
       })),
       total,
@@ -1156,7 +1158,7 @@ export class DatabaseStorage implements IStorage {
         recipeFavorites,
         and(
           eq(recipeFavorites.recipeId, recipes.id),
-          gte(recipeFavorites.favoriteDate, dateFilter)
+          gte(recipeFavorites.createdAt, dateFilter)
         )
       )
       .where(eq(recipes.isApproved, true))
