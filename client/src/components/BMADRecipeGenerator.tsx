@@ -259,15 +259,16 @@ export default function BMADRecipeGenerator() {
     setError(null);
 
     try {
-      // Map frontend fields to backend's expected legacy field names for compatibility
+      // Map frontend fields to backend's expected field names
       const backendPayload = {
         ...data,
         // Backend expects dietaryRestrictions (array), we send dietaryTag (string)
         dietaryRestrictions: data.dietaryTag ? [data.dietaryTag] : undefined,
         // Backend expects targetCalories, we send dailyCalorieTarget
         targetCalories: data.dailyCalorieTarget,
-        // Backend expects mainIngredient (we don't collect this anymore, so undefined)
-        mainIngredient: undefined,
+        // Use focusIngredient if provided, otherwise undefined (don't use mainIngredient)
+        focusIngredient: data.focusIngredient || undefined,
+        mainIngredient: undefined, // Legacy field, prefer focusIngredient
       };
 
       const response = await fetch('/api/admin/generate-bmad', {
@@ -280,8 +281,17 @@ export default function BMADRecipeGenerator() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to start bulk generation');
+        // Try to extract user-friendly error message from JSON response
+        let errorMessage = `Failed to start bulk generation (${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.error('[BMAD] Error response:', errorData);
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const result: BMADGenerationResult = await response.json();

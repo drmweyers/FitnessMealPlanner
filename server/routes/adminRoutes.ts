@@ -438,6 +438,10 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
       dietaryRestrictions,
       targetCalories,
       mainIngredient,
+      focusIngredient, // New field: primary ingredient to feature
+      difficultyLevel, // New field: recipe difficulty
+      recipePreferences, // New field: additional preferences
+      maxIngredients, // New field: maximum ingredient count
       fitnessGoal,
       naturalLanguagePrompt,
       maxPrepTime,
@@ -456,7 +460,38 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
     // Validate required count parameter
     if (!count || count < 1 || count > 100) {
       return res.status(400).json({
-        message: "Count is required and must be between 1 and 100 for BMAD generation"
+        error: "Invalid recipe count",
+        message: "Count is required and must be between 1 and 100 for BMAD generation",
+        completed: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    // Validate other parameters if provided
+    if (targetCalories && (targetCalories < 0 || targetCalories > 5000)) {
+      return res.status(400).json({
+        error: "Invalid target calories",
+        message: "Target calories must be between 0 and 5000",
+        completed: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    if (maxCalories && (maxCalories < 0 || maxCalories > 5000)) {
+      return res.status(400).json({
+        error: "Invalid max calories",
+        message: "Max calories must be between 0 and 5000",
+        completed: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    if (maxPrepTime && (maxPrepTime < 0 || maxPrepTime > 600)) {
+      return res.status(400).json({
+        error: "Invalid max prep time",
+        message: "Max prep time must be between 0 and 600 minutes",
+        completed: false,
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -479,6 +514,10 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
       dietaryRestrictions,
       targetCalories,
       mainIngredient,
+      focusIngredient, // Pass focusIngredient (preferred over mainIngredient if both provided)
+      difficultyLevel,
+      recipePreferences,
+      maxIngredients,
       fitnessGoal,
       naturalLanguagePrompt,
       maxPrepTime,
@@ -517,7 +556,21 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('[BMAD] Error starting generation:', error);
-    res.status(500).json({ message: "Failed to start BMAD recipe generation" });
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    
+    // Check if this is a validation error (user-facing, not a server error)
+    const isValidationError = errorMessage.includes('required') || 
+                              errorMessage.includes('must be') || 
+                              errorMessage.includes('Invalid') ||
+                              errorMessage.includes('between');
+    const statusCode = isValidationError ? 400 : 500;
+    
+    res.status(statusCode).json({ 
+      error: isValidationError ? errorMessage : "Failed to start BMAD recipe generation",
+      message: errorMessage,
+      completed: false,
+      timestamp: new Date().toISOString(),
+    });
   }
 });
 

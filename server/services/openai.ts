@@ -35,6 +35,10 @@ interface GenerateOptions {
   dietaryRestrictions?: string[];
   targetCalories?: number;
   mainIngredient?: string;
+  focusIngredient?: string; // Primary ingredient to feature prominently
+  difficultyLevel?: string; // e.g., "easy", "medium", "hard"
+  recipePreferences?: string; // Additional preferences like "quick meals", "family friendly"
+  maxIngredients?: number; // Maximum number of ingredients allowed
   fitnessGoal?: string;
   naturalLanguagePrompt?: string;
   maxPrepTime?: number;
@@ -150,45 +154,134 @@ async function generateRecipeBatchSingle(
   console.log(`[generateRecipeBatchSingle] CALLED with count=${count}, options=`, Object.keys(options));
   console.log(`[generateRecipeBatchSingle] OPENAI_API_KEY exists: ${!!process.env.OPENAI_API_KEY}`);
 
-  const systemPrompt = `You are an expert nutritionist and professional chef.
-Generate a batch of ${count} diverse and healthy recipes.
-${options.fitnessGoal ? `Focus on recipes that support this fitness goal: ${options.fitnessGoal}.` : ''}
-${options.targetCalories ? `Target approximately ${options.targetCalories} calories per recipe.` : ''}
-${options.maxCalories ? `Ensure recipes do not exceed ${options.maxCalories} calories.` : ''}
-${options.mainIngredient ? `Feature "${options.mainIngredient}" as a primary ingredient when possible.` : ''}
-${options.maxPrepTime ? `Keep preparation time under ${options.maxPrepTime} minutes.` : ''}
-IMPORTANT: Respond with a single JSON object containing a 'recipes' array: { "recipes": [...] }.
+  const systemPrompt = `You are an expert nutritionist and professional chef specializing in precise recipe generation.
+Your task is to generate ${count} recipe${count > 1 ? 's' : ''} that STRICTLY ADHERE to ALL specified constraints and requirements.
+
+CRITICAL RULES - THESE ARE MANDATORY, NOT SUGGESTIONS:
+${options.focusIngredient ? `1. PRIMARY INGREDIENT (HIGHEST PRIORITY): "${options.focusIngredient}" MUST be the main/primary ingredient in EVERY recipe. This overrides ALL other ingredient requirements. If recipePreferences mentions other ingredients, IGNORE those and use ONLY "${options.focusIngredient}".` : options.mainIngredient ? `1. MAIN INGREDIENT: Feature "${options.mainIngredient}" as the primary ingredient when possible.` : ''}
+${options.maxIngredients ? `2. INGREDIENT COUNT LIMIT: Each recipe MUST use EXACTLY ${options.maxIngredients} or FEWER ingredients total. Count EVERYTHING: main ingredients, vegetables, spices, oils, salt, pepper, herbs, seasonings, condiments. For example, if maxIngredients is 10, you cannot use 11 ingredients.` : ''}
+${options.maxPrepTime ? `3. TIME CONSTRAINT: The TOTAL time (prepTimeMinutes + cookTimeMinutes) MUST be ${options.maxPrepTime} minutes or LESS. Calculate carefully: if prepTimeMinutes=5 and cookTimeMinutes=12, total is 17 minutes (within limit).` : ''}
+${options.maxCalories ? `4. CALORIE LIMIT: Each recipe's estimatedNutrition.calories MUST NOT exceed ${options.maxCalories} calories. This is a hard limit - recipes exceeding this will be rejected.` : ''}
+${options.targetCalories ? `5. CALORIE TARGET: Aim for approximately ${options.targetCalories} calories per recipe (±10% variance is acceptable, but ${options.maxCalories ? `must not exceed ${options.maxCalories}` : 'stay close to target'}).` : ''}
+${(options.minProtein || options.maxProtein) ? `6. PROTEIN RANGE: Each recipe's estimatedNutrition.protein MUST be between ${options.minProtein || 0}g and ${options.maxProtein || '∞'}g. Values outside this range are INVALID.` : ''}
+${(options.minCarbs || options.maxCarbs) ? `7. CARBS RANGE: Each recipe's estimatedNutrition.carbs MUST be between ${options.minCarbs || 0}g and ${options.maxCarbs || '∞'}g. Values outside this range are INVALID.` : ''}
+${(options.minFat || options.maxFat) ? `8. FAT RANGE: Each recipe's estimatedNutrition.fat MUST be between ${options.minFat || 0}g and ${options.maxFat || '∞'}g. Values outside this range are INVALID.` : ''}
+${options.difficultyLevel ? `9. DIFFICULTY LEVEL: Recipes must match "${options.difficultyLevel}" difficulty:
+   - "easy": Simple techniques, minimal steps, common ingredients, basic cooking methods (boil, pan-fry, bake)
+   - "medium": Moderate techniques, some skill required, intermediate steps, varied cooking methods
+   - "hard": Advanced techniques, complex steps, specialized equipment/ingredients, multiple cooking methods` : ''}
+${options.fitnessGoal ? `10. FITNESS GOAL: All recipes must support "${options.fitnessGoal}":
+   - "muscle_gain": High protein content, adequate calories, nutrient-dense, recovery-supporting
+   - "weight_loss": Lower calories, high fiber, satiating, nutrient-dense with fewer calories
+   - "maintenance": Balanced macros, moderate calories, sustainable long-term
+   - Adjust macro ratios and portion sizes accordingly` : ''}
+${options.dietaryRestrictions?.length ? `11. DIETARY RESTRICTIONS: Recipes MUST comply with ALL listed restrictions: ${options.dietaryRestrictions.join(', ')}. Check every ingredient against these restrictions.` : ''}
+${options.mealTypes?.length ? `12. MEAL TYPES: Each recipe's mealTypes array MUST include at least one of: ${options.mealTypes.join(', ')}. Recipes for the wrong meal type will be rejected.` : ''}
+
+VALIDATION CHECKLIST - Before submitting each recipe, verify:
+- [ ] All ingredients counted (including spices/oils) ≤ maxIngredients (${options.maxIngredients || 'N/A'})
+- [ ] Total time (prep + cook) ≤ maxPrepTime (${options.maxPrepTime || 'N/A'} minutes)
+- [ ] Calories ≤ maxCalories (${options.maxCalories || 'N/A'} calories)
+- [ ] Protein within range: ${options.minProtein || 0}g - ${options.maxProtein || '∞'}g
+- [ ] Carbs within range: ${options.minCarbs || 0}g - ${options.maxCarbs || '∞'}g
+- [ ] Fat within range: ${options.minFat || 0}g - ${options.maxFat || '∞'}g
+- [ ] Primary ingredient is "${(() => {
+  const focusIng = options.focusIngredient || options.mainIngredient;
+  if (focusIng) {
+    const parts = focusIng.split(',').map(ing => ing.trim()).filter(ing => ing.length > 0);
+    return parts[0] || focusIng;
+  }
+  return 'N/A';
+})()}"${options.focusIngredient && options.focusIngredient.includes(',') ? ` (with secondary: ${options.focusIngredient.split(',').slice(1).map(ing => ing.trim()).join(', ')})` : ''}
+- [ ] mainIngredientTags is an array of SEPARATE strings (e.g., ["Salmon", "Beef"]), NOT ["salmon, beef"]
+- [ ] Meal types include: ${options.mealTypes?.join(', ') || 'N/A'}
+- [ ] Dietary restrictions met: ${options.dietaryRestrictions?.join(', ') || 'N/A'}
+- [ ] Difficulty level matches: ${options.difficultyLevel || 'N/A'}
+
+OUTPUT FORMAT - REQUIRED:
+Respond with a single JSON object containing a 'recipes' array: { "recipes": [...] }.
 Each recipe object in the array MUST be complete and strictly follow this TypeScript interface:
+
 interface GeneratedRecipe {
-  name: string;
-  description: string;
-  mealTypes: string[]; // e.g., ["Breakfast", "Snack"]
-  dietaryTags: string[]; // e.g., ["Gluten-Free", "Vegan"]
-  mainIngredientTags: string[]; // e.g., ["Chicken", "Broccoli"]
-  ingredients: { name: string; amount: number; unit: string }[];
-  instructions: string; // Detailed, step-by-step instructions.
-  prepTimeMinutes: number;
-  cookTimeMinutes: number;
-  servings: number;
+  name: string;                    // Descriptive recipe name (e.g., "Lemon Herb Chicken with Quinoa")
+  description: string;              // 1-2 sentence description highlighting key features
+  mealTypes: string[];             // Array matching user's mealTypes requirement (e.g., ["Lunch", "Dinner"])
+  dietaryTags: string[];           // Array matching dietary restrictions (e.g., ["High-Protein", "Gluten-Free"])
+  mainIngredientTags: string[];    // Array where EACH ingredient is a SEPARATE string element. If focusIngredient is "salmon, beef", use ["Salmon", "Beef"], NOT ["salmon, beef"]. FIRST element MUST be the primary focusIngredient.
+  ingredients: { name: string; amount: number; unit: string }[];  // Array with EXACTLY ${options.maxIngredients || 'the specified'} or fewer items
+  instructions: string;             // Detailed, numbered, step-by-step instructions
+  prepTimeMinutes: number;          // Must satisfy: prepTimeMinutes + cookTimeMinutes ≤ ${options.maxPrepTime || 'N/A'} minutes
+  cookTimeMinutes: number;          // Must satisfy: prepTimeMinutes + cookTimeMinutes ≤ ${options.maxPrepTime || 'N/A'} minutes
+  servings: number;                 // Typically 1-4 servings
   estimatedNutrition: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
+    calories: number;               // Must be ≤ ${options.maxCalories || 'N/A'} calories
+    protein: number;                // Must be between ${options.minProtein || 0}g and ${options.maxProtein || '∞'}g
+    carbs: number;                  // Must be between ${options.minCarbs || 0}g and ${options.maxCarbs || '∞'}g
+    fat: number;                    // Must be between ${options.minFat || 0}g and ${options.maxFat || '∞'}g
   };
-  imageUrl: string; // Set this to an empty string: ""
+  imageUrl: string;                 // Always set to empty string: ""
 }
-Ensure the final JSON is perfectly valid and complete. Do not omit any fields.`;
+
+CRITICAL VALIDATION RULES:
+- ingredients array length MUST equal or be less than ${options.maxIngredients || 'the maxIngredients limit'}
+- prepTimeMinutes + cookTimeMinutes MUST equal or be less than ${options.maxPrepTime || 'the maxPrepTime limit'} minutes
+- estimatedNutrition.calories MUST equal or be less than ${options.maxCalories || 'the maxCalories limit'}
+- estimatedNutrition.protein MUST be between ${options.minProtein || 0}g and ${options.maxProtein || '∞'}g
+- estimatedNutrition.carbs MUST be between ${options.minCarbs || 0}g and ${options.maxCarbs || '∞'}g
+- estimatedNutrition.fat MUST be between ${options.minFat || 0}g and ${options.maxFat || '∞'}g
+- mainIngredientTags MUST be an array of SEPARATE strings. If focusIngredient is "salmon, beef", use ["Salmon", "Beef"], NOT ["salmon, beef"]. mainIngredientTags[0] MUST be "${(() => {
+  const focusIng = options.focusIngredient || options.mainIngredient;
+  if (focusIng) {
+    const parts = focusIng.split(',').map(ing => ing.trim()).filter(ing => ing.length > 0);
+    return parts[0] || focusIng;
+  }
+  return 'the primary ingredient';
+})()}"
+- mealTypes MUST include at least one of: ${options.mealTypes?.join(', ') || 'the specified meal types'}
+- dietaryTags MUST include: ${options.dietaryRestrictions?.join(', ') || 'the specified dietary tags'}
+
+Ensure the final JSON is perfectly valid and complete. Do not omit any fields. Recipes that don't meet ALL constraints will be automatically rejected.`;
 
   const contextLines = [];
   if (options.naturalLanguagePrompt) {
     contextLines.push(`User requirements: "${options.naturalLanguagePrompt}"`);
   }
+  
+  // Handle recipePreferences - remove conflicting ingredient mentions if focusIngredient is set
+  if (options.recipePreferences) {
+    let preferences = options.recipePreferences;
+    
+    // If focusIngredient is set, prioritize it and remove conflicting ingredient mentions from preferences
+    if (options.focusIngredient) {
+      // Remove ingredient-specific mentions from preferences (e.g., "fish", "salmon", "beef", etc.)
+      const focusIngredientLower = options.focusIngredient.toLowerCase();
+      const ingredientKeywords = ['chicken', 'beef', 'fish', 'salmon', 'tofu', 'eggs', 'pork', 'turkey', 'shrimp', 'vegetables', 'vegetable', 'seafood'];
+      
+      // Remove conflicting ingredient mentions but keep other preferences
+      ingredientKeywords.forEach(keyword => {
+        if (keyword !== focusIngredientLower && preferences.toLowerCase().includes(keyword)) {
+          // Remove conflicting ingredient mentions
+          const regex = new RegExp(`\\b(include\\s+)?(fish\\s+)?${keyword}[\\s,]*`, 'gi');
+          preferences = preferences.replace(regex, '').trim();
+        }
+      });
+      
+      // Clean up any leftover artifacts (extra commas, "only", etc.)
+      preferences = preferences.replace(/\s*,\s*,/g, ',').replace(/,\s*only/gi, '').replace(/\s+/g, ' ').trim();
+      
+      if (preferences.length > 0) {
+        contextLines.push(`Recipe preferences: ${preferences}`);
+      }
+    } else {
+      contextLines.push(`Recipe preferences: ${options.recipePreferences}`);
+    }
+  }
+  
   if (options.mealTypes?.length) {
     contextLines.push(`Meal types: ${options.mealTypes.join(", ")}`);
   }
   if (options.dietaryRestrictions?.length) {
-    contextLines.push(`Dietary restrictions: ${options.dietaryRestrictions.join(", ")}`);
+    contextLines.push(`Dietary restrictions/tags: ${options.dietaryRestrictions.join(", ")}`);
   }
   if (options.fitnessGoal) {
     contextLines.push(`Fitness goal: ${options.fitnessGoal}`);
@@ -199,11 +292,36 @@ Ensure the final JSON is perfectly valid and complete. Do not omit any fields.`;
   if (options.maxCalories) {
     contextLines.push(`Maximum calories per recipe: ${options.maxCalories}`);
   }
-  if (options.mainIngredient) {
-    contextLines.push(`Main ingredient focus: ${options.mainIngredient}`);
+  
+  // PRIORITY: focusIngredient takes precedence over recipePreferences
+  if (options.focusIngredient) {
+    // Parse comma-separated ingredients
+    const focusIngredients = options.focusIngredient.split(',').map(ing => ing.trim()).filter(ing => ing.length > 0);
+    
+    if (focusIngredients.length === 1) {
+      contextLines.push(`PRIMARY INGREDIENT (REQUIRED - OVERRIDES ALL OTHER INGREDIENT REQUIREMENTS): "${focusIngredients[0]}" - This MUST be the main ingredient in each recipe.`);
+    } else if (focusIngredients.length > 1) {
+      // Multiple ingredients: use the first as primary, others as secondary
+      contextLines.push(`PRIMARY INGREDIENT (REQUIRED): "${focusIngredients[0]}" MUST be the main ingredient in each recipe.`);
+      contextLines.push(`SECONDARY INGREDIENTS (PREFERRED): "${focusIngredients.slice(1).join('", "')}" should also be included as primary ingredients when possible.`);
+      contextLines.push(`IMPORTANT: If multiple ingredients are listed, create recipes that feature "${focusIngredients[0]}" as the main ingredient, and incorporate "${focusIngredients.slice(1).join('", "')}" as secondary primary ingredients.`);
+    }
+  } else if (options.mainIngredient) {
+    const mainIngredients = options.mainIngredient.split(',').map(ing => ing.trim()).filter(ing => ing.length > 0);
+    if (mainIngredients.length === 1) {
+      contextLines.push(`Main ingredient focus: ${mainIngredients[0]}`);
+    } else {
+      contextLines.push(`Main ingredients focus: ${mainIngredients.join(', ')} (primary: ${mainIngredients[0]})`);
+    }
+  }
+  if (options.difficultyLevel) {
+    contextLines.push(`Difficulty level: ${options.difficultyLevel}`);
   }
   if (options.maxPrepTime) {
     contextLines.push(`Maximum prep time: ${options.maxPrepTime} minutes`);
+  }
+  if (options.maxIngredients) {
+    contextLines.push(`Maximum ingredients per recipe: ${options.maxIngredients} (including all spices, oils, and seasonings)`);
   }
   
   // Macro nutrient constraints
@@ -224,8 +342,56 @@ Ensure the final JSON is perfectly valid and complete. Do not omit any fields.`;
     contextLines.push(`Macro nutrient targets per recipe: ${macroConstraints.join(", ")}`);
   }
 
-  const userPrompt = `Generate ${count} recipes with the following specifications:
-${contextLines.length > 0 ? contextLines.join('\n') : 'No specific requirements - create diverse, healthy recipes.'}
+  const userPrompt = `Generate ${count} recipe${count > 1 ? 's' : ''} that EXACTLY match the following requirements:
+
+${contextLines.length > 0 ? 'SPECIFICATIONS:\n' + contextLines.join('\n') : 'No specific requirements - create diverse, healthy recipes.'}
+
+MANDATORY CONSTRAINTS (NON-NEGOTIABLE - RECIPES THAT VIOLATE THESE WILL BE REJECTED):
+${options.focusIngredient ? (() => {
+  const focusIngredients = options.focusIngredient.split(',').map(ing => ing.trim()).filter(ing => ing.length > 0);
+  if (focusIngredients.length === 1) {
+    return `✓ PRIMARY INGREDIENT: "${focusIngredients[0]}" MUST be the main ingredient. This overrides any conflicting ingredient mentions in preferences.`;
+  } else {
+    return `✓ PRIMARY INGREDIENT: "${focusIngredients[0]}" MUST be the main ingredient. SECONDARY INGREDIENTS: "${focusIngredients.slice(1).join('", "')}" should also be included as primary ingredients. mainIngredientTags MUST be ["${focusIngredients[0]}", "${focusIngredients.slice(1).join('", "')}"] (separate strings), NOT a single comma-separated string.`;
+  }
+})() : ''}
+${options.maxIngredients ? `✓ INGREDIENT COUNT: Maximum ${options.maxIngredients} ingredients TOTAL (count EVERY item: proteins, vegetables, spices, oils, salt, pepper, herbs, seasonings, condiments). Example: If maxIngredients=10, using 11 ingredients is INVALID.` : ''}
+${options.maxCalories ? `✓ CALORIE LIMIT: Maximum ${options.maxCalories} calories per recipe. Calculate accurately: protein (4 cal/g) + carbs (4 cal/g) + fat (9 cal/g) = total calories.` : ''}
+${options.targetCalories ? `✓ CALORIE TARGET: Aim for ${options.targetCalories} calories (±10% acceptable: ${Math.round(options.targetCalories * 0.9)}-${options.maxCalories ? Math.min(Math.round(options.targetCalories * 1.1), options.maxCalories) : Math.round(options.targetCalories * 1.1)} calories).` : ''}
+${options.maxPrepTime ? `✓ TIME LIMIT: prepTimeMinutes + cookTimeMinutes MUST total ${options.maxPrepTime} minutes or LESS. Calculate: if prepTimeMinutes=5 and cookTimeMinutes=12, total=17 minutes (${17 <= (options.maxPrepTime || 999) ? 'VALID' : 'INVALID'}).` : ''}
+${(options.minProtein || options.maxProtein) ? `✓ PROTEIN RANGE: ${options.minProtein || 0}g - ${options.maxProtein || '∞'}g protein per recipe. Values outside this range are INVALID.` : ''}
+${(options.minCarbs || options.maxCarbs) ? `✓ CARBS RANGE: ${options.minCarbs || 0}g - ${options.maxCarbs || '∞'}g carbs per recipe. Values outside this range are INVALID.` : ''}
+${(options.minFat || options.maxFat) ? `✓ FAT RANGE: ${options.minFat || 0}g - ${options.maxFat || '∞'}g fat per recipe. Values outside this range are INVALID.` : ''}
+${options.difficultyLevel ? `✓ DIFFICULTY: Recipes must match "${options.difficultyLevel}" complexity level - adjust techniques, steps, and methods accordingly.` : ''}
+${options.fitnessGoal ? `✓ FITNESS GOAL: All recipes must support "${options.fitnessGoal}" - adjust macro ratios and portion sizes accordingly.` : ''}
+${options.dietaryRestrictions?.length ? `✓ DIETARY COMPLIANCE: ALL recipes MUST comply with: ${options.dietaryRestrictions.join(', ')}. Verify every ingredient.` : ''}
+${options.mealTypes?.length ? `✓ MEAL TYPES: Each recipe's mealTypes array MUST include at least one of: ${options.mealTypes.join(', ')}.` : ''}
+
+QUALITY REQUIREMENTS:
+- Recipes must be practical, achievable, and use commonly available ingredients
+- Instructions must be clear, step-by-step, and executable
+- Nutritional values must be realistic and accurate
+- Recipe names should be descriptive and appetizing
+- Descriptions should highlight key features (protein content, preparation time, etc.)
+
+VALIDATION BEFORE SUBMISSION:
+Before including each recipe in your response, verify:
+1. All numeric constraints are met (ingredients, time, calories, macros)
+2. Primary ingredient matches "${(() => {
+  const focusIng = options.focusIngredient || options.mainIngredient;
+  if (focusIng) {
+    const parts = focusIng.split(',').map(ing => ing.trim()).filter(ing => ing.length > 0);
+    return parts[0] || focusIng;
+  }
+  return 'specifications';
+})()}"${options.focusIngredient && options.focusIngredient.includes(',') ? ` (and secondary ingredients "${options.focusIngredient.split(',').slice(1).map(ing => ing.trim()).join('", "')}" are included)` : ''}
+3. mainIngredientTags is an array of SEPARATE strings (e.g., ["Salmon", "Beef"]), NOT a comma-separated string (e.g., ["salmon, beef"])
+4. All dietary restrictions are respected
+5. Meal types are correct
+6. Difficulty level is appropriate
+7. All fields in the interface are populated
+
+If a recipe cannot meet ALL constraints simultaneously, do NOT include it. Only submit recipes that pass all validations.
 
 Respond with { "recipes": [ ... ] }`;
 
@@ -233,6 +399,20 @@ Respond with { "recipes": [ ... ] }`;
     console.log(`[generateRecipeBatchSingle] About to call OpenAI API...`);
     console.log(`[generateRecipeBatchSingle] System prompt length: ${systemPrompt.length}`);
     console.log(`[generateRecipeBatchSingle] User prompt length: ${userPrompt.length}`);
+    console.log(`[generateRecipeBatchSingle] Applied constraints:`, {
+      focusIngredient: options.focusIngredient || 'none',
+      difficultyLevel: options.difficultyLevel || 'none',
+      recipePreferences: options.recipePreferences || 'none',
+      maxIngredients: options.maxIngredients || 'none',
+      maxPrepTime: options.maxPrepTime || 'none',
+      maxCalories: options.maxCalories || 'none',
+      dietaryRestrictions: options.dietaryRestrictions?.join(', ') || 'none',
+      mealTypes: options.mealTypes?.join(', ') || 'none',
+      fitnessGoal: options.fitnessGoal || 'none',
+      proteinRange: options.minProtein || options.maxProtein ? `${options.minProtein || 0}-${options.maxProtein || '∞'}g` : 'none',
+      carbsRange: options.minCarbs || options.maxCarbs ? `${options.minCarbs || 0}-${options.maxCarbs || '∞'}g` : 'none',
+      fatRange: options.minFat || options.maxFat ? `${options.minFat || 0}-${options.maxFat || '∞'}g` : 'none',
+    });
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

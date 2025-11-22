@@ -178,6 +178,10 @@ export interface GenerationOptions {
   dietaryRestrictions?: string[];
   targetCalories?: number;
   mainIngredient?: string;
+  focusIngredient?: string; // Primary ingredient to feature prominently
+  difficultyLevel?: string; // e.g., "easy", "medium", "hard"
+  recipePreferences?: string; // Additional preferences like "quick meals", "family friendly"
+  maxIngredients?: number; // Maximum number of ingredients allowed
   fitnessGoal?: string;
   naturalLanguagePrompt?: string;
   maxPrepTime?: number;
