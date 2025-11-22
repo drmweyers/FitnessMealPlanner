@@ -339,10 +339,16 @@ adminRouter.post('/generate-from-prompt', requireAdmin, async (req, res) => {
 
     console.log('[Natural Language Meal Plan Generation] Meal plan options:', mealPlanOptions);
 
+    // Defensive check for authenticated user
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required' });
+    }
+
     // Generate intelligent meal plan using intelligentMealPlanGenerator
     const mealPlan = await intelligentMealPlanGenerator.generateIntelligentMealPlan(
       mealPlanOptions,
-      req.user!.id
+      userId
     );
 
     console.log('[Natural Language Meal Plan Generation] Successfully generated meal plan:', mealPlan.id);
@@ -714,7 +720,12 @@ const assignRecipeSchema = z.object({
 adminRouter.post('/assign-recipe', requireTrainerOrAdmin, async (req, res) => {
   try {
     const { recipeId, customerIds } = assignRecipeSchema.parse(req.body);
-    const trainerId = req.user!.id;
+    
+    // Defensive check for authenticated user
+    const trainerId = req.user?.id;
+    if (!trainerId) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required' });
+    }
     
     // Get current assignments to determine what changed
     const currentAssignments = await db
@@ -801,7 +812,12 @@ const assignMealPlanSchema = z.object({
 adminRouter.post('/assign-meal-plan', requireTrainerOrAdmin, async (req, res) => {
   try {
     const { mealPlanData, customerIds } = assignMealPlanSchema.parse(req.body);
-    const trainerId = req.user!.id;
+    
+    // Defensive check for authenticated user
+    const trainerId = req.user?.id;
+    if (!trainerId) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required' });
+    }
     
     await storage.assignMealPlanToCustomers(trainerId, mealPlanData, customerIds);
     
@@ -1128,8 +1144,14 @@ adminRouter.get('/recipes/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Recipe not found' });
     }
     
+    // Defensive check for authenticated user
+    const userRole = req.user?.role;
+    if (!userRole) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required' });
+    }
+    
     // Admins can see all recipes, regular users can only see approved recipes
-    if (req.user!.role !== 'admin' && !recipe.isApproved) {
+    if (userRole !== 'admin' && !recipe.isApproved) {
       return res.status(404).json({ error: 'Recipe not found or not approved' });
     }
     

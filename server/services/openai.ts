@@ -253,13 +253,22 @@ Ensure the final JSON is perfectly valid and complete. Do not omit any fields. R
     
     // If focusIngredient is set, prioritize it and remove conflicting ingredient mentions from preferences
     if (options.focusIngredient) {
-      // Remove ingredient-specific mentions from preferences (e.g., "fish", "salmon", "beef", etc.)
-      const focusIngredientLower = options.focusIngredient.toLowerCase();
+      // Parse comma-separated focusIngredient into array (e.g., "salmon, beef" -> ["salmon", "beef"])
+      const focusIngredients = options.focusIngredient
+        .split(',')
+        .map(ing => ing.trim().toLowerCase())
+        .filter(ing => ing.length > 0);
+      
       const ingredientKeywords = ['chicken', 'beef', 'fish', 'salmon', 'tofu', 'eggs', 'pork', 'turkey', 'shrimp', 'vegetables', 'vegetable', 'seafood'];
       
       // Remove conflicting ingredient mentions but keep other preferences
+      // Only remove keywords that are NOT in the focusIngredients array
       ingredientKeywords.forEach(keyword => {
-        if (keyword !== focusIngredientLower && preferences.toLowerCase().includes(keyword)) {
+        const isInFocusIngredients = focusIngredients.some(fi => 
+          fi.includes(keyword) || keyword.includes(fi)
+        );
+        
+        if (!isInFocusIngredients && preferences.toLowerCase().includes(keyword)) {
           // Remove conflicting ingredient mentions
           const regex = new RegExp(`\\b(include\\s+)?(fish\\s+)?${keyword}[\\s,]*`, 'gi');
           preferences = preferences.replace(regex, '').trim();
