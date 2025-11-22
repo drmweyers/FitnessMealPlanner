@@ -77,7 +77,28 @@ mealPlanRouter.post('/generate', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error generating meal plan:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    res.status(500).json({ error: 'Failed to generate meal plan', details: errorMessage });
+    
+    // Check if this is a validation error (user-facing, not a server error)
+    const isValidationError = (error as any)?.isValidationError === true;
+    const statusCode = (error as any)?.statusCode || (isValidationError ? 400 : 500);
+    
+    if (isValidationError) {
+      // Return 400 Bad Request for validation errors (user-friendly)
+      res.status(400).json({ 
+        error: errorMessage,
+        message: errorMessage,
+        completed: false,
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      // Return 500 Internal Server Error for actual server errors
+      res.status(500).json({ 
+        error: 'Failed to generate meal plan', 
+        details: errorMessage,
+        completed: false,
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 });
 

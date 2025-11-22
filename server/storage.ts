@@ -527,9 +527,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(sql`${recipes.mealTypes} @> ${JSON.stringify([filters.mealType])}`);
     }
 
-    if (filters.dietaryTag) {
-      conditions.push(sql`${recipes.dietaryTags} @> ${JSON.stringify([filters.dietaryTag])}`);
-    }
+    // Note: dietaryTag filtering is done case-insensitively in-memory after the query
+    // because PostgreSQL's @> operator is case-sensitive and we want to match
+    // "Vegetarian", "vegetarian", "VEGETARIAN", etc.
+    // We'll apply this filter after fetching recipes
 
     if (filters.maxPrepTime) {
       conditions.push(lte(recipes.prepTimeMinutes, filters.maxPrepTime));
@@ -588,7 +589,23 @@ export class DatabaseStorage implements IStorage {
       .limit(limit)
       .offset(offset);
 
-    return { recipes: recipeResults, total: count };
+    // Apply case-insensitive dietary tag filtering in-memory
+    let filteredRecipes = recipeResults;
+    if (filters.dietaryTag) {
+      const normalizedTag = filters.dietaryTag.toLowerCase().trim();
+      filteredRecipes = recipeResults.filter(recipe => {
+        if (!recipe.dietaryTags || recipe.dietaryTags.length === 0) return false;
+        // Case-insensitive matching: check if any tag matches (normalized to lowercase)
+        return recipe.dietaryTags.some((tag: string) => 
+          tag.toLowerCase().trim() === normalizedTag
+        );
+      });
+      // Update count to reflect filtered results
+      const filteredCount = filteredRecipes.length;
+      console.log(`[Storage] Filtered ${recipeResults.length} recipes to ${filteredCount} recipes with dietary tag '${filters.dietaryTag}' (case-insensitive)`);
+    }
+
+    return { recipes: filteredRecipes, total: filters.dietaryTag ? filteredRecipes.length : count };
   }
 
   async getRecipeStats(): Promise<{

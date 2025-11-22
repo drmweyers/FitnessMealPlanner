@@ -68,25 +68,156 @@ export class MealPlanGeneratorService {
 
     // Apply user-specified filters progressively
     if (filterParams.mealType) recipeFilter.mealType = filterParams.mealType;
-    if (filterParams.dietaryTag) recipeFilter.dietaryTag = filterParams.dietaryTag;
+    if (filterParams.dietaryTag) {
+      // Normalize dietary tag (handle variations like 'high-protein' vs 'high_protein' vs 'mediterranean')
+      const normalizedTag = filterParams.dietaryTag.toLowerCase().replace(/_/g, '-');
+      recipeFilter.dietaryTag = normalizedTag;
+      console.log(`[Meal Plan Generator] Filtering by dietary tag: ${normalizedTag}`);
+    }
     if (filterParams.maxPrepTime) recipeFilter.maxPrepTime = filterParams.maxPrepTime;
+    // Apply nutrition range filters if provided
+    if (filterParams.maxCalories) recipeFilter.maxCalories = filterParams.maxCalories;
+    if (filterParams.minCalories) recipeFilter.minCalories = filterParams.minCalories;
+    if (filterParams.minProtein) recipeFilter.minProtein = filterParams.minProtein;
+    if (filterParams.maxProtein) recipeFilter.maxProtein = filterParams.maxProtein;
+    if (filterParams.minCarbs) recipeFilter.minCarbs = filterParams.minCarbs;
+    if (filterParams.maxCarbs) recipeFilter.maxCarbs = filterParams.maxCarbs;
+    if (filterParams.minFat) recipeFilter.minFat = filterParams.minFat;
+    if (filterParams.maxFat) recipeFilter.maxFat = filterParams.maxFat;
+
+    // Extract keywords from description for ingredient filtering
+    const descriptionKeywords: string[] = [];
+    if (description) {
+      const lowerDesc = description.toLowerCase().trim();
+      // Common ingredient keywords
+      const ingredientKeywords = ['chicken', 'beef', 'fish', 'salmon', 'tofu', 'eggs', 'pork', 'turkey', 'shrimp', 'vegetables', 'vegetable'];
+      ingredientKeywords.forEach(keyword => {
+        if (lowerDesc.includes(keyword)) {
+          descriptionKeywords.push(keyword);
+        }
+      });
+      // If description doesn't match known keywords, use the whole description as a keyword
+      if (descriptionKeywords.length === 0 && lowerDesc.length > 0) {
+        descriptionKeywords.push(lowerDesc);
+      }
+      console.log(`[Meal Plan Generator] Extracted description keywords: ${descriptionKeywords.join(', ')}`);
+    }
 
     // Execute initial recipe search
     console.log("Searching for recipes with filter:", recipeFilter);
     let { recipes } = await storage.searchRecipes(recipeFilter);
     console.log("Found", recipes.length, "recipes with filters");
+    
+    // Filter by description keywords if provided - STRICT: only use recipes that match
+    if (descriptionKeywords.length > 0) {
+      const keywordFiltered = recipes.filter(recipe => {
+        // PRIORITY: Check mainIngredientTags first (most reliable)
+        const mainIngredients = (recipe.mainIngredientTags || []).map((tag: string) => tag.toLowerCase());
+        const hasInMainIngredients = descriptionKeywords.some(keyword => 
+          mainIngredients.some(tag => tag.includes(keyword) || tag === keyword)
+        );
+        
+        // SECONDARY: Check ingredient names
+        const allIngredientNames = (recipe.ingredientsJson || []).map((ing: any) => (ing.name || '').toLowerCase());
+        const hasInIngredients = descriptionKeywords.some(keyword =>
+          allIngredientNames.some(name => name.includes(keyword) || name === keyword)
+        );
+        
+        // TERTIARY: Check recipe name and description (less reliable but still useful)
+        const recipeName = (recipe.name || '').toLowerCase();
+        const recipeDesc = (recipe.description || '').toLowerCase();
+        const hasInNameOrDesc = descriptionKeywords.some(keyword =>
+          recipeName.includes(keyword) || recipeDesc.includes(keyword)
+        );
+        
+        // Match if found in main ingredients OR ingredients OR name/description
+        return hasInMainIngredients || hasInIngredients || hasInNameOrDesc;
+      });
+      if (keywordFiltered.length > 0) {
+        console.log(`[Meal Plan Generator] ✅ Filtered to ${keywordFiltered.length} recipes matching description keywords: ${descriptionKeywords.join(', ')}`);
+        recipes = keywordFiltered;
+      } else {
+        // STRICT: If description keywords are specified but no matches found, throw validation error
+        const availableIngredients = Array.from(new Set(recipes.flatMap(r => (r.mainIngredientTags || []).map((tag: string) => tag.toLowerCase())))).filter(Boolean);
+        const availableIngredientNames = Array.from(new Set(recipes.flatMap(r => (r.ingredientsJson || []).map((ing: any) => (ing.name || '').toLowerCase())))).filter(Boolean);
+        console.error(`[Meal Plan Generator] ❌ ERROR: No recipes found matching description keywords: ${descriptionKeywords.join(', ')}.`);
+        console.error(`[Meal Plan Generator] Available main ingredients: ${availableIngredients.join(', ') || 'None found'}`);
+        console.error(`[Meal Plan Generator] Available ingredient names: ${availableIngredientNames.slice(0, 20).join(', ') || 'None found'}${availableIngredientNames.length > 20 ? '...' : ''}`);
+        const validationError: any = new Error(`No recipes found matching your description requirement: "${descriptionKeywords.join(', ')}". Available main ingredients: ${availableIngredients.join(', ') || 'None'}. Please adjust your description or add recipes with these ingredients to your library.`);
+        validationError.isValidationError = true;
+        validationError.statusCode = 400;
+        throw validationError;
+      }
+    }
+    
+    // Apply maxIngredients filter at the initial search level (STRICT)
+    if (maxIngredients && maxIngredients > 0) {
+      const beforeCount = recipes.length;
+      recipes = recipes.filter(recipe => {
+        const ingredientCount = (recipe.ingredientsJson || []).length;
+        return ingredientCount <= maxIngredients;
+      });
+      if (recipes.length === 0) {
+        console.warn(`[Meal Plan Generator] ⚠️  WARNING: No recipes found with ${maxIngredients} or fewer ingredients.`);
+        // Get ingredient counts from original recipes before filtering
+        const originalRecipes = await storage.searchRecipes({ approved: true, limit: 100, page: 1 });
+        if (originalRecipes.recipes.length > 0) {
+          const ingredientCounts = originalRecipes.recipes.map(r => (r.ingredientsJson || []).length);
+          const minIngredients = Math.min(...ingredientCounts);
+          const maxIngredientsFound = Math.max(...ingredientCounts);
+          console.warn(`[Meal Plan Generator] Available recipes have ${minIngredients} to ${maxIngredientsFound} ingredients.`);
+        }
+        // Don't throw error, but log warning - will relax constraint per meal if needed
+      } else {
+        console.log(`[Meal Plan Generator] ✅ Filtered to ${recipes.length} recipes with ${maxIngredients} or fewer ingredients (from ${beforeCount} available).`);
+      }
+    }
 
-    // Fallback strategy: If no recipes match constraints, use all approved recipes
+    // STRICT: If no recipes match all requirements, provide helpful error message
     if (recipes.length === 0) {
-      console.log("No recipes found with filters, trying fallback...");
-      const fallbackFilter: RecipeFilter = {
-        approved: true,
-        limit: 100,
-        page: 1,
-      };
-      const fallbackResult = await storage.searchRecipes(fallbackFilter);
-      recipes = fallbackResult.recipes;
-      console.log("Found", recipes.length, "recipes with fallback filter");
+      // Check what dietary tags are actually available in the database
+      const allRecipesResult = await storage.searchRecipes({ approved: true, limit: 100, page: 1 });
+      const availableTags = new Set<string>();
+      allRecipesResult.recipes.forEach(recipe => {
+        (recipe.dietaryTags || []).forEach(tag => availableTags.add(tag.toLowerCase()));
+      });
+      
+      // Build helpful error message based on what filters were applied
+      const appliedFilters: string[] = [];
+      if (filterParams.dietaryTag) {
+        appliedFilters.push(`dietary tag: "${filterParams.dietaryTag}"`);
+      }
+      if (maxIngredients && maxIngredients > 0) {
+        appliedFilters.push(`max ingredients: ${maxIngredients}`);
+      }
+      if (descriptionKeywords.length > 0) {
+        appliedFilters.push(`description: "${descriptionKeywords.join(', ')}"`);
+      }
+      
+      const filterSummary = appliedFilters.length > 0 
+        ? ` with ${appliedFilters.join(', ')}`
+        : '';
+      
+      const normalizedRequestedTag = filterParams.dietaryTag ? filterParams.dietaryTag.toLowerCase().replace(/_/g, '-') : null;
+      console.error(`[Meal Plan Generator] ❌ ERROR: No recipes found${filterSummary}.`);
+      if (normalizedRequestedTag) {
+        console.error(`[Meal Plan Generator] Available dietary tags in database: ${Array.from(availableTags).join(', ') || 'None found'}`);
+      }
+      
+      let errorMessage = `No recipes found matching your requirements${filterSummary}.`;
+      if (normalizedRequestedTag && !availableTags.has(normalizedRequestedTag)) {
+        errorMessage += ` The dietary tag "${normalizedRequestedTag}" is not available. Available dietary tags: ${Array.from(availableTags).join(', ') || 'None'}.`;
+      } else if (appliedFilters.length > 0) {
+        errorMessage += ` Please adjust your filters or add more recipes to your library.`;
+        if (normalizedRequestedTag && availableTags.has(normalizedRequestedTag)) {
+          errorMessage += ` There are recipes with the "${normalizedRequestedTag}" tag, but they don't meet your other requirements (e.g., max ingredients: ${maxIngredients}).`;
+        }
+      }
+      
+      const validationError: any = new Error(errorMessage);
+      validationError.isValidationError = true;
+      validationError.statusCode = 400;
+      throw validationError;
     }
 
     if (recipes.length === 0) {
@@ -101,7 +232,8 @@ export class MealPlanGeneratorService {
     
     // Calculate calorie distribution per meal based on daily target
     const caloriesPerMeal = Math.round(dailyCalorieTarget / mealsPerDay);
-    const calorieVariance = Math.round(caloriesPerMeal * 0.2); // 20% variance allowed
+    // Increased variance to 40% to allow more flexibility in recipe selection
+    const calorieVariance = Math.round(caloriesPerMeal * 0.4); // 40% variance allowed
     
     const mealPlan: MealPlan = {
       id: nanoid(),
@@ -134,29 +266,126 @@ export class MealPlanGeneratorService {
         }
 
         // Filter recipes by meal type if no specific meal type was requested
+        // IMPORTANT: recipes at this point are already filtered by dietary tag, description keywords, etc.
         let availableRecipes = recipes;
         if (!params.mealType) {
-          availableRecipes = recipes.filter(recipe => 
-            recipe.mealTypes && recipe.mealTypes.includes(mealType)
-          );
+          // Normalize meal type for comparison (database might have "Breakfast" vs "breakfast")
+          const normalizedMealType = mealType.charAt(0).toUpperCase() + mealType.slice(1).toLowerCase();
+          availableRecipes = recipes.filter(recipe => {
+            if (!recipe.mealTypes || recipe.mealTypes.length === 0) return false;
+            // Check if recipe has this meal type (case-insensitive)
+            return recipe.mealTypes.some((mt: string) => 
+              mt.toLowerCase() === mealType.toLowerCase() || 
+              mt.toLowerCase() === normalizedMealType.toLowerCase()
+            );
+          });
           
           // Fallback to all recipes if no specific meal type matches
+          // NOTE: This fallback still respects dietary tag because 'recipes' is already filtered
           if (availableRecipes.length === 0) {
-            availableRecipes = recipes;
+            console.warn(`[Meal Plan Generator] ⚠️  No recipes found for meal type '${mealType}' with current filters. Using all available filtered recipes.`);
+            availableRecipes = recipes; // This is already filtered by dietary tag, description, etc.
+          }
+        }
+        
+        // CRITICAL: Ensure dietary tag filter is ALWAYS enforced (double-check)
+        if (filterParams.dietaryTag && availableRecipes.length > 0) {
+          const normalizedTag = filterParams.dietaryTag.toLowerCase().trim();
+          const dietaryFiltered = availableRecipes.filter(recipe => {
+            if (!recipe.dietaryTags || recipe.dietaryTags.length === 0) return false;
+            return recipe.dietaryTags.some((tag: string) => 
+              tag.toLowerCase().trim() === normalizedTag
+            );
+          });
+          if (dietaryFiltered.length === 0) {
+            console.error(`[Meal Plan Generator] ❌ ERROR: No recipes found for meal type '${mealType}' with dietary tag '${filterParams.dietaryTag}'.`);
+            const validationError: any = new Error(`No recipes found for ${mealType} matching your dietary requirement: "${filterParams.dietaryTag}". Please adjust your meal plan parameters or add more recipes to your library.`);
+            validationError.isValidationError = true;
+            validationError.statusCode = 400;
+            throw validationError;
+          }
+          availableRecipes = dietaryFiltered;
+        }
+        
+        // Apply maxIngredients filter if specified (BEFORE calorie filtering)
+        // Note: This is a secondary check - initial filtering already applied maxIngredients at search level
+        if (maxIngredients && maxIngredients > 0) {
+          const beforeCount = availableRecipes.length;
+          availableRecipes = availableRecipes.filter(recipe => {
+            const ingredientCount = (recipe.ingredientsJson || []).length;
+            return ingredientCount <= maxIngredients;
+          });
+          if (availableRecipes.length === 0) {
+            console.warn(`[Meal Plan Generator] ⚠️  No recipes found with ${maxIngredients} or fewer ingredients for ${mealType}. Relaxing constraint to ${maxIngredients + 1}...`);
+            // Relax slightly: allow recipes with up to maxIngredients + 1 (not +2)
+            availableRecipes = recipes.filter(recipe => {
+              const ingredientCount = (recipe.ingredientsJson || []).length;
+              return ingredientCount <= (maxIngredients + 1);
+            });
+            if (availableRecipes.length === 0) {
+              console.warn(`[Meal Plan Generator] ⚠️  Still no recipes found. Using all available recipes for this meal.`);
+              availableRecipes = recipes;
+            }
           }
         }
 
-        // Filter by calorie range per meal (target ± variance)
-        const minCalories = caloriesPerMeal - calorieVariance;
-        const maxCalories = caloriesPerMeal + calorieVariance;
+        // Filter by calorie range per meal (target ± variance, or user-specified constraints)
+        // Use more flexible range: allow 50% variance if no user constraints
+        const baseVariance = filterParams.minCalories || filterParams.maxCalories ? calorieVariance : Math.round(caloriesPerMeal * 0.5);
+        const minCalories = filterParams.minCalories 
+          ? Math.max(filterParams.minCalories, Math.max(200, caloriesPerMeal - baseVariance))
+          : Math.max(200, caloriesPerMeal - baseVariance);
+        const maxCalories = filterParams.maxCalories 
+          ? Math.min(filterParams.maxCalories, caloriesPerMeal + baseVariance)
+          : caloriesPerMeal + baseVariance;
         
         let calorieFilteredRecipes = availableRecipes.filter(recipe => 
           recipe.caloriesKcal >= minCalories && recipe.caloriesKcal <= maxCalories
         );
         
-        // If no recipes fit the calorie range, use all available recipes
+        // Apply macro nutrient filters if specified
+        if (filterParams.minProtein || filterParams.maxProtein || 
+            filterParams.minCarbs || filterParams.maxCarbs ||
+            filterParams.minFat || filterParams.maxFat) {
+          calorieFilteredRecipes = calorieFilteredRecipes.filter(recipe => {
+            const protein = parseFloat(recipe.proteinGrams?.toString() || "0");
+            const carbs = parseFloat(recipe.carbsGrams?.toString() || "0");
+            const fat = parseFloat(recipe.fatGrams?.toString() || "0");
+            
+            // Check protein constraints
+            if (filterParams.minProtein && protein < filterParams.minProtein) return false;
+            if (filterParams.maxProtein && protein > filterParams.maxProtein) return false;
+            
+            // Check carbs constraints
+            if (filterParams.minCarbs && carbs < filterParams.minCarbs) return false;
+            if (filterParams.maxCarbs && carbs > filterParams.maxCarbs) return false;
+            
+            // Check fat constraints
+            if (filterParams.minFat && fat < filterParams.minFat) return false;
+            if (filterParams.maxFat && fat > filterParams.maxFat) return false;
+            
+            return true;
+          });
+        }
+        
+        // Progressive fallback: if no recipes match strict constraints, relax them
         if (calorieFilteredRecipes.length === 0) {
-          calorieFilteredRecipes = availableRecipes;
+          console.log(`[Meal Plan Generator] No recipes match strict nutrition constraints (${minCalories}-${maxCalories} cal) for day ${day}, meal ${mealNumber}. Trying relaxed constraints...`);
+          
+          // Relax calorie constraints: allow 100% variance
+          const relaxedMin = Math.max(150, Math.round(caloriesPerMeal * 0.5));
+          const relaxedMax = Math.round(caloriesPerMeal * 1.5);
+          
+          calorieFilteredRecipes = availableRecipes.filter(recipe => 
+            recipe.caloriesKcal >= relaxedMin && recipe.caloriesKcal <= relaxedMax
+          );
+          
+          if (calorieFilteredRecipes.length === 0) {
+            console.log(`[Meal Plan Generator] No recipes match relaxed constraints either. Using all available recipes.`);
+            calorieFilteredRecipes = availableRecipes;
+          } else {
+            console.log(`[Meal Plan Generator] Found ${calorieFilteredRecipes.length} recipes with relaxed constraints (${relaxedMin}-${relaxedMax} cal).`);
+          }
         }
 
         // NEW FEATURE: Ingredient-aware recipe selection

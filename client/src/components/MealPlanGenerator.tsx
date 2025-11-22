@@ -325,11 +325,33 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
 
   const generateMealPlan = useMutation({
     mutationFn: async (data: MealPlanGeneration): Promise<MealPlanResult> => {
-      const response = await apiRequest(
-        "POST",
-        "/api/meal-plan/generate",
-        data,
-      );
+      const response = await fetch("/api/meal-plan/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token')}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        // Try to extract user-friendly error message from JSON response
+        let errorMessage = `Failed to generate meal plan (${response.status})`;
+        try {
+          const errorData = await response.json();
+          console.log('[Meal Plan Generator] Error response data:', errorData);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.log('[Meal Plan Generator] Extracted error message:', errorMessage);
+        } catch (parseError) {
+          // If response is not JSON, use status text
+          console.error('[Meal Plan Generator] Failed to parse error response:', parseError);
+          errorMessage = response.statusText || errorMessage;
+        }
+        console.log('[Meal Plan Generator] Throwing error with message:', errorMessage);
+        throw new Error(errorMessage);
+      }
+
       return response.json();
     },
     onSuccess: (data) => {
@@ -353,9 +375,16 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       // }
     },
     onError: (error: Error) => {
+      console.error('[Meal Plan Generator] Error caught in onError:', error);
+      console.error('[Meal Plan Generator] Error message:', error.message);
+      
+      const errorMessage = error.message || "Failed to generate meal plan. Please try again.";
+      
+      console.log('[Meal Plan Generator] Showing toast with message:', errorMessage);
+      
       toast({
         title: "Generation Failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     },

@@ -12,7 +12,7 @@
  * - Toast notifications for user feedback
  */
 
-// import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/toaster";
 // import { TooltipProvider } from "@/components/ui/tooltip";
 import Router from "./Router";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -29,7 +29,7 @@ function App() {
   return (
     <AuthProvider>
       {/* <TooltipProvider> */}
-        {/* <Toaster /> */}
+        <Toaster />
         <Router />
       {/* </TooltipProvider> */}
     </AuthProvider>

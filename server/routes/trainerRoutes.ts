@@ -312,6 +312,8 @@ trainerRouter.get('/customers/:customerId/measurements', requireAuth, requireRol
 });
 
 // Get customer goals (for trainer view)
+// NOTE: Customer goals feature is currently disabled (table commented out in schema)
+// This endpoint returns empty array until the feature is re-enabled
 trainerRouter.get('/customers/:customerId/goals', requireAuth, requireRole('trainer'), async (req, res) => {
   try {
     const trainerId = req.user!.id;
@@ -336,14 +338,11 @@ trainerRouter.get('/customers/:customerId/goals', requireAuth, requireRole('trai
       });
     }
     
-    const goals = await db.select()
-      .from(customerGoals)
-      .where(eq(customerGoals.customerId, customerId))
-      .orderBy(desc(customerGoals.createdAt));
-    
+    // Customer goals feature is currently disabled
+    // Return empty array until the feature is re-enabled
     res.json({
       status: 'success',
-      data: goals,
+      data: [],
     });
   } catch (error) {
     console.error('Failed to fetch customer goals:', error);
