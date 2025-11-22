@@ -112,28 +112,64 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 
       // Try to refresh using the refresh token
       try {
-        const newTokens = await refreshTokensWithDeduplication(refreshToken);
+        // First verify the refresh token to get userId
+        const refreshDecoded = await verifyRefreshToken(refreshToken);
+        
+        // Validate refresh token in storage or grace period
+        const storedToken = await storage.getRefreshToken(refreshToken);
+        const inGracePeriod = isTokenInGracePeriod(refreshToken);
+
+        // Token must be in storage OR in grace period
+        if (!storedToken && !inGracePeriod) {
+          res.clearCookie('token');
+          res.clearCookie('refreshToken');
+          return res.status(401).json({
+            error: 'Session expired. Please login again.',
+            code: 'REFRESH_TOKEN_EXPIRED'
+          });
+        }
+
+        // Check expiry only if token is in storage (grace period tokens are already validated)
+        if (storedToken && new Date() > new Date(storedToken.expiresAt)) {
+          res.clearCookie('token');
+          res.clearCookie('refreshToken');
+          return res.status(401).json({
+            error: 'Session expired. Please login again.',
+            code: 'REFRESH_TOKEN_EXPIRED'
+          });
+        }
+
+        // Get user to ensure they still exist
+        const user = await storage.getUser(refreshDecoded.id);
+        if (!user) {
+          res.clearCookie('token');
+          res.clearCookie('refreshToken');
+          return res.status(401).json({
+            error: 'Invalid user session',
+            code: 'INVALID_SESSION'
+          });
+        }
+
+        // Use deduplicated refresh to prevent race conditions
+        const newTokens = await refreshTokensWithDeduplication(user.id, refreshToken);
         
         if (!newTokens) {
+          res.clearCookie('token');
+          res.clearCookie('refreshToken');
           return res.status(401).json({ 
             error: 'Session expired',
             code: 'SESSION_EXPIRED'
           });
         }
 
-        const decoded = await verifyToken(newTokens.accessToken);
-        const user = await storage.getUser(decoded.id);
-        
-        if (!user) {
-          return res.status(401).json({ 
-            error: 'Invalid user session',
-            code: 'INVALID_SESSION'
-          });
-        }
-
         req.user = {
           id: user.id,
           role: user.role,
+        };
+
+        req.tokens = {
+          accessToken: newTokens.accessToken,
+          refreshToken: newTokens.refreshToken
         };
 
         // Set new cookies
@@ -154,10 +190,16 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
           expires: refreshTokenExpires,
         });
 
+        // Also set headers for non-cookie clients
+        res.setHeader('X-Access-Token', newTokens.accessToken);
+        res.setHeader('X-Refresh-Token', newTokens.refreshToken);
+
         return next();
       } catch (e) {
+        res.clearCookie('token');
+        res.clearCookie('refreshToken');
         return res.status(401).json({ 
-          error: 'Session expired',
+          error: 'Session expired. Please login again.',
           code: 'SESSION_EXPIRED'
         });
       }

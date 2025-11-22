@@ -113,7 +113,14 @@ async function executeRefresh(
     addTokenToGracePeriod(oldRefreshToken);
 
     // Delete old refresh token from database (after grace period set)
-    await storage.deleteRefreshToken(oldRefreshToken);
+    // Only delete if it exists in the database (might already be deleted if in grace period)
+    try {
+      await storage.deleteRefreshToken(oldRefreshToken);
+    } catch (error) {
+      // Token might not exist in database if it's already been rotated
+      // This is okay - we've already added it to grace period
+      console.log('[TokenRefresh] Old token not found in database (may already be rotated)');
+    }
 
     return { accessToken, refreshToken: newRefreshToken };
   } catch (error) {

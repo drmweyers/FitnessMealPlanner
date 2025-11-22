@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import { storage } from './storage';
-import { hashPassword, comparePasswords, generateTokens, verifyToken } from './auth';
+import { hashPassword, comparePasswords, generateTokens, verifyToken, verifyRefreshToken } from './auth';
 import { users } from '../shared/schema';
 import crypto from 'crypto';
 import passport from './passport-config';
@@ -255,36 +255,85 @@ authRouter.post('/refresh_token', generalAuthRateLimiter, async (req: Request, r
   }
 
   try {
-    const decoded = verifyToken(refreshToken);
+    // Verify refresh token using the correct verification function
+    const decoded = verifyRefreshToken(refreshToken);
     if (!decoded) {
+      res.clearCookie('token');
+      res.clearCookie('refreshToken');
       return res.status(403).json({ status: 'error', message: 'Invalid refresh token', code: 'INVALID_REFRESH_TOKEN' });
     }
 
+    // Validate refresh token in storage or grace period
     const storedToken = await storage.getRefreshToken(refreshToken);
-    if (!storedToken) {
-      return res.status(403).json({ status: 'error', message: 'Refresh token not found in store', code: 'INVALID_REFRESH_TOKEN' });
+    const { isTokenInGracePeriod } = await import('./middleware/tokenRefreshManager');
+    const inGracePeriod = isTokenInGracePeriod(refreshToken);
+
+    // Token must be in storage OR in grace period
+    if (!storedToken && !inGracePeriod) {
+      res.clearCookie('token');
+      res.clearCookie('refreshToken');
+      return res.status(403).json({ 
+        status: 'error', 
+        message: 'Refresh token not found in store', 
+        code: 'INVALID_REFRESH_TOKEN' 
+      });
     }
 
-    if (new Date() > new Date(storedToken.expiresAt)) {
-        await storage.deleteRefreshToken(refreshToken);
-        return res.status(403).json({ status: 'error', message: 'Refresh token expired', code: 'EXPIRED_REFRESH_TOKEN' });
+    // Check expiry only if token is in storage (grace period tokens are already validated)
+    if (storedToken && new Date() > new Date(storedToken.expiresAt)) {
+      await storage.deleteRefreshToken(refreshToken);
+      res.clearCookie('token');
+      res.clearCookie('refreshToken');
+      return res.status(403).json({ 
+        status: 'error', 
+        message: 'Refresh token expired', 
+        code: 'EXPIRED_REFRESH_TOKEN' 
+      });
     }
 
     const user = await storage.getUser(decoded.id);
     if (!user) {
+      res.clearCookie('token');
+      res.clearCookie('refreshToken');
       return res.status(404).json({ status: 'error', message: 'User not found', code: 'USER_NOT_FOUND' });
     }
 
-    const { accessToken } = generateTokens(user);
+    // Use token refresh manager for proper token rotation and deduplication
+    const { refreshTokensWithDeduplication } = await import('./middleware/tokenRefreshManager');
+    const { accessToken, refreshToken: newRefreshToken } = await refreshTokensWithDeduplication(
+      user.id,
+      refreshToken
+    );
+
+    // Set new cookies with updated tokens
+    const accessTokenExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const refreshTokenExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+    res.cookie('token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      expires: accessTokenExpires,
+    });
+
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      expires: refreshTokenExpires,
+    });
 
     res.json({
       status: 'success',
       data: {
         accessToken,
+        refreshToken: newRefreshToken, // Return new refresh token for clients that need it
       },
     });
   } catch (error) {
     console.error('Refresh token error:', error);
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
     res.status(500).json({ status: 'error', message: 'Internal server error', code: 'SERVER_ERROR' });
   }
 });
