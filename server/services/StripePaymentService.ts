@@ -21,7 +21,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-10-29.clover',
 });
 
 export type TierLevel = 'starter' | 'professional' | 'enterprise';
@@ -44,7 +44,7 @@ const TIER_PRICING: Record<TierLevel, TierPricing> = {
   starter: {
     tier: 'starter',
     stripePriceId: process.env.STRIPE_PRICE_STARTER || 'price_starter',
-    amount: 0, // Free tier
+    amount: 19900, // $199.00
     currency: 'usd',
     name: 'Starter',
     features: [
@@ -63,7 +63,7 @@ const TIER_PRICING: Record<TierLevel, TierPricing> = {
   professional: {
     tier: 'professional',
     stripePriceId: process.env.STRIPE_PRICE_PROFESSIONAL || 'price_professional',
-    amount: 9900, // $99.00
+    amount: 29900, // $299.00
     currency: 'usd',
     name: 'Professional',
     features: [
@@ -84,7 +84,7 @@ const TIER_PRICING: Record<TierLevel, TierPricing> = {
   enterprise: {
     tier: 'enterprise',
     stripePriceId: process.env.STRIPE_PRICE_ENTERPRISE || 'price_enterprise',
-    amount: 29900, // $299.00
+    amount: 39900, // $399.00
     currency: 'usd',
     name: 'Enterprise',
     features: [
@@ -154,12 +154,11 @@ export class StripePaymentService {
     // Log payment attempt
     await db.insert(paymentLogs).values({
       trainerId,
-      stripeCustomerId: customer.id,
       eventType: 'purchase',
-      amount: pricing.amount,
+      amount: (pricing.amount / 100).toFixed(2), // Convert cents to decimal string
       currency: pricing.currency,
       status: 'pending',
-      metadata: { sessionId: session.id, tier },
+      metadata: { sessionId: session.id, tier, stripeCustomerId: customer.id },
       occurredAt: new Date(),
     });
 
@@ -269,7 +268,7 @@ export class StripePaymentService {
       await db
         .update(webhookEvents)
         .set({ status: 'processed', processedAt: new Date() })
-        .where((events, { eq }) => eq(events.eventId, event.id));
+        .where(eq(webhookEvents.eventId, event.id));
     } catch (error: any) {
       console.error(`[Webhook] Failed to process event ${event.id}:`, error);
 
@@ -277,7 +276,7 @@ export class StripePaymentService {
       await db
         .update(webhookEvents)
         .set({ status: 'failed', errorMessage: error.message })
-        .where((events, { eq }) => eq(events.eventId, event.id));
+        .where(eq(webhookEvents.eventId, event.id));
 
       throw error;
     }
@@ -361,12 +360,11 @@ export class StripePaymentService {
     // Log payment
     await db.insert(paymentLogs).values({
       trainerId,
-      stripeCustomerId: session.customer as string,
       eventType: 'purchase',
-      amount: pricing.amount,
+      amount: (pricing.amount / 100).toFixed(2), // Convert cents to decimal string
       currency: pricing.currency,
-      status: 'succeeded',
-      metadata: { sessionId: session.id, tier },
+      status: 'completed', // Use 'completed' instead of 'succeeded' (matches enum)
+      metadata: { sessionId: session.id, tier, stripeCustomerId: session.customer as string },
       occurredAt: new Date(),
     });
 
@@ -393,8 +391,8 @@ export class StripePaymentService {
       .set({
         stripeSubscriptionId: subscription.id,
         status: subscription.status as any,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
       })
       .where(eq(trainerSubscriptions.trainerId, trainerId));
 
@@ -423,8 +421,8 @@ export class StripePaymentService {
       .update(trainerSubscriptions)
       .set({
         status: subscription.status as any,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
       })
       .where(
@@ -479,12 +477,11 @@ export class StripePaymentService {
     // Log successful payment
     await db.insert(paymentLogs).values({
       trainerId: subscription.trainerId,
-      stripeCustomerId: customerId,
       eventType: 'purchase',
-      amount: invoice.amount_paid,
-      currency: invoice.currency,
-      status: 'succeeded',
-      metadata: { invoiceId: invoice.id },
+      amount: (invoice.amount_paid / 100).toFixed(2), // Convert cents to decimal string
+      currency: invoice.currency || 'usd',
+      status: 'completed', // Use 'completed' instead of 'succeeded' (matches enum)
+      metadata: { invoiceId: invoice.id, stripeCustomerId: customerId },
       occurredAt: new Date(),
     });
   }
@@ -507,12 +504,11 @@ export class StripePaymentService {
     // Log failed payment
     await db.insert(paymentLogs).values({
       trainerId: subscription.trainerId,
-      stripeCustomerId: customerId,
       eventType: 'purchase',
-      amount: invoice.amount_due,
-      currency: invoice.currency,
+      amount: (invoice.amount_due / 100).toFixed(2), // Convert cents to decimal string
+      currency: invoice.currency || 'usd',
       status: 'failed',
-      metadata: { invoiceId: invoice.id },
+      metadata: { invoiceId: invoice.id, stripeCustomerId: customerId },
       occurredAt: new Date(),
     });
 
