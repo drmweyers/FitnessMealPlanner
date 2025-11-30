@@ -1,0 +1,322 @@
+{
+  "name": "Lead Magnet Delivery - Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-magnet-delivery",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Lead Magnet Form Submission",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const crypto = require('crypto');\n\nconst receivedSignature = $request.headers['x-signature'];\nconst secret = $env.WEBHOOK_SECRET_LEADMAGNET;\nconst payload = JSON.stringify($request.body);\n\nconst expectedSignature = crypto\n  .createHmac('sha256', secret)\n  .update(payload)\n  .digest('hex');\n\nif (receivedSignature !== expectedSignature) {\n  throw new Error('Invalid webhook signature');\n}\n\n// Extract and validate form data\nconst email = ($request.body.email || '').toLowerCase().trim();\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRegex.test(email)) {\n  throw new Error('Invalid email format');\n}\n\n// Sanitize inputs\nconst sanitize = (str) => {\n  return String(str || '')\n    .replace(/[<>]/g, '')\n    .replace(/['\";]/g, '')\n    .trim()\n    .substring(0, 255);\n};\n\nreturn {\n  json: {\n    email: email,\n    name: sanitize($request.body.name) || 'Valued Customer',\n    leadMagnetType: sanitize($request.body.leadMagnetType) || 'default',\n    source: sanitize($request.body.source) || 'organic',\n    downloadUrl: $request.body.downloadUrl,\n    submittedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "validate-signature",
+      "name": "Validate Webhook Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.email }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.downloadUrl }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-required-fields",
+      "name": "Valid Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "properties": [
+            {
+              "name": "firstname",
+              "value": "={{ $json.name.split(' ')[0] }}"
+            },
+            {
+              "name": "lastname",
+              "value": "={{ $json.name.split(' ').slice(1).join(' ') }}"
+            },
+            {
+              "name": "lead_magnet_type",
+              "value": "={{ $json.leadMagnetType }}"
+            },
+            {
+              "name": "lead_source",
+              "value": "={{ $json.source }}"
+            },
+            {
+              "name": "lifecycle_stage",
+              "value": "lead"
+            },
+            {
+              "name": "hs_lead_status",
+              "value": "NEW"
+            },
+            {
+              "name": "nurture_sequence_start_date",
+              "value": "={{ $json.submittedAt }}"
+            }
+          ]
+        }
+      },
+      "id": "create-update-contact",
+      "name": "Create/Update Contact in CRM",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetween": 1000
+    },
+    {
+      "parameters": {
+        "resource": "mail",
+        "operation": "send",
+        "fromEmail": "hello@yourdomain.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Your {{ $json.leadMagnetType }} is Ready!",
+        "emailType": "dynamic",
+        "dynamicTemplateId": "d-lead-magnet-delivery",
+        "dynamicTemplateValues": {
+          "customValues": [
+            {
+              "key": "name",
+              "value": "={{ $json.name.split(' ')[0] || 'there' }}"
+            },
+            {
+              "key": "downloadUrl",
+              "value": "={{ $json.downloadUrl }}"
+            },
+            {
+              "key": "leadMagnetType",
+              "value": "={{ $json.leadMagnetType }}"
+            }
+          ]
+        }
+      },
+      "id": "send-email",
+      "name": "Send Lead Magnet Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "credentials": {
+        "sendGridApi": {
+          "id": "sendgrid_api",
+          "name": "SendGrid API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetween": 1000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.segment.io/v1/track",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "segmentApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Lead Magnet Requested"
+            },
+            {
+              "name": "properties",
+              "value": "={{ { \"leadMagnetType\": $json.leadMagnetType, \"source\": $json.source, \"timestamp\": $json.submittedAt } }}"
+            }
+          ]
+        }
+      },
+      "id": "track-event-requested",
+      "name": "Track Lead Magnet Requested",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 100],
+      "credentials": {
+        "segmentApi": {
+          "id": "segment_api",
+          "name": "Segment API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.segment.io/v1/track",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "segmentApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Lead Magnet Sent"
+            },
+            {
+              "name": "properties",
+              "value": "={{ { \"leadMagnetType\": $json.leadMagnetType, \"emailSent\": true, \"timestamp\": $now.toISO() } }}"
+            }
+          ]
+        }
+      },
+      "id": "track-event-sent",
+      "name": "Track Lead Magnet Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 300],
+      "credentials": {
+        "segmentApi": {
+          "id": "segment_api",
+          "name": "Segment API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation-errors",
+        "text": "=Lead Magnet Delivery Error\n\nWorkflow: {{ $workflow.name }}\nEmail: {{ $json.email }}\nError: {{ $json.error.message }}\nExecution ID: {{ $execution.id }}\nTime: {{ $now.toISO() }}",
+        "otherOptions": {}
+      },
+      "id": "error-notification",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [650, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_api",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Lead Magnet Form Submission": {
+      "main": [
+        [
+          {
+            "node": "Validate Webhook Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Webhook Signature": {
+      "main": [
+        [
+          {
+            "node": "Valid Data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Data?": {
+      "main": [
+        [
+          {
+            "node": "Create/Update Contact in CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create/Update Contact in CRM": {
+      "main": [
+        [
+          {
+            "node": "Send Lead Magnet Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Lead Magnet Email": {
+      "main": [
+        [
+          {
+            "node": "Track Lead Magnet Requested",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Track Lead Magnet Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Acquisition"
+    },
+    {
+      "name": "Lead Magnet"
+    },
+    {
+      "name": "Webhook"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-17T00:00:00.000Z",
+  "versionId": "1"
+}

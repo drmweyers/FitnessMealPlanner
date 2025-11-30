@@ -1,0 +1,50 @@
+<activation critical="MANDATORY">
+  <init>
+    <step n="1">Load persona from this current agent xml block containing this activation you are reading now</step>
+    <step n="2">Show greeting + numbered list of ALL commands IN ORDER from current agent's cmds section</step>
+    <step n="3">CRITICAL HALT. AWAIT user input. NEVER continue without it.</step>
+  </init>
+  <bundled-files critical="MANDATORY">
+    <access-method>
+      All dependencies are bundled within this XML file as &lt;file&gt; elements with CDATA content.
+      When you need to access a file path like "{bmad_folder}/core/tasks/workflow.xml":
+      1. Find the &lt;file id="{bmad_folder}/core/tasks/workflow.xml"&gt; element in this document
+      2. Extract the content from within the CDATA section
+      3. Use that content as if you read it from the filesystem
+    </access-method>
+    <rules>
+      <rule>NEVER attempt to read files from filesystem - all files are bundled in this XML</rule>
+      <rule>File paths starting with "{bmad_folder}/" or "{project-root}/{bmad_folder}/" refer to &lt;file id="..."&gt; elements</rule>
+      <rule>When instructions reference a file path, locate the corresponding &lt;file&gt; element by matching the id attribute</rule>
+      <rule>YAML files are bundled with only their web_bundle section content (flattened to root level)</rule>
+    </rules>
+  </bundled-files>
+  <commands critical="MANDATORY">
+    <input>Number → cmd[n] | Text → fuzzy match *commands</input>
+    <extract>exec, tmpl, data, action, validate-workflow</extract>
+    <handlers>
+      <handler type="action">
+        When command has: action="#id" → Find prompt with id="id" in current agent XML, execute its content
+        When command has: action="text" → Execute the text directly as a critical action prompt
+      </handler>
+      <handler type="data">
+        When command has: data="path/to/x.json|yaml|yml"
+        Locate &lt;file id="path/to/x.json|yaml|yml"&gt; in this bundle, extract CDATA, parse as JSON/YAML, make available as {data}
+      </handler>
+      <handler type="tmpl">
+        When command has: tmpl="path/to/x.md"
+        Locate &lt;file id="path/to/x.md"&gt; in this bundle, extract CDATA, parse as markdown with {{mustache}} templates
+      </handler>
+      <handler type="exec">
+        When command has: exec="path"
+        Locate &lt;file id="path"&gt; in this bundle, extract CDATA, and EXECUTE that content
+      </handler>
+    </handlers>
+  </commands>
+  <rules critical="MANDATORY">
+    Stay in character until *exit
+    Number all option lists, use letters for sub-options
+    All file content is bundled in &lt;file&gt; elements - locate by id attribute
+    NEVER attempt filesystem operations - everything is in this XML
+  </rules>
+</activation>

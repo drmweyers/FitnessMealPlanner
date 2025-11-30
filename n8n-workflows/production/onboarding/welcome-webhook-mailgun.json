@@ -1,0 +1,362 @@
+{
+  "name": "Welcome Onboarding - Webhook (Mailgun)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "welcome",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Welcome Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Extract and validate form data\nconst email = ($json.body.email || '').toLowerCase().trim();\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRegex.test(email)) {\n  throw new Error('Invalid email format');\n}\n\n// Sanitize inputs\nconst sanitize = (str) => {\n  return String(str || '')\n    .replace(/[<>]/g, '')\n    .replace(/['\";]/g, '')\n    .trim()\n    .substring(0, 255);\n};\n\n// Validate account type\nconst validTypes = ['trial', 'lifetime', 'starter', 'professional', 'enterprise'];\nconst accountType = ($json.body.accountType || 'trial').toLowerCase();\nif (!validTypes.includes(accountType)) {\n  throw new Error(`Invalid account type: ${accountType}`);\n}\n\nreturn {\n  json: {\n    email: email,\n    firstName: sanitize($json.body.firstName) || 'Valued Customer',\n    lastName: sanitize($json.body.lastName) || '',\n    accountType: accountType,\n    customerId: sanitize($json.body.customerId) || '',\n    subscriptionId: sanitize($json.body.subscriptionId) || '',\n    submittedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "validate-data",
+      "name": "Validate & Sanitize Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.email }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.accountType }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-required-fields",
+      "name": "Valid Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "properties": [
+            {
+              "name": "firstname",
+              "value": "={{ $json.firstName }}"
+            },
+            {
+              "name": "lastname",
+              "value": "={{ $json.lastName }}"
+            },
+            {
+              "name": "account_tier",
+              "value": "={{ $json.accountType }}"
+            },
+            {
+              "name": "stripe_customer_id",
+              "value": "={{ $json.customerId }}"
+            },
+            {
+              "name": "stripe_subscription_id",
+              "value": "={{ $json.subscriptionId }}"
+            },
+            {
+              "name": "lifecycle_stage",
+              "value": "customer"
+            },
+            {
+              "name": "signup_date",
+              "value": "={{ $json.submittedAt }}"
+            },
+            {
+              "name": "onboarding_status",
+              "value": "started"
+            }
+          ]
+        }
+      },
+      "id": "create-update-contact",
+      "name": "Create/Update Contact in HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Build tier-specific welcome email content\nconst accountType = $json.accountType;\nconst firstName = $json.firstName || 'Valued Customer';\n\n// Subject lines by tier\nconst subjectMap = {\n  'starter': `Welcome to EvoFitMeals Starter - Let's Get Started!`,\n  'professional': `Welcome to EvoFitMeals Professional - You're All Set!`,\n  'enterprise': `Welcome to EvoFitMeals Enterprise - Let's Transform Your Business!`,\n  'trial': `Start Your EvoFitMeals Trial - Create Your First Meal Plan!`,\n  'lifetime': `Welcome to EvoFitMeals Lifetime - You're In For Life!`\n};\n\n// HTML email content by tier\nconst htmlContentMap = {\n  'starter': `\n    <h1>Welcome to EvoFitMeals Starter! 🎉</h1>\n    <p>Hi ${firstName},</p>\n    <p>Your Starter plan is now active! Here's what you can do:</p>\n    <ul>\n      <li>Create unlimited meal plans for your clients</li>\n      <li>Customize recipes to fit any dietary goal</li>\n      <li>Export and share meal plans easily</li>\n    </ul>\n    <p><a href=\"https://evofitmeals.com/login\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">Get Started Now</a></p>\n    <p>Questions? Reply to this email anytime!</p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n  `,\n  'professional': `\n    <h1>Welcome to EvoFitMeals Professional! 🚀</h1>\n    <p>Hi ${firstName},</p>\n    <p>Your Professional plan is ready! You now have access to:</p>\n    <ul>\n      <li>Advanced meal planning templates</li>\n      <li>Client tracking and progress monitoring</li>\n      <li>Priority support from our team</li>\n    </ul>\n    <p><a href=\"https://evofitmeals.com/login\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">Start Creating</a></p>\n    <p>Questions? Reply anytime!</p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n  `,\n  'enterprise': `\n    <h1>Welcome to EvoFitMeals Enterprise! 🏆</h1>\n    <p>Hi ${firstName},</p>\n    <p>Your Enterprise plan is activated! You have full access to:</p>\n    <ul>\n      <li>Unlimited meal plans and clients</li>\n      <li>White-label options for your brand</li>\n      <li>Dedicated account manager</li>\n      <li>Custom integrations and API access</li>\n    </ul>\n    <p><a href=\"https://evofitmeals.com/login\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">Access Your Dashboard</a></p>\n    <p>Your account manager will contact you within 24 hours.</p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n  `,\n  'trial': `\n    <h1>Start Your EvoFitMeals Trial! ⏰</h1>\n    <p>Hi ${firstName},</p>\n    <p>Your 14-day trial is now active! Get started:</p>\n    <ul>\n      <li>Create your first meal plan (takes 2 minutes)</li>\n      <li>Explore all features with no limits</li>\n      <li>See how EvoFitMeals transforms your coaching</li>\n    </ul>\n    <p><a href=\"https://evofitmeals.com/login\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">Create Your First Plan</a></p>\n    <p>Trial ends in 14 days - make the most of it!</p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n  `,\n  'lifetime': `\n    <h1>Welcome to EvoFitMeals Lifetime! 🎊</h1>\n    <p>Hi ${firstName},</p>\n    <p>You're now a lifetime member! Enjoy:</p>\n    <ul>\n      <li>Unlimited access forever - no recurring fees</li>\n      <li>All future updates and features included</li>\n      <li>VIP support for life</li>\n    </ul>\n    <p><a href=\"https://evofitmeals.com/login\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">Start Creating</a></p>\n    <p>Thank you for being a lifetime member!</p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n  `\n};\n\nreturn {\n  json: {\n    ...($json),\n    subject: subjectMap[accountType] || subjectMap['trial'],\n    htmlContent: htmlContentMap[accountType] || htmlContentMap['trial']\n  }\n};"
+      },
+      "id": "build-email-content",
+      "name": "Build Tier-Specific Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mailgun.net/v3/evofitmeals.com/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "formUrlEncoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "=EvoFit Meals <invites@evofitmeals.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "html",
+              "value": "={{ $json.htmlContent }}"
+            },
+            {
+              "name": "o:tracking",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-clicks",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-opens",
+              "value": "yes"
+            }
+          ]
+        }
+      },
+      "id": "send-mailgun-email",
+      "name": "Send Welcome Email via Mailgun",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 350],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "mailgun_api",
+          "name": "Mailgun API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Account Created"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  accountType: $json.accountType,\n  customerId: $json.customerId,\n  subscriptionId: $json.subscriptionId,\n  timestamp: $json.submittedAt\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-signup-event",
+      "name": "Track Account Created in Segment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 500],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Welcome Email Sent"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  accountType: $json.accountType,\n  timestamp: new Date().toISOString()\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-email-sent",
+      "name": "Track Welcome Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 350],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation-errors",
+        "text": "=Welcome Webhook Error:\nEmail: {{ $json.email }}\nAccount Type: {{ $json.accountType }}\nError: {{ $json.error?.message || 'Unknown error' }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": true
+        }
+      },
+      "id": "notify-error",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [650, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_api",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Welcome Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate & Sanitize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Sanitize Data": {
+      "main": [
+        [
+          {
+            "node": "Valid Data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Data?": {
+      "main": [
+        [
+          {
+            "node": "Create/Update Contact in HubSpot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Tier-Specific Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Track Account Created in Segment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Error to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Tier-Specific Email": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Email via Mailgun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email via Mailgun": {
+      "main": [
+        [
+          {
+            "node": "Track Welcome Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "onboarding",
+      "id": "onboarding"
+    },
+    {
+      "name": "fitnessmealplanner",
+      "id": "fitnessmealplanner"
+    },
+    {
+      "name": "mailgun",
+      "id": "mailgun"
+    }
+  ],
+  "triggerCount": 1,
+  "active": false
+}

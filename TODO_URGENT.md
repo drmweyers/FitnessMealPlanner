@@ -690,6 +690,206 @@ If stakeholders request:
 
 ---
 
+## 🧪 N8N WEBHOOK INTEGRATION - TESTING REQUIRED (November 18, 2025)
+
+**Status:** ✅ Implementation Complete | ⏳ Testing Required
+**Priority:** HIGH - User requested testing in next session
+**Implementation Date:** November 18, 2025
+
+### Overview
+
+Phase 21 n8n Marketing Automation webhook integration is complete with 3 webhooks implemented:
+- **Lead Capture** - Triggers on authenticated user meal plan generation
+- **Welcome Email** - Triggers on Stripe checkout completion (starter/professional/enterprise)
+- **Aha Moment** - Triggers when trainer saves their first meal plan
+
+### Prerequisites for Testing
+
+Before testing, verify:
+- [ ] n8n is running at http://localhost:5678
+- [ ] All 3 n8n workflows are active (Lead Capture, Welcome Onboarding, Aha Moment)
+- [ ] FitnessMealPlanner dev server is running: `npm run dev`
+- [ ] Environment variables configured in `.env`:
+  ```bash
+  N8N_LEAD_CAPTURE_WEBHOOK="http://localhost:5678/webhook/lead-capture"
+  N8N_WELCOME_WEBHOOK="http://localhost:5678/webhook/welcome"
+  N8N_AHA_MOMENT_WEBHOOK="http://localhost:5678/webhook/aha-moment"
+  ```
+
+### Test Scenarios
+
+#### Test 1: Lead Capture Webhook ⏳ PENDING
+
+**What to Test:** Authenticated user generates meal plan → n8n receives lead data
+
+**Steps:**
+1. Login as trainer: `trainer.test@evofitmeals.com` / `TestTrainer123!`
+2. Navigate to meal plan generator
+3. Generate a meal plan
+4. Check n8n workflow execution log at http://localhost:5678
+
+**Expected Results:**
+- Console log: `[n8n] Sending lead capture event: { email: ..., leadSource: ... }`
+- Console log: `[n8n] Lead capture event sent successfully`
+- n8n "Lead Capture" workflow triggers
+- Webhook receives: email, leadSource, userAgent, ipAddress
+
+**curl Test Alternative:**
+```bash
+# First, login to get auth token
+curl -X POST http://localhost:4000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"trainer.test@evofitmeals.com","password":"TestTrainer123!"}'
+
+# Then generate meal plan (replace YOUR_TOKEN_HERE)
+curl -X POST http://localhost:4000/api/meal-plan/generate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{
+    "numberOfDays": 7,
+    "dailyCalorieTarget": 2000,
+    "mealsPerDay": 3,
+    "clientName": "Test Client"
+  }'
+```
+
+#### Test 2: Welcome Webhook ⏳ PENDING
+
+**What to Test:** Stripe checkout completion → n8n sends welcome email
+
+**Steps (Direct n8n Test - Bypasses Stripe):**
+```bash
+curl -X POST http://localhost:5678/webhook/welcome \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "firstName": "Test",
+    "accountType": "starter",
+    "customerId": "cus_test123",
+    "subscriptionId": "sub_test123"
+  }'
+```
+
+**Expected Results:**
+- Console log: `[n8n] Sending welcome event: { email: ..., accountType: ... }`
+- Console log: `[n8n] Welcome event sent successfully`
+- n8n "Welcome Onboarding" workflow triggers
+- Email sent based on accountType (starter/professional/enterprise)
+
+**Note:** Full Stripe test requires Stripe test mode setup
+
+#### Test 3: Aha Moment Webhook ⏳ PENDING
+
+**What to Test:** Trainer saves first meal plan → n8n sends celebration email
+
+**Steps:**
+1. Create new trainer account OR use trainer with 0 meal plans
+2. Login as that trainer
+3. Navigate to meal plan builder
+4. Create and **save** a meal plan (POST to `/api/trainer/meal-plans`)
+5. Check n8n workflow execution log
+
+**Expected Results:**
+- Console log: `[n8n] Sending aha moment event: { email: ..., mealPlanId: ... }`
+- Console log: `[n8n] Aha moment event sent successfully`
+- n8n "Aha Moment Celebration" workflow triggers **only on first meal plan**
+- Subsequent meal plan saves do NOT trigger (isFirstMealPlan returns false)
+
+**curl Test Alternative:**
+```bash
+# Login as trainer
+TOKEN="..." # Get token from login
+
+# Save first meal plan
+curl -X POST http://localhost:4000/api/trainer/meal-plans \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "mealPlanData": {
+      "planName": "Test Meal Plan",
+      "dailyCalorieTarget": 2500,
+      "dailyProteinTarget": 200
+    },
+    "notes": "Test meal plan",
+    "tags": ["bulking"],
+    "isTemplate": false
+  }'
+```
+
+### Monitoring & Verification
+
+**Check Application Logs:**
+```bash
+# In dev server terminal, look for [n8n] prefixed messages:
+[n8n] Sending lead capture event: ...
+[n8n] Lead capture event sent successfully
+
+[n8n] Sending welcome event: ...
+[n8n] Welcome event sent successfully
+
+[n8n] Sending aha moment event: ...
+[n8n] Aha moment event sent successfully
+```
+
+**Check n8n Workflow Executions:**
+1. Open n8n: http://localhost:5678
+2. Click "Executions" in left sidebar
+3. View recent webhook triggers
+4. Inspect payload data received
+
+**Verify Error Handling:**
+- Stop n8n service temporarily
+- Trigger webhook (e.g., generate meal plan)
+- Verify app doesn't crash
+- Check console for error log: `[n8n] Lead capture webhook error: ...`
+- Verify app functionality continues normally
+
+### Production Deployment Checklist
+
+Before deploying to production:
+- [ ] Update `.env` with production n8n webhook URLs
+- [ ] All 3 workflows deployed to production n8n instance
+- [ ] Webhook URLs are publicly accessible
+- [ ] Test lead capture in production (authenticated user)
+- [ ] Test welcome email (Stripe production mode)
+- [ ] Test aha moment celebration (trainer first meal plan)
+- [ ] Verify Mailgun sends emails successfully
+- [ ] Verify HubSpot receives contact data
+- [ ] Set up n8n execution monitoring
+- [ ] Configure error notifications
+
+### Implementation Files Reference
+
+**Files Modified (Previous Session):**
+- `.env` - Added 3 webhook URLs (lines 83-90)
+- `server/utils/n8n-webhooks.ts` - NEW FILE (217 lines)
+  - sendLeadCaptureEvent()
+  - sendWelcomeEvent()
+  - sendAhaMomentEvent()
+  - isFirstMealPlan()
+- `server/services/StripeWebhookHandler.ts` - Modified (lines 277-301)
+- `server/routes/trainerRoutes.ts` - Modified (aha moment integration)
+- `server/routes/mealPlan.ts` - Modified (lead capture integration)
+
+**Documentation:**
+- `N8N_WEBHOOK_INTEGRATION_COMPLETE.md` - Complete reference (490 lines)
+- `PLANNING.md` - Phase 21 documented
+- `BMAD_WORKFLOW_STATUS.md` - Phase 21 status
+- `tasks.md` - Milestone 36 added
+
+### Success Criteria
+
+✅ **Testing Complete When:**
+- All 3 webhook test scenarios executed successfully
+- n8n receives payloads with correct data
+- Application logs show successful webhook calls
+- Error handling verified (app doesn't crash when n8n down)
+- Production deployment checklist reviewed
+
+**Total Test Time Estimate:** 30-45 minutes for all 3 scenarios + verification
+
+---
+
 ## 🤖 CONTINUOUS TESTING FRAMEWORK - IMPLEMENTED (January 2025)
 
 **Status:** ✅ FRAMEWORK COMPLETE | ⚠️ 5 TEST FAILURES TO FIX

@@ -1,0 +1,6 @@
+<handler type="exec">
+  When menu item has: exec="path/to/file.md"
+  Actually LOAD and EXECUTE the file at that path - do not improvise
+  Read the complete file and follow all instructions within it
+  If there is data="some/path/data-foo.md", pass that data to the executed file as context.
+</handler>

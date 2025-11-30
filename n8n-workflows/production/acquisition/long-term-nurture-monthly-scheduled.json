@@ -1,0 +1,303 @@
+{
+  "name": "Long-Term Nurture - Monthly Re-engagement",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Monthly on 1st at 10am ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "filterGroups": [
+            {
+              "filters": [
+                {
+                  "propertyName": "lifecycle_stage",
+                  "operator": "EQ",
+                  "value": "lead"
+                },
+                {
+                  "propertyName": "nurture_sequence_start_date",
+                  "operator": "IS_NOT_EMPTY"
+                },
+                {
+                  "propertyName": "hs_lifecyclestage_customer_date",
+                  "operator": "IS_EMPTY"
+                },
+                {
+                  "propertyName": "nurture_sequence_status",
+                  "operator": "EQ",
+                  "value": "completed"
+                }
+              ]
+            }
+          ]
+        },
+        "propertiesCollection": {
+          "properties": [
+            "email",
+            "firstname",
+            "lastname",
+            "lead_magnet_type",
+            "nurture_sequence_start_date",
+            "last_email_sent"
+          ]
+        }
+      },
+      "id": "get-non-buyers",
+      "name": "Get Non-Buyer Leads (>30 days)",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetween": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst today = new Date();\nconst thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));\n\n// Filter contacts who completed 7-day sequence more than 30 days ago\nconst filteredContacts = items.filter(item => {\n  const contact = item.json;\n  const startDate = new Date(contact.nurture_sequence_start_date);\n  return startDate < thirtyDaysAgo;\n});\n\nreturn filteredContacts;"
+      },
+      "id": "filter-30-days",
+      "name": "Filter Contacts >30 Days Old",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "resource": "mail",
+        "operation": "send",
+        "fromEmail": "hello@yourdomain.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "New Resource: [High-Value Topic]",
+        "emailType": "dynamic",
+        "dynamicTemplateId": "d-monthly-reengagement",
+        "dynamicTemplateValues": {
+          "customValues": [
+            {
+              "key": "name",
+              "value": "={{ $json.firstname || 'there' }}"
+            },
+            {
+              "key": "leadMagnetType",
+              "value": "={{ $json.lead_magnet_type }}"
+            }
+          ]
+        }
+      },
+      "id": "send-reengagement-email",
+      "name": "Send Monthly Re-engagement Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "sendGridApi": {
+          "id": "sendgrid_api",
+          "name": "SendGrid API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetween": 1000
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $json.id }}",
+        "updateFields": {
+          "properties": [
+            {
+              "name": "last_email_sent",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "last_email_type",
+              "value": "Long-Term Nurture"
+            },
+            {
+              "name": "last_contact_date",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "update-last-contact",
+      "name": "Update Last Contact Date",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1050, 300],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetween": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.segment.io/v1/track",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "segmentApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Long-Term Nurture Sent"
+            },
+            {
+              "name": "properties",
+              "value": "={{ { \"emailType\": \"monthly-reengagement\", \"timestamp\": $now.toISO() } }}"
+            }
+          ]
+        }
+      },
+      "id": "track-event",
+      "name": "Track Long-Term Nurture Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 300],
+      "credentials": {
+        "segmentApi": {
+          "id": "segment_api",
+          "name": "Segment API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation-errors",
+        "text": "=Long-Term Nurture Error\n\nWorkflow: {{ $workflow.name }}\nContact: {{ $json.email }}\nError: {{ $json.error.message }}\nExecution ID: {{ $execution.id }}\nTime: {{ $now.toISO() }}",
+        "otherOptions": {}
+      },
+      "id": "error-notification",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [650, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_api",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Monthly on 1st at 10am ET": {
+      "main": [
+        [
+          {
+            "node": "Get Non-Buyer Leads (>30 days)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Non-Buyer Leads (>30 days)": {
+      "main": [
+        [
+          {
+            "node": "Filter Contacts >30 Days Old",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Contacts >30 Days Old": {
+      "main": [
+        [
+          {
+            "node": "Send Monthly Re-engagement Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Monthly Re-engagement Email": {
+      "main": [
+        [
+          {
+            "node": "Update Last Contact Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Contact Date": {
+      "main": [
+        [
+          {
+            "node": "Track Long-Term Nurture Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "",
+    "timezone": "America/New_York"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Acquisition"
+    },
+    {
+      "name": "Lead Magnet"
+    },
+    {
+      "name": "Long-Term Nurture"
+    },
+    {
+      "name": "Scheduled"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-17T00:00:00.000Z",
+  "versionId": "1"
+}

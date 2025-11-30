@@ -28,6 +28,7 @@ import {
 } from '@shared/schema';
 import { db } from '../db';
 import { z } from 'zod';
+import { sendAhaMomentEvent, isFirstMealPlan } from '../utils/n8n-webhooks';
 import { manualMealPlanService, type ManualMealEntry } from '../services/manualMealPlanService';
 
 const trainerRouter = Router();
@@ -567,6 +568,34 @@ trainerRouter.post('/meal-plans', requireAuth, requireTrainerOrAdmin, async (req
     });
 
     console.log('[Save Meal Plan] SUCCESS: Meal plan saved with ID:', savedPlan.id);
+
+    // Check if this is trainer's first meal plan and send aha moment event (non-blocking)
+    isFirstMealPlan(db, trainerId)
+      .then((isFirst) => {
+        if (isFirst) {
+          const trainer = req.user!;
+          const mealPlanDetails = mealPlanData as any;
+
+          sendAhaMomentEvent(
+            {
+              email: trainer.email,
+              firstName: '', // Schema doesn't have firstName
+              accountType: 'trainer',
+            },
+            {
+              id: savedPlan.id,
+              type: mealPlanDetails?.planName || 'custom',
+              calories: mealPlanDetails?.dailyCalorieTarget || 0,
+              protein: mealPlanDetails?.dailyProteinTarget || 0,
+            }
+          ).catch((err) => {
+            console.error('[n8n] Failed to send aha moment event:', err);
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('[n8n] Failed to check first meal plan:', err);
+      });
 
     res.status(201).json({
       mealPlan: savedPlan,

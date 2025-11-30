@@ -1,0 +1,488 @@
+{
+  "name": "Lead Magnet Nurture - 7 Day Sequence (Mailgun)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily at 10am ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "filterGroups": [
+            {
+              "filters": [
+                {
+                  "propertyName": "lifecycle_stage",
+                  "operator": "EQ",
+                  "value": "lead"
+                },
+                {
+                  "propertyName": "nurture_sequence_start_date",
+                  "operator": "IS_NOT_EMPTY"
+                }
+              ]
+            }
+          ]
+        },
+        "propertiesCollection": {
+          "properties": [
+            "email",
+            "firstname",
+            "lastname",
+            "lead_source",
+            "nurture_sequence_start_date",
+            "last_email_sent",
+            "hs_lifecyclestage_customer_date"
+          ]
+        }
+      },
+      "id": "get-contacts",
+      "name": "Get Contacts in Nurture",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst today = new Date();\n\nconst enrichedContacts = items.map(item => {\n  const contact = item.json;\n  const startDate = new Date(contact.nurture_sequence_start_date);\n  const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));\n\n  // Determine which email to send\n  let emailDay = null;\n  let emailSubject = null;\n\n  if (daysSinceStart === 1) {\n    emailDay = 1;\n    emailSubject = '🎯 Quick Win: Master Meal Planning in 10 Minutes';\n  } else if (daysSinceStart === 3) {\n    emailDay = 3;\n    emailSubject = '💪 How Sarah Lost 15 lbs Using This Strategy';\n  } else if (daysSinceStart === 5) {\n    emailDay = 5;\n    emailSubject = '🎁 Special Offer: Transform Your Nutrition Game';\n  } else if (daysSinceStart === 7) {\n    emailDay = 7;\n    emailSubject = '⏰ Your Bonus Expires in 48 Hours';\n  } else if (daysSinceStart === 10) {\n    emailDay = 10;\n    emailSubject = '🚨 Last Chance: Offer Expires Tonight at Midnight';\n  }\n\n  return {\n    json: {\n      ...contact,\n      daysSinceStart,\n      emailDay,\n      emailSubject,\n      shouldSendEmail: emailDay !== null\n    }\n  };\n});\n\n// Filter only contacts who should receive email today\nreturn enrichedContacts.filter(item => item.json.shouldSendEmail);"
+      },
+      "id": "calculate-nurture-day",
+      "name": "Calculate Nurture Day",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.hs_lifecyclestage_customer_date }}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-purchased",
+      "name": "Has NOT Purchased?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 90,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Split In Batches (Rate Limit)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Build nurture email content based on day\nconst firstName = $json.firstname || 'there';\nconst emailDay = $json.emailDay;\nconst subject = $json.emailSubject;\n\n// Email content by nurture day\nconst emailContentMap = {\n  1: `\n    <h1>Hi ${firstName}! 👋</h1>\n    <p>You downloaded our free meal planning tool yesterday - awesome!</p>\n    <h2>🎯 Quick Win: Master Meal Planning in 10 Minutes</h2>\n    <p>Here's a simple strategy that will save you hours every week:</p>\n    <div style=\"background:#f0f0f0;padding:20px;border-radius:8px;margin:20px 0;\">\n      <h3 style=\"margin-top:0;\">The 3-Step Meal Prep Framework:</h3>\n      <ol>\n        <li><strong>Plan Once</strong> - Spend 10 minutes on Sunday planning your meals</li>\n        <li><strong>Shop Smart</strong> - One grocery trip with a complete list</li>\n        <li><strong>Prep Ahead</strong> - Batch cook proteins and chop vegetables</li>\n      </ol>\n    </div>\n    <p><strong>Pro Tip:</strong> Focus on 3-4 protein sources and rotate your vegetables. This keeps things simple while ensuring variety.</p>\n    <p><a href=\"https://evofitmeals.com/pricing\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">Get Pro Features - Free Trial</a></p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n  `,\n  3: `\n    <h1>Hi ${firstName}! 💪</h1>\n    <h2>How Sarah Lost 15 lbs Using This Strategy</h2>\n    <p>Sarah was struggling to stay consistent with her nutrition. Sound familiar?</p>\n    <p>Here's what changed everything for her:</p>\n    <div style=\"background:#f0f0f0;padding:20px;border-radius:8px;margin:20px 0;\">\n      <h3 style=\"margin-top:0;\">Sarah's Results:</h3>\n      <ul style=\"list-style:none;padding:0;\">\n        <li>✅ <strong>Lost 15 lbs in 8 weeks</strong></li>\n        <li>✅ <strong>Saved 5+ hours per week</strong> on meal planning</li>\n        <li>✅ <strong>Zero guilt</strong> about food choices</li>\n        <li>✅ <strong>More energy</strong> throughout the day</li>\n      </ul>\n    </div>\n    <p><strong>Her Secret?</strong> She switched from random meal planning to a structured system that tracks macros automatically.</p>\n    <blockquote style=\"border-left:4px solid #4CAF50;padding-left:15px;font-style:italic;\">\n      \"I finally stopped second-guessing my nutrition. The automated macro tracking changed everything.\" - Sarah M.\n    </blockquote>\n    <p><a href=\"https://evofitmeals.com/case-studies\" style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">Read More Success Stories</a></p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n  `,\n  5: `\n    <h1>Hi ${firstName}! 🎁</h1>\n    <h2>Special Offer: Transform Your Nutrition Game</h2>\n    <p>You've been using our free tool - imagine what you could do with the full platform!</p>\n    <div style=\"background:#4CAF50;color:white;padding:30px;border-radius:8px;margin:20px 0;text-align:center;\">\n      <h2 style=\"margin-top:0;color:white;\">🚀 LIMITED TIME OFFER</h2>\n      <p style=\"font-size:24px;margin:10px 0;\"><strong>50% OFF</strong> Your First Month</p>\n      <p style=\"color:#fff;\">Use code: <strong>NUTRITION50</strong></p>\n    </div>\n    <h3>What You'll Get:</h3>\n    <ul>\n      <li>✅ <strong>Unlimited meal plans</strong> - Create as many as you need</li>\n      <li>✅ <strong>Advanced macro tracking</strong> - Hit your goals precisely</li>\n      <li>✅ <strong>Recipe library</strong> - 1000+ healthy recipes</li>\n      <li>✅ <strong>Client management</strong> - Perfect for trainers & coaches</li>\n      <li>✅ <strong>Priority support</strong> - Get help when you need it</li>\n    </ul>\n    <p><a href=\"https://evofitmeals.com/pricing?code=NUTRITION50\" style=\"background:#FF5722;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;display:inline-block;font-size:18px;\">Claim Your 50% Discount Now</a></p>\n    <p style=\"color:#666;font-size:14px;\">*Offer expires in 48 hours. No credit card required for trial.</p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n  `,\n  7: `\n    <h1>Hi ${firstName}! ⏰</h1>\n    <h2>Your 50% Discount Expires in 48 Hours</h2>\n    <p>Just a quick reminder - your special offer expires soon!</p>\n    <div style=\"background:#FF5722;color:white;padding:25px;border-radius:8px;margin:20px 0;text-align:center;\">\n      <h2 style=\"margin-top:0;color:white;\">⏰ EXPIRES IN 48 HOURS</h2>\n      <p style=\"font-size:22px;margin:10px 0;\"><strong>50% OFF</strong> - Code: <strong>NUTRITION50</strong></p>\n    </div>\n    <p><strong>Plus, when you upgrade today, you'll get:</strong></p>\n    <ul>\n      <li>🎁 <strong>BONUS:</strong> 30-Day Meal Prep Masterclass ($97 value)</li>\n      <li>🎁 <strong>BONUS:</strong> Macro Tracking Cheat Sheet</li>\n      <li>🎁 <strong>BONUS:</strong> 50 Quick & Healthy Recipes eBook</li>\n    </ul>\n    <p>These bonuses disappear when the timer hits zero.</p>\n    <p><a href=\"https://evofitmeals.com/pricing?code=NUTRITION50\" style=\"background:#FF5722;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;display:inline-block;font-size:18px;\">Get 50% OFF + Bonuses Now</a></p>\n    <p style=\"color:#666;\">Don't miss out - this offer ends in 48 hours.</p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n  `,\n  10: `\n    <h1>Hi ${firstName}! 🚨</h1>\n    <h2>Last Chance: Offer Expires Tonight at Midnight</h2>\n    <p>This is your final reminder...</p>\n    <div style=\"background:#FF5722;color:white;padding:30px;border-radius:8px;margin:20px 0;text-align:center;\">\n      <h2 style=\"margin-top:0;color:white;\">🚨 FINAL HOURS</h2>\n      <p style=\"font-size:24px;margin:10px 0;\">Offer Expires: <strong>Tonight at Midnight</strong></p>\n      <p style=\"font-size:28px;margin:15px 0;\"><strong>50% OFF</strong></p>\n      <p style=\"color:#fff;\">Use code: <strong>NUTRITION50</strong></p>\n    </div>\n    <p><strong>This is the last time you'll see this offer.</strong></p>\n    <p>After tonight:</p>\n    <ul>\n      <li>❌ No 50% discount</li>\n      <li>❌ No bonus masterclass</li>\n      <li>❌ No free recipes eBook</li>\n    </ul>\n    <p><strong>But if you upgrade right now, you'll get:</strong></p>\n    <ul>\n      <li>✅ 50% off your first month</li>\n      <li>✅ 30-Day Meal Prep Masterclass</li>\n      <li>✅ Macro Tracking Cheat Sheet</li>\n      <li>✅ 50 Quick & Healthy Recipes</li>\n      <li>✅ Unlimited meal plans forever</li>\n    </ul>\n    <p><a href=\"https://evofitmeals.com/pricing?code=NUTRITION50\" style=\"background:#FF5722;color:white;padding:18px 35px;text-decoration:none;border-radius:5px;display:inline-block;font-size:20px;\">Claim Final Offer - Expires Tonight</a></p>\n    <p style=\"color:#666;font-size:14px;\">⏰ Offer expires at 11:59 PM ET tonight. No extensions.</p>\n    <p>To your success,<br>The EvoFitMeals Team</p>\n    <p style=\"margin-top:30px;padding-top:20px;border-top:1px solid #ccc;color:#999;font-size:12px;\">\n      This is the final email in our nurture sequence. If you're not ready yet, that's okay! \n      We'll send you occasional tips and updates, but the special offer ends tonight.\n    </p>\n  `\n};\n\nconst htmlContent = emailContentMap[emailDay] || '';\n\nreturn {\n  json: {\n    ...($json),\n    subject: subject,\n    htmlContent: htmlContent\n  }\n};"
+      },
+      "id": "build-email-content",
+      "name": "Build Nurture Email Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mailgun.net/v3/evofitmeals.com/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "formUrlEncoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "=EvoFit Meals <invites@evofitmeals.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "html",
+              "value": "={{ $json.htmlContent }}"
+            },
+            {
+              "name": "o:tracking",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-clicks",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-opens",
+              "value": "yes"
+            }
+          ]
+        }
+      },
+      "id": "send-mailgun-email",
+      "name": "Send Nurture Email via Mailgun",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 200],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "mailgun_api",
+          "name": "Mailgun API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $json.id }}",
+        "updateFields": {
+          "properties": [
+            {
+              "name": "last_email_sent",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "last_email_type",
+              "value": "Nurture Day {{ $json.emailDay }}"
+            }
+          ]
+        }
+      },
+      "id": "update-crm",
+      "name": "Update Last Email Sent in HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1650, 200],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Nurture Email Sent"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  emailDay: $json.emailDay,\n  timestamp: new Date().toISOString()\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-email-sent",
+      "name": "Track Email Sent in Segment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1850, 200],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.emailDay }}",
+              "value2": 10
+            }
+          ]
+        }
+      },
+      "id": "check-sequence-complete",
+      "name": "Sequence Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2050, 200]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $json.id }}",
+        "updateFields": {
+          "properties": [
+            {
+              "name": "nurture_sequence_status",
+              "value": "completed"
+            },
+            {
+              "name": "nurture_sequence_end_date",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "mark-complete",
+      "name": "Mark Sequence Complete in HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [2250, 100],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Wait 10 seconds between batches to respect API rate limits\nawait new Promise(resolve => setTimeout(resolve, 10000));\nreturn $input.all();"
+      },
+      "id": "rate-limit-delay",
+      "name": "Rate Limit Delay (10s)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation-errors",
+        "text": "=Nurture Sequence Error:\nContact: {{ $json.email }}\nEmail Day: {{ $json.emailDay }}\nError: {{ $json.error?.message || 'Unknown error' }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": true
+        }
+      },
+      "id": "error-notification",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [850, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_api",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily at 10am ET": {
+      "main": [
+        [
+          {
+            "node": "Get Contacts in Nurture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contacts in Nurture": {
+      "main": [
+        [
+          {
+            "node": "Calculate Nurture Day",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Nurture Day": {
+      "main": [
+        [
+          {
+            "node": "Has NOT Purchased?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has NOT Purchased?": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Error to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches (Rate Limit)": {
+      "main": [
+        [
+          {
+            "node": "Build Nurture Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rate Limit Delay (10s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Nurture Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send Nurture Email via Mailgun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Nurture Email via Mailgun": {
+      "main": [
+        [
+          {
+            "node": "Update Last Email Sent in HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Email Sent in HubSpot": {
+      "main": [
+        [
+          {
+            "node": "Track Email Sent in Segment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Track Email Sent in Segment": {
+      "main": [
+        [
+          {
+            "node": "Sequence Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sequence Complete?": {
+      "main": [
+        [
+          {
+            "node": "Mark Sequence Complete in HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Delay (10s)": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "acquisition",
+      "id": "acquisition"
+    },
+    {
+      "name": "fitnessmealplanner",
+      "id": "fitnessmealplanner"
+    },
+    {
+      "name": "nurture",
+      "id": "nurture"
+    },
+    {
+      "name": "mailgun",
+      "id": "mailgun"
+    }
+  ],
+  "triggerCount": 1,
+  "active": false
+}

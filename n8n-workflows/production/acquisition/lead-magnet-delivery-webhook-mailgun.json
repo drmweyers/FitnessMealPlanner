@@ -1,0 +1,354 @@
+{
+  "name": "Lead Magnet Delivery - Webhook (Mailgun)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-capture",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Lead Magnet Form Submission",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Extract and validate form data\nconst email = ($json.body.email || '').toLowerCase().trim();\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRegex.test(email)) {\n  throw new Error('Invalid email format');\n}\n\n// Sanitize inputs\nconst sanitize = (str) => {\n  return String(str || '')\n    .replace(/[<>]/g, '')\n    .replace(/['\";]/g, '')\n    .trim()\n    .substring(0, 255);\n};\n\nreturn {\n  json: {\n    email: email,\n    firstName: sanitize($json.body.firstName) || 'Valued Customer',\n    lastName: sanitize($json.body.lastName) || '',\n    leadSource: sanitize($json.body.leadSource) || 'free_tool',\n    userAgent: sanitize($json.body.userAgent) || '',\n    ipAddress: sanitize($json.body.ipAddress) || '',\n    submittedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "validate-data",
+      "name": "Validate & Sanitize Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.email }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-required-fields",
+      "name": "Valid Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "properties": [
+            {
+              "name": "firstname",
+              "value": "={{ $json.firstName }}"
+            },
+            {
+              "name": "lastname",
+              "value": "={{ $json.lastName }}"
+            },
+            {
+              "name": "lead_source",
+              "value": "={{ $json.leadSource }}"
+            },
+            {
+              "name": "lifecycle_stage",
+              "value": "lead"
+            },
+            {
+              "name": "hs_lead_status",
+              "value": "NEW"
+            },
+            {
+              "name": "nurture_sequence_start_date",
+              "value": "={{ $json.submittedAt }}"
+            },
+            {
+              "name": "lead_capture_source",
+              "value": "free_meal_plan_tool"
+            }
+          ]
+        }
+      },
+      "id": "create-update-contact",
+      "name": "Create/Update Contact in HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Build lead magnet delivery email\nconst firstName = $json.firstName || 'there';\n\n// Email subject\nconst subject = `Your Free Meal Planning Tool - Get Started Now!`;\n\n// HTML email content\nconst htmlContent = `\n  <h1>Hi ${firstName}! 👋</h1>\n  \n  <p>Thanks for using our free meal planning tool!</p>\n  \n  <p>Your personalized meal plan is ready. Here's what you can do next:</p>\n  \n  <div style=\"background:#f0f0f0;padding:20px;border-radius:8px;margin:20px 0;\">\n    <h2 style=\"margin-top:0;\">Next Steps:</h2>\n    <ol>\n      <li><strong>Save your meal plan</strong> - Download or bookmark it for easy access</li>\n      <li><strong>Customize your macros</strong> - Adjust calories and protein to fit your goals</li>\n      <li><strong>Try different meal types</strong> - Create plans for cutting, bulking, or maintenance</li>\n      <li><strong>Share with clients</strong> - If you're a trainer, use this tool for your clients</li>\n    </ol>\n  </div>\n  \n  <h3>Want More?</h3>\n  <p>Our free tool is great, but imagine having:</p>\n  <ul>\n    <li>✅ Unlimited meal plans</li>\n    <li>✅ Advanced macro customization</li>\n    <li>✅ Client management features</li>\n    <li>✅ Recipe library with 1000+ options</li>\n  </ul>\n  \n  <p>\n    <a href=\"https://evofitmeals.com/pricing\" \n       style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">\n      Upgrade to Pro - Start Free Trial\n    </a>\n  </p>\n  \n  <p style=\"margin-top:30px;\">\n    <strong>Pro Tip:</strong> Create multiple meal plans for different goals (cutting, bulking, maintenance) \n    to see which macros work best for you or your clients.\n  </p>\n  \n  <p style=\"color:#666;\">\n    Have questions? Reply to this email - we're here to help!\n  </p>\n  \n  <p>To your success,<br>The EvoFitMeals Team</p>\n`;\n\nreturn {\n  json: {\n    ...($json),\n    subject: subject,\n    htmlContent: htmlContent\n  }\n};"
+      },
+      "id": "build-email-content",
+      "name": "Build Lead Magnet Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mailgun.net/v3/evofitmeals.com/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "formUrlEncoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "=EvoFit Meals <invites@evofitmeals.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "html",
+              "value": "={{ $json.htmlContent }}"
+            },
+            {
+              "name": "o:tracking",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-clicks",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-opens",
+              "value": "yes"
+            }
+          ]
+        }
+      },
+      "id": "send-mailgun-email",
+      "name": "Send Lead Magnet Email via Mailgun",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 350],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "mailgun_api",
+          "name": "Mailgun API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Lead Captured"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  leadSource: $json.leadSource,\n  timestamp: $json.submittedAt\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-lead-captured",
+      "name": "Track Lead Captured in Segment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 500],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Lead Magnet Email Sent"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  timestamp: new Date().toISOString()\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-email-sent",
+      "name": "Track Email Sent in Segment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 350],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation-errors",
+        "text": "=Lead Capture Webhook Error:\nEmail: {{ $json.email }}\nLead Source: {{ $json.leadSource }}\nError: {{ $json.error?.message || 'Unknown error' }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": true
+        }
+      },
+      "id": "notify-error",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [650, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_api",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Lead Magnet Form Submission": {
+      "main": [
+        [
+          {
+            "node": "Validate & Sanitize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Sanitize Data": {
+      "main": [
+        [
+          {
+            "node": "Valid Data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Data?": {
+      "main": [
+        [
+          {
+            "node": "Create/Update Contact in HubSpot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Lead Magnet Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Track Lead Captured in Segment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Error to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Lead Magnet Email": {
+      "main": [
+        [
+          {
+            "node": "Send Lead Magnet Email via Mailgun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Lead Magnet Email via Mailgun": {
+      "main": [
+        [
+          {
+            "node": "Track Email Sent in Segment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "acquisition",
+      "id": "acquisition"
+    },
+    {
+      "name": "fitnessmealplanner",
+      "id": "fitnessmealplanner"
+    },
+    {
+      "name": "mailgun",
+      "id": "mailgun"
+    }
+  ],
+  "triggerCount": 1,
+  "active": false
+}

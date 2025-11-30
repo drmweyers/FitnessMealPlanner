@@ -1,0 +1,448 @@
+{
+  "name": "Lead Magnet Nurture - 7 Day Sequence",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily at 10am ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "filterGroups": [
+            {
+              "filters": [
+                {
+                  "propertyName": "lifecycle_stage",
+                  "operator": "EQ",
+                  "value": "lead"
+                },
+                {
+                  "propertyName": "lead_magnet_type",
+                  "operator": "IS_NOT_EMPTY"
+                },
+                {
+                  "propertyName": "nurture_sequence_start_date",
+                  "operator": "IS_NOT_EMPTY"
+                }
+              ]
+            }
+          ]
+        },
+        "propertiesCollection": {
+          "properties": [
+            "email",
+            "firstname",
+            "lastname",
+            "lead_magnet_type",
+            "nurture_sequence_start_date",
+            "last_email_sent",
+            "hs_lifecyclestage_customer_date"
+          ]
+        }
+      },
+      "id": "get-contacts",
+      "name": "Get Contacts in Nurture",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetween": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst today = new Date();\n\nconst enrichedContacts = items.map(item => {\n  const contact = item.json;\n  const downloadDate = new Date(contact.nurture_sequence_start_date);\n  const daysSinceDownload = Math.floor((today - downloadDate) / (1000 * 60 * 60 * 24));\n\n  // Determine which email to send\n  let emailDay = null;\n  let emailTemplate = null;\n  let emailSubject = null;\n\n  if (daysSinceDownload === 1) {\n    emailDay = 1;\n    emailTemplate = 'd-day-1-educational';\n    emailSubject = 'Quick Win: Get Results in 10 Minutes';\n  } else if (daysSinceDownload === 3) {\n    emailDay = 3;\n    emailTemplate = 'd-day-3-case-study';\n    emailSubject = 'How [Customer] Achieved [Result]';\n  } else if (daysSinceDownload === 5) {\n    emailDay = 5;\n    emailTemplate = 'd-day-5-entry-offer';\n    emailSubject = 'Special Offer: Transform Your [Outcome]';\n  } else if (daysSinceDownload === 7) {\n    emailDay = 7;\n    emailTemplate = 'd-day-7-urgency-bonus';\n    emailSubject = 'Your Bonus Expires in 48 Hours';\n  } else if (daysSinceDownload === 10) {\n    emailDay = 10;\n    emailTemplate = 'd-day-10-last-chance';\n    emailSubject = 'Last Chance: Offer Expires Tonight';\n  }\n\n  return {\n    json: {\n      ...contact,\n      daysSinceDownload,\n      emailDay,\n      emailTemplate,\n      emailSubject,\n      shouldSendEmail: emailDay !== null\n    }\n  };\n});\n\n// Filter only contacts who should receive email today\nreturn enrichedContacts.filter(item => item.json.shouldSendEmail);"
+      },
+      "id": "calculate-nurture-day",
+      "name": "Calculate Nurture Day",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.hs_lifecyclestage_customer_date }}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-purchased",
+      "name": "Has NOT Purchased?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 90,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Split In Batches (Rate Limit)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "resource": "mail",
+        "operation": "send",
+        "fromEmail": "hello@yourdomain.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.emailSubject }}",
+        "emailType": "dynamic",
+        "dynamicTemplateId": "={{ $json.emailTemplate }}",
+        "dynamicTemplateValues": {
+          "customValues": [
+            {
+              "key": "name",
+              "value": "={{ $json.firstname || 'there' }}"
+            },
+            {
+              "key": "emailDay",
+              "value": "={{ $json.emailDay }}"
+            },
+            {
+              "key": "leadMagnetType",
+              "value": "={{ $json.lead_magnet_type }}"
+            }
+          ]
+        }
+      },
+      "id": "send-nurture-email",
+      "name": "Send Nurture Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [1250, 200],
+      "credentials": {
+        "sendGridApi": {
+          "id": "sendgrid_api",
+          "name": "SendGrid API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetween": 1000
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $json.id }}",
+        "updateFields": {
+          "properties": [
+            {
+              "name": "last_email_sent",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "last_email_type",
+              "value": "Nurture Day {{ $json.emailDay }}"
+            }
+          ]
+        }
+      },
+      "id": "update-crm",
+      "name": "Update Last Email Sent",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1450, 200],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetween": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.segment.io/v1/track",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "segmentApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Nurture Email Sent"
+            },
+            {
+              "name": "properties",
+              "value": "={{ { \"emailDay\": $json.emailDay, \"emailTemplate\": $json.emailTemplate, \"timestamp\": $now.toISO() } }}"
+            }
+          ]
+        }
+      },
+      "id": "track-email-sent",
+      "name": "Track Email Sent Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1650, 200],
+      "credentials": {
+        "segmentApi": {
+          "id": "segment_api",
+          "name": "Segment API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.emailDay }}",
+              "value2": 10
+            }
+          ]
+        }
+      },
+      "id": "check-sequence-complete",
+      "name": "Sequence Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1850, 200]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $json.id }}",
+        "updateFields": {
+          "properties": [
+            {
+              "name": "nurture_sequence_status",
+              "value": "completed"
+            },
+            {
+              "name": "nurture_sequence_end_date",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "mark-complete",
+      "name": "Mark Sequence Complete",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [2050, 100],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Wait 10 seconds between batches to respect API rate limits\nawait new Promise(resolve => setTimeout(resolve, 10000));\nreturn $input.all();"
+      },
+      "id": "rate-limit-delay",
+      "name": "Rate Limit Delay (10s)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation-errors",
+        "text": "=Nurture Sequence Error\n\nWorkflow: {{ $workflow.name }}\nContact: {{ $json.email }}\nError: {{ $json.error.message }}\nExecution ID: {{ $execution.id }}\nTime: {{ $now.toISO() }}",
+        "otherOptions": {}
+      },
+      "id": "error-notification",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [850, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_api",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily at 10am ET": {
+      "main": [
+        [
+          {
+            "node": "Get Contacts in Nurture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contacts in Nurture": {
+      "main": [
+        [
+          {
+            "node": "Calculate Nurture Day",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Nurture Day": {
+      "main": [
+        [
+          {
+            "node": "Has NOT Purchased?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has NOT Purchased?": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches (Rate Limit)": {
+      "main": [
+        [
+          {
+            "node": "Send Nurture Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rate Limit Delay (10s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Nurture Email": {
+      "main": [
+        [
+          {
+            "node": "Update Last Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Email Sent": {
+      "main": [
+        [
+          {
+            "node": "Track Email Sent Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Track Email Sent Event": {
+      "main": [
+        [
+          {
+            "node": "Sequence Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sequence Complete?": {
+      "main": [
+        [
+          {
+            "node": "Mark Sequence Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Delay (10s)": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "",
+    "timezone": "America/New_York"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Acquisition"
+    },
+    {
+      "name": "Lead Magnet"
+    },
+    {
+      "name": "Nurture"
+    },
+    {
+      "name": "Scheduled"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-17T00:00:00.000Z",
+  "versionId": "1"
+}

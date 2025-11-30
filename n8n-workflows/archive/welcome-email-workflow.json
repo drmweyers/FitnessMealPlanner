@@ -1,0 +1,190 @@
+{
+  "name": "Welcome Email - New Customer Onboarding",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "welcome",
+        "options": {},
+        "responseMode": "responseNode",
+        "responseData": "allEntries"
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "welcome"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Welcome email queued\", \"timestamp\": $now } }}"
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.accountType }}",
+              "operation": "equals",
+              "value2": "starter"
+            }
+          ]
+        }
+      },
+      "id": "check-account-type",
+      "name": "Check Account Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "subject": "Welcome to FitnessMealPlanner - Starter Plan! 🎉",
+        "emailType": "html",
+        "message": "<h1>Welcome {{ $json.firstName }}!</h1><p>You're on the <strong>Starter Plan</strong>. Get started with meal planning today!</p><ul><li>Generate meal plans</li><li>Track nutrition</li><li>Access recipe library</li></ul>",
+        "toEmail": "={{ $json.email }}"
+      },
+      "id": "send-starter-email",
+      "name": "Send Starter Welcome",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 200],
+      "notes": "In production: Replace with actual Email node (SendGrid, Mailgun, etc.)"
+    },
+    {
+      "parameters": {
+        "subject": "Welcome to FitnessMealPlanner - Professional Plan! 🚀",
+        "emailType": "html",
+        "message": "<h1>Welcome {{ $json.firstName }}!</h1><p>You're on the <strong>Professional Plan</strong>. Unlock advanced features!</p><ul><li>Unlimited meal plans</li><li>Client management</li><li>Advanced analytics</li><li>Priority support</li></ul>",
+        "toEmail": "={{ $json.email }}"
+      },
+      "id": "send-professional-email",
+      "name": "Send Professional Welcome",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 400],
+      "notes": "In production: Replace with actual Email node"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "accountType",
+              "value": "={{ $json.accountType }}"
+            },
+            {
+              "name": "customerId",
+              "value": "={{ $json.customerId }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}"
+            }
+          ]
+        }
+      },
+      "id": "save-customer",
+      "name": "Save Customer to CRM",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "notes": "In production: Replace with CRM node (Salesforce, HubSpot, etc.)"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check Account Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Account Type": {
+      "main": [
+        [
+          {
+            "node": "Send Starter Welcome",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Professional Welcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Starter Welcome": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Professional Welcome": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Save Customer to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "id": "welcome-email-workflow",
+  "tags": [
+    {
+      "name": "marketing",
+      "createdAt": "2025-01-20T00:00:00.000Z"
+    },
+    {
+      "name": "onboarding",
+      "createdAt": "2025-01-20T00:00:00.000Z"
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fitnessmealplanner"
+  }
+}

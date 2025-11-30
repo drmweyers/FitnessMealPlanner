@@ -1136,6 +1136,18 @@ This section provides **FitnessMealPlanner-specific** BMAD guidance.
 - Database migration strategies
 - Production monitoring setup
 
+#### Custom User Agents - `~/.claude/agents/`
+| Agent | Purpose | Command |
+|-------|---------|---------|
+| `prompt-creator` | Expert prompt engineering with frameworks (RACE, RISEN, CoT) | `@prompt-creator` |
+| `hormozi-constraint-analyzer` | Theory of Constraints + ICE business analysis | `@hormozi-constraint-analyzer` |
+
+**Use Cases for FitnessMealPlanner:**
+- Create optimized prompts for recipe generation
+- Design few-shot prompts for meal planning AI
+- Build system prompts for automated workflows
+- Optimize existing prompts for better results
+
 ---
 
 ### 🎯 When to Use BMAD (FitnessMealPlanner Context)

@@ -1,0 +1,328 @@
+{
+  "name": "Welcome Onboarding - Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "welcome",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Welcome Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Extract and validate form data\nconst email = ($json.body.email || '').toLowerCase().trim();\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRegex.test(email)) {\n  throw new Error('Invalid email format');\n}\n\n// Sanitize inputs\nconst sanitize = (str) => {\n  return String(str || '')\n    .replace(/[<>]/g, '')\n    .replace(/['\";]/g, '')\n    .trim()\n    .substring(0, 255);\n};\n\n// Validate account type\nconst validTypes = ['trial', 'lifetime', 'starter', 'professional', 'enterprise'];\nconst accountType = ($json.body.accountType || 'trial').toLowerCase();\nif (!validTypes.includes(accountType)) {\n  throw new Error(`Invalid account type: ${accountType}`);\n}\n\nreturn {\n  json: {\n    email: email,\n    firstName: sanitize($json.body.firstName) || '',\n    lastName: sanitize($json.body.lastName) || '',\n    accountType: accountType,\n    customerId: sanitize($json.body.customerId) || '',\n    subscriptionId: sanitize($json.body.subscriptionId) || '',\n    submittedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "validate-data",
+      "name": "Validate & Sanitize Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.email }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.accountType }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-required-fields",
+      "name": "Valid Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "properties": [
+            {
+              "name": "firstname",
+              "value": "={{ $json.firstName }}"
+            },
+            {
+              "name": "lastname",
+              "value": "={{ $json.lastName }}"
+            },
+            {
+              "name": "account_tier",
+              "value": "={{ $json.accountType }}"
+            },
+            {
+              "name": "stripe_customer_id",
+              "value": "={{ $json.customerId }}"
+            },
+            {
+              "name": "stripe_subscription_id",
+              "value": "={{ $json.subscriptionId }}"
+            },
+            {
+              "name": "lifecycle_stage",
+              "value": "customer"
+            },
+            {
+              "name": "signup_date",
+              "value": "={{ $json.submittedAt }}"
+            },
+            {
+              "name": "onboarding_status",
+              "value": "started"
+            }
+          ]
+        }
+      },
+      "id": "create-update-contact",
+      "name": "Create/Update Contact in HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Determine welcome email template based on account type\nconst templateMap = {\n  'starter': 'd-welcome-starter',\n  'professional': 'd-welcome-professional',\n  'enterprise': 'd-welcome-enterprise',\n  'trial': 'd-welcome-trial',\n  'lifetime': 'd-welcome-lifetime'\n};\n\nconst accountType = $json.accountType;\nconst templateId = templateMap[accountType] || 'd-welcome-trial';\n\nreturn {\n  json: {\n    ...($json),\n    templateId: templateId,\n    fromEmail: 'hello@evofitmeals.com',\n    fromName: 'EvoFitMeals Team'\n  }\n};"
+      },
+      "id": "determine-template",
+      "name": "Determine Email Template",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.fromEmail }}",
+        "toEmail": "={{ $json.email }}",
+        "message": "=Welcome Email",
+        "subject": "=Welcome to EvoFitMeals - Let's Get Started!",
+        "emailType": "template",
+        "templateId": "={{ $json.templateId }}",
+        "dynamicTemplateValuesJson": "={{ JSON.stringify({\n  firstName: $json.firstName || 'Valued Customer',\n  accountType: $json.accountType,\n  loginUrl: 'https://evofitmeals.com/login'\n}) }}"
+      },
+      "id": "send-welcome-email",
+      "name": "Send Welcome Email via SendGrid",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 1,
+      "position": [1050, 350],
+      "credentials": {
+        "sendGridApi": {
+          "id": "sendgrid_api",
+          "name": "SendGrid API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Account Created"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  accountType: $json.accountType,\n  customerId: $json.customerId,\n  subscriptionId: $json.subscriptionId,\n  timestamp: $json.submittedAt\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-signup-event",
+      "name": "Track Account Created in Segment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 500],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Welcome Email Sent"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  accountType: $json.accountType,\n  templateId: $json.templateId,\n  timestamp: new Date().toISOString()\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-email-sent",
+      "name": "Track Welcome Email Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 350],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation-errors",
+        "text": "=Welcome Webhook Error:\nEmail: {{ $json.email }}\nAccount Type: {{ $json.accountType }}\nError: {{ $json.error?.message || 'Unknown error' }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": true
+        }
+      },
+      "id": "notify-error",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [650, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_api",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Welcome Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate & Sanitize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Sanitize Data": {
+      "main": [
+        [
+          {
+            "node": "Valid Data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Data?": {
+      "main": [
+        [
+          {
+            "node": "Create/Update Contact in HubSpot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Determine Email Template",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Track Account Created in Segment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Error to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Email Template": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Email via SendGrid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email via SendGrid": {
+      "main": [
+        [
+          {
+            "node": "Track Welcome Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "onboarding",
+      "id": "onboarding"
+    },
+    {
+      "name": "fitnessmealplanner",
+      "id": "fitnessmealplanner"
+    }
+  ],
+  "triggerCount": 1,
+  "active": false
+}

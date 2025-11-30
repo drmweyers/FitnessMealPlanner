@@ -1,0 +1,358 @@
+{
+  "name": "Aha Moment Celebration - Webhook (Mailgun)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aha-moment",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Aha Moment Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Extract and validate data\nconst email = ($json.body.email || '').toLowerCase().trim();\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRegex.test(email)) {\n  throw new Error('Invalid email format');\n}\n\n// Sanitize inputs\nconst sanitize = (str) => {\n  return String(str || '')\n    .replace(/[<>]/g, '')\n    .replace(/['\";]/g, '')\n    .trim()\n    .substring(0, 255);\n};\n\nreturn {\n  json: {\n    email: email,\n    firstName: sanitize($json.body.firstName) || '',\n    mealPlanId: sanitize($json.body.mealPlanId) || '',\n    mealPlanType: sanitize($json.body.mealPlanType) || 'custom',\n    calories: parseInt($json.body.calories) || 0,\n    protein: parseInt($json.body.protein) || 0,\n    accountType: sanitize($json.body.accountType) || 'free',\n    submittedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "validate-data",
+      "name": "Validate & Sanitize Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.email }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.mealPlanId }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-required-fields",
+      "name": "Valid Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "properties": [
+            {
+              "name": "firstname",
+              "value": "={{ $json.firstName }}"
+            },
+            {
+              "name": "first_meal_plan_created",
+              "value": "={{ $json.submittedAt }}"
+            },
+            {
+              "name": "first_meal_plan_type",
+              "value": "={{ $json.mealPlanType }}"
+            },
+            {
+              "name": "first_meal_plan_calories",
+              "value": "={{ $json.calories }}"
+            },
+            {
+              "name": "first_meal_plan_protein",
+              "value": "={{ $json.protein }}"
+            },
+            {
+              "name": "feature_adoption_status",
+              "value": "meal_plan_created"
+            },
+            {
+              "name": "onboarding_milestone",
+              "value": "aha_moment_reached"
+            }
+          ]
+        }
+      },
+      "id": "update-contact",
+      "name": "Update Contact in HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Build celebration email content\nconst firstName = $json.firstName || 'Valued Customer';\nconst mealPlanType = $json.mealPlanType || 'custom meal plan';\nconst calories = $json.calories || 0;\nconst protein = $json.protein || 0;\n\n// Email subject\nconst subject = `🎉 Amazing! You Created Your First Meal Plan`;\n\n// HTML email content\nconst htmlContent = `\n  <h1>🎉 Congratulations, ${firstName}!</h1>\n  <p>You just created your first meal plan - this is a huge milestone!</p>\n  \n  <div style=\"background:#f0f0f0;padding:20px;border-radius:8px;margin:20px 0;\">\n    <h2 style=\"margin-top:0;\">Your Meal Plan Details:</h2>\n    <ul style=\"list-style:none;padding:0;\">\n      <li><strong>Type:</strong> ${mealPlanType}</li>\n      <li><strong>Calories:</strong> ${calories} kcal/day</li>\n      <li><strong>Protein:</strong> ${protein}g/day</li>\n    </ul>\n  </div>\n  \n  <h3>What's Next?</h3>\n  <ul>\n    <li>Share this meal plan with your clients</li>\n    <li>Create more custom plans for different goals</li>\n    <li>Adjust macros and calories as needed</li>\n    <li>Save your favorite meal plans for quick access</li>\n  </ul>\n  \n  <p>\n    <a href=\"https://evofitmeals.com/login\" \n       style=\"background:#4CAF50;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">\n      Create Another Meal Plan\n    </a>\n  </p>\n  \n  <p style=\"margin-top:30px;color:#666;\">\n    Need help? Reply to this email anytime - we're here to support you!\n  </p>\n  \n  <p>To your success,<br>The EvoFitMeals Team</p>\n`;\n\nreturn {\n  json: {\n    ...($json),\n    subject: subject,\n    htmlContent: htmlContent\n  }\n};"
+      },
+      "id": "build-email-content",
+      "name": "Build Celebration Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mailgun.net/v3/evofitmeals.com/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "formUrlEncoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "=EvoFit Meals <invites@evofitmeals.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "html",
+              "value": "={{ $json.htmlContent }}"
+            },
+            {
+              "name": "o:tracking",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-clicks",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-opens",
+              "value": "yes"
+            }
+          ]
+        }
+      },
+      "id": "send-mailgun-email",
+      "name": "Send Celebration Email via Mailgun",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 350],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "mailgun_api",
+          "name": "Mailgun API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "First Meal Plan Created"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  mealPlanId: $json.mealPlanId,\n  mealPlanType: $json.mealPlanType,\n  calories: $json.calories,\n  protein: $json.protein,\n  accountType: $json.accountType,\n  timestamp: $json.submittedAt\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-aha-moment",
+      "name": "Track Aha Moment in Segment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 500],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Aha Moment Email Sent"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  mealPlanId: $json.mealPlanId,\n  timestamp: new Date().toISOString()\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-email-sent",
+      "name": "Track Email Sent in Segment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 350],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation-errors",
+        "text": "=Aha Moment Webhook Error:\nEmail: {{ $json.email }}\nMeal Plan ID: {{ $json.mealPlanId }}\nError: {{ $json.error?.message || 'Unknown error' }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": true
+        }
+      },
+      "id": "notify-error",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [650, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_api",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Aha Moment Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate & Sanitize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Sanitize Data": {
+      "main": [
+        [
+          {
+            "node": "Valid Data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Data?": {
+      "main": [
+        [
+          {
+            "node": "Update Contact in HubSpot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Celebration Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Track Aha Moment in Segment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Error to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Celebration Email": {
+      "main": [
+        [
+          {
+            "node": "Send Celebration Email via Mailgun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Celebration Email via Mailgun": {
+      "main": [
+        [
+          {
+            "node": "Track Email Sent in Segment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "onboarding",
+      "id": "onboarding"
+    },
+    {
+      "name": "fitnessmealplanner",
+      "id": "fitnessmealplanner"
+    },
+    {
+      "name": "mailgun",
+      "id": "mailgun"
+    }
+  ],
+  "triggerCount": 1,
+  "active": false
+}

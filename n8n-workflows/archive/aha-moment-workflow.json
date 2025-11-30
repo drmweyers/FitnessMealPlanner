@@ -1,0 +1,158 @@
+{
+  "name": "Aha Moment - First Meal Plan Celebration",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "aha-moment",
+        "options": {},
+        "responseMode": "responseNode",
+        "responseData": "allEntries"
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "aha-moment"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Aha moment celebrated!\", \"timestamp\": $now } }}"
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "subject": "🎉 Congratulations on Your First Meal Plan!",
+        "emailType": "html",
+        "message": "<h1>Way to go, {{ $json.firstName }}!</h1><p>You just created your <strong>first meal plan</strong> on FitnessMealPlanner! 🎯</p><p><strong>Meal Plan Details:</strong></p><ul><li>Type: {{ $json.mealPlanType }}</li><li>Daily Calories: {{ $json.calories }} kcal</li><li>Daily Protein: {{ $json.protein }}g</li></ul><p>This is your <em>aha moment</em> - the beginning of helping clients achieve their fitness goals!</p><p><strong>What's next?</strong></p><ol><li>Share this meal plan with your client</li><li>Track their progress</li><li>Create more customized plans</li></ol><p>Need help? Reply to this email or check out our resources.</p>",
+        "toEmail": "={{ $json.email }}"
+      },
+      "id": "send-celebration-email",
+      "name": "Send Celebration Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "notes": "In production: Replace with actual Email node (SendGrid, Mailgun, etc.)"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "mealPlanId",
+              "value": "={{ $json.mealPlanId }}"
+            },
+            {
+              "name": "mealPlanType",
+              "value": "={{ $json.mealPlanType }}"
+            },
+            {
+              "name": "accountType",
+              "value": "={{ $json.accountType }}"
+            },
+            {
+              "name": "ahaMomentTimestamp",
+              "value": "={{ $json.timestamp }}"
+            }
+          ]
+        }
+      },
+      "id": "track-milestone",
+      "name": "Track Milestone in Analytics",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "notes": "In production: Replace with Analytics node (Mixpanel, Segment, etc.)"
+    },
+    {
+      "parameters": {
+        "content": "# 🎉 First Meal Plan Created!\n\n**Trainer:** {{ $json.email }}\n**Meal Plan:** {{ $json.mealPlanType }}\n**Calories:** {{ $json.calories }} kcal\n**Protein:** {{ $json.protein }}g\n**Time:** {{ $json.timestamp }}\n\nThis trainer just hit their aha moment!",
+        "channelName": "=#milestones",
+        "attachments": []
+      },
+      "id": "notify-team",
+      "name": "Notify Team (Optional)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "notes": "In production: Replace with Slack/Discord node",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Celebration Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Celebration Email": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Track Milestone in Analytics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Track Milestone in Analytics": {
+      "main": [
+        [
+          {
+            "node": "Notify Team (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "id": "aha-moment-workflow",
+  "tags": [
+    {
+      "name": "marketing",
+      "createdAt": "2025-01-20T00:00:00.000Z"
+    },
+    {
+      "name": "engagement",
+      "createdAt": "2025-01-20T00:00:00.000Z"
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fitnessmealplanner"
+  }
+}

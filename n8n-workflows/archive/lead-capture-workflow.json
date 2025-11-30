@@ -1,0 +1,120 @@
+{
+  "name": "Lead Capture - Meal Plan Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "lead-capture",
+        "options": {},
+        "responseMode": "responseNode",
+        "responseData": "allEntries"
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "lead-capture"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Lead captured successfully\", \"timestamp\": $now } }}"
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "collectionName": "leads",
+        "dataToInsert": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.email }}",
+            "firstName": "={{ $json.firstName }}",
+            "lastName": "={{ $json.lastName }}",
+            "leadSource": "={{ $json.leadSource }}",
+            "userAgent": "={{ $json.userAgent }}",
+            "ipAddress": "={{ $json.ipAddress }}",
+            "timestamp": "={{ $json.timestamp }}",
+            "status": "new"
+          }
+        }
+      },
+      "id": "save-lead",
+      "name": "Save Lead to Database",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "notes": "In production: Replace with actual database node (MongoDB, PostgreSQL, etc.)"
+    },
+    {
+      "parameters": {
+        "content": "# Lead Captured! 🎯\n\n**Email:** {{ $json.email }}\n**Source:** {{ $json.leadSource }}\n**Time:** {{ $json.timestamp }}\n\nThis lead used the meal plan generator. Trigger nurture sequence!",
+        "channelName": "=#leads",
+        "attachments": []
+      },
+      "id": "notify-slack",
+      "name": "Notify Slack (Optional)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "notes": "In production: Replace with Slack/Discord/Email node",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Save Lead to Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead to Database": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Notify Slack (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "id": "lead-capture-workflow",
+  "tags": [
+    {
+      "name": "marketing",
+      "createdAt": "2025-01-20T00:00:00.000Z"
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fitnessmealplanner"
+  }
+}

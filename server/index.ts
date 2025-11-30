@@ -40,6 +40,7 @@ import { emailAnalyticsRouter } from './routes/emailAnalytics';
 import { groceryListsRouter } from './routes/groceryLists';
 import { exportRouter } from './routes/export';
 import { paymentRouter } from './routes/payment'; // Stripe payment integration
+import webhookRouter from './routes/webhooks'; // n8n marketing automation webhooks
 // TEMPORARILY DISABLED - Stripe integration incomplete
 // import tierRouter from './routes/tierRoutes';
 // import subscriptionRouter from './routes/subscriptionRoutes';
@@ -246,6 +247,9 @@ app.use('/api/email-analytics', emailAnalyticsRouter);
 
 // Payment routes (Stripe integration - 8 endpoints)
 app.use('/api', paymentRouter);
+
+// n8n Marketing Automation Webhooks (4 endpoints)
+app.use('/api/webhooks', webhookRouter);
 
 // 3-Tier Subscription System Routes
 // TEMPORARILY DISABLED - Stripe integration incomplete

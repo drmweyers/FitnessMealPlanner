@@ -1,0 +1,8 @@
+# BMAD Core Configuration
+# Generated: 2025-11-29
+
+project_name: FitnessMealPlanner
+user_name: Developer
+communication_language: English
+output_folder: docs/bmad-output
+bmad_folder: bmad

@@ -30,12 +30,14 @@ import {
   webhookEvents,
   paymentLogs,
   tierUsageTracking,
+  users,
   InsertTrainerSubscription,
   InsertSubscriptionItem,
   InsertWebhookEvent,
   InsertPaymentLog,
 } from '../../shared/schema';
 import { entitlementsService } from './EntitlementsService';
+import { sendWelcomeEvent } from '../utils/n8n-webhooks';
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY environment variable is required');
@@ -271,6 +273,32 @@ export class StripeWebhookHandler {
 
     // Invalidate entitlements cache
     await entitlementsService.invalidateCache(trainerId);
+
+    // Send welcome email via n8n (non-blocking)
+    db.query.users
+      .findFirst({
+        where: eq(users.id, trainerId),
+      })
+      .then((trainer) => {
+        if (trainer) {
+          sendWelcomeEvent(
+            {
+              email: trainer.email,
+              firstName: '', // Schema doesn't have firstName field
+              lastName: '',
+              stripeCustomerId: subscription.customer as string,
+              stripeSubscriptionId: subscription.id,
+            },
+            tier
+          ).catch((err) => {
+            console.error('[n8n] Failed to send welcome event:', err);
+            // Don't fail the webhook if n8n call fails
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('[n8n] Failed to fetch trainer details:', err);
+      });
   }
 
   /**

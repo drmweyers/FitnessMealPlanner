@@ -1,0 +1,344 @@
+{
+  "name": "Long-Term Nurture - Monthly Re-engagement (Mailgun)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Monthly on 1st at 10am ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {
+          "filterGroups": [
+            {
+              "filters": [
+                {
+                  "propertyName": "lifecycle_stage",
+                  "operator": "EQ",
+                  "value": "lead"
+                },
+                {
+                  "propertyName": "nurture_sequence_start_date",
+                  "operator": "IS_NOT_EMPTY"
+                },
+                {
+                  "propertyName": "hs_lifecyclestage_customer_date",
+                  "operator": "IS_EMPTY"
+                },
+                {
+                  "propertyName": "nurture_sequence_status",
+                  "operator": "EQ",
+                  "value": "completed"
+                }
+              ]
+            }
+          ]
+        },
+        "propertiesCollection": {
+          "properties": [
+            "email",
+            "firstname",
+            "lastname",
+            "lead_source",
+            "nurture_sequence_start_date",
+            "last_email_sent"
+          ]
+        }
+      },
+      "id": "get-non-buyers",
+      "name": "Get Non-Buyer Leads (>30 days)",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst today = new Date();\nconst thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));\n\n// Filter contacts who completed 7-day sequence more than 30 days ago\nconst filteredContacts = items.filter(item => {\n  const contact = item.json;\n  const startDate = new Date(contact.nurture_sequence_start_date);\n  return startDate < thirtyDaysAgo;\n});\n\nreturn filteredContacts;"
+      },
+      "id": "filter-30-days",
+      "name": "Filter Contacts >30 Days Old",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Build monthly re-engagement email\nconst firstName = $json.firstname || 'there';\n\n// Determine current month for personalization\nconst months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];\nconst currentMonth = months[new Date().getMonth()];\n\n// Email subject\nconst subject = `${currentMonth} Check-In: Still Struggling With Meal Planning?`;\n\n// HTML email content\nconst htmlContent = `\n  <h1>Hi ${firstName}! 👋</h1>\n  \n  <p>It's been a while since you used our free meal planning tool. We wanted to check in and see how you're doing!</p>\n  \n  <h2>🎯 ${currentMonth} Focus: Sustainable Nutrition Habits</h2>\n  \n  <p>This month, we're helping coaches and fitness professionals master one critical skill: <strong>building sustainable meal plans that clients actually stick to.</strong></p>\n  \n  <div style=\"background:#f0f0f0;padding:20px;border-radius:8px;margin:20px 0;\">\n    <h3 style=\"margin-top:0;\">What's New This Month:</h3>\n    <ul>\n      <li>🆕 <strong>Recipe Library Expansion</strong> - 200+ new high-protein recipes</li>\n      <li>📊 <strong>Enhanced Macro Tracking</strong> - More accurate calorie calculations</li>\n      <li>📱 <strong>Mobile App Updates</strong> - Create meal plans on the go</li>\n      <li>🎓 <strong>Free Webinar</strong> - \"3 Secrets to Client Compliance\" (this week!)</li>\n    </ul>\n  </div>\n  \n  <h3>Struggling With:</h3>\n  <ul>\n    <li>❌ Clients not sticking to meal plans?</li>\n    <li>❌ Spending hours creating custom plans?</li>\n    <li>❌ Difficulty tracking macros accurately?</li>\n    <li>❌ Need more recipe variety?</li>\n  </ul>\n  \n  <p><strong>We can help with all of that.</strong></p>\n  \n  <div style=\"background:#4CAF50;color:white;padding:25px;border-radius:8px;margin:25px 0;text-align:center;\">\n    <h2 style=\"margin-top:0;color:white;\">🎁 Welcome Back Offer</h2>\n    <p style=\"font-size:22px;margin:10px 0;\"><strong>Get 2 Months for the Price of 1</strong></p>\n    <p style=\"color:#fff;\">Use code: <strong>COMEBACK50</strong></p>\n    <p style=\"font-size:14px;margin-top:15px;\">Limited to the first 50 people who use this code</p>\n  </div>\n  \n  <p>\n    <a href=\"https://evofitmeals.com/pricing?code=COMEBACK50\" \n       style=\"background:#FF5722;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;display:inline-block;font-size:18px;\">\n      Claim Your Welcome Back Offer\n    </a>\n  </p>\n  \n  <h3 style=\"margin-top:40px;\">📅 Join Our Free Webinar This Week:</h3>\n  <p><strong>\"3 Secrets to Client Compliance: How to Get Clients to Actually Follow Their Meal Plans\"</strong></p>\n  <p>Thursday at 8pm ET - Limited spots available</p>\n  <p>\n    <a href=\"https://evofitmeals.com/webinar\" \n       style=\"background:#2196F3;color:white;padding:12px 24px;text-decoration:none;border-radius:5px;display:inline-block;\">\n      Save My Seat (Free)\n    </a>\n  </p>\n  \n  <p style=\"margin-top:40px;color:#666;\">\n    Not ready yet? No problem! We'll keep sending you valuable tips and updates each month. \n    Reply to this email with any questions - we're here to help.\n  </p>\n  \n  <p>To your success,<br>The EvoFitMeals Team</p>\n  \n  <p style=\"margin-top:30px;padding-top:20px;border-top:1px solid #ccc;color:#999;font-size:12px;\">\n    P.S. The COMEBACK50 code is limited to the first 50 people. If you want to take advantage of this offer, \n    don't wait - it won't last long!\n  </p>\n`;\n\nreturn {\n  json: {\n    ...($json),\n    subject: subject,\n    htmlContent: htmlContent\n  }\n};"
+      },
+      "id": "build-email-content",
+      "name": "Build Re-engagement Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mailgun.net/v3/evofitmeals.com/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "formUrlEncoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "=EvoFit Meals <invites@evofitmeals.com>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "html",
+              "value": "={{ $json.htmlContent }}"
+            },
+            {
+              "name": "o:tracking",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-clicks",
+              "value": "yes"
+            },
+            {
+              "name": "o:tracking-opens",
+              "value": "yes"
+            }
+          ]
+        }
+      },
+      "id": "send-mailgun-email",
+      "name": "Send Re-engagement Email via Mailgun",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "mailgun_api",
+          "name": "Mailgun API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $json.id }}",
+        "updateFields": {
+          "properties": [
+            {
+              "name": "last_email_sent",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "last_email_type",
+              "value": "Long-Term Nurture"
+            },
+            {
+              "name": "last_contact_date",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "update-last-contact",
+      "name": "Update Last Contact Date in HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "hubspot_oauth",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "url": "=https://api.segment.io/v1/track",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "event",
+              "value": "Long-Term Nurture Sent"
+            },
+            {
+              "name": "properties",
+              "value": "={{ JSON.stringify({\n  emailType: 'monthly-reengagement',\n  timestamp: new Date().toISOString()\n}) }}"
+            }
+          ]
+        }
+      },
+      "id": "track-event",
+      "name": "Track Long-Term Nurture in Segment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "segment_api",
+          "name": "Segment Write Key"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "channel": "#marketing-automation-errors",
+        "text": "=Long-Term Nurture Error:\nContact: {{ $json.email }}\nError: {{ $json.error?.message || 'Unknown error' }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": true
+        }
+      },
+      "id": "error-notification",
+      "name": "Notify Error to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [650, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_api",
+          "name": "Slack API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Monthly on 1st at 10am ET": {
+      "main": [
+        [
+          {
+            "node": "Get Non-Buyer Leads (>30 days)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Non-Buyer Leads (>30 days)": {
+      "main": [
+        [
+          {
+            "node": "Filter Contacts >30 Days Old",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Contacts >30 Days Old": {
+      "main": [
+        [
+          {
+            "node": "Build Re-engagement Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Re-engagement Email": {
+      "main": [
+        [
+          {
+            "node": "Send Re-engagement Email via Mailgun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Re-engagement Email via Mailgun": {
+      "main": [
+        [
+          {
+            "node": "Update Last Contact Date in HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Contact Date in HubSpot": {
+      "main": [
+        [
+          {
+            "node": "Track Long-Term Nurture in Segment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "acquisition",
+      "id": "acquisition"
+    },
+    {
+      "name": "fitnessmealplanner",
+      "id": "fitnessmealplanner"
+    },
+    {
+      "name": "long-term-nurture",
+      "id": "long-term-nurture"
+    },
+    {
+      "name": "mailgun",
+      "id": "mailgun"
+    }
+  ],
+  "triggerCount": 1,
+  "active": false
+}

@@ -8,6 +8,7 @@ import { nutritionalOptimizer } from '../services/nutritionalOptimizer';
 import { mealPlanScheduler } from '../services/mealPlanScheduler';
 import { mealPlanVariationService } from '../services/mealPlanVariationService';
 import { requireAuth } from '../middleware/auth';
+import { sendLeadCaptureEvent } from '../utils/n8n-webhooks';
 // TEMPORARILY DISABLED - Stripe integration incomplete
 // import { enforceUsageLimit, incrementUsage } from '../middleware/usageEnforcement';
 // import { trackMealPlanGeneration } from '../services/usageTracking';
@@ -65,6 +66,23 @@ mealPlanRouter.post('/generate', requireAuth, async (req, res) => {
     // });
 
     console.log('Meal plan generated successfully.');
+
+    // Send lead capture event to n8n (non-blocking)
+    // Note: This endpoint requires authentication, so this captures authenticated users
+    const user = req.user;
+    if (user) {
+      sendLeadCaptureEvent({
+        email: user.email,
+        firstName: '',
+        lastName: '',
+        leadSource: 'meal_plan_generator_authenticated',
+        userAgent: req.headers['user-agent'],
+        ipAddress: (req.headers['x-forwarded-for'] as string) || req.ip || '',
+      }).catch((err) => {
+        console.error('[n8n] Failed to send lead capture event:', err);
+      });
+    }
+
     res.json({
       mealPlan,
       nutrition,
