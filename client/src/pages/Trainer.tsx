@@ -94,7 +94,11 @@ export default function Trainer() {
       {/* Header Section */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
-          Welcome, {user?.email?.split('@')[0] || 'Trainer'}
+          {(() => {
+            const displayName = user?.name || 
+              (user?.email?.split('@')[0]?.replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Trainer');
+            return `Welcome, ${displayName}`;
+          })()}
         </h1>
         <p className="text-sm sm:text-base text-slate-600">
           Browse recipes and create meal plans for your clients.
@@ -159,20 +163,20 @@ export default function Trainer() {
           <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
 
           {/* Recipe Count Display - Story 2.14 */}
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 p-2 rounded-full">
-                <i className="fas fa-book-open text-blue-600 text-lg"></i>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 shadow-sm">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="bg-blue-100 p-2.5 sm:p-3 rounded-full flex-shrink-0">
+                <i className="fas fa-book-open text-blue-600 text-lg sm:text-xl"></i>
               </div>
-              <div>
-                <p className="text-sm text-slate-600">Available Recipes in {tierName} Tier</p>
-                <p className="text-2xl font-bold text-slate-900" data-testid="recipe-count">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-slate-600 mb-1">Available Recipes in {tierName} Tier</p>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight" data-testid="recipe-count">
                   {accessibleRecipeCount.toLocaleString()}
                 </p>
               </div>
             </div>
-            <Badge variant="outline" className="bg-white">
-              {tierName} Access
+            <Badge variant="outline" className="bg-white text-xs sm:text-sm px-3 py-1.5 self-start sm:self-auto w-fit">
+              {tierName.charAt(0).toUpperCase() + tierName.slice(1)} Access
             </Badge>
           </div>
 

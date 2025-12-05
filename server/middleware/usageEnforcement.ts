@@ -19,9 +19,9 @@ import { eq } from 'drizzle-orm';
 
 // Usage limits for one-time payment tiers
 const ONETIME_USAGE_LIMITS = {
-  starter: 20,
-  professional: 50,
-  enterprise: 150,
+  starter: 50,
+  professional: 200,
+  enterprise: 500,
 };
 
 interface UsageCheckResult {

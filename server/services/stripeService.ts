@@ -59,10 +59,10 @@ export const ONETIME_TIERS = {
     name: 'Starter',
     price: 39900, // $399 in cents
     maxClients: 9,
-    usageLimit: 20, // meal plans per month
+    usageLimit: 50, // meal plans per month
     features: [
       'Up to 9 clients',
-      '20 meal plans/month',
+      '50 meal plans/month',
       'Essential recipe library',
       'AI meal plan generation',
       'PDF exports',
@@ -74,10 +74,10 @@ export const ONETIME_TIERS = {
     name: 'Professional',
     price: 59900, // $599 in cents
     maxClients: 20,
-    usageLimit: 50, // meal plans per month
+    usageLimit: 200, // meal plans per month
     features: [
       'Up to 20 clients',
-      '50 meal plans/month',
+      '200 meal plans/month',
       'Complete recipe library',
       'Advanced AI plans',
       'Progress tracking',
@@ -90,10 +90,10 @@ export const ONETIME_TIERS = {
     name: 'Enterprise',
     price: 99900, // $999 in cents
     maxClients: 50,
-    usageLimit: 150, // meal plans per month
+    usageLimit: 500, // meal plans per month
     features: [
       'Up to 50 clients',
-      '150 meal plans/month',
+      '500 meal plans/month',
       'Unlimited recipes',
       'Team accounts',
       'API access',

@@ -108,7 +108,17 @@ export function TierSelectionModal({ open, onClose, currentTier, onSuccess }: Ti
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create checkout session');
+        // Handle test account error with user-friendly message
+        if (error.isTestAccount) {
+          toast({
+            variant: 'destructive',
+            title: error.error || 'Test Account',
+            description: error.message || 'This is a test account. Payment features are not available for test accounts.',
+          });
+          setPurchasingTier(null);
+          return;
+        }
+        throw new Error(error.message || error.error || 'Failed to create checkout session');
       }
 
       const { url } = await response.json();
@@ -168,33 +178,35 @@ export function TierSelectionModal({ open, onClose, currentTier, onSuccess }: Ti
                     isPopular ? 'border-primary shadow-xl border-2 lg:scale-105 lg:-mt-2' : ''
                   } ${isCurrentTier ? 'border-green-500 border-2' : ''}`}
                 >
-                  {isPopular && (
-                    <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-white px-3 py-1 text-xs sm:text-sm z-10">
-                      <Zap className="w-3 h-3 mr-1" />
-                      Most Popular
-                    </Badge>
-                  )}
+                  {/* Badge Container - Stack badges when both are present */}
+                  <div className="absolute -top-3 left-0 right-0 flex items-center justify-center gap-2 z-10 px-4">
+                    {isPopular && (
+                      <Badge className="bg-primary text-white px-3 py-1 text-xs sm:text-sm shadow-md">
+                        <Zap className="w-3 h-3 mr-1" />
+                        Most Popular
+                      </Badge>
+                    )}
+                    {isCurrentTier && (
+                      <Badge className="bg-green-500 text-white px-2 py-1 text-xs sm:text-sm shadow-md">
+                        Current Tier
+                      </Badge>
+                    )}
+                  </div>
 
-                  {isCurrentTier && (
-                    <Badge className="absolute -top-3 right-2 sm:right-4 bg-green-500 text-white px-2 py-1 text-xs sm:text-sm z-10">
-                      Current Tier
-                    </Badge>
-                  )}
-
-                  <CardHeader className="text-center pb-3 sm:pb-4 pt-6 sm:pt-8 px-4 sm:px-6">
-                    <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold">{tier.name}</CardTitle>
-                    <div className="mt-3 sm:mt-4">
+                  <CardHeader className="text-center pb-3 sm:pb-4 pt-8 sm:pt-10 px-4 sm:px-6">
+                    <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4">{tier.name}</CardTitle>
+                    <div className="flex items-baseline justify-center gap-2 mb-2">
                       <span className="text-3xl sm:text-4xl lg:text-5xl font-bold">
                         {formatPrice(tier.amount, tier.currency)}
                       </span>
-                      <span className="text-muted-foreground ml-2 text-sm sm:text-base">one-time</span>
+                      <span className="text-muted-foreground text-xs sm:text-sm font-normal">one-time</span>
                     </div>
                     {tier.limits.customers === -1 ? (
-                      <CardDescription className="mt-2 text-xs sm:text-sm">
+                      <CardDescription className="mt-2 text-xs sm:text-sm text-center">
                         Unlimited customers & meal plans
                       </CardDescription>
                     ) : (
-                      <CardDescription className="mt-2 text-xs sm:text-sm">
+                      <CardDescription className="mt-2 text-xs sm:text-sm text-center">
                         Up to {tier.limits.customers} customers
                       </CardDescription>
                     )}

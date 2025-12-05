@@ -40,10 +40,9 @@ import { emailAnalyticsRouter } from './routes/emailAnalytics';
 import { groceryListsRouter } from './routes/groceryLists';
 import { exportRouter } from './routes/export';
 import { paymentRouter } from './routes/payment'; // Stripe payment integration
-// TEMPORARILY DISABLED - Stripe integration incomplete
-// import tierRouter from './routes/tierRoutes';
-// import subscriptionRouter from './routes/subscriptionRoutes';
-// import usageRouter from './routes/usageRoutes';
+import tierRouter from './routes/tierRoutes';
+import subscriptionRouter from './routes/subscriptionRoutes';
+import usageRouter from './routes/usageRoutes';
 import { schedulerService } from './services/schedulerService';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -249,15 +248,15 @@ app.use('/api', paymentRouter);
 
 // 3-Tier Subscription System Routes
 // TEMPORARILY DISABLED - Stripe integration incomplete
-// app.use('/api/v1', tierRouter); // Includes /public/pricing, /tiers/*, /webhooks/stripe
+app.use('/api/v1', tierRouter); // Includes /public/pricing, /tiers/*, /webhooks/stripe
 
 // Hybrid Pricing Subscription Routes (Stripe Integration)
 // TEMPORARILY DISABLED - Stripe integration incomplete
-// app.use('/api/subscription', subscriptionRouter);
+app.use('/api/subscription', subscriptionRouter);
 
 // Usage Tracking and Enforcement Routes
 // TEMPORARILY DISABLED - Stripe integration incomplete
-// app.use('/api/usage', usageRouter);
+app.use('/api/usage', usageRouter);
 
 // Apply analytics error handler
 app.use('/api', analyticsErrorHandler);

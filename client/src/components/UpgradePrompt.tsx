@@ -138,7 +138,16 @@ export function UpgradePrompt({ open, onOpenChange, feature, requiredTier }: Upg
 
                   if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.error || 'Failed to create checkout session');
+                    // Handle test account error with user-friendly message
+                    if (error.isTestAccount) {
+                      toast({
+                        variant: 'destructive',
+                        title: error.error || 'Test Account',
+                        description: error.message || 'This is a test account. Payment features are not available for test accounts.',
+                      });
+                      return;
+                    }
+                    throw new Error(error.message || error.error || 'Failed to create checkout session');
                   }
 
                   const { url } = await response.json();

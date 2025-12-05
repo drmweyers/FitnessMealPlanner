@@ -76,8 +76,8 @@ describe('EntitlementsService', () => {
       const limits = (service as any).getTierLimits('enterprise');
 
       expect(limits).toEqual({
-        customers: -1, // unlimited
-        mealPlans: -1, // unlimited
+        customers: 50,
+        mealPlans: 500,
         aiGenerations: -1, // unlimited
         recipes: 4000,
       });
@@ -179,7 +179,7 @@ describe('EntitlementsService', () => {
       });
     });
 
-    it('should handle unlimited resources (Enterprise tier)', async () => {
+    it('should handle Enterprise tier resources (Enterprise tier)', () => {
       const mockSubscription = {
         id: 'sub-123',
         trainerId: mockTrainerId,
@@ -193,8 +193,35 @@ describe('EntitlementsService', () => {
       const mockUsage = {
         trainerId: mockTrainerId,
         periodEnd: new Date('2024-02-01'),
-        customersCount: 100,
-        mealPlansCount: 500,
+        customersCount: 25,
+        mealPlansCount: 100,
+      };
+
+      vi.mocked(db.query.trainerSubscriptions.findFirst).mockResolvedValue(mockSubscription as any);
+      vi.mocked(db.query.subscriptionItems.findMany).mockResolvedValue([]);
+      vi.mocked(db.query.tierUsageTracking.findFirst).mockResolvedValue(mockUsage as any);
+
+      // We need to spy on getTierLimits if we want to ensure it returns our modified values
+      // but since we modified the source, we can just test the result.
+      // However, getEntitlements calls this.getTierLimits() internally.
+    });
+
+    it('should calculate percentage usage for Enterprise correctly', async () => {
+         const mockSubscription = {
+        id: 'sub-123',
+        trainerId: mockTrainerId,
+        tier: 'enterprise',
+        status: 'active',
+        currentPeriodStart: new Date('2024-01-01'),
+        currentPeriodEnd: new Date('2024-02-01'),
+        cancelAtPeriodEnd: false,
+      };
+
+      const mockUsage = {
+        trainerId: mockTrainerId,
+        periodEnd: new Date('2024-02-01'),
+        customersCount: 25, // 50% of 50
+        mealPlansCount: 250, // 50% of 500
       };
 
       vi.mocked(db.query.trainerSubscriptions.findFirst).mockResolvedValue(mockSubscription as any);
@@ -204,15 +231,15 @@ describe('EntitlementsService', () => {
       const result = await service.getEntitlements(mockTrainerId);
 
       expect(result?.limits.customers).toEqual({
-        max: -1,
-        used: 100,
-        percentage: 0, // Unlimited = 0% used
+        max: 50,
+        used: 25,
+        percentage: 50,
       });
 
       expect(result?.limits.mealPlans).toEqual({
-        max: -1,
-        used: 500,
-        percentage: 0,
+        max: 500,
+        used: 250,
+        percentage: 50,
       });
     });
   });
@@ -366,7 +393,7 @@ describe('EntitlementsService', () => {
       });
     });
 
-    it('should always allow for unlimited resources (Enterprise)', async () => {
+    it('should block Enterprise user when limit reached', async () => {
       const mockSubscription = {
         id: 'sub-123',
         trainerId: mockTrainerId,
@@ -380,7 +407,7 @@ describe('EntitlementsService', () => {
       const mockUsage = {
         trainerId: mockTrainerId,
         periodEnd: new Date('2024-02-01'),
-        customersCount: 1000,
+        customersCount: 50, // Enterprise limit
         mealPlansCount: 5000,
       };
 
@@ -391,6 +418,38 @@ describe('EntitlementsService', () => {
       const result = await service.checkUsageLimit(mockTrainerId, 'customers');
 
       expect(result).toEqual({
+        allowed: false,
+        reason: 'customers limit reached (50/50)',
+        upgradeRequired: true,
+        currentTier: 'enterprise',
+      });
+    });
+
+    it('should allow Enterprise user under limit', async () => {
+      const mockSubscription = {
+        id: 'sub-123',
+        trainerId: mockTrainerId,
+        tier: 'enterprise',
+        status: 'active',
+        currentPeriodStart: new Date('2024-01-01'),
+        currentPeriodEnd: new Date('2024-02-01'),
+        cancelAtPeriodEnd: false,
+      };
+
+      const mockUsage = {
+        trainerId: mockTrainerId,
+        periodEnd: new Date('2024-02-01'),
+        customersCount: 49, // Under limit
+        mealPlansCount: 100,
+      };
+
+      vi.mocked(db.query.trainerSubscriptions.findFirst).mockResolvedValue(mockSubscription as any);
+      vi.mocked(db.query.subscriptionItems.findMany).mockResolvedValue([]);
+      vi.mocked(db.query.tierUsageTracking.findFirst).mockResolvedValue(mockUsage as any);
+
+      const result = await service.checkUsageLimit(mockTrainerId, 'customers');
+
+      expect(result).toMatchObject({
         allowed: true,
         currentTier: 'enterprise',
       });

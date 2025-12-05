@@ -93,6 +93,10 @@ export class StripeSubscriptionService {
     });
 
     if (existingSubscription?.stripeCustomerId) {
+      // Check if this is a test account (seed script pattern)
+      if (existingSubscription.stripeCustomerId.startsWith('cus_test_')) {
+        throw new Error('TEST_ACCOUNT: This is a test account. Payment features are not available for test accounts. Please use a production account to process payments.');
+      }
       return existingSubscription.stripeCustomerId;
     }
 

@@ -182,7 +182,28 @@ tierRouter.post('/purchase', requireAuth, requireRole(['trainer']), async (req: 
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: 'Invalid request data', details: error.errors });
     }
-    res.status(500).json({ error: 'Failed to create checkout session' });
+
+    // Check for test account error
+    if (error.message?.includes('TEST_ACCOUNT:')) {
+      return res.status(400).json({
+        error: 'Test Account Detected',
+        message: error.message.replace('TEST_ACCOUNT: ', ''),
+        isTestAccount: true,
+      });
+    }
+
+    // Check if error is related to test customer ID
+    if (error.code === 'resource_missing' && error.param === 'customer' && error.message?.includes('cus_test_')) {
+      return res.status(400).json({
+        error: 'Test Account Detected',
+        message: 'This is a test account. Payment features are not available for test accounts. Please use a production account to process payments.',
+        isTestAccount: true,
+      });
+    }
+
+    res.status(500).json({ 
+      error: error.message || 'Failed to create checkout session' 
+    });
   }
 });
 

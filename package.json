@@ -50,6 +50,7 @@
     "seed:recipe-tiers": "tsx server/scripts/seed-recipe-tiers.ts",
     "seed:tier-accounts": "tsx server/scripts/seed-tier-test-accounts.ts",
     "seed:enterprise-recipes": "cross-env DATABASE_URL=postgresql://postgres:postgres@localhost:5433/fitmeal tsx server/db/seeds/seed-enterprise-recipes.ts",
+    "seed:comprehensive-test": "tsx server/scripts/seed-comprehensive-test-data.ts",
     "reset:test-accounts": "node scripts/reset-test-accounts.cjs",
     "setup:test-relationships": "bash scripts/setup-test-relationships.sh",
     "test:comprehensive:unit": "tsx test/test-runner.ts --unit-only",

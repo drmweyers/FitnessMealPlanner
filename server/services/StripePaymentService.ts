@@ -99,8 +99,8 @@ const TIER_PRICING: Record<TierLevel, TierPricing> = {
       'Dedicated support',
     ],
     limits: {
-      customers: -1, // unlimited
-      mealPlans: -1, // unlimited
+      customers: 50,
+      mealPlans: 500,
     },
   },
 };
@@ -172,30 +172,30 @@ export class StripePaymentService {
    * Get or create Stripe customer for trainer
    */
   private async getOrCreateStripeCustomer(trainerId: string): Promise<Stripe.Customer> {
+    // Get trainer email first (needed for both test and real customers)
+    const trainer = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.id, trainerId),
+    });
+
     // Check if trainer already has a subscription with Stripe customer ID
     const existingSubscription = await db.query.trainerSubscriptions.findFirst({
       where: eq(trainerSubscriptions.trainerId, trainerId),
     });
 
     if (existingSubscription?.stripeCustomerId) {
-      // Fetch existing customer
-      try {
-        const customer = await stripe.customers.retrieve(
-          existingSubscription.stripeCustomerId
-        );
-        if (!customer.deleted) {
-          return customer as Stripe.Customer;
-        }
-      } catch (error) {
-        console.error('Failed to retrieve Stripe customer:', error);
-        // Continue to create new customer
+      // Check if this is a test account (seed script pattern)
+      if (existingSubscription.stripeCustomerId.startsWith('cus_test_')) {
+        throw new Error('TEST_ACCOUNT: This is a test account. Payment features are not available for test accounts. Please use a production account to process payments.');
+      }
+
+      // Fetch existing customer from Stripe
+      const customer = await stripe.customers.retrieve(
+        existingSubscription.stripeCustomerId
+      );
+      if (!customer.deleted) {
+        return customer as Stripe.Customer;
       }
     }
-
-    // Get trainer email
-    const trainer = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.id, trainerId),
-    });
 
     if (!trainer) {
       throw new Error('Trainer not found');
