@@ -127,6 +127,16 @@ RUN echo '#!/bin/bash' > /app/start.sh && \
     echo 'echo "⚡ Running database migrations..."' >> /app/start.sh && \
     echo 'npx drizzle-kit push --config=./drizzle.config.ts || echo "⚠️ Migration failed, continuing..."' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
+    echo '# Auto-seed production test accounts' >> /app/start.sh && \
+    echo 'echo "🌱 Auto-seeding test accounts..."' >> /app/start.sh && \
+    echo 'npx tsx server/db/seeds/auto-seed-production.ts || echo "⚠️ Test account seeding failed (non-fatal)"' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Comprehensive test data seeding (if enabled)' >> /app/start.sh && \
+    echo 'if [ "$RUN_COMPREHENSIVE_SEED" = "true" ]; then' >> /app/start.sh && \
+    echo '  echo "🌱 Running comprehensive test data seeding..."' >> /app/start.sh && \
+    echo '  npx tsx server/scripts/seed-comprehensive-test-data.ts || echo "⚠️ Comprehensive seed failed (non-fatal)"' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
     echo '# Start the application with tsx (matches package.json start script)' >> /app/start.sh && \
     echo 'echo "🚀 Starting FitMeal Pro server..."' >> /app/start.sh && \
     echo 'exec npx tsx server/index.ts' >> /app/start.sh && \

@@ -91,9 +91,9 @@ FROM base AS prod
 # Copy package.json first
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (including tsx for running TypeScript seed scripts)
 RUN npm ci --only=production && \
-    npm install drizzle-kit && \
+    npm install drizzle-kit tsx && \
     echo "✅ Dependencies installed"
 
 # Copy built application
@@ -169,6 +169,9 @@ COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 # Copy database seeds directory for auto-seeding
 COPY --from=builder /app/server/db/seeds ./server/db/seeds
 
+# Copy scripts directory (includes comprehensive test data seeding script)
+COPY --from=builder /app/server/scripts ./server/scripts
+
 # MANDATORY VERIFICATION: Fail if drizzle.config.ts wasn't copied
 RUN echo "🔍 FINAL VERIFICATION: Checking drizzle.config.ts in production stage..." && \
     if [ ! -f "drizzle.config.ts" ]; then \
@@ -208,6 +211,10 @@ RUN echo '#!/bin/sh' > start.sh && \
     echo 'npx drizzle-kit push --config=./drizzle.config.ts --verbose || echo "⚠️ Migration failed"' >> start.sh && \
     echo 'echo "🌱 Auto-seeding test accounts..."' >> start.sh && \
     echo 'npm run seed:production || echo "⚠️ Test account seeding failed (non-fatal)"' >> start.sh && \
+    echo 'if [ "$RUN_COMPREHENSIVE_SEED" = "true" ]; then' >> start.sh && \
+    echo '  echo "🌱 Running comprehensive test data seeding..."' >> start.sh && \
+    echo '  npx tsx server/scripts/seed-comprehensive-test-data.ts || echo "⚠️ Comprehensive seed failed (non-fatal)"' >> start.sh && \
+    echo 'fi' >> start.sh && \
     echo 'echo "🎉 Starting application..."' >> start.sh && \
     echo 'exec npm start' >> start.sh && \
     chmod +x start.sh

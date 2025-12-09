@@ -77,6 +77,16 @@ const getSslConfig = () => {
   // Production environments
   console.log("Database SSL mode: Production - using standard SSL");
 
+  // Check for local Docker database even in production mode
+  if (
+    databaseUrl.includes("localhost") ||
+    databaseUrl.includes("postgres:5432") ||
+    databaseUrl.includes("127.0.0.1")
+  ) {
+    console.log("Local Docker database detected in production - SSL disabled");
+    return false;
+  }
+
   if (caCertificateFile) {
     console.log(`Using NODE_EXTRA_CA_CERTS: ${caCertificateFile}`);
     return { rejectUnauthorized: true };
