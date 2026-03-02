@@ -12,11 +12,11 @@ fa-magic
 ### Title
 AI Recipe Engine
 ### Description
-Generate unlimited recipes with perfect macros for any dietary restriction
+Generate recipes with accurate macros for any dietary protocol — powered by GPT-4
 ### Benefits
-- 500+ recipes per batch
-- 8+ dietary protocols
-- Nutritional optimization
+- Multiple generation methods (batch, enhanced, BMAD multi-agent)
+- 8+ dietary protocols (vegan, keto, gluten-free, and more)
+- Automatic nutritional optimization
 
 ## Feature 2
 ### Icon
@@ -24,56 +24,56 @@ fa-users
 ### Title
 Client Management
 ### Description
-Professional tools to manage and track unlimited clients efficiently
+Invite clients, assign meal plans, and track their progress from one dashboard
 ### Benefits
-- Progress tracking
-- Photo uploads
-- Goal monitoring
+- Email invitation system
+- Progress tracking (measurements + photos)
+- Engagement metrics per client
 
 ## Feature 3
 ### Icon
 fa-file-pdf
 ### Title
-Professional Export
+Professional PDF Export
 ### Description
-Branded PDFs that showcase your expertise and impress clients
+Branded PDFs with your logo and colors that impress clients
 ### Benefits
-- Custom branding
-- Shopping lists
-- Meal prep guides
+- Custom branding (Professional+)
+- Integrated shopping lists
+- Nutritional breakdowns per meal
 
 ## Feature 4
 ### Icon
 fa-calendar
 ### Title
-Meal Planning
+Smart Meal Planning
 ### Description
-Intelligent meal plan generation with automatic scheduling
+AI-generated or manually created meal plans with automatic macro balancing
 ### Benefits
-- 7-30 day plans
-- Variety optimization
-- Template library
+- 7-30 day plan generation
+- Natural language input support
+- Manual meal plan creation (zero AI cost)
 
 ## Feature 5
 ### Icon
 fa-chart-line
 ### Title
-Analytics Dashboard
+Progress Tracking
 ### Description
-Track client progress and business growth with detailed insights
+Monitor client body measurements, progress photos, and engagement over time
 ### Benefits
-- Progress metrics
-- Client retention
-- Revenue tracking
+- Body measurement history
+- Progress photo uploads (front, side, back)
+- Assignment statistics and trends
 
 ## Feature 6
 ### Icon
-fa-mobile-alt
+fa-shopping-cart
 ### Title
-Mobile Optimized
+Grocery Lists
 ### Description
-Full-featured mobile experience for you and your clients
+Auto-generate shopping lists from meal plans with smart ingredient consolidation
 ### Benefits
-- Responsive design
-- Offline access
-- Push notifications
+- Generate from any meal plan
+- Category-organized items
+- Check items off while shopping

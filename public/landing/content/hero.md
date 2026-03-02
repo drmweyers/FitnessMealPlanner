@@ -1,20 +1,20 @@
 # Hero Section
 
 ## Badge
-💰 Pay Once. Plan Forever. Save $2,000+
+AI-Powered Nutrition Planning for Fitness Pros
 
 ## Headline
-Pay Once.
-Plan Forever.
+Turn Nutrition Coaching Into
+a Scalable Revenue Stream
 
 ## Subheadline
-Generate custom meal plans in 60 seconds. One-time payment. No monthly fees. Ever.
+Generate custom meal plans in 60 seconds. Manage clients, track progress, and export branded PDFs — all from one platform built for trainers.
 
 ## Primary Button
-Get Lifetime Access
+See How It Works
 
 ## Secondary Button
-See Pricing
+Calculate Your Savings
 
 ## Bottom Text
-$199-$399 one-time • Lifetime access • No subscriptions
+Plans from $199 one-time | No monthly fees | 14-day money-back guarantee

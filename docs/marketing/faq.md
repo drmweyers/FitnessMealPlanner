@@ -1,42 +1,43 @@
 # EvoFitMeals FAQ (Shared)
 
 Purpose: Single source of truth for answers used across site, sales, and support.
+Last Updated: March 2026 (grounded in codebase audit)
+
+---
 
 Product
-- What is EvoFitMeals? An AI‑powered nutrition platform for fitness professionals to generate and manage personalized meal plans at scale.
-- Who is it for? New and established trainers, online coaches, and gym teams.
-- How fast is plan generation? Typically seconds‑level; 500+ recipe options in ~60 seconds.
-- How many clients can I manage? Designed to scale to 200+ clients without hiring.
-- Which dietary protocols are supported? 8+ protocols (e.g., vegan, keto, gluten‑free) plus ingredient exclusions and macro targets.
-- Can I customize plans? Yes—lock macros/meals, regenerate sections, and edit before exporting.
-- Do plans include shopping lists? Yes, with branded PDF exports.
+- What is EvoFitMeals? An AI-powered nutrition platform for fitness professionals to generate, manage, and assign personalized meal plans at scale.
+- Who is it for? Fitness trainers, online coaches, and gym teams who want to offer nutrition services to their clients.
+- How fast is plan generation? AI generates meal plans in seconds. Natural language input is supported (e.g., "high protein, no dairy, 2000 cal").
+- How many clients can I manage? Starter: up to 9 clients. Professional: up to 20. Enterprise: unlimited.
+- Which dietary protocols are supported? 8+ protocols including vegan, keto, gluten-free, high-protein, low-carb, and more. Ingredient exclusions and macro targets are also supported.
+- Can I customize plans? Yes — set macros, exclude ingredients, choose dietary protocols, and manually edit any generated plan before assigning.
+- Do plans include shopping lists? Yes — grocery lists are auto-generated from any meal plan with smart ingredient consolidation.
+- Can I create plans without AI? Yes — manual meal plan creation is included for trainers who want full control (zero AI cost).
 
-Pricing & trial
-- Do you offer a free trial? Yes—typically 14 days. See the signup page for current terms.
-- Is a credit card required? Trial terms may vary; check the signup flow.
-- Do you offer annual plans or team pricing? Yes; annual discounts and volume pricing for teams.
+Pricing
+- What does EvoFitMeals cost? One-time payment: Starter $199, Professional $299, Enterprise $399. No monthly fees.
+- Is there a free trial? We offer a 14-day money-back guarantee. If you're not satisfied, contact us for a full refund.
+- Are there monthly fees? No. All plans are one-time payments with lifetime access.
 
-Teams & workflows
-- Do you support roles and permissions? Yes—owner, coach, and admin roles (team plan).
-- Can we share templates across a team? Yes—shared templates and brand controls.
+Client management
+- How do I add clients? Send email invitations from your dashboard. Clients create their own accounts and are linked to you automatically.
+- Do clients need paid accounts? No. Client accounts are free. Only trainers purchase a plan.
+- Can clients track their own progress? Yes — clients can log body measurements, upload progress photos, and view their assigned meal plans and grocery lists.
 
-Integrations
-- Do you integrate with my CRM or calendar? Roadmap depends on demand; contact sales for updates.
-- Can I import existing clients? CSV import and manual add are supported.
+Exports & branding
+- What export formats are available? PDF exports for all tiers. Professional and Enterprise tiers add CSV and Excel exports.
+- Can I add my branding? Professional tier includes logo and color customization on PDF exports. Enterprise adds white-label mode with custom domain.
+- Can I share plans without requiring client login? Yes — shareable meal plan links are available. Recipients can view the plan without an account.
 
 Security & privacy
-- How is my data protected? Encryption in transit and at rest, role‑based access, least‑privilege controls, and audit logging. See Privacy for details.
+- How is my data protected? Encryption in transit and at rest, role-based access control, and audit logging. Each trainer sees only their own clients' data.
 - Who owns the data? You own your data. We process it to provide the service.
-- Do you train models on my content? We do not use customer content to train our models unless you explicitly opt‑in.
 
-Compliance
-- Do you support GDPR/CCPA requests? Yes—access, deletion, and portability are supported upon request.
-- Do you serve minors? The service is intended for professional use; coaches are responsible for obtaining appropriate consents where required.
-
-Support & billing
-- How do I get support? Email support at support@example.com (replace) or contact us in‑app.
-- What is your refund policy? See Terms of Service; contact billing for assistance.
-- How do I cancel? You can cancel anytime from account settings; data retention rules apply—see Privacy.
+Support
+- How do I get support? Email support for all tiers. Professional and Enterprise tiers receive priority support.
+- How do I cancel? You can delete your account from settings. Since pricing is one-time, there are no recurring charges to cancel.
 
 Notes
-- Keep claims consistent with MARKETING_COPY and strategy. Replace placeholders (emails, company/legal names) before publishing.
+- All answers grounded in codebase audit (March 2026). No aspirational features.
+- Replace support@example.com with actual support email before publishing.

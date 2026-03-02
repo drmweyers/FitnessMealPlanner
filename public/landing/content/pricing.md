@@ -4,12 +4,12 @@
 Invest Once. Benefit Forever.
 
 ## Subheadline
-Choose the plan that fits your business. Upgrade anytime.
+Choose the plan that fits your practice. Upgrade anytime.
 
 ## Bottom Text
-14-day money-back guarantee • Lifetime access • No hidden fees
+14-day money-back guarantee | Lifetime access | No hidden fees
 
-## Plan 1 - Trainer
+## Plan 1 - Starter
 ### Price
 $199
 ### Period
@@ -18,22 +18,18 @@ ONE-TIME
 Perfect for new trainers
 ### Features
 - Up to 9 clients
-- 30 meal plans/month
-- 50 progress photos
-- Basic support
-- ✅ LIFETIME ACCESS
-### Comparison
-Eat This Much: $8.99/mo × 24 = $216
-### Savings
-Save $17 in 2 years, $340 in 5 years
+- 50 meal plans
+- AI meal plan generation
+- PDF exports
+- Email support
 ### ROI
 Pays for itself with 2 clients
 ### Button Text
-Get Lifetime Access
+Get Started
 ### Popular
 false
 
-## Plan 2 - Trainer Pro
+## Plan 2 - Professional
 ### Price
 $299
 ### Period
@@ -42,23 +38,19 @@ ONE-TIME
 For growing practices
 ### Features
 - Up to 20 clients
-- 75 meal plans/month
-- 100 progress photos
+- 200 meal plans
+- Advanced AI generation
+- Progress tracking
 - Priority support
-- Custom branding
-- ✅ LIFETIME ACCESS
-### Comparison
-PlateJoy: $12.99/mo × 24 = $312
-### Savings
-Save $13 in 2 years, $480 in 5 years
+- Custom branding (logo + colors)
 ### ROI
 Pays for itself with 3 clients
 ### Button Text
-Get Lifetime Access
+Get Started
 ### Popular
 true
 ### Badge
-⭐ MOST POPULAR
+MOST POPULAR
 
 ## Plan 3 - Enterprise
 ### Price
@@ -68,20 +60,16 @@ ONE-TIME
 ### Description
 For teams and gyms
 ### Features
-- Up to 50 clients
-- 200 meal plans/month
-- 250 progress photos
-- Priority support
-- White-label options
+- Unlimited clients
+- Unlimited meal plans
+- Full recipe library access
+- White-label branding + custom domain
 - API access
-- ✅ LIFETIME ACCESS
-### Comparison
-Trainerize: $100/mo × 24 = $2,400
-### Savings
-Save $2,001 in 2 years, $5,601 in 5 years
+- Bulk operations
+- Dedicated support
 ### ROI
 Pays for itself with 4 clients
 ### Button Text
-Get Lifetime Access
+Contact Sales
 ### Popular
 false

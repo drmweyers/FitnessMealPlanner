@@ -2,34 +2,39 @@
 
 Hero
 - Headline: Add a nutrition revenue stream without hiring
-- Subheadline: Team workflows, branded exports, and AI-powered plans you can deliver at scale
-- Primary CTA: Talk to Sales
-- Secondary CTA: Start Free 14-Day Trial
+- Subheadline: AI-powered meal plans, branded exports, and client management for your entire team
+- Primary CTA: Contact Sales
+- Secondary CTA: See How It Works
 
 Why it matters
-- Launch nutrition services that complement training programs
-- Standardize quality across coaches and locations
-- Increase ARPU and retention with ongoing meal support
+- Launch nutrition services that complement existing training programs
+- Each trainer manages their own clients with admin oversight
+- Increase per-client revenue with ongoing meal plan support
 
-Team workflows
-- Roles & permissions for owners, coaches, and admins
-- Shared templates and brand controls
-- Centralized reporting on plan delivery and client progress
+Enterprise capabilities
+- Unlimited clients and meal plans (Enterprise tier)
+- White-label branding with custom domain and DNS verification
+- Bulk meal plan assignment across multiple clients
+- API access for custom integrations
+- Full analytics and export capabilities (PDF, CSV, Excel)
+- Admin dashboard with platform-wide statistics and user management
 
 Core capabilities
-- 500+ recipe generation in ~60 seconds; supports 8+ dietary protocols
-- Scales to 200+ clients per team without sacrificing quality
-- Branded PDF exports and asset library for consistency
+- AI recipe generation with 8+ dietary protocols and macro targeting
+- Client invitation system — each trainer manages their own client relationships
+- Progress tracking with body measurements and progress photos
+- Branded PDF exports with gym logo and colors
+- Recipe approval workflow — admin controls quality before recipes go live
 
-Proof
-- Trusted by thousands; multi-coach case studies in development
+Pricing
+- Enterprise: $399 one-time — unlimited clients, unlimited plans, white-label, API access, dedicated support
+- Volume inquiries — contact sales@evofitmeals.com
 
 FAQ
-- Can we use our gym’s branding? Yes—brand kit and PDF customization.
-- How does onboarding work? Concierge onboarding available for teams; import clients and assign coaches.
-- What about data security? See Trust & Privacy documentation.
-- Do you integrate with our CRM? Roadmap depends on demand; contact sales for updates.
-- Pricing for teams? Volume pricing available; talk to sales.
+- Can we use our gym's branding? Yes — Enterprise includes white-label mode with custom domain and full brand kit customization.
+- How does client onboarding work? Trainers send email invitations. Clients create accounts and are linked to their trainer automatically.
+- What about data security? Role-based access control ensures each trainer sees only their own clients. Admin has full oversight. Encryption in transit and at rest.
+- Can multiple trainers use the platform? Yes — each trainer manages their own clients and meal plans. Admin role has full platform access.
 
 Notes
-- Keep claims conservative; avoid “unlimited clients.”
+- All claims grounded in codebase audit (March 2026). No aspirational features listed.

@@ -21,6 +21,7 @@ test-outputs/
 playwright-report/
 test-results.json
 *.png
+!public/landing/images/screenshots/*.png
 *.log
 
 # Temporary data scripts

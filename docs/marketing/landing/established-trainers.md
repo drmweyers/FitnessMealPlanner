@@ -1,37 +1,41 @@
 # EvoFitMeals for Established Trainers
 
 Hero
-- Headline: Reclaim your week—scale client load without hiring
-- Subheadline: Generate personalized meal plans in minutes, manage 200+ clients, and keep quality high
-- Primary CTA: Start Free 14-Day Trial
-- Secondary CTA: Watch 2-Minute Demo
+- Headline: Scale your nutrition business without hiring
+- Subheadline: AI-powered meal planning, client management, and branded exports — built for trainers with 10+ clients
+- Primary CTA: See How It Works
+- Secondary CTA: Calculate Your Savings
 
 Why it matters
-- Save 15+ hours/week currently lost to manual meal planning
-- Increase client capacity 3× while maintaining personalization and results
-- Standardize workflows across clients to reduce churn
-
-Workflow upgrades
-- Batch generate recipes and plans per segment
-- Reuse templates with client-specific overrides
-- One-click branded exports and version history
+- Automate repetitive meal planning so you can focus on coaching
+- Maintain personalized quality as your client base grows
+- Deliver professional, branded nutrition plans that justify premium pricing
 
 Core capabilities
-- 500+ recipes in ~60 seconds per generation
-- 8+ dietary protocols and macro targets by goal
-- Client management: tags, notes, progress tracking
-- Professional PDF exports clients will actually read
+- AI recipe generation with 8+ dietary protocols and macro targeting
+- Client invitation system with progress tracking (measurements + photos)
+- Branded PDF exports with your logo and colors (Professional+)
+- Manual meal plan creation for full control (zero AI cost)
+- Meal plan library — save and reuse plans across clients
+- Bulk meal plan assignment to multiple clients at once
 
-Proof
-- Trusted by thousands of coaches; retention-focused playbooks
-- Case studies: high-capacity trainer and hybrid gym model (in progress)
+How it works (3 steps)
+1) Invite clients via email — they set up their own profiles
+2) Generate or create meal plans using AI or manual entry
+3) Assign plans, track progress, and export branded PDFs
+
+Pricing
+- Starter: $199 one-time (up to 9 clients, 50 meal plans)
+- Professional: $299 one-time (up to 20 clients, 200 meal plans, custom branding)
+- Enterprise: $399 one-time (unlimited clients and plans, white-label, API access)
 
 FAQ
-- Can I import existing clients? CSV import and manual add; map fields to preferences/protocols.
-- How do I ensure compliance? Use protocol presets, ingredient bans, and shopping lists.
-- Can I lock parts of a plan? Yes—lock meals/macros and regenerate the rest.
-- How fast is it? Typically seconds-level generation; 500+ recipes in ~60 seconds.
-- Do you support teams? See Gym Owners page for roles and permissions.
+- How do I onboard clients? Send email invitations. Clients create accounts and appear on your dashboard automatically.
+- Can I reuse meal plans? Yes — save plans to your library and assign to multiple clients individually or in bulk.
+- Can I brand my exports? Professional tier includes logo and color customization on PDFs.
+- How fast is generation? AI generates meal plans in seconds. Natural language input is supported.
+- What dietary protocols are supported? 8+ including vegan, keto, gluten-free, high-protein, and more — plus ingredient exclusions and macro targets.
+- Do you support teams? Enterprise tier supports multi-trainer operations. See Gym Owners page.
 
 Notes
-- Keep language consistent with global messaging (AI-powered, personalized, protocols).
+- All claims grounded in codebase audit (March 2026). No aspirational features listed.
