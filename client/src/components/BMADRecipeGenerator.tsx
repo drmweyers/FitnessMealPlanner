@@ -126,7 +126,12 @@ export default function BMADRecipeGenerator() {
   const [error, setError] = useState<string | null>(null);
   const [naturalLanguageInput, setNaturalLanguageInput] = useState("");
   const [showAdvancedForm, setShowAdvancedForm] = useState(true);
+  const [isParsing, setIsParsing] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectAttemptsRef = useRef<number>(0);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const maxReconnectAttempts = 5;
+  const reconnectDelayMs = 3000; // 3 seconds
 
   const form = useForm<BMADGeneration>({
     resolver: zodResolver(bmadGenerationSchema),
@@ -144,7 +149,14 @@ export default function BMADRecipeGenerator() {
     if (activeBatchId) {
       console.log('[BMAD] Found active batch on mount:', activeBatchId);
       setIsGenerating(true);
-      connectToSSE(activeBatchId);
+      
+      // Reset reconnection attempts
+      reconnectAttemptsRef.current = 0;
+      
+      // Fetch current progress first, then connect to SSE
+      fetchCurrentProgress(activeBatchId).then(() => {
+        connectToSSE(activeBatchId);
+      });
 
       toast({
         title: "Reconnecting to Generation",
@@ -152,7 +164,7 @@ export default function BMADRecipeGenerator() {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // connectToSSE and toast are stable, safe to omit from deps
+  }, []); // connectToSSE, fetchCurrentProgress and toast are stable, safe to omit from deps
 
   // Cleanup EventSource on unmount (but DON'T clear localStorage)
   useEffect(() => {
@@ -162,11 +174,49 @@ export default function BMADRecipeGenerator() {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
       }
+      
+      // Clear any pending reconnection attempts
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      
       // Note: We DON'T clear localStorage here - batch may still be running
     };
   }, []);
 
+  // Fetch current progress from API (useful for reconnection)
+  const fetchCurrentProgress = async (batchId: string) => {
+    try {
+      const response = await fetch(`/api/admin/bmad-progress/${batchId}`, {
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        const progressData = await response.json();
+        console.log('[BMAD] Fetched current progress:', progressData);
+        setProgress(progressData);
+        
+        // If generation is complete, handle it
+        if (progressData.phase === 'complete' || progressData.phase === 'error') {
+          setIsGenerating(false);
+          localStorage.removeItem('bmad-active-batch');
+        } else {
+          setIsGenerating(true);
+        }
+      }
+    } catch (error) {
+      console.error('[BMAD] Failed to fetch current progress:', error);
+    }
+  };
+
   const connectToSSE = (batchId: string) => {
+    // Clear any pending reconnection attempts
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
@@ -182,6 +232,13 @@ export default function BMADRecipeGenerator() {
     eventSource.addEventListener('connected', (event) => {
       const data = JSON.parse(event.data);
       console.log('[BMAD SSE] Connected:', data);
+      
+      // Reset reconnection attempts on successful connection
+      reconnectAttemptsRef.current = 0;
+      setError(null);
+      
+      // Fetch current progress to sync state
+      fetchCurrentProgress(batchId);
     });
 
     eventSource.addEventListener('progress', (event) => {
@@ -189,6 +246,9 @@ export default function BMADRecipeGenerator() {
       console.log('[BMAD SSE] Progress:', progressData);
       setProgress(progressData);
       setError(null);
+      
+      // Reset reconnection attempts on successful progress update
+      reconnectAttemptsRef.current = 0;
     });
 
     eventSource.addEventListener('complete', (event) => {
@@ -239,15 +299,48 @@ export default function BMADRecipeGenerator() {
 
     eventSource.onerror = (error) => {
       console.error('[BMAD SSE] Connection error:', error);
-      setError("SSE connection lost");
-      setIsGenerating(false);
-
-      // Clear active batch from localStorage on connection error
-      localStorage.removeItem('bmad-active-batch');
-      console.log('[BMAD] Cleared active batch from localStorage (connection error)');
-
-      eventSource.close();
-      eventSourceRef.current = null;
+      
+      // Check if connection is in a reconnectable state
+      const readyState = eventSource.readyState;
+      console.log('[BMAD SSE] EventSource readyState:', readyState);
+      
+      // EventSource.CONNECTING = 0, EventSource.OPEN = 1, EventSource.CLOSED = 2
+      if (readyState === EventSource.CLOSED) {
+        // Connection closed - attempt to reconnect
+        eventSource.close();
+        eventSourceRef.current = null;
+        
+        // Only attempt reconnection if we haven't exceeded max attempts
+        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+          reconnectAttemptsRef.current += 1;
+          console.log(`[BMAD SSE] Attempting to reconnect (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
+          
+          setError(`Connection lost. Reconnecting... (${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+          
+          // Attempt reconnection after delay
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connectToSSE(batchId);
+          }, reconnectDelayMs);
+        } else {
+          // Max reconnection attempts exceeded
+          console.error('[BMAD SSE] Max reconnection attempts exceeded');
+          setError("SSE connection lost. Please refresh the page to check progress.");
+          setIsGenerating(false);
+          
+          // Clear active batch from localStorage
+          localStorage.removeItem('bmad-active-batch');
+          console.log('[BMAD] Cleared active batch from localStorage (max reconnection attempts exceeded)');
+          
+          toast({
+            variant: "destructive",
+            title: "Connection Lost",
+            description: "Unable to reconnect. The generation may still be running. Please refresh the page.",
+          });
+        }
+      } else {
+        // Connection is still trying to connect or is open - don't treat as fatal error yet
+        console.warn('[BMAD SSE] Connection error but readyState is not CLOSED, waiting...');
+      }
     };
 
     eventSourceRef.current = eventSource;
@@ -296,6 +389,9 @@ export default function BMADRecipeGenerator() {
 
       const result: BMADGenerationResult = await response.json();
 
+      // Reset reconnection attempts for new generation
+      reconnectAttemptsRef.current = 0;
+      
       // Connect to SSE stream with returned batchId
       connectToSSE(result.batchId);
 
@@ -317,19 +413,259 @@ export default function BMADRecipeGenerator() {
   };
 
   const handleQuickGenerate = (count: number) => {
-    // Auto-fill form with default fitness values and submit
-    form.setValue("count", count);
-    form.setValue("enableImageGeneration", true);
-    form.setValue("enableNutritionValidation", true);
-    form.setValue("enableS3Upload", true);
+    // Clear all form fields first to ensure no stale values that could cause duplicate images
+    // Quick generators are designed for rapid, diverse recipe generation without restrictions
+    // Each count serves a specific purpose:
+    // - 10: Quick test batch, fast validation
+    // - 20: Medium batch for content creation
+    // - 30: Standard production batch
+    // - 50: Large production batch for comprehensive libraries
+    
+    form.reset({
+      count: count,
+      // Leave all parameters undefined to maximize variety and ensure unique recipes/images
+      // This allows the AI to generate diverse recipes across all categories
+      focusIngredient: undefined,
+      difficultyLevel: undefined,
+      recipePreferences: undefined,
+      fitnessGoal: undefined, // Variety across all fitness goals
+      dailyCalorieTarget: undefined,
+      days: undefined,
+      mealsPerDay: undefined,
+      maxIngredients: undefined,
+      generateMealPrep: false,
+      mealTypes: undefined, // All meal types = maximum variety
+      dietaryTag: undefined, // No dietary restrictions = variety
+      maxPrepTime: undefined, // No time restrictions = variety
+      maxCalories: undefined, // No calorie restrictions = variety
+      minProtein: undefined, // No protein restrictions = variety
+      maxProtein: undefined,
+      minCarbs: undefined,
+      maxCarbs: undefined,
+      minFat: undefined,
+      maxFat: undefined,
+      // Enable all features for best results
+      enableImageGeneration: true,
+      enableS3Upload: true,
+      enableNutritionValidation: true,
+    });
 
-    // Submit form immediately with current values
+    // Submit form immediately with clean default values
     form.handleSubmit(onSubmit)();
+
+    const purposeDescriptions: Record<number, string> = {
+      10: 'Quick test batch - Fast validation and testing',
+      20: 'Medium batch - Content creation and variety',
+      30: 'Standard batch - Production-ready recipes',
+      50: 'Large batch - Comprehensive recipe library'
+    };
 
     toast({
       title: "Quick Generation Started",
-      description: `Generating ${count} recipes with default fitness parameters`,
+      description: `Generating ${count} diverse fitness-focused recipes: ${purposeDescriptions[count] || 'Production batch'}`,
     });
+  };
+
+  const handleParseAI = async () => {
+    // Validate input
+    if (!naturalLanguageInput || naturalLanguageInput.trim().length === 0) {
+      toast({
+        title: "Input Required",
+        description: "Please enter a recipe generation prompt in natural language",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsParsing(true);
+      setError(null);
+
+      // Call parse endpoint to extract parameters
+      const response = await fetch('/api/admin/parse-recipe-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ prompt: naturalLanguageInput }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to parse prompt');
+      }
+
+      const result = await response.json();
+      const parsedParams = result.parsedParameters || {};
+
+      // Map parsed parameters to form fields
+      // Handle count
+      if (parsedParams.count) {
+        form.setValue('count', parsedParams.count);
+      }
+      
+      // Handle focus ingredient (prefer focusIngredient, fallback to mainIngredientTags)
+      const focusIngredient = parsedParams.focusIngredient || 
+        (parsedParams.mainIngredientTags && Array.isArray(parsedParams.mainIngredientTags) 
+          ? parsedParams.mainIngredientTags.join(', ') 
+          : undefined);
+      if (focusIngredient) {
+        form.setValue('focusIngredient', focusIngredient);
+      }
+      
+      // Handle difficulty (map 'difficulty' to 'difficultyLevel')
+      if (parsedParams.difficulty) {
+        form.setValue('difficultyLevel', parsedParams.difficulty);
+      }
+      
+      // Handle recipe preferences/description
+      if (parsedParams.description || parsedParams.recipePreferences) {
+        form.setValue('recipePreferences', parsedParams.description || parsedParams.recipePreferences);
+      }
+      
+      // Handle fitness goal
+      if (parsedParams.fitnessGoal) {
+        // Map common variations to form values
+        const fitnessGoalLower = parsedParams.fitnessGoal.toLowerCase();
+        const fitnessGoalMap: Record<string, string> = {
+          'muscle_gain': 'muscle_gain',
+          'muscle gain': 'muscle_gain',
+          'build muscle': 'muscle_gain',
+          'build muscles': 'muscle_gain',
+          'muscle building': 'muscle_gain',
+          'gain muscle': 'muscle_gain',
+          'weight_loss': 'weight_loss',
+          'weight loss': 'weight_loss',
+          'lose weight': 'weight_loss',
+          'maintenance': 'maintenance',
+          'endurance': 'endurance',
+        };
+        
+        // Check for partial matches (e.g., "build muscles" contains "build")
+        let mappedGoal = fitnessGoalMap[fitnessGoalLower];
+        if (!mappedGoal) {
+          // Try to find a partial match
+          if (fitnessGoalLower.includes('muscle') || fitnessGoalLower.includes('build') || fitnessGoalLower.includes('gain')) {
+            mappedGoal = 'muscle_gain';
+          } else if (fitnessGoalLower.includes('weight') || fitnessGoalLower.includes('lose')) {
+            mappedGoal = 'weight_loss';
+          } else {
+            mappedGoal = parsedParams.fitnessGoal;
+          }
+        }
+        
+        form.setValue('fitnessGoal', mappedGoal);
+      }
+      
+      // Handle calorie targets
+      if (parsedParams.dailyCalorieTarget) {
+        form.setValue('dailyCalorieTarget', parsedParams.dailyCalorieTarget);
+      }
+      if (parsedParams.maxCalories) {
+        form.setValue('maxCalories', parsedParams.maxCalories);
+      }
+      if (parsedParams.minCalories) {
+        // Note: form doesn't have minCalories, but we can use maxCalories as a range hint
+        // This is handled by the backend
+      }
+      
+      // Handle other parameters
+      if (parsedParams.maxIngredients) {
+        form.setValue('maxIngredients', parsedParams.maxIngredients);
+      }
+      if (parsedParams.mealTypes && Array.isArray(parsedParams.mealTypes) && parsedParams.mealTypes.length > 0) {
+        form.setValue('mealTypes', parsedParams.mealTypes);
+      }
+      if (parsedParams.dietaryTags && Array.isArray(parsedParams.dietaryTags) && parsedParams.dietaryTags.length > 0) {
+        // Map dietary tags to form values (handle both normalized and raw values)
+        const dietaryTagMap: Record<string, string> = {
+          'high_carb': 'high_carb',
+          'high carb': 'high_carb',
+          'high-carb': 'high_carb',
+          'carb diet': 'high_carb',
+          'low_carb': 'low_carb',
+          'low carb': 'low_carb',
+          'low-carb': 'low_carb',
+          'high_protein': 'high_protein',
+          'high protein': 'high_protein',
+          'high-protein': 'high_protein',
+          'gluten_free': 'gluten_free',
+          'gluten-free': 'gluten_free',
+          'gluten free': 'gluten_free',
+          'dairy_free': 'dairy_free',
+          'dairy-free': 'dairy_free',
+          'dairy free': 'dairy_free',
+        };
+        
+        const firstTag = parsedParams.dietaryTags[0];
+        const mappedTag = dietaryTagMap[firstTag.toLowerCase()] || firstTag;
+        
+        // Only set if it's a valid form value
+        const validTags = ['vegetarian', 'vegan', 'keto', 'paleo', 'gluten_free', 'low_carb', 
+                          'high_carb', 'high_protein', 'mediterranean', 'pescatarian', 'dairy_free'];
+        
+        if (validTags.includes(mappedTag)) {
+          form.setValue('dietaryTag', mappedTag);
+        } else {
+          // Try to find a matching tag
+          const matchingTag = validTags.find(tag => 
+            firstTag.toLowerCase().includes(tag.replace('_', ' ')) ||
+            tag.replace('_', ' ').includes(firstTag.toLowerCase())
+          );
+          if (matchingTag) {
+            form.setValue('dietaryTag', matchingTag);
+          }
+        }
+      }
+      if (parsedParams.maxPrepTime) {
+        form.setValue('maxPrepTime', parsedParams.maxPrepTime);
+      }
+      if (parsedParams.minProtein) {
+        form.setValue('minProtein', parsedParams.minProtein);
+      }
+      if (parsedParams.maxProtein) {
+        form.setValue('maxProtein', parsedParams.maxProtein);
+      }
+      if (parsedParams.minCarbs) {
+        form.setValue('minCarbs', parsedParams.minCarbs);
+      }
+      if (parsedParams.maxCarbs) {
+        form.setValue('maxCarbs', parsedParams.maxCarbs);
+      }
+      if (parsedParams.minFat) {
+        form.setValue('minFat', parsedParams.minFat);
+      }
+      if (parsedParams.maxFat) {
+        form.setValue('maxFat', parsedParams.maxFat);
+      }
+
+      // Show advanced form if any advanced fields were parsed
+      if (parsedParams.minProtein || parsedParams.maxProtein || parsedParams.minCarbs || 
+          parsedParams.maxCarbs || parsedParams.minFat || parsedParams.maxFat) {
+        setShowAdvancedForm(true);
+      }
+
+      toast({
+        title: "Form Prefilled Successfully",
+        description: `Parsed ${Object.keys(parsedParams).length} parameters from your description. Review and adjust as needed, then click "Start Bulk Generation".`,
+      });
+
+      console.log('[Parse AI] Parsed parameters:', parsedParams);
+
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unknown error');
+
+      toast({
+        variant: "destructive",
+        title: "Parse Failed",
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      console.error('[Parse AI] Error:', error);
+    } finally {
+      setIsParsing(false);
+    }
   };
 
   const handleDirectGeneration = async () => {
@@ -348,8 +684,8 @@ export default function BMADRecipeGenerator() {
       setProgress(null);
       setError(null);
 
-      // Call natural language generation endpoint
-      const response = await fetch('/api/admin/generate-from-prompt', {
+      // Parse the prompt first to get parameters
+      const parseResponse = await fetch('/api/admin/parse-recipe-prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -358,23 +694,108 @@ export default function BMADRecipeGenerator() {
         body: JSON.stringify({ prompt: naturalLanguageInput }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to start natural language generation');
+      if (!parseResponse.ok) {
+        const errorData = await parseResponse.json();
+        throw new Error(errorData.message || 'Failed to parse prompt');
       }
 
-      const result = await response.json();
+      const parseResult = await parseResponse.json();
+      const parsedParams = parseResult.parsedParameters || {};
 
+      // Map parsed parameters to BMAD generation options (same mapping as Parse AI)
+      const focusIngredient = parsedParams.focusIngredient || 
+        (parsedParams.mainIngredientTags && Array.isArray(parsedParams.mainIngredientTags) 
+          ? parsedParams.mainIngredientTags.join(', ') 
+          : undefined);
+      
+      // Map fitness goal variations (same logic as Parse AI)
+      const fitnessGoalLower = parsedParams.fitnessGoal?.toLowerCase() || '';
+      const fitnessGoalMap: Record<string, string> = {
+        'muscle_gain': 'muscle_gain',
+        'muscle gain': 'muscle_gain',
+        'build muscle': 'muscle_gain',
+        'build muscles': 'muscle_gain',
+        'muscle building': 'muscle_gain',
+        'gain muscle': 'muscle_gain',
+        'weight_loss': 'weight_loss',
+        'weight loss': 'weight_loss',
+        'lose weight': 'weight_loss',
+        'maintenance': 'maintenance',
+        'endurance': 'endurance',
+      };
+      
+      let mappedFitnessGoal = parsedParams.fitnessGoal ? fitnessGoalMap[fitnessGoalLower] : undefined;
+      if (!mappedFitnessGoal && parsedParams.fitnessGoal) {
+        // Try to find a partial match
+        if (fitnessGoalLower.includes('muscle') || fitnessGoalLower.includes('build') || fitnessGoalLower.includes('gain')) {
+          mappedFitnessGoal = 'muscle_gain';
+        } else if (fitnessGoalLower.includes('weight') || fitnessGoalLower.includes('lose')) {
+          mappedFitnessGoal = 'weight_loss';
+        } else {
+          mappedFitnessGoal = parsedParams.fitnessGoal;
+        }
+      }
+
+      const backendPayload = {
+        count: parsedParams.count || 10,
+        mealTypes: parsedParams.mealTypes,
+        dietaryRestrictions: parsedParams.dietaryTags,
+        targetCalories: parsedParams.dailyCalorieTarget || parsedParams.maxCalories,
+        focusIngredient: focusIngredient,
+        difficultyLevel: parsedParams.difficulty,
+        recipePreferences: parsedParams.description || parsedParams.recipePreferences,
+        fitnessGoal: mappedFitnessGoal,
+        maxIngredients: parsedParams.maxIngredients,
+        naturalLanguagePrompt: naturalLanguageInput,
+        maxPrepTime: parsedParams.maxPrepTime,
+        maxCalories: parsedParams.maxCalories,
+        minProtein: parsedParams.minProtein,
+        maxProtein: parsedParams.maxProtein,
+        minCarbs: parsedParams.minCarbs,
+        maxCarbs: parsedParams.maxCarbs,
+        minFat: parsedParams.minFat,
+        maxFat: parsedParams.maxFat,
+        enableImageGeneration: true,
+        enableS3Upload: true,
+        enableNutritionValidation: true,
+      };
+
+      // Call BMAD generation endpoint
+      const response = await fetch('/api/admin/generate-bmad', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(backendPayload),
+      });
+
+      if (!response.ok) {
+        let errorMessage = `Failed to start generation (${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result: BMADGenerationResult = await response.json();
+
+      // Reset reconnection attempts for new generation
+      reconnectAttemptsRef.current = 0;
+      
       // Connect to SSE stream with returned batchId
       connectToSSE(result.batchId);
 
       toast({
-        title: "Natural Language Generation Started",
-        description: `Generating ${result.parsedParameters?.count || 10} recipes from your prompt`,
+        title: "Generation Started",
+        description: `Generating ${result.count} recipes from your natural language prompt`,
       });
 
-      console.log('[Natural Language Generation] Started BMAD batch:', result);
-      console.log('[Natural Language Generation] Parsed parameters:', result.parsedParameters);
+      console.log('[Direct Generation] Started BMAD batch:', result);
+      console.log('[Direct Generation] Parsed parameters:', parsedParams);
 
     } catch (error) {
       setIsGenerating(false);
@@ -386,7 +807,7 @@ export default function BMADRecipeGenerator() {
         description: error instanceof Error ? error.message : 'Unknown error',
       });
 
-      console.error('[Natural Language Generation] Error:', error);
+      console.error('[Direct Generation] Error:', error);
     }
   };
 
@@ -470,17 +891,21 @@ export default function BMADRecipeGenerator() {
               <div className="flex gap-3">
                 <Button
                   type="button"
-                  onClick={() => {
-                    toast({
-                      title: "Feature Coming Soon",
-                      description: "AI parsing will be available in a future update",
-                    });
-                  }}
-                  disabled={!naturalLanguageInput.trim() || isGenerating}
+                  onClick={handleParseAI}
+                  disabled={!naturalLanguageInput.trim() || isGenerating || isParsing}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Parse with AI
+                  {isParsing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Parsing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Parse with AI
+                    </>
+                  )}
                 </Button>
                 <Button
                   type="button"
@@ -531,16 +956,22 @@ export default function BMADRecipeGenerator() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[10, 20, 30, 50].map((count) => (
+              {[
+                { count: 10, label: 'Quick Test', desc: 'Fast validation' },
+                { count: 20, label: 'Medium Batch', desc: 'Content creation' },
+                { count: 30, label: 'Standard Batch', desc: 'Production ready' },
+                { count: 50, label: 'Large Batch', desc: 'Full library' }
+              ].map(({ count, label, desc }) => (
                 <Button
                   key={count}
                   variant="outline"
                   onClick={() => handleQuickGenerate(count)}
                   disabled={isGenerating}
-                  className="h-20 flex flex-col items-center justify-center border-purple-300 hover:bg-purple-100 hover:border-purple-400 transition-all"
+                  className="h-24 flex flex-col items-center justify-center border-purple-300 hover:bg-purple-100 hover:border-purple-400 transition-all"
                 >
                   <span className="text-2xl font-bold text-purple-700">{count}</span>
-                  <span className="text-xs text-purple-600">recipes</span>
+                  <span className="text-xs font-medium text-purple-600">{label}</span>
+                  <span className="text-[10px] text-purple-500 mt-0.5">{desc}</span>
                 </Button>
               ))}
             </div>
@@ -820,6 +1251,7 @@ export default function BMADRecipeGenerator() {
                             <SelectItem value="paleo">Paleo</SelectItem>
                             <SelectItem value="gluten_free">Gluten Free</SelectItem>
                             <SelectItem value="low_carb">Low Carb</SelectItem>
+                            <SelectItem value="high_carb">High Carb</SelectItem>
                             <SelectItem value="high_protein">High Protein</SelectItem>
                             <SelectItem value="mediterranean">Mediterranean</SelectItem>
                             <SelectItem value="pescatarian">Pescatarian</SelectItem>

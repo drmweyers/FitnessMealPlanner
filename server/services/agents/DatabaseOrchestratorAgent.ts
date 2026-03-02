@@ -9,11 +9,13 @@ import { BaseAgent } from './BaseAgent';
 import { AgentResponse, ValidatedRecipe, SavedRecipeResult } from './types';
 import { storage } from '../../storage';
 import type { InsertRecipe } from '@shared/schema';
+import { recipes } from '@shared/schema';
 
 interface DatabaseInput {
   validatedRecipes: ValidatedRecipe[];
   batchId: string;
   imageUrl?: string; // Default placeholder image
+  tierLevel?: 'starter' | 'professional' | 'enterprise'; // Tier level for recipes
 }
 
 interface DatabaseOutput {
@@ -43,8 +45,9 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
     correlationId: string
   ): Promise<AgentResponse<DatabaseOutput>> {
     return this.executeWithMetrics(async () => {
-      const { recipes, validatedRecipes, batchId, imageUrl } = input as any;
+      const { recipes, validatedRecipes, batchId, imageUrl, tierLevel } = input as any;
       const defaultImageUrl = imageUrl || this.PLACEHOLDER_IMAGE_URL;
+      const recipeTierLevel = tierLevel || 'starter'; // Default to starter if not provided
 
       console.log('[database] Received:', {
         hasRecipes: !!recipes,
@@ -101,7 +104,7 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
 
       for (const batch of batches) {
         try {
-          const batchResults = await this.saveBatchWithTransaction(batch, defaultImageUrl);
+          const batchResults = await this.saveBatchWithTransaction(batch, defaultImageUrl, recipeTierLevel);
           savedRecipes.push(...batchResults.saved);
           errors.push(...batchResults.errors);
           totalSaved += batchResults.saved.length;
@@ -125,11 +128,12 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
 
   /**
    * Save a batch of recipes within a single transaction
-   * Rolls back all changes if any recipe fails
+   * Uses transaction context directly to ensure all inserts are part of the transaction
    */
   private async saveBatchWithTransaction(
     batch: ValidatedRecipe[],
-    defaultImageUrl: string
+    defaultImageUrl: string,
+    tierLevel: 'starter' | 'professional' | 'enterprise' = 'starter'
   ): Promise<{
     saved: SavedRecipeResult[];
     failed: number;
@@ -145,11 +149,15 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
           try {
             const recipeData = this.convertToInsertRecipe(
               validatedRecipe.recipe,
-              defaultImageUrl
+              defaultImageUrl,
+              tierLevel
             );
 
-            // Use transaction context for insert
-            const createdRecipe = await storage.createRecipe(recipeData);
+            // CRITICAL FIX: Use transaction context directly instead of storage.createRecipe()
+            // This ensures the insert is part of the transaction
+            const [createdRecipe] = await tx.insert(recipes)
+              .values(recipeData as any)
+              .returning();
 
             saved.push({
               recipeId: createdRecipe.id,  // UUID string, not Number
@@ -157,25 +165,52 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
               recipeDescription: createdRecipe.description || '',
               mealTypes: createdRecipe.mealTypes || [],
               success: true,
-              imageUrl: createdRecipe.imageUrl || defaultImageUrl
+              imageUrl: createdRecipe.imageUrl || null // Don't use placeholder - images must be generated or recipe will be deleted
             });
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
+            const errorDetails = {
+              message: errorMsg,
+              type: error instanceof Error ? error.constructor.name : 'Unknown',
+              code: (error as any)?.code, // PostgreSQL error code
+              detail: (error as any)?.detail, // PostgreSQL error detail
+              constraint: (error as any)?.constraint, // Constraint name if violated
+              recipeName: validatedRecipe.recipe.name
+            };
+            
+            console.error('[database] Recipe save error:', JSON.stringify(errorDetails, null, 2));
+            
             errors.push(`Failed to save ${validatedRecipe.recipe.name}: ${errorMsg}`);
             failed++;
 
-            // Throw error to trigger transaction rollback
-            throw new Error(`Recipe save failed: ${errorMsg}`);
+            // Don't throw - allow other recipes in the batch to save
+            // Only throw if it's a critical error that should rollback everything
+            if ((error as any)?.code === '23505') { // Unique constraint violation
+              console.warn(`[database] Skipping duplicate recipe: ${validatedRecipe.recipe.name}`);
+            } else {
+              // For other errors, log but continue
+              console.warn(`[database] Recipe save failed but continuing: ${errorMsg}`);
+            }
           }
         }
       });
     } catch (error) {
-      // Transaction rolled back
+      // Transaction-level error (connection issues, etc.)
       const errorMsg = error instanceof Error ? error.message : String(error);
+      const errorDetails = {
+        message: errorMsg,
+        type: error instanceof Error ? error.constructor.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined,
+        code: (error as any)?.code,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.error('[database] Transaction failed:', JSON.stringify(errorDetails, null, 2));
+      
       return {
-        saved: [], // No recipes saved due to rollback
+        saved: [], // No recipes saved due to transaction failure
         failed: batch.length,
-        errors: [errorMsg]
+        errors: [`Transaction failed: ${errorMsg}`]
       };
     }
 
@@ -185,7 +220,7 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
   /**
    * Convert GeneratedRecipe to InsertRecipe format for database
    */
-  private convertToInsertRecipe(recipe: any, imageUrl: string): InsertRecipe {
+  private convertToInsertRecipe(recipe: any, imageUrl: string, tierLevel: 'starter' | 'professional' | 'enterprise' = 'starter'): InsertRecipe {
     return {
       name: recipe.name,
       description: recipe.description,
@@ -204,9 +239,10 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
       proteinGrams: Number(recipe.estimatedNutrition.protein).toFixed(2),
       carbsGrams: Number(recipe.estimatedNutrition.carbs).toFixed(2),
       fatGrams: Number(recipe.estimatedNutrition.fat).toFixed(2),
-      imageUrl: imageUrl,
+      imageUrl: null, // Don't set placeholder image - recipes must have images generated later
       sourceReference: 'AI Generated - BMAD',
       isApproved: false,
+      tierLevel: tierLevel, // Assign tier level to recipe
     };
   }
 
@@ -216,9 +252,11 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
   async saveBatchWithoutTransaction(
     validatedRecipes: ValidatedRecipe[],
     batchId: string,
-    imageUrl?: string
+    imageUrl?: string,
+    tierLevel: 'starter' | 'professional' | 'enterprise' = 'starter'
   ): Promise<AgentResponse<DatabaseOutput>> {
-    const defaultImageUrl = imageUrl || this.PLACEHOLDER_IMAGE_URL;
+    // Don't use placeholder - recipes must have images generated later
+    const defaultImageUrl = null;
     const savedRecipes: SavedRecipeResult[] = [];
     const errors: string[] = [];
     let totalSaved = 0;
@@ -232,7 +270,7 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
       }
 
       try {
-        const recipeData = this.convertToInsertRecipe(validatedRecipe.recipe, defaultImageUrl);
+        const recipeData = this.convertToInsertRecipe(validatedRecipe.recipe, defaultImageUrl, 'starter'); // tierLevel defaults to starter if not provided
         const createdRecipe = await storage.createRecipe(recipeData);
 
         savedRecipes.push({
@@ -241,7 +279,7 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
           recipeDescription: createdRecipe.description || '',
           mealTypes: createdRecipe.mealTypes || [],
           success: true,
-          imageUrl: createdRecipe.imageUrl || defaultImageUrl
+          imageUrl: createdRecipe.imageUrl || null // Don't use placeholder - images must be generated or recipe will be deleted
         });
         totalSaved++;
       } catch (error) {

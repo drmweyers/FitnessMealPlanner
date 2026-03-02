@@ -29,15 +29,17 @@ const openai = new OpenAI({
 });
 
 interface ImageGenerationInput {
-  recipeId: number;
+  recipeId: string | number; // UUID string from database, or number for compatibility
   recipeName: string;
   recipeDescription: string;
   mealTypes: string[];
+  mainIngredientTags?: string[]; // Main ingredients to feature prominently
+  ingredients?: Array<{ name: string; amount: number; unit: string }>; // Full ingredient list
   batchId: string;
 }
 
 interface ImageGenerationOutput {
-  recipeId: number;
+  recipeId: string | number; // UUID string from database, or number for compatibility
   recipeName: string;
   imageMetadata: RecipeImageMetadata;
   batchId: string;
@@ -61,12 +63,13 @@ export class ImageGenerationAgent extends BaseAgent {
   private readonly PLACEHOLDER_IMAGE_URL = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=600&fit=crop';
   private readonly SIMILARITY_THRESHOLD = 0.85; // 85% similarity = duplicate
   private generatedHashes: Set<string> = new Set();
+  private generatedImageUrls: Set<string> = new Set(); // Track image URLs to prevent exact duplicates
 
   constructor() {
     super('artist', {
       retryLimit: 3, // Increased from 2 to 3 to match OpenAI client retries
       backoffMs: 2000, // Increased from 500ms to 2s for better retry spacing
-      fallbackBehavior: 'placeholder',
+      fallbackBehavior: 'skip', // Skip recipes without images instead of using placeholders
       notifyUser: true
     });
   }
@@ -88,31 +91,29 @@ export class ImageGenerationAgent extends BaseAgent {
         try {
           const imageMetadata = await this.generateUniqueImage(recipe);
 
+          // Only add recipes with successfully generated images (skip placeholders)
+          if (imageMetadata.isPlaceholder) {
+            placeholderCount++;
+            errors.push(`Image generation failed for ${recipe.recipeName}: Using placeholder - recipe skipped`);
+            totalFailed++;
+            // Skip this recipe - don't add to images array
+            console.log(`[artist] Skipping recipe ${recipe.recipeName} - image generation failed`);
+            continue;
+          }
+
+          totalGenerated++;
           images.push({
             recipeId: recipe.recipeId,
             recipeName: recipe.recipeName,
             imageMetadata,
             batchId
           });
-
-          if (imageMetadata.isPlaceholder) {
-            placeholderCount++;
-          } else {
-            totalGenerated++;
-          }
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          errors.push(`Failed to generate image for ${recipe.recipeName}: ${errorMsg}`);
+          errors.push(`Failed to generate image for ${recipe.recipeName}: ${errorMsg} - recipe skipped`);
           totalFailed++;
-
-          // Use placeholder on failure
-          images.push({
-            recipeId: recipe.recipeId,
-            recipeName: recipe.recipeName,
-            imageMetadata: this.createPlaceholderMetadata(recipe.recipeName),
-            batchId
-          });
-          placeholderCount++;
+          // Skip this recipe - don't add placeholder, don't add to images array
+          console.log(`[artist] Skipping recipe ${recipe.recipeName} - image generation error: ${errorMsg}`);
         }
       }
 
@@ -138,8 +139,19 @@ export class ImageGenerationAgent extends BaseAgent {
     const maxRetries = 3;
 
     try {
-      const prompt = this.createImagePrompt(recipe);
+      const prompt = this.createImagePrompt(recipe, retryCount);
+      console.log(`[artist] Generating image for "${recipe.recipeName}" (attempt ${retryCount + 1})`);
+      console.log(`[artist] Prompt preview: ${prompt.substring(0, 100)}...`);
+      
       const imageUrl = await this.callDallE3(prompt);
+
+      // Check for exact URL duplicate first (fast check)
+      if (this.generatedImageUrls.has(imageUrl)) {
+        console.warn(`[artist] Exact image URL duplicate detected for ${recipe.recipeName}, retrying...`);
+        if (retryCount < maxRetries) {
+          return this.generateUniqueImage(recipe, retryCount + 1);
+        }
+      }
 
       // Generate perceptual hash (async now)
       const perceptualHash = await this.generateSimilarityHash(imageUrl, recipe.recipeName);
@@ -161,9 +173,14 @@ export class ImageGenerationAgent extends BaseAgent {
         return this.generateUniqueImage(recipe, retryCount + 1);
       }
 
-      // Store hash to prevent future duplicates (both in memory and database)
+      // Store hash and URL to prevent future duplicates (both in memory and database)
       this.generatedHashes.add(perceptualHash);
+      this.generatedImageUrls.add(imageUrl);
       await this.storeImageHash(recipe.recipeId, perceptualHash, imageUrl, prompt);
+      
+      console.log(`[artist] Successfully generated unique image for "${recipe.recipeName}"`);
+      console.log(`[artist] Image URL: ${imageUrl.substring(0, 50)}...`);
+      console.log(`[artist] Hash: ${perceptualHash.substring(0, 16)}...`);
 
       return {
         imageUrl,
@@ -177,27 +194,105 @@ export class ImageGenerationAgent extends BaseAgent {
     } catch (error) {
       console.error(`[artist] DALL-E 3 generation failed for ${recipe.recipeName}:`, error);
 
-      // Use placeholder on failure
-      return this.createPlaceholderMetadata(recipe.recipeName);
+      // Don't use placeholder - throw error to skip recipe
+      throw error;
     }
   }
 
   /**
    * Create optimized DALL-E 3 prompt for recipe images
+   * Includes recipe-specific details and variation for retries
    */
-  private createImagePrompt(recipe: ImageGenerationInput): string {
+  private createImagePrompt(recipe: ImageGenerationInput, retryCount: number = 0): string {
     const mealType = recipe.mealTypes[0]?.toLowerCase() || 'meal';
-
-    return `
-      Generate an ultra-realistic, high-resolution photograph of "${recipe.recipeName}", a ${mealType} dish.
-      ${recipe.recipeDescription}
-      Present it artfully plated on a clean white ceramic plate set atop a rustic wooden table.
-      Illuminate the scene with soft, natural side lighting to bring out the textures and vibrant colors of the ingredients.
-      Use a shallow depth of field (aperture f/2.8) and a 45° camera angle for a professional, editorial look.
-      Add subtle garnishes and minimal props (e.g., fresh herbs, linen napkin) to enhance context without clutter.
-      The final image should be bright, mouthwatering, and ready for a premium fitness-focused recipe website.
-      Style: photorealistic, food photography, professional.
-    `.trim();
+    
+    // Extract main ingredients for emphasis
+    const mainIngredients = recipe.mainIngredientTags || [];
+    const mainIngredientText = mainIngredients.length > 0 
+      ? `featuring prominently ${mainIngredients.join(', ')}` 
+      : '';
+    
+    // Extract key ingredients from full list (first 3-5)
+    const keyIngredients = recipe.ingredients 
+      ? recipe.ingredients.slice(0, 5).map(ing => ing.name).join(', ')
+      : '';
+    
+    // Add variation for retries to ensure different images
+    const variations = [
+      {
+        angle: '45° camera angle',
+        lighting: 'soft, natural side lighting',
+        plate: 'clean white ceramic plate',
+        surface: 'rustic wooden table',
+        style: 'editorial food photography'
+      },
+      {
+        angle: 'overhead bird\'s eye view',
+        lighting: 'bright, diffused natural light from above',
+        plate: 'minimalist white plate',
+        surface: 'marble countertop',
+        style: 'modern, minimalist food styling'
+      },
+      {
+        angle: 'low angle 30° view',
+        lighting: 'warm, golden hour lighting',
+        plate: 'dark slate plate',
+        surface: 'weathered wooden board',
+        style: 'rustic, artisanal food photography'
+      },
+      {
+        angle: 'close-up detail shot',
+        lighting: 'dramatic side lighting with soft fill',
+        plate: 'elegant ceramic dish',
+        surface: 'textured stone surface',
+        style: 'fine dining, high-end food photography'
+      }
+    ];
+    
+    const variation = variations[retryCount % variations.length];
+    
+    // Build detailed prompt with recipe-specific information
+    let prompt = `Generate an ultra-realistic, high-resolution photograph of "${recipe.recipeName}", a ${mealType} dish`;
+    
+    if (mainIngredientText) {
+      prompt += ` ${mainIngredientText}`;
+    }
+    
+    prompt += '.';
+    
+    // Add recipe description
+    if (recipe.recipeDescription) {
+      prompt += ` ${recipe.recipeDescription}`;
+    }
+    
+    // Add key ingredients if available
+    if (keyIngredients) {
+      prompt += ` The dish includes: ${keyIngredients}.`;
+    }
+    
+    // Add visual styling with variation
+    prompt += ` Present it artfully plated on a ${variation.plate} set atop a ${variation.surface}.`;
+    prompt += ` Illuminate the scene with ${variation.lighting} to bring out the textures and vibrant colors of the ingredients.`;
+    prompt += ` Use a shallow depth of field (aperture f/2.8) and ${variation.angle} for a professional, ${variation.style} look.`;
+    
+    // Add unique elements based on retry count
+    if (retryCount > 0) {
+      const uniqueElements = [
+        'Add fresh microgreens and edible flowers as garnish.',
+        'Include a drizzle of sauce or dressing visible on the plate.',
+        'Show steam rising from the dish to indicate it\'s freshly prepared.',
+        'Add complementary side elements like lemon wedges or fresh herbs.',
+        'Include subtle texture contrast with crispy elements visible.'
+      ];
+      prompt += ` ${uniqueElements[retryCount % uniqueElements.length]}`;
+    } else {
+      prompt += ` Add subtle garnishes and minimal props (e.g., fresh herbs, linen napkin) to enhance context without clutter.`;
+    }
+    
+    prompt += ` The final image should be bright, mouthwatering, and ready for a premium fitness-focused recipe website.`;
+    prompt += ` Style: photorealistic, ${variation.style}, professional food photography.`;
+    
+    return prompt.trim();
   }
 
   /**
@@ -232,21 +327,41 @@ export class ImageGenerationAgent extends BaseAgent {
     try {
       // Generate perceptual hash (pHash) using imghash if available
       if (imghash && typeof imghash === 'function') {
-        // imghash can work with URLs or file paths
-        // For URLs, we need to download the image first or use a different approach
-        // For now, use a content-based hash as fallback
-        const pHash = await imghash(imageUrl, 16, 'hex');
-        console.log(`[artist] Generated pHash for ${recipeName}: ${pHash.substring(0, 16)}...`);
-        return pHash;
+        try {
+          // Try to generate hash from URL directly (imghash may support URLs)
+          const pHash = await imghash(imageUrl, 16, 'hex');
+          console.log(`[artist] Generated pHash for ${recipeName}: ${pHash.substring(0, 16)}...`);
+          return pHash;
+        } catch (urlError) {
+          // If URL doesn't work, try downloading the image first
+          console.log(`[artist] Attempting to download image for hashing: ${recipeName}`);
+          const response = await fetch(imageUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to download image: ${response.statusText}`);
+          }
+          
+          // Convert response to buffer
+          const arrayBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          
+          // Generate hash from buffer
+          const pHash = await imghash(buffer, 16, 'hex');
+          console.log(`[artist] Generated pHash from downloaded image for ${recipeName}: ${pHash.substring(0, 16)}...`);
+          return pHash;
+        }
       } else {
-        // Fallback: use content-based hash
+        // Fallback: use content-based hash with more unique elements
         throw new Error('imghash not available');
       }
     } catch (error) {
-      console.warn(`[artist] Using fallback hash for ${recipeName} (imghash unavailable or failed)`);
-      // Fallback to content-based hash if perceptual hashing fails
-      const content = `${recipeName}-${imageUrl.substring(imageUrl.length - 20)}`;
-      return crypto.createHash('sha256').update(content).digest('hex').substring(0, 64);
+      console.warn(`[artist] Using fallback hash for ${recipeName} (imghash unavailable or failed):`, error instanceof Error ? error.message : String(error));
+      // Fallback to content-based hash with timestamp and random element for uniqueness
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 15);
+      const content = `${recipeName}-${imageUrl}-${timestamp}-${random}`;
+      const hash = crypto.createHash('sha256').update(content).digest('hex').substring(0, 64);
+      console.log(`[artist] Generated fallback hash for ${recipeName}: ${hash.substring(0, 16)}...`);
+      return hash;
     }
   }
 
@@ -333,12 +448,15 @@ export class ImageGenerationAgent extends BaseAgent {
    * Store image hash in database for persistent duplicate detection
    */
   private async storeImageHash(
-    recipeId: number,
+    recipeId: string | number,
     perceptualHash: string,
     imageUrl: string,
     dallePrompt: string
   ): Promise<void> {
     try {
+      // Convert recipeId to UUID string if it's a number (for backward compatibility)
+      const recipeIdUuid = typeof recipeId === 'number' ? String(recipeId) : recipeId;
+      
       await db.execute(sql`
         INSERT INTO recipe_image_hashes (
           recipe_id,
@@ -348,7 +466,7 @@ export class ImageGenerationAgent extends BaseAgent {
           dalle_prompt,
           created_at
         ) VALUES (
-          ${recipeId}::uuid,
+          ${recipeIdUuid}::uuid,
           ${perceptualHash},
           ${perceptualHash.substring(0, 16)},
           ${imageUrl},
@@ -356,7 +474,7 @@ export class ImageGenerationAgent extends BaseAgent {
           NOW()
         )
       `);
-      console.log(`[artist] Stored pHash for recipe ${recipeId}`);
+      console.log(`[artist] Stored pHash for recipe ${recipeIdUuid}`);
     } catch (error: any) {
       // Gracefully handle missing table (42P01 = relation does not exist)
       if (error?.code === '42P01') {
@@ -414,5 +532,6 @@ export class ImageGenerationAgent extends BaseAgent {
    */
   clearHashCache(): void {
     this.generatedHashes.clear();
+    this.generatedImageUrls.clear();
   }
 }

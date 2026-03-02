@@ -21,6 +21,7 @@ import { mealPlanSharingRouter } from './routes/mealPlanSharing';
 import authRouter from './authRoutes';
 import invitationRouter from './invitationRoutes';
 import adminRouter from './routes/adminRoutes';
+import bulkGenerationRouter from './routes/bulkGeneration';
 import trainerRouter from './routes/trainerRoutes';
 import customerRouter from './routes/customerRoutes';
 import pdfRouter from './routes/pdf';
@@ -32,6 +33,7 @@ import { favoritesRouter } from './routes/favorites';
 import { trendingRouter } from './routes/trending';
 // Meal plan rating feature removed
 import { adminAnalyticsRouter } from './routes/adminAnalytics';
+import { adminDashboardRouter } from './routes/adminDashboard';
 import analyticsRouter from './routes/analytics';
 // import ratingsRouter from './routes/ratings'; // REMOVED - rating feature deleted
 import { progressSummariesRouter } from './routes/progressSummaries';
@@ -43,6 +45,7 @@ import { paymentRouter } from './routes/payment'; // Stripe payment integration
 import tierRouter from './routes/tierRoutes';
 import subscriptionRouter from './routes/subscriptionRoutes';
 import usageRouter from './routes/usageRoutes';
+import { logAccess } from './middleware/accessLogging';
 import { schedulerService } from './services/schedulerService';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -211,6 +214,8 @@ app.use('/api', securityAnalysis);
 app.use('/api', requestMonitoring);
 app.use('/api', sanitizeAnalyticsData);
 app.use('/api', privacyProtection);
+// Apply access logging to all API routes for admin monitoring
+app.use('/api', logAccess);
 
 // Invitations routes (mixed auth requirements - handled internally)
 app.use('/api/invitations', invitationRouter);
@@ -219,6 +224,11 @@ app.use('/api/meal-types', mealTypeRouter); // Story 2.15: Meal type tier filter
 app.use('/api/branding', brandingRouter); // Story 2.12: Branding & customization (Professional+)
 app.use('/api/entitlements', entitlementsRouter); // Tier and feature entitlements
 // app.use('/api/ratings', ratingsRouter); // Recipe rating endpoints REMOVED - feature deleted
+
+// CRITICAL: Register more specific admin routes BEFORE the catch-all /api/admin route
+// This ensures /api/admin/generate-bulk is matched before /api/admin
+app.use('/api/admin/generate-bulk', bulkGenerationRouter);
+app.use('/api/admin/dashboard', adminDashboardRouter);
 app.use('/api/admin', requireAdmin, adminRouter);
 app.use('/api/export', requireAdmin, exportRouter);
 app.use('/api/trainer', requireTrainerOrAdmin, trainerRouter);

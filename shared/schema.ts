@@ -692,15 +692,12 @@ export const progressPhotos = pgTable("progress_photos", {
   photoDateIdx: index("progress_photos_date_idx").on(table.photoDate),
 }));
 
-// GOALS FEATURE REMOVED - Commented out for future reference
-/*
 /**
  * Customer Goals Table
  * 
  * Stores fitness and health goals set by customers.
  * Supports various goal types with target dates and achievement tracking.
  */
-/*
 export const customerGoals = pgTable("customer_goals", {
   id: uuid("id").primaryKey().defaultRandom(),
   customerId: uuid("customer_id")
@@ -733,7 +730,6 @@ export const customerGoals = pgTable("customer_goals", {
   customerIdIdx: index("customer_goals_customer_id_idx").on(table.customerId),
   statusIdx: index("customer_goals_status_idx").on(table.status),
 }));
-*/
 
 /**
  * Goal Milestones Table
@@ -741,7 +737,6 @@ export const customerGoals = pgTable("customer_goals", {
  * Tracks milestone achievements within larger goals.
  * Allows breaking down big goals into smaller, achievable steps.
  */
-/*
 export const goalMilestones = pgTable("goal_milestones", {
   id: uuid("id").primaryKey().defaultRandom(),
   goalId: uuid("goal_id")
@@ -755,7 +750,6 @@ export const goalMilestones = pgTable("goal_milestones", {
 }, (table) => ({
   goalIdIdx: index("goal_milestones_goal_id_idx").on(table.goalId),
 }));
-*/
 
 // Type exports for progress tracking
 export type InsertProgressMeasurement = typeof progressMeasurements.$inferInsert;
@@ -764,14 +758,11 @@ export type ProgressMeasurement = typeof progressMeasurements.$inferSelect;
 export type InsertProgressPhoto = typeof progressPhotos.$inferInsert;
 export type ProgressPhoto = typeof progressPhotos.$inferSelect;
 
-// GOALS TYPES REMOVED - Stub exports to prevent import errors
-export type InsertCustomerGoal = any;
-export type CustomerGoal = any;
-export type InsertGoalMilestone = any;
-export type GoalMilestone = any;
-// Stub table exports (will cause runtime errors if used)
-export const customerGoals = {} as any;
-export const goalMilestones = {} as any;
+// Goals type exports
+export type InsertCustomerGoal = typeof customerGoals.$inferInsert;
+export type CustomerGoal = typeof customerGoals.$inferSelect;
+export type InsertGoalMilestone = typeof goalMilestones.$inferInsert;
+export type GoalMilestone = typeof goalMilestones.$inferSelect;
 
 // Validation schemas for progress tracking
 export const createMeasurementSchema = z.object({

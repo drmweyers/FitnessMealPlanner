@@ -7,15 +7,19 @@ import { Loader2, Download, Database, Users, Calendar, CheckCircle } from "lucid
 interface ExportJSONModalProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedRecipeIds?: Set<string>;
 }
 
 type ExportType = "recipes" | "users" | "mealPlans" | "all";
 
-export default function ExportJSONModal({ isOpen, onClose }: ExportJSONModalProps) {
+export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: ExportJSONModalProps) {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState<ExportType | null>(null);
   const [exportStatus, setExportStatus] = useState<Record<string, boolean>>({});
+
+  // Recalculate hasSelectedRecipes on each render to ensure it's up-to-date
+  const hasSelectedRecipes = selectedRecipeIds && selectedRecipeIds.size > 0;
 
   const handleExport = async (type: ExportType) => {
     setIsExporting(true);
@@ -24,7 +28,29 @@ export default function ExportJSONModal({ isOpen, onClose }: ExportJSONModalProp
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/admin/export?type=${type}`, {
+      
+      // Re-check selectedRecipeIds at the time of export (in case it changed)
+      const currentHasSelected = selectedRecipeIds && selectedRecipeIds.size > 0;
+      console.log('[Export] Export type:', type);
+      console.log('[Export] Has selected recipes:', currentHasSelected);
+      console.log('[Export] Selected recipe IDs:', selectedRecipeIds ? Array.from(selectedRecipeIds) : 'none');
+      
+      // Build query parameters
+      const params = new URLSearchParams({ type });
+      
+      // If exporting recipes and we have selected recipe IDs, include them
+      if (type === 'recipes' && currentHasSelected && selectedRecipeIds) {
+        const recipeIdsArray = Array.from(selectedRecipeIds);
+        console.log('[Export] Including recipe IDs in request:', recipeIdsArray);
+        params.append('recipeIds', recipeIdsArray.join(','));
+      } else {
+        console.log('[Export] Not including recipe IDs (type:', type, ', hasSelected:', currentHasSelected, ')');
+      }
+      
+      const requestUrl = `/api/admin/export?${params.toString()}`;
+      console.log('[Export] Request URL:', requestUrl);
+      
+      const response = await fetch(requestUrl, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -38,14 +64,14 @@ export default function ExportJSONModal({ isOpen, onClose }: ExportJSONModalProp
       
       // Create and download JSON file
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
+      a.href = blobUrl;
       a.download = `fitnessmealplanner-${type}-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(blobUrl);
 
       // Update status
       if (type === "all") {
@@ -54,9 +80,15 @@ export default function ExportJSONModal({ isOpen, onClose }: ExportJSONModalProp
         setExportStatus({ [type]: true });
       }
 
+      const exportDescription = type === "recipes" && hasSelectedRecipes
+        ? `${selectedRecipeIds.size} selected recipe${selectedRecipeIds.size === 1 ? '' : 's'} exported successfully`
+        : type === "all" 
+          ? "All data exported successfully"
+          : `${type} exported successfully`;
+      
       toast({
         title: "Export successful",
-        description: `${type === "all" ? "All data" : type} exported successfully`,
+        description: exportDescription,
       });
 
       // Close modal after a short delay
@@ -95,6 +127,14 @@ export default function ExportJSONModal({ isOpen, onClose }: ExportJSONModalProp
         </div>
 
         <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-200px)]">
+          {hasSelectedRecipes && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800 font-medium">
+                {selectedRecipeIds.size} recipe{selectedRecipeIds.size === 1 ? '' : 's'} selected. 
+                Click "Recipes" to export only the selected recipes, or use "Export All" to export everything.
+              </p>
+            </div>
+          )}
           <p className="text-gray-600 mb-6">
             Select the data you want to export. The data will be downloaded as a JSON file.
           </p>
@@ -117,7 +157,11 @@ export default function ExportJSONModal({ isOpen, onClose }: ExportJSONModalProp
                   )}
                 </div>
                 <h3 className="text-lg font-semibold mb-1">Recipes</h3>
-                <p className="text-sm text-gray-600">Export all recipes with nutritional data</p>
+                <p className="text-sm text-gray-600">
+                  {hasSelectedRecipes 
+                    ? `Export ${selectedRecipeIds.size} selected recipe${selectedRecipeIds.size === 1 ? '' : 's'} with nutritional data`
+                    : 'Export all recipes with nutritional data'}
+                </p>
                 {isExporting && exportType === "recipes" && (
                   <div className="mt-3">
                     <Loader2 className="h-4 w-4 animate-spin" />

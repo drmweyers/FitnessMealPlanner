@@ -54,9 +54,19 @@ export default function RecipeModal({ recipe, onClose, showDeleteButton = false,
         },
       });
       if (!response.ok) {
-        throw new Error('Failed to delete recipe');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete recipe' }));
+        throw new Error(errorData.error || errorData.message || 'Failed to delete recipe');
       }
-      return response.json();
+      // Handle 204 No Content response (no body to parse)
+      if (response.status === 204) {
+        return null;
+      }
+      // For other success statuses, try to parse JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json();
+      }
+      return null;
     },
     onSuccess: () => {
       // Invalidate and refetch admin recipes

@@ -15,12 +15,20 @@ interface SSEClient {
 export class SSEManager {
   private clients: Map<string, SSEClient[]> = new Map();
   private cleanupInterval: NodeJS.Timeout;
+  private keepaliveInterval: NodeJS.Timeout;
+  private readonly KEEPALIVE_INTERVAL_MS = 30000; // Send keepalive every 30 seconds
+  private readonly STALE_CONNECTION_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes (increased from 5)
 
   constructor() {
     // Clean up stale connections every 30 seconds
     this.cleanupInterval = setInterval(() => {
       this.cleanupStaleConnections();
     }, 30000);
+
+    // Send keepalive messages to all active connections every 30 seconds
+    this.keepaliveInterval = setInterval(() => {
+      this.sendKeepalive();
+    }, this.KEEPALIVE_INTERVAL_MS);
   }
 
   /**
@@ -89,10 +97,25 @@ export class SSEManager {
 
     console.log(`[SSE] Broadcasting progress to ${batchClients.length} clients for batch ${batchId}`);
 
-    // Send to all connected clients
+    // Send to all connected clients, remove any that fail
+    const validClients: SSEClient[] = [];
     batchClients.forEach(client => {
-      this.sendEvent(client.res, 'progress', progressData);
+      try {
+        this.sendEvent(client.res, 'progress', progressData);
+        validClients.push(client);
+      } catch (error) {
+        console.warn(`[SSE] Failed to send progress to client ${client.id}, removing`);
+      }
     });
+
+    // Update client list if any were removed
+    if (validClients.length !== batchClients.length) {
+      if (validClients.length === 0) {
+        this.clients.delete(batchId);
+      } else {
+        this.clients.set(batchId, validClients);
+      }
+    }
   }
 
   /**
@@ -142,26 +165,52 @@ export class SSEManager {
    */
   private sendEvent(res: Response, event: string, data: any): void {
     try {
+      if (res.writableEnded || res.destroyed) {
+        console.warn('[SSE] Attempted to send event to closed connection');
+        return;
+      }
       res.write(`event: ${event}\n`);
       res.write(`data: ${JSON.stringify(data)}\n\n`);
     } catch (error) {
       console.error('[SSE] Failed to send event:', error);
+      // Don't throw - connection might be closed, caller should handle cleanup
     }
   }
 
   /**
-   * Clean up stale connections (older than 5 minutes with no activity)
+   * Send keepalive messages to prevent connection timeouts
+   */
+  private sendKeepalive(): void {
+    this.clients.forEach((batchClients, batchId) => {
+      batchClients.forEach(client => {
+        try {
+          // Send a comment line (keepalive) - SSE spec allows comment lines starting with :
+          client.res.write(`: keepalive ${Date.now()}\n\n`);
+        } catch (error) {
+          // Connection might be closed, remove it
+          console.warn(`[SSE] Failed to send keepalive to client ${client.id}, removing`);
+          this.removeClient(batchId, client.id);
+        }
+      });
+    });
+  }
+
+  /**
+   * Clean up stale connections (older than threshold with no activity)
    */
   private cleanupStaleConnections(): void {
     const now = Date.now();
-    const staleThreshold = 5 * 60 * 1000; // 5 minutes
 
     this.clients.forEach((batchClients, batchId) => {
       const validClients = batchClients.filter(client => {
         const age = now - client.connectedAt.getTime();
-        if (age > staleThreshold) {
-          console.log(`[SSE] Closing stale connection for client ${client.id} in batch ${batchId}`);
-          client.res.end();
+        if (age > this.STALE_CONNECTION_THRESHOLD_MS) {
+          console.log(`[SSE] Closing stale connection for client ${client.id} in batch ${batchId} (age: ${Math.round(age / 1000)}s)`);
+          try {
+            client.res.end();
+          } catch (error) {
+            // Connection already closed
+          }
           return false;
         }
         return true;
@@ -200,6 +249,7 @@ export class SSEManager {
    */
   shutdown(): void {
     clearInterval(this.cleanupInterval);
+    clearInterval(this.keepaliveInterval);
 
     // Close all connections
     this.clients.forEach((batchClients, batchId) => {

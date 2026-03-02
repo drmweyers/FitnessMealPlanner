@@ -23,6 +23,8 @@ interface BMADGenerationOptions extends GenerationOptions {
   enableNutritionValidation?: boolean;
   progressCallback?: (progress: ProgressState) => void;
   batchId?: string; // Optional: Allow passing batch ID from API
+  tierLevel?: 'starter' | 'professional' | 'enterprise'; // Tier level for generated recipes
+  tierLevels?: string[]; // Full array of selected tiers (for reference)
 }
 
 interface BMADGenerationResult extends ChunkedGenerationResult {
@@ -73,6 +75,26 @@ export class BMADRecipeService {
 
       // Phase 1: Strategy & Concept Generation
       console.log(`[BMAD] Phase 1: Generating strategy for ${options.count} recipes...`);
+      console.log('[BMAD] Input options being passed to concept agent:', {
+        count: options.count,
+        mealTypes: options.mealTypes,
+        dietaryRestrictions: options.dietaryRestrictions,
+        targetCalories: options.targetCalories,
+        focusIngredient: options.focusIngredient,
+        difficultyLevel: options.difficultyLevel,
+        recipePreferences: options.recipePreferences,
+        maxIngredients: options.maxIngredients,
+        fitnessGoal: options.fitnessGoal,
+        naturalLanguagePrompt: options.naturalLanguagePrompt,
+        maxPrepTime: options.maxPrepTime,
+        maxCalories: options.maxCalories,
+        minProtein: options.minProtein,
+        maxProtein: options.maxProtein,
+        minCarbs: options.minCarbs,
+        maxCarbs: options.maxCarbs,
+        minFat: options.minFat,
+        maxFat: options.maxFat
+      });
       const conceptResponse = await this.conceptAgent.process({
         options: { ...options, count: options.count },
         batchId
@@ -247,7 +269,8 @@ export class BMADRecipeService {
           console.log('[BMAD] Calling database agent...');
           const saveResponse = await this.databaseAgent.process({
             validatedRecipes: validatedRecipes,
-            batchId
+            batchId,
+            tierLevel: options.tierLevel || 'starter' // Pass tier level to database agent
           }, batchId);
 
           console.log('[BMAD] Database response:', {
@@ -289,14 +312,33 @@ export class BMADRecipeService {
               hasMealTypes: !!savedRecipes[0]?.mealTypes
             });
 
+            // Get full recipe data to pass more details to image generation
+            const recipesForImageGen = await Promise.all(
+              savedRecipes.map(async (r: any) => {
+                // Fetch full recipe data to get ingredients and mainIngredientTags
+                const fullRecipe = await storage.getRecipe(r.id || r.recipeId);
+                // Convert ingredientsJson to ingredients array format
+                const ingredients = fullRecipe?.ingredientsJson 
+                  ? fullRecipe.ingredientsJson.map((ing: any) => ({
+                      name: ing.name || ing.ingredient || '',
+                      amount: ing.amount || 0,
+                      unit: ing.unit || ''
+                    }))
+                  : [];
+                return {
+                  recipeId: r.id || r.recipeId, // Use UUID (r.id) if available, otherwise fallback to recipeId
+                  recipeName: r.recipeName,
+                  recipeDescription: r.recipeDescription || fullRecipe?.description || '',
+                  mealTypes: r.mealTypes || fullRecipe?.mealTypes || [],
+                  mainIngredientTags: fullRecipe?.mainIngredientTags || [],
+                  ingredients: ingredients,
+                  batchId
+                };
+              })
+            );
+
             const imageResponse = await this.imageAgent.generateBatchImages(
-              savedRecipes.map((r: any) => ({
-                recipeId: typeof r.recipeId === 'string' ? parseInt(r.recipeId, 10) : r.recipeId,
-                recipeName: r.recipeName,
-                recipeDescription: r.recipeDescription || '',
-                mealTypes: r.mealTypes || [],
-                batchId
-              })),
+              recipesForImageGen,
               batchId
             );
 
@@ -311,14 +353,90 @@ export class BMADRecipeService {
             if (imageResponse.success && imageResponse.data) {
               imagesGenerated += imageResponse.data.totalGenerated;
 
+              // Step 5: Delete recipes that don't have images (skipped due to image generation failure)
+              // Find recipes that were saved but don't have corresponding images
+              const recipesWithImages = new Set(
+                imageResponse.data.images.map(img => String(img.recipeId))
+              );
+              const recipesToDelete: any[] = [];
+              
+              for (const savedRecipe of savedRecipes) {
+                const recipeId = String(savedRecipe.id || savedRecipe.recipeId);
+                if (!recipesWithImages.has(recipeId)) {
+                  recipesToDelete.push(savedRecipe);
+                }
+              }
+
+              // Delete recipes without images
+              if (recipesToDelete.length > 0) {
+                console.log(`[BMAD] Deleting ${recipesToDelete.length} recipes without images...`);
+                for (const recipeToDelete of recipesToDelete) {
+                  try {
+                    const recipeId = recipeToDelete.id || recipeToDelete.recipeId;
+                    await storage.deleteRecipe(recipeId);
+                    console.log(`[BMAD] Deleted recipe ${recipeId} (${recipeToDelete.recipeName}) - no image generated`);
+                    // Remove from allSavedRecipes
+                    const index = allSavedRecipes.findIndex(r => (r.id || r.recipeId) === recipeId);
+                    if (index >= 0) {
+                      allSavedRecipes.splice(index, 1);
+                    }
+                  } catch (error) {
+                    console.error(`[BMAD] Failed to delete recipe ${recipeToDelete.recipeName}:`, error);
+                    allErrors.push(`Failed to delete recipe ${recipeToDelete.recipeName} without image`);
+                  }
+                }
+              }
+
               // Log if no images were generated
               if (imageResponse.data.totalGenerated === 0) {
-                console.warn('[BMAD] WARNING: Zero images generated!');
+                console.warn('[BMAD] WARNING: Zero images generated! All recipes in this chunk will be deleted.');
                 console.warn('[BMAD] Errors:', imageResponse.data.errors);
                 allErrors.push(...imageResponse.data.errors);
               }
 
-              // Step 5: S3 Upload (if enabled)
+              // Step 6: Update recipes with generated image URLs (even if S3 upload is disabled)
+              // This ensures recipes have images even if S3 upload fails or is disabled
+              if (imageResponse.data.images.length > 0) {
+                console.log(`[BMAD] Updating ${imageResponse.data.images.length} recipes with generated image URLs...`);
+                
+                // Create mapping from recipeId to UUID for all saved recipes
+                const recipeIdToUuid = new Map<string | number, string>();
+                for (const recipe of savedRecipes) {
+                  const recipeId = recipe.id || recipe.recipeId;
+                  // Handle both numeric and UUID recipeIds from image generation
+                  const imageRecipeId = recipe.id || recipe.recipeId;
+                  recipeIdToUuid.set(String(imageRecipeId), String(recipeId));
+                  // Also map numeric ID if recipeId was converted
+                  if (typeof recipe.recipeId === 'number') {
+                    recipeIdToUuid.set(recipe.recipeId, String(recipeId));
+                  }
+                }
+
+                // Update recipes with temporary DALL-E URLs (will be replaced with S3 URLs if upload succeeds)
+                let tempUrlUpdateCount = 0;
+                for (const image of imageResponse.data.images) {
+                  if (!image.imageMetadata.isPlaceholder && image.imageMetadata.imageUrl) {
+                    const recipeUuid = recipeIdToUuid.get(String(image.recipeId)) || recipeIdToUuid.get(image.recipeId);
+                    if (recipeUuid) {
+                      try {
+                        await storage.updateRecipe(recipeUuid, {
+                          imageUrl: image.imageMetadata.imageUrl
+                        });
+                        tempUrlUpdateCount++;
+                        console.log(`[BMAD] Updated recipe ${recipeUuid} with temporary image URL: ${image.imageMetadata.imageUrl.substring(0, 50)}...`);
+                      } catch (error) {
+                        console.error(`[BMAD] Failed to update recipe ${recipeUuid} with image URL:`, error);
+                        allErrors.push(`Failed to update recipe ${image.recipeName} with image URL`);
+                      }
+                    } else {
+                      console.warn(`[BMAD] No UUID mapping found for recipeId ${image.recipeId} (recipe: ${image.recipeName})`);
+                    }
+                  }
+                }
+                console.log(`[BMAD] Updated ${tempUrlUpdateCount} recipes with temporary image URLs`);
+              }
+
+              // Step 7: S3 Upload (if enabled) - this will replace temporary URLs with permanent ones
               if (options.enableS3Upload !== false && imageResponse.data.images.length > 0) {
                 console.log(`[BMAD] Starting S3 upload for ${imageResponse.data.images.length} images...`);
 
@@ -342,28 +460,61 @@ export class BMADRecipeService {
                 if (uploadResponse.success && uploadResponse.data) {
                   imagesUploaded += uploadResponse.data.totalUploaded;
 
-                  // Create mapping from recipeId (integer) to UUID
-                  const recipeIdToUuid = new Map<number, string>();
+                  // Create mapping from recipeId to UUID (handle both string and number IDs)
+                  const recipeIdToUuid = new Map<string | number, string>();
                   for (const recipe of savedRecipes) {
-                    const numericId = typeof recipe.recipeId === 'string' ? parseInt(recipe.recipeId, 10) : recipe.recipeId;
-                    const uuidId = recipe.id || recipe.recipeId; // Use UUID if available
-                    recipeIdToUuid.set(numericId, String(uuidId));
+                    const recipeId = recipe.id || recipe.recipeId;
+                    // Map both the UUID and any numeric ID that might be used
+                    recipeIdToUuid.set(String(recipeId), String(recipeId));
+                    if (typeof recipe.recipeId === 'number') {
+                      recipeIdToUuid.set(recipe.recipeId, String(recipeId));
+                    }
+                    // Also map from image generation recipeId format
+                    const imageRecipeId = recipe.id || recipe.recipeId;
+                    recipeIdToUuid.set(String(imageRecipeId), String(recipeId));
                   }
 
-                  // Step 6: Update database with permanent URLs
-                  console.log(`[BMAD] Updating ${uploadResponse.data.uploads.length} recipes with permanent URLs...`);
+                  // Step 7: Update database with permanent S3 URLs (replaces temporary URLs)
+                  console.log(`[BMAD] Updating ${uploadResponse.data.uploads.length} recipes with permanent S3 URLs...`);
                   let updatedCount = 0;
                   for (const upload of uploadResponse.data.uploads) {
-                    if (upload.wasUploaded) {
-                      const recipeUuid = recipeIdToUuid.get(upload.recipeId);
+                    // Only update with S3 URL if upload succeeded - do not keep temporary URL on failure
+                    if (upload.wasUploaded && upload.permanentImageUrl) {
+                      // Find the UUID for this recipeId (handle both string and number)
+                      const recipeUuid = recipeIdToUuid.get(String(upload.recipeId)) || 
+                                        recipeIdToUuid.get(upload.recipeId) ||
+                                        recipeIdToUuid.get(Number(upload.recipeId));
+                      
                       if (recipeUuid) {
-                        console.log(`[BMAD] Updating recipe ${upload.recipeId} (UUID: ${recipeUuid}) with S3 URL: ${upload.permanentImageUrl}`);
-                        await storage.updateRecipe(recipeUuid, {
-                          imageUrl: upload.permanentImageUrl
-                        });
-                        updatedCount++;
+                        try {
+                          console.log(`[BMAD] Updating recipe ${upload.recipeId} (UUID: ${recipeUuid}) with S3 URL: ${upload.permanentImageUrl.substring(0, 50)}...`);
+                          await storage.updateRecipe(recipeUuid, {
+                            imageUrl: upload.permanentImageUrl
+                          });
+                          updatedCount++;
+                        } catch (error) {
+                          console.error(`[BMAD] Failed to update recipe ${recipeUuid} with S3 URL:`, error);
+                          allErrors.push(`Failed to update recipe ${upload.recipeName} with S3 URL`);
+                        }
                       } else {
-                        console.error(`[BMAD] No UUID found for recipeId ${upload.recipeId}`);
+                        console.error(`[BMAD] No UUID found for recipeId ${upload.recipeId} (recipe: ${upload.recipeName})`);
+                        console.error(`[BMAD] Available mappings:`, Array.from(recipeIdToUuid.entries()));
+                      }
+                    } else {
+                      console.log(`[BMAD] S3 upload failed for ${upload.recipeName}, not using temporary URL`);
+                      // Remove temporary URL from recipe if S3 upload failed
+                      const recipeUuid = recipeIdToUuid.get(String(upload.recipeId)) || 
+                                        recipeIdToUuid.get(upload.recipeId) ||
+                                        recipeIdToUuid.get(Number(upload.recipeId));
+                      if (recipeUuid) {
+                        try {
+                          await storage.updateRecipe(recipeUuid, {
+                            imageUrl: null
+                          });
+                          console.log(`[BMAD] Removed temporary image URL from recipe ${upload.recipeName} due to S3 upload failure`);
+                        } catch (error) {
+                          console.error(`[BMAD] Failed to remove temporary URL from recipe ${recipeUuid}:`, error);
+                        }
                       }
                     }
                   }
@@ -371,13 +522,65 @@ export class BMADRecipeService {
                 } else {
                   console.error('[BMAD] S3 upload failed:', uploadResponse.error);
                   allErrors.push(`S3 upload failed: ${uploadResponse.error}`);
+                  
+                  // Delete recipes without permanent images since S3 upload failed
+                  // Recipes require images, so delete them if S3 upload fails
+                  console.log('[BMAD] Deleting recipes without permanent images due to S3 upload failure...');
+                  const recipeIdToUuid = new Map<string | number, string>();
+                  for (const recipe of savedRecipes) {
+                    const recipeId = recipe.id || recipe.recipeId;
+                    recipeIdToUuid.set(String(recipeId), String(recipeId));
+                    if (typeof recipe.recipeId === 'number') {
+                      recipeIdToUuid.set(recipe.recipeId, String(recipeId));
+                    }
+                  }
+                  
+                  // Delete all recipes that were supposed to get S3 images
+                  for (const image of imageResponse.data.images) {
+                    if (!image.imageMetadata.isPlaceholder && image.imageMetadata.imageUrl) {
+                      const recipeUuid = recipeIdToUuid.get(String(image.recipeId)) || recipeIdToUuid.get(image.recipeId);
+                      if (recipeUuid) {
+                        try {
+                          await storage.deleteRecipe(recipeUuid);
+                          console.log(`[BMAD] Deleted recipe ${recipeUuid} (${image.recipeName}) - S3 upload failed, recipe requires images`);
+                          // Remove from allSavedRecipes
+                          const index = allSavedRecipes.findIndex(r => (r.id || r.recipeId) === recipeUuid);
+                          if (index >= 0) {
+                            allSavedRecipes.splice(index, 1);
+                          }
+                        } catch (error) {
+                          console.error(`[BMAD] Failed to delete recipe ${recipeUuid}:`, error);
+                          allErrors.push(`Failed to delete recipe ${image.recipeName} after S3 upload failure`);
+                        }
+                      }
+                    }
+                  }
                 }
-              } else if (options.enableS3Upload !== false) {
+              } else if (options.enableS3Upload === false) {
+                console.log('[BMAD] S3 upload disabled, recipes already updated with temporary DALL-E URLs');
+              } else {
                 console.warn('[BMAD] Skipping S3 upload: no images to upload');
               }
             } else {
               console.error('[BMAD] Image generation failed:', imageResponse.error);
               allErrors.push(`Image generation failed: ${imageResponse.error}`);
+              
+              // Delete all saved recipes in this chunk since no images were generated
+              console.log(`[BMAD] Deleting all ${savedRecipes.length} recipes in chunk ${chunkIndex + 1} - no images generated`);
+              for (const recipeToDelete of savedRecipes) {
+                try {
+                  const recipeId = recipeToDelete.id || recipeToDelete.recipeId;
+                  await storage.deleteRecipe(recipeId);
+                  console.log(`[BMAD] Deleted recipe ${recipeId} (${recipeToDelete.recipeName || recipeToDelete.recipeId}) - image generation failed`);
+                  // Remove from allSavedRecipes
+                  const index = allSavedRecipes.findIndex(r => (r.id || r.recipeId) === recipeId);
+                  if (index >= 0) {
+                    allSavedRecipes.splice(index, 1);
+                  }
+                } catch (error) {
+                  console.error(`[BMAD] Failed to delete recipe ${recipeToDelete.recipeName || recipeToDelete.recipeId}:`, error);
+                }
+              }
             }
           }
 

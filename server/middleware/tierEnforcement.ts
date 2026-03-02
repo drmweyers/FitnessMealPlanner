@@ -251,10 +251,10 @@ export function getEntitlements(req: Request): any {
  * Story 2.14: Recipe Tier Filtering Middleware
  *
  * Attaches the user's tier level to the request for recipe filtering.
- * Progressive access model: Higher tiers can access all lower tier recipes.
- * - Starter: tier_level = 'starter' only (1,000 recipes)
- * - Professional: tier_level <= 'professional' (starter + professional = 2,500 recipes)
- * - Enterprise: tier_level <= 'enterprise' (all recipes = 4,000 recipes)
+ * Progressive access model: Trainers see recipes assigned to their tier level OR lower tiers.
+ * - Starter: tier_level <= 'starter' (sees only starter recipes)
+ * - Professional: tier_level <= 'professional' (sees starter + professional recipes)
+ * - Enterprise: tier_level <= 'enterprise' (sees all recipes)
  *
  * Usage: Add to recipe routes before querying database
  * Route handlers should filter using: WHERE tier_level <= req.userTierLevel

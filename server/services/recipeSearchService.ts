@@ -62,6 +62,10 @@ export class RecipeSearchService {
     ];
 
     // Story 2.14: Tier-based filtering (progressive access model)
+    // Trainers see recipes assigned to their tier level OR lower tiers
+    // - Starter: sees recipes with tier_level = 'starter' only
+    // - Professional: sees recipes with tier_level <= 'professional' (starter + professional)
+    // - Enterprise: sees recipes with tier_level <= 'enterprise' (all recipes)
     if (tierLevel) {
       conditions.push(sql`${recipes.tierLevel} <= ${tierLevel}::tier_level`);
     }
