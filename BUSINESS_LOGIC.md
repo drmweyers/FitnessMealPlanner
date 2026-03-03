@@ -1,5 +1,5 @@
 # EvoFitMeals — Business Logic Documentation
-**Last Updated:** 2026-03-01
+**Last Updated:** 2026-03-03
 **Audited From:** Codebase (`shared/schema.ts`, `server/routes/*`, `server/controllers/*`, `client/src/pages/*`)
 **Production URL:** https://evofitmeals.com
 
@@ -18,7 +18,7 @@ EvoFitMeals (FitnessMealPlanner) is a B2B SaaS meal planning platform designed f
 - **AI:** OpenAI API (recipe generation, NLP parsing)
 - **Payments:** Stripe (subscriptions + one-time payments)
 - **Image Storage:** S3-compatible
-- **Deployment:** Docker + docker-compose
+- **Deployment:** DigitalOcean App Platform (Docker + docker-compose for local dev)
 
 ---
 
@@ -733,3 +733,31 @@ Table: `branding_audit_log`
 | `payment_event_type` | purchase, upgrade, downgrade, refund, chargeback, failed |
 | `payment_status` | pending, completed, failed, refunded |
 | `webhook_event_status` | pending, processed, failed |
+
+---
+
+## 17. Deployment & Infrastructure
+
+### Production Environment
+
+| Item | Value |
+|------|-------|
+| **Platform** | DigitalOcean App Platform |
+| **Production URL** | https://evofitmeals.com |
+| **Deploy Branch** | `main` (auto-deploy on push) |
+| **Port** | 5001 |
+| **Runtime** | Node.js |
+| **Database** | DigitalOcean Managed PostgreSQL 14 |
+| **Config** | `.do/app.yaml` |
+
+### CORS Configuration
+- **Production:** `FRONTEND_URL` env var or fallback to `https://evofitmeals.com` (see `server/index.ts:77-79`)
+- **Development:** `http://localhost:3000`, `http://localhost:5173`, `http://127.0.0.1:5173`
+
+### Local Development
+- **Docker:** `docker-compose --profile dev up -d` (PostgreSQL + app on port 4000)
+- **Port override:** Production uses `PORT=5001` via `.do/app.yaml`; local defaults to `process.env.PORT || 4000`
+
+### Health Check
+- **Endpoint:** `GET /api/health`
+- **Used by:** DigitalOcean App Platform for readiness/liveness checks
