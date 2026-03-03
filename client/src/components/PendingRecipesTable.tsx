@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -12,11 +12,22 @@ export default function PendingRecipesTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [filters] = useState<RecipeFilter>({ 
+  const [page, setPage] = useState(1);
+  const [limit] = useState(50); // Recipes per page
+  const [filters, setFilters] = useState<RecipeFilter>({ 
     approved: false, 
     page: 1, 
     limit: 50 
   });
+
+  // Update filters when page changes
+  useEffect(() => {
+    setFilters({ 
+      approved: false, 
+      page, 
+      limit 
+    });
+  }, [page, limit]);
 
   const { data: pendingData, isLoading, refetch } = useQuery({
     queryKey: ['/api/admin/recipes', filters],
@@ -40,6 +51,8 @@ export default function PendingRecipesTable() {
   });
 
   const pendingRecipes = (pendingData as any)?.recipes || [];
+  const totalRecipes = (pendingData as any)?.total || 0;
+  const totalPages = Math.ceil(totalRecipes / limit);
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -198,7 +211,8 @@ export default function PendingRecipesTable() {
         {recipes.length > 0 && (
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-slate-50 rounded-lg border gap-3 sm:gap-4">
             <div className="text-xs sm:text-sm text-slate-600">
-              {recipes.length} recipes pending approval
+              {totalRecipes} recipes pending approval
+              {totalPages > 1 && ` (showing ${recipes.length} on this page)`}
             </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Button
@@ -226,6 +240,7 @@ export default function PendingRecipesTable() {
                 onClick={() => approveAllMutation.mutate()}
                 disabled={approveAllMutation.isPending}
                 className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm py-2 sm:py-1"
+                title={`Approve all ${recipes.length} recipes on this page`}
               >
                 {approveAllMutation.isPending ? (
                   <>
@@ -415,9 +430,63 @@ export default function PendingRecipesTable() {
           </table>
         </div>
         
-        {/* Results summary */}
-        <div className="px-3 sm:px-6 py-3 sm:py-4 bg-slate-50 rounded-lg text-xs sm:text-sm text-slate-600">
-          Showing {recipes.length} pending recipes
+        {/* Results summary and pagination */}
+        <div className="px-3 sm:px-6 py-3 sm:py-4 bg-slate-50 rounded-lg">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-xs sm:text-sm text-slate-600">
+              Showing {recipes.length} of {totalRecipes} pending recipes
+              {totalPages > 1 && ` (Page ${page} of ${totalPages})`}
+            </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                  className="text-xs"
+                >
+                  <i className="fas fa-angle-double-left mr-1"></i>
+                  First
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="text-xs"
+                >
+                  <i className="fas fa-angle-left mr-1"></i>
+                  Previous
+                </Button>
+                <span className="text-xs sm:text-sm text-slate-600 px-2">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="text-xs"
+                >
+                  Next
+                  <i className="fas fa-angle-right ml-1"></i>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(totalPages)}
+                  disabled={page === totalPages}
+                  className="text-xs"
+                >
+                  Last
+                  <i className="fas fa-angle-double-right ml-1"></i>
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       

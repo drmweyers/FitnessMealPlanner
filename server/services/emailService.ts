@@ -1,9 +1,14 @@
 import { emailAnalyticsService } from './emailAnalyticsService';
+import { Resend } from 'resend';
 
 // Mailgun configuration
 const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
 const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
 const MAILGUN_API_BASE_URL = process.env.MAILGUN_API_BASE_URL || 'https://api.mailgun.net';
+
+// Resend configuration
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 export interface InvitationEmailData {
   customerEmail: string;
@@ -202,6 +207,14 @@ export class EmailService {
         month: 'long',
         day: 'numeric'
       });
+
+      if (!resend) {
+        console.error('RESEND_API_KEY not configured. Cannot send progress summary email.');
+        return { 
+          success: false, 
+          error: 'Email service not configured - missing RESEND_API_KEY' 
+        };
+      }
 
       const { data: emailData, error } = await resend.emails.send({
         from: fromEmail,
@@ -453,6 +466,14 @@ If you didn't expect this invitation, you can safely ignore this email.
 
       const fromEmail = this.getFromEmailAddress();
       console.log(`Sending test email from: ${fromEmail} to: ${to}`);
+
+      if (!resend) {
+        console.error('RESEND_API_KEY not configured. Cannot send test email.');
+        return { 
+          success: false, 
+          error: 'Email service not configured - missing RESEND_API_KEY' 
+        };
+      }
 
       const { data, error } = await resend.emails.send({
         from: fromEmail,

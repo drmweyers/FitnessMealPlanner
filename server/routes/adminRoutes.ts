@@ -14,8 +14,8 @@ import { bmadImageMonitor } from '../services/monitoring/BMADImageGenerationMoni
 import { parseNaturalLanguageRecipeRequirements } from '../services/openai';
 import { intelligentMealPlanGenerator } from '../services/intelligentMealPlanGenerator';
 import { nanoid } from 'nanoid';
-import { eq, sql } from 'drizzle-orm';
-import { personalizedRecipes, personalizedMealPlans, users, type MealPlan } from '@shared/schema';
+import { eq, sql, inArray, desc, and } from 'drizzle-orm';
+import { personalizedRecipes, personalizedMealPlans, users, trainerMealPlans, type MealPlan } from '@shared/schema';
 import { db } from '../db';
 
 const adminRouter = Router();
@@ -509,7 +509,28 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
       count,
       enableImageGeneration,
       enableS3Upload,
-      enableNutritionValidation
+      enableNutritionValidation,
+      // Log all input fields for verification
+      inputFields: {
+        mealTypes,
+        dietaryRestrictions,
+        targetCalories,
+        mainIngredient,
+        focusIngredient,
+        difficultyLevel,
+        recipePreferences,
+        maxIngredients,
+        fitnessGoal,
+        naturalLanguagePrompt,
+        maxPrepTime,
+        maxCalories,
+        minProtein,
+        maxProtein,
+        minCarbs,
+        maxCarbs,
+        minFat,
+        maxFat
+      }
     });
 
     // Start BMAD generation in background (pass batchId via options)
@@ -871,10 +892,166 @@ adminRouter.get('/recipes', requireAdmin, async (req, res) => {
 adminRouter.get('/stats', requireAdmin, async (req, res) => {
   try {
     const stats = await storage.getRecipeStats();
-    res.json(stats);
+    const [userCount] = await db.select({ count: sql<number>`count(*)` }).from(users);
+    res.json({ ...stats, users: userCount?.count ?? 0 });
   } catch (error) {
     console.error('Failed to fetch admin stats:', error);
     res.status(500).json({ error: 'Could not fetch stats' });
+  }
+});
+
+// List all users with status and usage (for admin customer monitoring)
+const adminUsersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  search: z.string().optional(),
+  role: z.enum(['admin', 'trainer', 'customer']).optional(),
+});
+
+adminRouter.get('/users', requireAdmin, async (req, res) => {
+  try {
+    const query = adminUsersQuerySchema.parse(req.query);
+    const offset = (query.page - 1) * query.limit;
+
+    const conditions = [];
+    if (query.role) {
+      conditions.push(eq(users.role, query.role));
+    }
+    if (query.search && query.search.trim()) {
+      const term = `%${query.search.trim()}%`;
+      conditions.push(
+        sql`(${users.email}::text ILIKE ${term} OR COALESCE(${users.name}, '')::text ILIKE ${term})`
+      );
+    }
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [totalRow] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(whereClause);
+
+    const userList = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+        profilePicture: users.profilePicture,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(whereClause)
+      .orderBy(sql`${users.createdAt} DESC`)
+      .limit(query.limit)
+      .offset(offset);
+
+    const userIds = userList.map((u) => u.id);
+
+    const trainerPlanCounts = await db
+      .select({
+        trainerId: trainerMealPlans.trainerId,
+        count: sql<number>`count(*)`,
+      })
+      .from(trainerMealPlans)
+      .where(inArray(trainerMealPlans.trainerId, userIds))
+      .groupBy(trainerMealPlans.trainerId);
+
+    const customerPlanCounts = await db
+      .select({
+        customerId: personalizedMealPlans.customerId,
+        count: sql<number>`count(*)`,
+      })
+      .from(personalizedMealPlans)
+      .where(inArray(personalizedMealPlans.customerId, userIds))
+      .groupBy(personalizedMealPlans.customerId);
+
+    const trainerCountMap = new Map(trainerPlanCounts.map((r) => [r.trainerId, Number(r.count)]));
+    const customerCountMap = new Map(customerPlanCounts.map((r) => [r.customerId, Number(r.count)]));
+
+    const usersWithUsage = userList.map((u) => ({
+      ...u,
+      status: 'active',
+      mealPlansGenerated: u.role === 'trainer' || u.role === 'admin' ? (trainerCountMap.get(u.id) ?? 0) : 0,
+      mealPlansAssigned: u.role === 'customer' ? (customerCountMap.get(u.id) ?? 0) : 0,
+    }));
+
+    res.json({
+      users: usersWithUsage,
+      total: Number(totalRow?.count ?? 0),
+      page: query.page,
+      limit: query.limit,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid query', details: error.errors });
+    }
+    console.error('Failed to fetch admin users:', error);
+    res.status(500).json({ error: 'Could not fetch users' });
+  }
+});
+
+// Get single user detail with meal plans list
+adminRouter.get('/users/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+        profilePicture: users.profilePicture,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.id, id));
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    let mealPlansGenerated: any[] = [];
+    let mealPlansAssigned: any[] = [];
+
+    if (user.role === 'trainer' || user.role === 'admin') {
+      mealPlansGenerated = await db
+        .select({
+          id: trainerMealPlans.id,
+          mealPlanData: trainerMealPlans.mealPlanData,
+          isTemplate: trainerMealPlans.isTemplate,
+          createdAt: trainerMealPlans.createdAt,
+        })
+        .from(trainerMealPlans)
+        .where(eq(trainerMealPlans.trainerId, id))
+        .orderBy(desc(trainerMealPlans.createdAt));
+    }
+
+    mealPlansAssigned = await db
+      .select({
+        id: personalizedMealPlans.id,
+        mealPlanData: personalizedMealPlans.mealPlanData,
+        assignedAt: personalizedMealPlans.assignedAt,
+        trainerId: personalizedMealPlans.trainerId,
+      })
+      .from(personalizedMealPlans)
+      .where(eq(personalizedMealPlans.customerId, id))
+      .orderBy(desc(personalizedMealPlans.assignedAt));
+
+    res.json({
+      user: {
+        ...user,
+        status: 'active',
+        mealPlansGeneratedCount: mealPlansGenerated.length,
+        mealPlansAssignedCount: mealPlansAssigned.length,
+      },
+      mealPlansGenerated,
+      mealPlansAssigned,
+    });
+  } catch (error) {
+    console.error('Failed to fetch admin user detail:', error);
+    res.status(500).json({ error: 'Could not fetch user' });
   }
 });
 
@@ -1165,34 +1342,32 @@ adminRouter.get('/recipes/:id', requireAuth, async (req, res) => {
 // Admin profile statistics endpoint
 adminRouter.get('/profile/stats', requireAuth, requireAdmin, async (req, res) => {
   try {
-    // Get basic recipe stats
-    const recipeStats = await storage.getRecipeStats();
+    // Import admin dashboard service for comprehensive stats
+    const { adminDashboardService } = await import('../services/adminDashboardService');
     
-    // Get user counts by role
-    const userStats = await db.select({
-      role: users.role,
-      count: sql<number>`count(*)::int`,
-    })
-    .from(users)
-    .groupBy(users.role);
-
-    const userCounts = userStats.reduce((acc, stat) => {
-      acc[stat.role] = stat.count;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Get total meal plans count
-    const [mealPlansCount] = await db.select({
-      count: sql<number>`count(*)::int`,
-    }).from(personalizedMealPlans);
+    // Get comprehensive system overview
+    const overview = await adminDashboardService.getSystemOverview();
+    
+    // Get usage stats
+    const usageStats = await adminDashboardService.getUsageStats();
 
     const stats = {
-      totalUsers: (userCounts.admin || 0) + (userCounts.trainer || 0) + (userCounts.customer || 0),
-      totalRecipes: recipeStats.total,
-      pendingRecipes: recipeStats.pending,
-      totalMealPlans: mealPlansCount?.count || 0,
-      activeTrainers: userCounts.trainer || 0,
-      activeCustomers: userCounts.customer || 0,
+      totalUsers: overview.users.total,
+      usersByRole: overview.users.byRole,
+      totalRecipes: overview.content.totalRecipes,
+      pendingRecipes: overview.content.pendingRecipes,
+      totalMealPlans: overview.content.totalMealPlans,
+      activeUsers: usageStats.activeUsers,
+      subscriptions: {
+        total: overview.subscriptions.total,
+        active: overview.subscriptions.active,
+        byTier: overview.subscriptions.byTier,
+      },
+      revenue: overview.subscriptions.revenue,
+      engagement: {
+        totalInteractions: overview.engagement.totalInteractions,
+        activeUsersToday: overview.engagement.activeUsersToday,
+      },
     };
 
     res.json(stats);
@@ -1209,7 +1384,9 @@ adminRouter.get('/profile/stats', requireAuth, requireAdmin, async (req, res) =>
 // Export data as JSON
 adminRouter.get('/export', requireAdmin, async (req, res) => {
   try {
-    const { type } = req.query;
+    const { type, recipeIds } = req.query;
+    
+    console.log('[Export] Received request - type:', type, ', recipeIds:', recipeIds);
     
     if (!type || !['recipes', 'users', 'mealPlans', 'all'].includes(type as string)) {
       return res.status(400).json({ error: 'Invalid export type. Must be: recipes, users, mealPlans, or all' });
@@ -1219,12 +1396,42 @@ adminRouter.get('/export', requireAdmin, async (req, res) => {
     
     // Export recipes
     if (type === 'recipes' || type === 'all') {
-      const { recipes } = await storage.searchRecipes({
-        page: 1,
-        limit: 100000, // Get all recipes
-      });
-      exportData.recipes = recipes;
-      exportData.recipesCount = recipes.length;
+      // Only filter by recipeIds when type is 'recipes' (not 'all')
+      // When type is 'all', always export all recipes regardless of recipeIds
+      // Handle recipeIds as string or array (Express can return either)
+      const recipeIdsStr = Array.isArray(recipeIds) ? recipeIds[0] : recipeIds;
+      
+      if (type === 'recipes' && recipeIdsStr && typeof recipeIdsStr === 'string' && recipeIdsStr.trim().length > 0) {
+        const idsArray = recipeIdsStr.split(',').map(id => id.trim()).filter(id => id.length > 0);
+        
+        console.log('[Export] Filtering recipes by IDs:', idsArray);
+        
+        // Fetch recipes by IDs
+        const selectedRecipes = await Promise.all(
+          idsArray.map(id => storage.getRecipe(id))
+        );
+        
+        // Filter out undefined results (recipes that don't exist)
+        const validRecipes = selectedRecipes.filter((recipe: any) => recipe !== undefined);
+        
+        console.log('[Export] Found', validRecipes.length, 'recipes out of', idsArray.length, 'requested');
+        
+        exportData.recipes = validRecipes;
+        exportData.recipesCount = validRecipes.length;
+        exportData.requestedCount = idsArray.length;
+        if (validRecipes.length < idsArray.length) {
+          exportData.warning = `Only ${validRecipes.length} of ${idsArray.length} requested recipes were found`;
+        }
+      } else {
+        // Export all recipes (either type is 'all' or no recipeIds provided)
+        console.log('[Export] Exporting all recipes (type:', type, ', recipeIds provided:', !!recipeIdsStr, ')');
+        const { recipes } = await storage.searchRecipes({
+          page: 1,
+          limit: 100000, // Get all recipes
+        });
+        exportData.recipes = recipes;
+        exportData.recipesCount = recipes.length;
+      }
     }
     
     // Export users

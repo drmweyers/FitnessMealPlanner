@@ -331,8 +331,18 @@ export class ProgressSummaryService {
         status: goal.status || 'active'
       }));
 
-    } catch (error) {
+    } catch (error: any) {
+      // Handle SQL errors gracefully (e.g., if table doesn't exist yet)
+      // Error code 42601 = syntax error, 42P01 = relation does not exist
+      if (error?.code === '42601' || error?.code === '42P01' || 
+          error?.message?.includes('syntax error') || 
+          error?.message?.includes('does not exist') ||
+          (error?.message?.includes('relation') && error?.message?.includes('does not exist'))) {
+        console.warn('customerGoals table query failed - table may not exist yet. Run migration 0025_create_customer_goals.sql:', error.message || error.code);
+        return undefined;
+      }
       console.error('Error getting goals progress:', error);
+      // Return undefined instead of throwing to allow progress summary to continue
       return undefined;
     }
   }

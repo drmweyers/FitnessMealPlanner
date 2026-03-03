@@ -500,13 +500,16 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Story 2.14: Tier-based filtering (progressive access model)
-    // Higher tiers can access all lower tier recipes
-    // starter: only 'starter' tier recipes
-    // professional: 'starter' + 'professional' tier recipes
-    // enterprise: all recipes ('starter' + 'professional' + 'enterprise')
+    // Trainers see recipes assigned to their tier level OR lower tiers
+    // This ensures that when recipes are assigned to lower tiers for multiple tier access,
+    // higher tier trainers can still see them
+    // - Starter: sees recipes with tier_level = 'starter' only
+    // - Professional: sees recipes with tier_level <= 'professional' (starter + professional)
+    // - Enterprise: sees recipes with tier_level <= 'enterprise' (all recipes)
     const tierFilteringSupported = await this.ensureTierFilteringSupport();
 
     if (filters.tierLevel && tierFilteringSupported) {
+      // Progressive access: trainers can see their tier and all lower tier recipes
       conditions.push(sql`${recipes.tierLevel} <= ${filters.tierLevel}::tier_level`);
     } else if (filters.tierLevel && !tierFilteringSupported) {
       console.warn(

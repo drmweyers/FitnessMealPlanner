@@ -82,10 +82,11 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="flex items-center min-w-0 flex-1">
               <div className="flex-shrink-0">
                 <div className="flex items-center">
-                  <Utensils className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 mr-2" />
+                  {/* <Utensils className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 mr-2" />
                   <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
                     EvoFitMeals
-                  </h1>
+                  </h1> */}
+                  <img src="/logo.svg" alt="EvoFitMeals" className="w-10 h-10" />
                 </div>
               </div>
               

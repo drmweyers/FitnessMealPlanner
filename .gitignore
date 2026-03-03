@@ -16,6 +16,9 @@ test-*.ts
 test-*.html
 test-*.bat
 test-*.pdf
+test-*.sh
+test-*.ps1
+test-*.json
 test-results/
 test-outputs/
 playwright-report/

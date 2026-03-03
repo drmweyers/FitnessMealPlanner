@@ -10,7 +10,7 @@ import { AgentResponse } from './types';
 import { uploadImageToS3 } from '../utils/S3Uploader';
 
 interface ImageUploadInput {
-  recipeId: number;
+  recipeId: string | number; // UUID string or number for compatibility
   recipeName: string;
   temporaryImageUrl: string;
   batchId: string;
@@ -87,11 +87,11 @@ export class ImageStorageAgent extends BaseAgent {
             errors.push(`Failed to upload ${image.recipeName}: ${errorMsg}`);
             totalFailed++;
 
-            // Add failed upload with original URL
+            // Add failed upload without temporary URL
             uploads.push({
               recipeId: image.recipeId,
               recipeName: image.recipeName,
-              permanentImageUrl: image.temporaryImageUrl,
+              permanentImageUrl: '', // No fallback to temporary URL
               wasUploaded: false,
               batchId: image.batchId
             });
@@ -137,11 +137,11 @@ export class ImageStorageAgent extends BaseAgent {
     } catch (error) {
       console.error(`S3 upload failed for ${image.recipeName}:`, error);
 
-      // Fallback to temporary URL (better than nothing)
+      // Do not fallback to temporary URL - return empty URL instead
       return {
         recipeId: image.recipeId,
         recipeName: image.recipeName,
-        permanentImageUrl: image.temporaryImageUrl,
+        permanentImageUrl: '', // No fallback to temporary URL
         wasUploaded: false,
         batchId: image.batchId
       };

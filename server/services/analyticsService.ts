@@ -7,8 +7,15 @@
  */
 
 import { db } from '../db';
-import { sql } from 'drizzle-orm';
+import { sql, gte, lte, eq, and } from 'drizzle-orm';
 import { logger } from '../utils/logger';
+import {
+  users,
+  recipeInteractions,
+  userActivitySessions,
+  paymentLogs,
+  trainerSubscriptions,
+} from '@shared/schema';
 
 interface SystemMetrics {
   users: {
@@ -163,50 +170,148 @@ class AnalyticsService {
       // Process meal plan data
       // totalMealPlans already calculated above from both tables
 
-      // Construct metrics object with real data where available
+      // Get REAL active users based on interactions
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const thisWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thisMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const lastWeek = new Date(thisWeek.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      // REAL active users (users with interactions) - using Drizzle ORM
+      const [activeTodayResult] = await db
+        .select({ count: sql<number>`count(distinct ${recipeInteractions.userId})` })
+        .from(recipeInteractions)
+        .where(gte(recipeInteractions.interactionDate, today));
+      const activeToday = activeTodayResult?.count || 0;
+
+      const [activeThisWeekResult] = await db
+        .select({ count: sql<number>`count(distinct ${recipeInteractions.userId})` })
+        .from(recipeInteractions)
+        .where(gte(recipeInteractions.interactionDate, thisWeek));
+      const activeThisWeek = activeThisWeekResult?.count || 0;
+
+      const [activeThisMonthResult] = await db
+        .select({ count: sql<number>`count(distinct ${recipeInteractions.userId})` })
+        .from(recipeInteractions)
+        .where(gte(recipeInteractions.interactionDate, thisMonth));
+      const activeThisMonth = activeThisMonthResult?.count || 0;
+
+      // REAL new users this week - using Drizzle ORM
+      const [newThisWeekResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(gte(users.createdAt, thisWeek));
+      const newThisWeek = newThisWeekResult?.count || 0;
+
+      // REAL growth rate calculation
+      const [lastWeekUsersResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(
+          and(
+            gte(users.createdAt, lastWeek),
+            lte(users.createdAt, thisWeek)
+          )
+        );
+      const lastWeekUsers = lastWeekUsersResult?.count || 0;
+      const growthRate = lastWeekUsers > 0 ? ((newThisWeek - lastWeekUsers) / lastWeekUsers) * 100 : 0;
+
+      // REAL session data - using Drizzle ORM
+      const [sessionStats] = await db
+        .select({
+          totalSessions: sql<number>`count(*)`,
+          avgDuration: sql<number>`avg(extract(epoch from (${userActivitySessions.endTime} - ${userActivitySessions.startTime})))`,
+        })
+        .from(userActivitySessions)
+        .where(sql`${userActivitySessions.endTime} IS NOT NULL`);
+      const totalSessions = sessionStats?.totalSessions || 0;
+      const avgSessionDuration = sessionStats?.avgDuration ? Math.round(sessionStats.avgDuration / 60) : 0; // Convert to minutes
+
+      // REAL revenue from payment logs - using Drizzle ORM
+      const [revenueResult] = await db
+        .select({
+          monthly: sql<number>`coalesce(sum(case when ${paymentLogs.occurredAt} >= ${thisMonth} then ${paymentLogs.amount} else 0 end), 0)`,
+          total: sql<number>`coalesce(sum(${paymentLogs.amount}), 0)`,
+        })
+        .from(paymentLogs)
+        .where(eq(paymentLogs.status, 'completed'));
+      const monthlyRevenue = Number(revenueResult?.monthly || 0);
+      const totalRevenue = Number(revenueResult?.total || 0);
+
+      // REAL active subscriptions - using Drizzle ORM
+      const [subscriptionsResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(trainerSubscriptions)
+        .where(eq(trainerSubscriptions.status, 'active'));
+      const activeSubscriptions = subscriptionsResult?.count || 0;
+
+      // REAL database size
+      const [dbSizeResult] = await db.execute(sql`
+        SELECT pg_size_pretty(pg_database_size(current_database())) as size
+      `);
+      const databaseSize = (dbSizeResult.rows[0] as any)?.size || 'N/A';
+
+      // Calculate REAL revenue growth (compare this month to last month)
+      const lastMonth = new Date(thisMonth.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const [lastMonthRevenueResult] = await db
+        .select({
+          total: sql<number>`coalesce(sum(${paymentLogs.amount}), 0)`,
+        })
+        .from(paymentLogs)
+        .where(
+          and(
+            eq(paymentLogs.status, 'completed'),
+            gte(paymentLogs.occurredAt, lastMonth),
+            lte(paymentLogs.occurredAt, thisMonth)
+          )
+        );
+      const lastMonthRevenue = Number(lastMonthRevenueResult?.total || 0);
+      const revenueGrowth = lastMonthRevenue > 0 ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
+
+      // Construct metrics object with REAL data
       const metrics: SystemMetrics = {
         users: {
           total: totalUsers,
           byRole,
-          activeToday: Math.floor(totalUsers * 0.3), // Mock: 30% active today
-          activeThisWeek: Math.floor(totalUsers * 0.7), // Mock: 70% active this week
-          activeThisMonth: Math.floor(totalUsers * 0.9), // Mock: 90% active this month
-          newThisWeek: Math.floor(totalUsers * 0.05), // Mock: 5% new this week
-          growthRate: 8.5 // Mock: 8.5% growth
+          activeToday,
+          activeThisWeek,
+          activeThisMonth,
+          newThisWeek,
+          growthRate: Math.round(growthRate * 10) / 10 // Round to 1 decimal
         },
         content: {
           totalRecipes,
           approvedRecipes,
           pendingRecipes,
           totalMealPlans,
-          activeMealPlans: Math.floor(totalMealPlans * 0.8), // Mock: 80% active
+          activeMealPlans: totalMealPlans, // All meal plans are considered active
           avgRecipesPerPlan: totalMealPlans > 0 ? Math.round((totalRecipes / totalMealPlans) * 10) / 10 : 0
         },
         engagement: {
-          dailyActiveUsers: Math.floor(totalUsers * 0.3),
-          weeklyActiveUsers: Math.floor(totalUsers * 0.7),
-          monthlyActiveUsers: Math.floor(totalUsers * 0.9),
-          avgSessionDuration: 15, // minutes
-          totalSessions: totalUsers * 25, // Mock: average 25 sessions per user
-          bounceRate: 35 // percentage
+          dailyActiveUsers: activeToday,
+          weeklyActiveUsers: activeThisWeek,
+          monthlyActiveUsers: activeThisMonth,
+          avgSessionDuration: avgSessionDuration,
+          totalSessions: totalSessions,
+          bounceRate: 0 // Would need to calculate from actual bounce data
         },
         performance: {
-          avgResponseTime: 145, // ms
-          errorRate: 0.3, // percentage
-          uptime: 99.95, // percentage
-          databaseSize: '2.3 GB',
-          cacheHitRate: 78 // percentage
+          avgResponseTime: 145, // TODO: Get from access logs when implemented
+          errorRate: 0.3, // TODO: Calculate from actual error logs
+          uptime: 99.95, // TODO: Calculate from actual uptime tracking
+          databaseSize: databaseSize,
+          cacheHitRate: 78 // TODO: Get from cache statistics
         },
         business: {
           totalCustomers: byRole['customer'] || 0,
-          activeSubscriptions: Math.floor((byRole['customer'] || 0) * 0.85),
-          churnRate: 5.2, // percentage
+          activeSubscriptions: activeSubscriptions,
+          churnRate: 0, // TODO: Calculate from subscription cancellations
           avgCustomersPerTrainer: byRole['trainer'] > 0 ? Math.round((byRole['customer'] / byRole['trainer']) * 10) / 10 : 0,
-          conversionRate: 12.5, // percentage
+          conversionRate: 0, // TODO: Calculate from signup to subscription conversion
           revenue: {
-            monthly: (byRole['customer'] || 0) * 29.99,
-            annual: (byRole['customer'] || 0) * 29.99 * 12,
-            growth: 8.5 // percentage
+            monthly: monthlyRevenue,
+            annual: totalRevenue,
+            growth: Math.round(revenueGrowth * 10) / 10 // Round to 1 decimal
           }
         }
       };
@@ -240,15 +345,47 @@ class AnalyticsService {
         last_active: Date | null;
       }[];
 
-      return users.map(user => ({
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        lastActive: user.last_active || new Date(),
-        sessionCount: Math.floor(Math.random() * 50) + 1, // Mock data
-        totalDuration: Math.floor(Math.random() * 1000) + 100, // Mock data
-        actions: ['login', 'view_recipes', 'create_meal_plan'] // Mock data
-      }));
+      // Get REAL session data for each user - using Drizzle ORM
+      const enrichedUsers = await Promise.all(
+        users.map(async (user) => {
+          // Get REAL session count and duration
+          const [sessionData] = await db
+            .select({
+              sessionCount: sql<number>`count(*)`,
+              totalDuration: sql<number>`sum(extract(epoch from (${userActivitySessions.endTime} - ${userActivitySessions.startTime})))`,
+            })
+            .from(userActivitySessions)
+            .where(
+              and(
+                eq(userActivitySessions.userId, user.id),
+                sql`${userActivitySessions.endTime} IS NOT NULL`
+              )
+            );
+          const sessionCount = sessionData?.sessionCount || 0;
+          const totalDuration = sessionData?.totalDuration ? Math.round(sessionData.totalDuration / 60) : 0; // Convert to minutes
+
+          // Get REAL actions/interactions
+          const interactionsData = await db
+            .select({ interactionType: recipeInteractions.interactionType })
+            .from(recipeInteractions)
+            .where(eq(recipeInteractions.userId, user.id))
+            .groupBy(recipeInteractions.interactionType)
+            .limit(10);
+          const actions = interactionsData.map(row => row.interactionType) || [];
+
+          return {
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            lastActive: user.last_active || new Date(),
+            sessionCount: sessionCount,
+            totalDuration: totalDuration,
+            actions: actions.length > 0 ? actions : ['No activity yet']
+          };
+        })
+      );
+
+      return enrichedUsers;
     } catch (error) {
       logger.error('Failed to get user activity:', error);
       return [];

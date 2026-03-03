@@ -7,6 +7,8 @@ import Admin from "./pages/Admin";
 import Customer from "./pages/Customer";
 import AdminProfile from "./pages/AdminProfile";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminDashboard from "./pages/AdminDashboard";
+import BulkRecipeGeneration from "./pages/BulkRecipeGeneration";
 import TrainerProfile from "./pages/TrainerProfile";
 import CustomerProfile from "./pages/CustomerProfile";
 import LoginPage from "./pages/LoginPage";
@@ -104,6 +106,18 @@ export default function Router() {
         <Route path="/admin/analytics" component={() => (
           <ProtectedRoute requiredRole="admin">
             <AdminAnalytics />
+          </ProtectedRoute>
+        )} />
+        
+        <Route path="/admin/dashboard" component={() => (
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        )} />
+        
+        <Route path="/admin/bulk-generation" component={() => (
+          <ProtectedRoute requiredRole="admin">
+            <BulkRecipeGeneration />
           </ProtectedRoute>
         )} />
         

@@ -29,7 +29,7 @@ const getRecipesSchema = z.object({
 });
 
 // GET /api/recipes - Fetch public, approved recipes
-// Story 2.14: Apply tier filtering for progressive recipe access
+// Story 2.14: Apply tier filtering - trainers see only their tier's recipes
 recipeRouter.get('/', attachRecipeTierFilter, async (req, res) => {
   try {
     const query = getRecipesSchema.parse(req.query);
@@ -38,7 +38,7 @@ recipeRouter.get('/', attachRecipeTierFilter, async (req, res) => {
     const { recipes, total } = await storage.searchRecipes({
       ...query,
       approved: true, // Public users only see approved recipes
-      // tierLevel removed - tier system not implemented
+      tierLevel: userTier, // Exact tier match - trainers see only their tier's recipes
     });
     res.json({ recipes, total });
   } catch (error) {
@@ -61,14 +61,31 @@ recipeRouter.get('/personalized', requireAuth, async (req, res) => {
 });
 
 // GET /api/recipes/:id - Fetch a single public recipe by ID
-recipeRouter.get('/:id', async (req, res) => {
+// Story 2.14: Apply tier filtering - trainers see only their tier's recipes
+recipeRouter.get('/:id', attachRecipeTierFilter, async (req, res) => {
   try {
     const { id } = req.params;
+    const userTier = getUserTierLevel(req);
     const recipe = await storage.getRecipe(id);
+    
     // Ensure the recipe exists and is approved for public view
     if (!recipe || !recipe.isApproved) {
       return res.status(404).json({ error: 'Recipe not found or not approved' });
     }
+    
+    // Story 2.14: Check tier access using progressive access model
+    // Trainers can view recipes from their tier or lower tiers
+    const tierLevels = { starter: 1, professional: 2, enterprise: 3 };
+    const recipeTierLevel = tierLevels[recipe.tierLevel as keyof typeof tierLevels] || 1;
+    const userTierLevel = tierLevels[userTier];
+    
+    if (recipeTierLevel > userTierLevel) {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: `This recipe requires ${recipe.tierLevel} tier or higher. Your tier: ${userTier}.`
+      });
+    }
+    
     res.json(recipe);
   } catch (error) {
     console.error(`Failed to fetch recipe ${req.params.id}:`, error);
@@ -77,7 +94,7 @@ recipeRouter.get('/:id', async (req, res) => {
 });
 
 // Enhanced recipe search with comprehensive filtering
-// Story 2.14: Apply tier filtering for progressive recipe access
+// Story 2.14: Apply tier filtering - trainers see only their tier's recipes
 recipeRouter.get('/search', attachRecipeTierFilter, async (req, res) => {
   try {
     console.log('[Recipe Search API] Received search request:', req.query);
@@ -114,8 +131,8 @@ recipeRouter.get('/search', attachRecipeTierFilter, async (req, res) => {
       sortBy: req.query.sortBy as string,
       sortOrder: req.query.sortOrder as 'asc' | 'desc',
       page: req.query.page ? Number(req.query.page) : 1,
-      limit: Math.min(Number(req.query.limit) || 20, 50) // Cap at 50 for performance
-      // tierLevel removed - tier system not implemented
+      limit: Math.min(Number(req.query.limit) || 20, 50), // Cap at 50 for performance
+      tierLevel: userTier, // Exact tier match - trainers see only their tier's recipes
     };
 
     const results = await recipeSearchService.searchRecipes(filters);

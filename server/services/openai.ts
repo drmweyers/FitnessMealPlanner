@@ -153,6 +153,25 @@ async function generateRecipeBatchSingle(
 ): Promise<GeneratedRecipe[]> {
   console.log(`[generateRecipeBatchSingle] CALLED with count=${count}, options=`, Object.keys(options));
   console.log(`[generateRecipeBatchSingle] OPENAI_API_KEY exists: ${!!process.env.OPENAI_API_KEY}`);
+  console.log(`[generateRecipeBatchSingle] Input options details:`, {
+    focusIngredient: options.focusIngredient,
+    difficultyLevel: options.difficultyLevel,
+    recipePreferences: options.recipePreferences,
+    maxIngredients: options.maxIngredients,
+    mealTypes: options.mealTypes,
+    dietaryRestrictions: options.dietaryRestrictions,
+    fitnessGoal: options.fitnessGoal,
+    targetCalories: options.targetCalories,
+    maxCalories: options.maxCalories,
+    maxPrepTime: options.maxPrepTime,
+    minProtein: options.minProtein,
+    maxProtein: options.maxProtein,
+    minCarbs: options.minCarbs,
+    maxCarbs: options.maxCarbs,
+    minFat: options.minFat,
+    maxFat: options.maxFat,
+    naturalLanguagePrompt: options.naturalLanguagePrompt
+  });
 
   const systemPrompt = `You are an expert nutritionist and professional chef specializing in precise recipe generation.
 Your task is to generate ${count} recipe${count > 1 ? 's' : ''} that STRICTLY ADHERE to ALL specified constraints and requirements.
@@ -604,10 +623,24 @@ You are an intelligent assistant for a recipe management application.
 A user has provided a natural language request to create or find recipes.
 Your task is to parse this request and extract the key parameters into a structured JSON object.
 
+IMPORTANT DISTINCTIONS:
+- fitnessGoal: ONLY for fitness objectives like "muscle gain", "weight loss", "maintenance", "endurance", "general health"
+- dietaryTags: For ALL diet types, restrictions, and dietary patterns including:
+  * Diet types: "vegetarian", "vegan", "keto", "paleo", "pescatarian", "mediterranean"
+  * Dietary patterns: "high_carb", "low_carb", "high_protein", "low fat", "high fat"
+  * Restrictions: "gluten_free", "dairy_free", "nut_free", "sugar_free"
+  * Any mention of "diet" (carb diet, keto diet, etc.) should go in dietaryTags, NOT fitnessGoal
+
+CONTEXT-AWARE PARSING FOR "CARB DIET":
+- When user says "carb diet" + mentions "muscle", "build", "gain", "trainer" → use "high_carb" (muscle building needs carbs for energy)
+- When user says "carb diet" + mentions "weight loss", "lose weight" → use "low_carb" (weight loss typically uses low carb)
+- When user says "carb diet" alone → default to "high_carb" (fitness context usually means higher carbs)
+- Always analyze the FULL sentence context to determine the correct dietary tag
+
 The JSON object should include these fields when mentioned in the input:
 - count: number (how many recipes to generate, e.g., 10, 15, 30)
 - mealTypes: array of strings (e.g., ["breakfast", "lunch", "dinner", "snack"])
-- dietaryTags: array of strings (e.g., ["vegetarian", "gluten-free", "keto", "paleo", "dairy-free", "nut-free"])
+- dietaryTags: array of strings - ALL diet types, restrictions, and dietary patterns (e.g., ["vegetarian", "gluten-free", "keto", "high carb", "carb diet", "low carb", "high protein"])
 - mainIngredientTags: array of strings (e.g., ["chicken", "beef", "tofu", "fish", "eggs"])
 - focusIngredient: string (primary ingredient to feature, e.g., "eggs", "Greek yogurt", "chicken breast")
 - maxPrepTime: number (maximum preparation time in minutes)
@@ -620,15 +653,24 @@ The JSON object should include these fields when mentioned in the input:
 - minFat: number (minimum fat in grams)
 - maxFat: number (maximum fat in grams)
 - difficulty: string (e.g., "easy", "medium", "hard")
-- fitnessGoal: string (e.g., "muscle gain", "weight loss", "maintenance")
+- fitnessGoal: string - ONLY for fitness objectives (e.g., "muscle gain", "weight loss", "maintenance", "endurance")
 - description: string (any additional context or requirements)
 
 Examples:
 Input: "Generate 15 high-protein breakfast recipes under 20 minutes prep time, focusing on eggs and Greek yogurt, suitable for keto diet, with 400-600 calories"
-Output: {"count": 15, "mealTypes": ["breakfast"], "dietaryTags": ["keto"], "maxPrepTime": 20, "focusIngredient": "eggs, Greek yogurt", "minCalories": 400, "maxCalories": 600, "minProtein": 40}
+Output: {"count": 15, "mealTypes": ["breakfast"], "dietaryTags": ["keto", "high protein"], "maxPrepTime": 20, "focusIngredient": "eggs, Greek yogurt", "minCalories": 400, "maxCalories": 600, "minProtein": 40}
 
 Input: "Create 10 easy vegetarian dinner recipes with 500-700 calories and at least 25g protein"
 Output: {"count": 10, "mealTypes": ["dinner"], "dietaryTags": ["vegetarian"], "difficulty": "easy", "minCalories": 500, "maxCalories": 700, "minProtein": 25}
+
+Input: "generate 3 recipes for carb diet trainer with salmon and beef"
+Output: {"count": 3, "dietaryTags": ["high_carb"], "mainIngredientTags": ["salmon", "beef"]}
+
+Input: "generate a non-chicken but salmon only and u can add little beef steak with mashed potatos max fat should be 25 grams but 12 g should be the minimum and i need a triple recipes for carb diet trainer and my goal is to build muscles"
+Output: {"count": 3, "fitnessGoal": "muscle gain", "dietaryTags": ["high_carb"], "mainIngredientTags": ["salmon", "beef steak", "mashed potatoes"], "minFat": 12, "maxFat": 25}
+
+Input: "10 recipes for weight loss with low carb diet"
+Output: {"count": 10, "fitnessGoal": "weight loss", "dietaryTags": ["low_carb"]}
 
 If a value isn't mentioned, omit the key from the JSON object.
 The output MUST be a single, valid JSON object. Do not include any other text or explanations.
@@ -653,6 +695,91 @@ The output MUST be a single, valid JSON object. Do not include any other text or
     }
 
     const parsedJson = parsePartialJson(content);
+    
+    // Post-process to fix common misclassifications and normalize dietary tags
+    // Move diet-related terms from fitnessGoal to dietaryTags
+    const dietTerms = [
+      'carb diet', 'high carb', 'low carb', 'keto diet', 'paleo diet',
+      'vegetarian diet', 'vegan diet', 'mediterranean diet', 'dash diet',
+      'atkins diet', 'south beach diet', 'whole30', 'carnivore diet'
+    ];
+    
+    if (parsedJson.fitnessGoal) {
+      const fitnessGoalLower = parsedJson.fitnessGoal.toLowerCase();
+      const isDietTerm = dietTerms.some(term => fitnessGoalLower.includes(term));
+      
+      if (isDietTerm) {
+        // Move to dietaryTags
+        if (!parsedJson.dietaryTags) {
+          parsedJson.dietaryTags = [];
+        }
+        if (!Array.isArray(parsedJson.dietaryTags)) {
+          parsedJson.dietaryTags = [parsedJson.dietaryTags];
+        }
+        
+        // Add to dietaryTags (normalize the term)
+        const normalizedDiet = fitnessGoalLower.includes('carb') ? 'high carb' :
+                              fitnessGoalLower.includes('keto') ? 'keto' :
+                              fitnessGoalLower.includes('paleo') ? 'paleo' :
+                              fitnessGoalLower.includes('vegetarian') ? 'vegetarian' :
+                              fitnessGoalLower.includes('vegan') ? 'vegan' :
+                              parsedJson.fitnessGoal;
+        
+        if (!parsedJson.dietaryTags.includes(normalizedDiet)) {
+          parsedJson.dietaryTags.push(normalizedDiet);
+        }
+        
+        // Remove from fitnessGoal
+        delete parsedJson.fitnessGoal;
+      }
+    }
+    
+    // Normalize dietary tags to match form values
+    // Map common variations to form-compatible values
+    const dietaryTagMap: Record<string, string> = {
+      'high carb': 'high_carb',
+      'high-carb': 'high_carb',
+      'carb diet': 'high_carb', // Default to high_carb for muscle building context
+      'low carb': 'low_carb',
+      'low-carb': 'low_carb',
+      'high protein': 'high_protein',
+      'high-protein': 'high_protein',
+      'gluten-free': 'gluten_free',
+      'gluten free': 'gluten_free',
+      'dairy-free': 'dairy_free',
+      'dairy free': 'dairy_free',
+      'nut-free': 'dairy_free', // Map nut-free to dairy_free as closest match
+    };
+    
+    // Analyze context to determine if "carb diet" means high or low carb
+    const inputLower = naturalLanguageInput.toLowerCase();
+    const isMuscleBuilding = inputLower.includes('muscle') || inputLower.includes('build') || 
+                            inputLower.includes('gain') || inputLower.includes('trainer') ||
+                            parsedJson.fitnessGoal === 'muscle gain';
+    const isWeightLoss = inputLower.includes('weight loss') || inputLower.includes('lose weight') ||
+                        parsedJson.fitnessGoal === 'weight loss';
+    
+    if (parsedJson.dietaryTags && Array.isArray(parsedJson.dietaryTags)) {
+      parsedJson.dietaryTags = parsedJson.dietaryTags.map((tag: string) => {
+        const tagLower = tag.toLowerCase();
+        
+        // Special handling for "carb diet" based on context
+        if (tagLower.includes('carb diet') || tagLower === 'carb diet') {
+          if (isWeightLoss) {
+            return 'low_carb';
+          } else if (isMuscleBuilding) {
+            return 'high_carb';
+          } else {
+            // Default to high_carb for general fitness
+            return 'high_carb';
+          }
+        }
+        
+        // Map other variations
+        return dietaryTagMap[tagLower] || tag;
+      });
+    }
+    
     return parsedJson;
 
   } catch (error) {

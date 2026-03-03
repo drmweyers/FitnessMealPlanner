@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Check, X, BarChart3, Eye, Download, Utensils, Calendar, Bot } from "lucide-react";
+import { Check, X, BarChart3, Eye, Download, Utensils, Calendar, Bot, ChefHat } from "lucide-react";
 import { Link } from "wouter";
 import { 
   Pagination, 
@@ -107,9 +107,19 @@ export default function Admin() {
         body: JSON.stringify({ ids: recipeIds }),
       });
       if (!response.ok) {
-        throw new Error('Failed to delete recipes');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete recipes' }));
+        throw new Error(errorData.error || errorData.message || 'Failed to delete recipes');
       }
-      return response.json();
+      // Handle 204 No Content response (no body to parse)
+      if (response.status === 204) {
+        return { message: `Successfully deleted ${recipeIds.length} recipe${recipeIds.length === 1 ? '' : 's'}.` };
+      }
+      // For other success statuses, try to parse JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json();
+      }
+      return { message: `Successfully deleted ${recipeIds.length} recipe${recipeIds.length === 1 ? '' : 's'}.` };
     },
     onSuccess: (data, recipeIds) => {
       // Invalidate and refetch admin recipes and stats
@@ -236,12 +246,26 @@ export default function Admin() {
             Manage recipes, users, and meal plan generation
           </p>
         </div>
-        <Link href="/admin/analytics">
-          <Button variant="outline" className="gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Analytics Dashboard
-          </Button>
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Link href="/admin/bulk-generation">
+            <Button variant="default" className="gap-2 bg-purple-600 hover:bg-purple-700">
+              <ChefHat className="h-4 w-4" />
+              Bulk Generation
+            </Button>
+          </Link>
+          <Link href="/admin/dashboard">
+            <Button variant="outline" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Dashboard
+            </Button>
+          </Link>
+          <Link href="/admin/analytics">
+            <Button variant="outline" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Main Tabs */}
@@ -575,6 +599,7 @@ export default function Admin() {
       <ExportJSONModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
+        selectedRecipeIds={selectedRecipeIds}
       />
     </div>
   );
