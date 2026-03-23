@@ -295,22 +295,25 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/css', express.static(path.join(__dirname, 'public/css')));
   app.use('/js', express.static(path.join(__dirname, 'public/js')));
 
-  // Serve landing page assets
-  app.use(express.static(path.join(__dirname, '../public')));
+  // Serve landing page static assets (CSS, JS, images)
+  app.use('/landing', express.static(path.join(__dirname, 'landing')));
+
+  // Serve uploads directory
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
   // Route configuration
   app.get('/', (req, res) => {
     // Serve landing page as the homepage
-    res.sendFile(path.join(__dirname, '../public/landing/index.html'));
+    res.sendFile(path.join(__dirname, 'landing', 'index.html'));
   });
 
   // Serve features page (both /features and /features.html)
   app.get('/features', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/landing/features.html'));
+    res.sendFile(path.join(__dirname, 'landing', 'features.html'));
   });
 
   app.get('/features.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/landing/features.html'));
+    res.sendFile(path.join(__dirname, 'landing', 'features.html'));
   });
 
   app.get('/login', (req, res) => {
