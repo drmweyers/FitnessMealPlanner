@@ -48,6 +48,7 @@ import usageRouter from './routes/usageRoutes';
 import { logAccess } from './middleware/accessLogging';
 import { schedulerService } from './services/schedulerService';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import ViteExpress from 'vite-express';
 // import { createProxyMiddleware } from 'http-proxy-middleware'; // Will use this later
@@ -69,6 +70,40 @@ import { SelfHealingSystem } from './self-healing';
 // ES module compatible dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Resolve static file paths - works in both dev and production (Docker/DO App Platform)
+// Cache resolved paths at startup to avoid per-request fs.existsSync calls
+const _resolvedPathCache = new Map<string, string>();
+
+function resolveProjectPath(...segments: string[]): string {
+  const key = segments.join('/');
+  if (_resolvedPathCache.has(key)) return _resolvedPathCache.get(key)!;
+
+  // Try __dirname/../ relative first (landing page lives outside dist/)
+  const parentPath = path.resolve(__dirname, '..', ...segments);
+  if (fs.existsSync(parentPath)) {
+    _resolvedPathCache.set(key, parentPath);
+    return parentPath;
+  }
+
+  // Try cwd-relative (works on DO App Platform)
+  const cwdPath = path.resolve(process.cwd(), ...segments);
+  if (fs.existsSync(cwdPath)) {
+    _resolvedPathCache.set(key, cwdPath);
+    return cwdPath;
+  }
+
+  // Try __dirname-relative (for files inside dist/)
+  const dirnamePath = path.resolve(__dirname, ...segments);
+  if (fs.existsSync(dirnamePath)) {
+    _resolvedPathCache.set(key, dirnamePath);
+    return dirnamePath;
+  }
+
+  // Return parent path as default (let Express handle the error)
+  _resolvedPathCache.set(key, parentPath);
+  return parentPath;
+}
 
 const app = express();
 
@@ -272,10 +307,10 @@ app.use('/api/usage', usageRouter);
 app.use('/api', analyticsErrorHandler);
 
 // Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+app.use('/uploads', express.static(resolveProjectPath('public', 'uploads')));
 
 // Serve landing page and static public files
-app.use('/landing', express.static(path.join(__dirname, '../public/landing')));
+app.use('/landing', express.static(resolveProjectPath('public', 'landing')));
 
 // In development, ViteExpress handles /src and /assets automatically
 // DO NOT serve these statically or it bypasses Vite's transformation
@@ -295,25 +330,28 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/css', express.static(path.join(__dirname, 'public/css')));
   app.use('/js', express.static(path.join(__dirname, 'public/js')));
 
+  // Serve landing page assets (from project root public/, NOT dist/public/)
+  app.use(express.static(resolveProjectPath('public')));
+
   // Serve landing page static assets (CSS, JS, images)
-  app.use('/landing', express.static(path.join(__dirname, 'landing')));
+  app.use('/landing', express.static(resolveProjectPath('public', 'landing')));
 
   // Serve uploads directory
-  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+  app.use('/uploads', express.static(resolveProjectPath('public', 'uploads')));
 
   // Route configuration
   app.get('/', (req, res) => {
     // Serve landing page as the homepage
-    res.sendFile(path.join(__dirname, 'landing', 'index.html'));
+    res.sendFile(resolveProjectPath('public', 'landing', 'index.html'));
   });
 
   // Serve features page (both /features and /features.html)
   app.get('/features', (req, res) => {
-    res.sendFile(path.join(__dirname, 'landing', 'features.html'));
+    res.sendFile(resolveProjectPath('public', 'landing', 'features.html'));
   });
 
   app.get('/features.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'landing', 'features.html'));
+    res.sendFile(resolveProjectPath('public', 'landing', 'features.html'));
   });
 
   app.get('/login', (req, res) => {
@@ -348,16 +386,23 @@ if (process.env.NODE_ENV === 'production') {
 
   // Catch-all for other app routes
   app.get('*', (req, res) => {
-    // If it's not an API route, static file, or landing page asset, serve the React app
+    // If it's not an API route or static file, serve the React app
     if (!req.path.startsWith('/api') &&
-        !req.path.startsWith('/uploads') &&
-        !req.path.startsWith('/landing')) {
+        !req.path.startsWith('/uploads')) {
       res.sendFile(path.join(__dirname, 'public', 'index.html'));
     }
   });
+
+  // Log resolved paths for debugging
+  const landingPath = resolveProjectPath('public', 'landing', 'index.html');
+  const reactAppPath = path.join(__dirname, 'public', 'index.html');
+  console.log(`📂 Landing page path: ${landingPath} (exists: ${fs.existsSync(landingPath)})`);
+  console.log(`📂 React app path: ${reactAppPath} (exists: ${fs.existsSync(reactAppPath)})`);
+  console.log(`📂 __dirname: ${__dirname}`);
+  console.log(`📂 process.cwd(): ${process.cwd()}`);
 }
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5001;
 
 // Initialize Enterprise 404 Prevention System
 let failoverSystem: RouteFailoverSystem | null = null;

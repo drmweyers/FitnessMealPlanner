@@ -270,6 +270,7 @@ Simple
 | Testing protocols | .claude/rules/testing-protocols.md |
 | Marketing system | .claude/rules/marketing-system.md |
 | Features status | .claude/rules/features-status.md |
+| **Agent Teams Reference** | **docs/AGENT-TEAMS-REFERENCE.md** |
 
 ---
 

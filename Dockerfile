@@ -53,7 +53,7 @@ EXPOSE 5001 24678 4000
 
 # Health check for dev container
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget -q --spider http://localhost:4000/api/health || exit 1
+  CMD wget -q --spider http://localhost:5001/api/health || exit 1
 
 CMD ["npm", "run", "dev"]
 
