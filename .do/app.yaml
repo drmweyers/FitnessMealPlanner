@@ -8,7 +8,7 @@ services:
     branch: main
     deploy_on_push: true
   run_command: npm start
-  build_command: npm ci --include=dev && npm run build && npm prune --production
+  build_command: npm run build
   environment_slug: node-js
   instance_count: 1
   instance_size_slug: professional-xs
