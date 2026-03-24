@@ -303,8 +303,8 @@ if (process.env.NODE_ENV === 'production') {
 
   // Route configuration
   app.get('/', (req, res) => {
-    // Serve landing page as the homepage
-    res.sendFile(path.join(__dirname, 'landing', 'index.html'));
+    // Serve React SPA for homepage (landing page served by React routing)
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
   // Serve features page (both /features and /features.html)
