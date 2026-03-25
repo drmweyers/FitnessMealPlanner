@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout Cancelled — EvoFitMeals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/landing/css/funnel.css">
+</head>
+<body class="funnel-page">
+
+  <div class="funnel-container">
+    <!-- Logo -->
+    <div class="funnel-logo">
+      <i class="fas fa-utensils"></i>
+      <span>EvoFitMeals</span>
+    </div>
+
+    <div class="funnel-card">
+
+      <!-- Hero -->
+      <div class="welcome-hero">
+        <div class="checkmark" style="background:rgba(239,68,68,0.15); color:#ef4444;">
+          <i class="fas fa-times"></i>
+        </div>
+        <h1 class="funnel-headline">Checkout Cancelled</h1>
+        <p class="funnel-subheadline" style="margin-bottom:0;">
+          No worries — you haven't been charged. Your selections are still saved
+          if you'd like to pick up where you left off.
+        </p>
+      </div>
+
+      <hr class="funnel-divider">
+
+      <h2 style="color:#fff; font-size:1.25rem; font-weight:700; margin-bottom:1.25rem;">
+        <i class="fas fa-question-circle" style="color:#a78bfa; margin-right:0.5rem;"></i>
+        Changed Your Mind?
+      </h2>
+
+      <p style="color:rgba(255,255,255,0.7); margin-bottom:1.5rem; line-height:1.7;">
+        If you have questions about pricing, features, or which tier is right for you,
+        we're happy to help. Reach out at
+        <a href="mailto:support@evofitmeals.com" style="color:#a78bfa;">support@evofitmeals.com</a>.
+      </p>
+
+      <!-- CTAs -->
+      <a href="/landing/upgrade-professional.html" class="funnel-cta"
+         onclick="sessionStorage.setItem('evofit_funnel_tier','starter')">
+        Try Again — View Plans
+      </a>
+
+      <a href="/landing/comparison.html" class="funnel-decline">
+        Compare EvoFitMeals to Alternatives
+      </a>
+
+      <!-- Trust -->
+      <div class="funnel-trust">
+        <div class="badge"><i class="fas fa-shield-halved"></i> 14-Day Guarantee</div>
+        <div class="badge"><i class="fas fa-lock"></i> Secure Checkout</div>
+        <div class="badge"><i class="fas fa-users"></i> 500+ Trainers</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/landing/js/funnel.js"></script>
+</body>
+</html>

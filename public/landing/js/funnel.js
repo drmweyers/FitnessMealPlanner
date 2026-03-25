@@ -1,4 +1,4 @@
-/* EvoFitMeals — Funnel State Management */
+/* EvoFitMeals — Funnel State Management + Stripe Checkout */
 
 (function () {
   'use strict';
@@ -26,12 +26,53 @@
     };
   };
 
-  /** Build a checkout redirect URL and navigate. */
+  /**
+   * Call the backend to create a Stripe Checkout session,
+   * then redirect the browser to Stripe's hosted checkout page.
+   */
   window.goToCheckout = function () {
     var sel = window.getSelection();
-    var url = '/checkout?tier=' + encodeURIComponent(sel.tier) +
-              '&saas=' + (sel.saas ? '1' : '0');
-    window.location.href = url;
+    var btn = document.querySelector('.funnel-cta');
+
+    // Disable button while loading
+    if (btn) {
+      btn.classList.add('loading');
+      btn.textContent = 'Redirecting to checkout…';
+      btn.style.pointerEvents = 'none';
+    }
+
+    fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tier: sel.tier,
+        saas: sel.saas
+      })
+    })
+    .then(function (res) {
+      if (!res.ok) {
+        return res.json().then(function (data) {
+          throw new Error(data.message || 'Checkout failed');
+        });
+      }
+      return res.json();
+    })
+    .then(function (data) {
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    })
+    .catch(function (err) {
+      console.error('[Funnel] Checkout error:', err);
+      alert('Something went wrong creating your checkout session. Please try again.');
+      if (btn) {
+        btn.classList.remove('loading');
+        btn.textContent = 'Complete Purchase';
+        btn.style.pointerEvents = '';
+      }
+    });
   };
 
   /** Render order summary on the welcome page. */

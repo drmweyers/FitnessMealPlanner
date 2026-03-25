@@ -42,6 +42,7 @@ import { emailAnalyticsRouter } from './routes/emailAnalytics';
 import { groceryListsRouter } from './routes/groceryLists';
 import { exportRouter } from './routes/export';
 import { paymentRouter } from './routes/payment'; // Stripe payment integration
+import { funnelCheckoutRouter } from './routes/funnelCheckout'; // Public funnel checkout
 import tierRouter from './routes/tierRoutes';
 import subscriptionRouter from './routes/subscriptionRoutes';
 import usageRouter from './routes/usageRoutes';
@@ -287,6 +288,9 @@ app.use('/api/admin/analytics', adminAnalyticsRouter);
 app.use('/api/progress-summaries', progressSummariesRouter);
 app.use('/api/email-preferences', emailPreferencesRouter);
 app.use('/api/email-analytics', emailAnalyticsRouter);
+
+// Public funnel checkout (no auth required)
+app.use('/api', funnelCheckoutRouter);
 
 // Payment routes (Stripe integration - 8 endpoints)
 app.use('/api', paymentRouter);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to EvoFitMeals!</title>
+  <title>Payment Successful — EvoFitMeals</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/landing/css/funnel.css">
@@ -22,15 +22,10 @@
       <!-- Hero -->
       <div class="welcome-hero">
         <div class="checkmark"><i class="fas fa-check"></i></div>
-        <h1 class="funnel-headline">You're all set! 🎉</h1>
+        <h1 class="funnel-headline">Payment Successful! 🎉</h1>
         <p class="funnel-subheadline" style="margin-bottom:0;">
-          Your EvoFitMeals account is ready. Here's what you selected:
+          Your EvoFitMeals purchase is confirmed. Check your email for a receipt from Stripe.
         </p>
-      </div>
-
-      <!-- Order Summary (populated by JS) -->
-      <div class="welcome-summary" id="order-summary">
-        <div class="line-item"><span>Loading…</span><span></span></div>
       </div>
 
       <hr class="funnel-divider">
@@ -65,9 +60,9 @@
         </li>
       </ul>
 
-      <!-- Primary CTA — redirects to Stripe Checkout -->
-      <a href="javascript:void(0)" class="funnel-cta" onclick="goToCheckout()">
-        Complete Purchase →
+      <!-- Primary CTA -->
+      <a href="/dashboard" class="funnel-cta">
+        Go to My Dashboard →
       </a>
 
       <!-- Cross-sell -->
@@ -85,17 +80,12 @@
       <!-- Trust -->
       <div class="funnel-trust">
         <div class="badge"><i class="fas fa-shield-halved"></i> 14-Day Guarantee</div>
-        <div class="badge"><i class="fas fa-lock"></i> Secure Checkout</div>
+        <div class="badge"><i class="fas fa-lock"></i> Secure Payment</div>
         <div class="badge"><i class="fas fa-users"></i> 500+ Trainers</div>
       </div>
     </div>
   </div>
 
   <script src="/landing/js/funnel.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      renderOrderSummary();
-    });
-  </script>
 </body>
 </html>
