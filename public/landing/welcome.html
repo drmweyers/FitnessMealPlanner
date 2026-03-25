@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to EvoFitMeals!</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/landing/css/funnel.css">
+</head>
+<body class="funnel-page">
+
+  <div class="funnel-container">
+    <!-- Logo -->
+    <div class="funnel-logo">
+      <i class="fas fa-utensils"></i>
+      <span>EvoFitMeals</span>
+    </div>
+
+    <div class="funnel-card">
+
+      <!-- Hero -->
+      <div class="welcome-hero">
+        <div class="checkmark"><i class="fas fa-check"></i></div>
+        <h1 class="funnel-headline">You're all set! 🎉</h1>
+        <p class="funnel-subheadline" style="margin-bottom:0;">
+          Your EvoFitMeals account is ready. Here's what you selected:
+        </p>
+      </div>
+
+      <!-- Order Summary (populated by JS) -->
+      <div class="welcome-summary" id="order-summary">
+        <div class="line-item"><span>Loading…</span><span></span></div>
+      </div>
+
+      <hr class="funnel-divider">
+
+      <!-- Quickstart -->
+      <h2 style="color:#fff; font-size:1.25rem; font-weight:700; margin-bottom:1.25rem;">
+        <i class="fas fa-rocket" style="color:#a78bfa; margin-right:0.5rem;"></i>
+        Get Started in 3 Steps
+      </h2>
+
+      <ul class="quickstart-steps">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <h4>Complete Your Profile</h4>
+            <p>Add your logo, business name, and branding colours so every PDF looks professional.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <h4>Invite Your First Client</h4>
+            <p>Send an email invite from the dashboard — they'll get a free account automatically.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <h4>Generate a Meal Plan</h4>
+            <p>Set their macros, choose a dietary protocol, and let AI create a personalised plan in 60 seconds.</p>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Primary CTA -->
+      <a href="/dashboard" class="funnel-cta">
+        Go to My Dashboard →
+      </a>
+
+      <!-- Cross-sell -->
+      <div class="cross-sell">
+        <h3><i class="fas fa-dumbbell" style="margin-right:0.5rem;"></i> Need Workout Programming Too?</h3>
+        <p>
+          EvoFit Trainer pairs perfectly with Meals — AI-powered workout plans, exercise libraries,
+          and client progress tracking in one place.
+        </p>
+        <a href="https://evofittrainer.com" target="_blank" rel="noopener">
+          Learn About EvoFit Trainer →
+        </a>
+      </div>
+
+      <!-- Trust -->
+      <div class="funnel-trust">
+        <div class="badge"><i class="fas fa-shield-halved"></i> 14-Day Guarantee</div>
+        <div class="badge"><i class="fas fa-lock"></i> Secure Checkout</div>
+        <div class="badge"><i class="fas fa-users"></i> 500+ Trainers</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/landing/js/funnel.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      renderOrderSummary();
+    });
+  </script>
+</body>
+</html>

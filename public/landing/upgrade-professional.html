@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upgrade to Professional — EvoFitMeals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/landing/css/funnel.css">
+</head>
+<body class="funnel-page">
+
+  <div class="funnel-container">
+    <!-- Logo -->
+    <div class="funnel-logo">
+      <i class="fas fa-utensils"></i>
+      <span>EvoFitMeals</span>
+    </div>
+
+    <div class="funnel-card">
+      <span class="funnel-eyebrow">Wait — Special Offer</span>
+
+      <h1 class="funnel-headline">
+        Great choice! <br>Before we finalize&hellip;
+      </h1>
+      <p class="funnel-subheadline">
+        You chose the Starter plan — solid move. But most trainers outgrow it within a month.
+        Professional unlocks everything you need to <strong style="color:#fff;">actually scale</strong>.
+      </p>
+
+      <ul class="funnel-features">
+        <li><i class="fas fa-check-circle"></i> <span><strong>20 clients</strong> — more than double Starter's 9</span></li>
+        <li><i class="fas fa-check-circle"></i> <span><strong>3,000 meal plans</strong> — never worry about limits</span></li>
+        <li><i class="fas fa-check-circle"></i> <span><strong>Custom branding</strong> — your logo on every PDF</span></li>
+        <li><i class="fas fa-check-circle"></i> <span><strong>Progress tracking</strong> — measurements &amp; photos</span></li>
+        <li><i class="fas fa-check-circle"></i> <span><strong>Priority support</strong> — skip the queue</span></li>
+      </ul>
+
+      <!-- Price -->
+      <div class="funnel-price-block">
+        <div class="price-big">$299</div>
+        <div class="price-suffix">one-time payment</div>
+        <span class="price-delta">Just $100 more than Starter</span>
+      </div>
+
+      <!-- CTA -->
+      <a href="javascript:void(0)"
+         class="funnel-cta"
+         onclick="selectTier('professional', '/landing/upgrade-enterprise.html')">
+        Yes — Upgrade to Professional ($299)
+      </a>
+
+      <a href="/landing/upgrade-enterprise.html"
+         class="funnel-decline"
+         onclick="selectTier('starter', '/landing/upgrade-enterprise.html'); return false;">
+        No thanks, I'll keep Starter ($199)
+      </a>
+
+      <!-- Trust -->
+      <div class="funnel-trust">
+        <div class="badge"><i class="fas fa-shield-halved"></i> 14-Day Guarantee</div>
+        <div class="badge"><i class="fas fa-lock"></i> Secure Checkout</div>
+        <div class="badge"><i class="fas fa-users"></i> 500+ Trainers</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/landing/js/funnel.js"></script>
+</body>
+</html>

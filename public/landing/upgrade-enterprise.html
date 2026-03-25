@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upgrade to Enterprise — EvoFitMeals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/landing/css/funnel.css">
+</head>
+<body class="funnel-page">
+
+  <div class="funnel-container">
+    <!-- Logo -->
+    <div class="funnel-logo">
+      <i class="fas fa-utensils"></i>
+      <span>EvoFitMeals</span>
+    </div>
+
+    <div class="funnel-card">
+      <span class="funnel-eyebrow">One More Thing</span>
+
+      <h1 class="funnel-headline">
+        What if there were <span class="gradient">no limits?</span>
+      </h1>
+      <p class="funnel-subheadline">
+        You're serious about nutrition coaching — why cap your growth?
+        Enterprise removes every ceiling so you can scale without looking back.
+      </p>
+
+      <ul class="funnel-features">
+        <li><i class="fas fa-check-circle"></i> <span><strong>Unlimited clients</strong> — grow your roster without limits</span></li>
+        <li><i class="fas fa-check-circle"></i> <span><strong>Unlimited meal plans</strong> — no plan caps, ever</span></li>
+        <li><i class="fas fa-check-circle"></i> <span><strong>White-label branding</strong> — fully custom look &amp; feel</span></li>
+        <li><i class="fas fa-check-circle"></i> <span><strong>API access</strong> — integrate with your own systems</span></li>
+        <li><i class="fas fa-check-circle"></i> <span><strong>Dedicated support</strong> — direct line to our team</span></li>
+        <li><i class="fas fa-check-circle"></i> <span><strong>Full recipe library</strong> — every recipe, every protocol</span></li>
+      </ul>
+
+      <!-- Price -->
+      <div class="funnel-price-block" id="enterprise-price">
+        <div class="price-big">$399</div>
+        <div class="price-suffix">one-time payment</div>
+        <span class="price-delta" id="price-delta-text">Just $100 more than Professional</span>
+      </div>
+
+      <!-- CTA -->
+      <a href="javascript:void(0)"
+         class="funnel-cta"
+         onclick="selectTier('enterprise', '/landing/upgrade-saas.html')">
+        Yes — Go Enterprise ($399)
+      </a>
+
+      <a href="/landing/upgrade-saas.html"
+         class="funnel-decline"
+         id="decline-link">
+        No thanks, I'll keep my current plan
+      </a>
+
+      <!-- Trust -->
+      <div class="funnel-trust">
+        <div class="badge"><i class="fas fa-shield-halved"></i> 14-Day Guarantee</div>
+        <div class="badge"><i class="fas fa-lock"></i> Secure Checkout</div>
+        <div class="badge"><i class="fas fa-users"></i> 500+ Trainers</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/landing/js/funnel.js"></script>
+  <script>
+    // Dynamic price-delta based on current selection
+    (function () {
+      var sel = window.getSelection();
+      var deltaEl = document.getElementById('price-delta-text');
+      if (sel.tier === 'starter') {
+        deltaEl.textContent = 'Just $200 more than Starter — unlock everything';
+      }
+      // Default text works for professional
+    })();
+  </script>
+</body>
+</html>
