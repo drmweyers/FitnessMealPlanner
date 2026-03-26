@@ -162,55 +162,115 @@ router.post('/stop/:batchId', requireAdmin, async (req: Request, res: Response) 
 });
 
 /**
+ * GET /api/admin/generate-bulk/recipe-count
+ * Query actual DB recipe count matching criteria — ground truth for executor
+ */
+router.get('/recipe-count', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { tierLevel, mainIngredient, createdAfter } = req.query;
+
+    const { db } = await import('../db');
+    const { recipes } = await import('../../shared/schema');
+    const { count, and, eq, gte, sql } = await import('drizzle-orm');
+
+    const conditions: any[] = [];
+
+    if (tierLevel && typeof tierLevel === 'string') {
+      conditions.push(eq(recipes.tierLevel, tierLevel as any));
+    }
+
+    if (createdAfter && typeof createdAfter === 'string') {
+      conditions.push(gte(recipes.creationTimestamp, new Date(createdAfter)));
+    }
+
+    if (mainIngredient && typeof mainIngredient === 'string') {
+      conditions.push(
+        sql`${recipes.mainIngredientTags}::jsonb @> ${JSON.stringify([mainIngredient])}::jsonb`
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [result] = await db
+      .select({ count: count() })
+      .from(recipes)
+      .where(whereClause);
+
+    res.json({
+      count: result?.count || 0,
+      filters: { tierLevel, mainIngredient, createdAfter },
+    });
+  } catch (error) {
+    console.error('[recipe-count] Error:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to query recipe count' });
+  }
+});
+
+/**
  * GET /api/admin/generate-bulk/status/:batchId
  * Get status of a generation batch
+ *
+ * Lookup chain:
+ * 1. activeBatches Map (currently running)
+ * 2. bmadRecipeService.getProgress() (BMAD ProgressMonitorAgent)
+ * 3. progressTracker (legacy recipeGenerator system)
+ * 4. 404 not found
  */
 router.get('/status/:batchId', requireAdmin, async (req: Request, res: Response) => {
   const { batchId } = req.params;
 
-  // Check if batch is in active batches
+  // 1. Check activeBatches (currently running)
   const batch = activeBatches.get(batchId);
-  if (batch) {
-    // Get progress from progress tracker if available
-    try {
-      const { progressTracker } = await import('../services/progressTracker');
-      const progress = progressTracker.getProgress(batchId);
-      
-      return res.json({
-        status: 'active',
-        batchId,
-        startTime: batch.startTime,
-        duration: Date.now() - batch.startTime,
-        options: batch.options,
-        progress: progress || null,
-      });
-    } catch (error) {
-      return res.json({
-        status: 'active',
-        batchId,
-        startTime: batch.startTime,
-        duration: Date.now() - batch.startTime,
-        options: batch.options,
-      });
-    }
+
+  // 2. Check BMAD ProgressMonitorAgent (primary progress source)
+  let bmadProgress = null;
+  try {
+    bmadProgress = await bmadRecipeService.getProgress(batchId);
+  } catch (error) {
+    // BMAD service may not have this batch
   }
 
-  // Check if batch exists in progress tracker (might be completed)
+  if (batch) {
+    return res.json({
+      status: bmadProgress?.phase === 'complete' ? 'complete'
+            : bmadProgress?.phase === 'error' ? 'failed'
+            : 'active',
+      batchId,
+      startTime: batch.startTime,
+      duration: Date.now() - batch.startTime,
+      options: batch.options,
+      progress: bmadProgress || null,
+    });
+  }
+
+  // Batch not in activeBatches — may have completed and been cleaned up
+  if (bmadProgress) {
+    return res.json({
+      status: bmadProgress.phase === 'complete' ? 'complete'
+            : bmadProgress.phase === 'error' ? 'failed'
+            : 'active',
+      batchId,
+      progress: bmadProgress,
+    });
+  }
+
+  // 3. Fall back to legacy progressTracker
   try {
     const { progressTracker } = await import('../services/progressTracker');
     const progress = progressTracker.getProgress(batchId);
-    
+
     if (progress) {
       return res.json({
-        status: progress.status === 'complete' ? 'complete' : 'active',
+        status: progress.currentStep === 'complete' ? 'complete' : 'active',
         batchId,
         progress,
       });
     }
   } catch (error) {
-    // Progress tracker might not have it
+    // progressTracker might not have it
   }
 
+  // 4. Not found anywhere
   return res.status(404).json({
     status: 'error',
     message: 'Batch not found',
