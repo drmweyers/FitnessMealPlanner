@@ -1045,7 +1045,8 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
           } else if (dbCount > 0) {
             const adjusted = adjustBatchTarget(batch.target, dbCount);
             console.log(`🔄 ${batch.id}: DB has ${dbCount}/${batch.target} — adjusting target to ${adjusted}`);
-            batch.target = adjusted;
+            // Use a property to track adjusted target without mutating the original spec
+            (batch as any)._adjustedTarget = adjusted;
             progress.batches[batch.id].recipesGenerated = dbCount;
             saveProgress(progress);
           }
@@ -1064,10 +1065,13 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
       continue;
     }
 
+    // Use adjusted target if smart resume reduced it, otherwise original
+    const effectiveTarget = (batch as any)._adjustedTarget ?? batch.target;
+
     // Split into chunks if --chunk-size specified
     const chunks: { subId: string; count: number }[] = [];
-    if (chunkSize && batch.target > chunkSize) {
-      let remaining = batch.target;
+    if (chunkSize && effectiveTarget > chunkSize) {
+      let remaining = effectiveTarget;
       let chunkNum = 1;
       while (remaining > 0) {
         const thisChunk = Math.min(remaining, chunkSize);
@@ -1077,7 +1081,7 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
       }
       console.log(`\n📦 Batch ${batch.id}: ${batch.name} — split into ${chunks.length} chunks of ${chunkSize}`);
     } else {
-      chunks.push({ subId: batch.id, count: batch.target });
+      chunks.push({ subId: batch.id, count: effectiveTarget });
     }
 
     let totalGeneratedForBatch = progress.batches[batch.id]?.recipesGenerated || 0;
@@ -1086,23 +1090,25 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
       batchId: batch.id,
       status: 'running',
       startedAt: progress.batches[batch.id]?.startedAt || new Date().toISOString(),
-      targetCount: batch.target,
+      targetCount: effectiveTarget,
       recipesGenerated: totalGeneratedForBatch,
     };
     saveProgress(progress);
 
     let batchFailed = false;
+    const batchStartTime = new Date().toISOString();
 
     for (const chunk of chunks) {
       // Skip chunks that are already accounted for
-      if (totalGeneratedForBatch >= batch.target) break;
+      if (totalGeneratedForBatch >= effectiveTarget) break;
 
-      // Get baseline recipe count for verification
+      // Get baseline recipe count for verification (scoped to this batch run)
       let baselineCount = 0;
       try {
         baselineCount = await fetchRecipeCount(baseUrl, token, {
           tierLevel: batch.tierLevel,
           mainIngredient: batch.mainIngredient,
+          createdAfter: batchStartTime,
         });
       } catch { /* baseline check is best-effort */ }
 
@@ -1124,11 +1130,12 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
           progress.batches[batch.id].recipesGenerated = totalGeneratedForBatch;
           console.log(`✅ Chunk ${chunk.subId} done: +${result.recipesGenerated} recipes (total: ${totalGeneratedForBatch}/${batch.target})`);
 
-          // Verify with DB ground truth
+          // Verify with DB ground truth (scoped to recipes created during this batch)
           try {
             const postCount = await fetchRecipeCount(baseUrl, token, {
               tierLevel: batch.tierLevel,
               mainIngredient: batch.mainIngredient,
+              createdAfter: batchStartTime,
             });
             const verifiedDelta = calculateBatchDelta(baselineCount, postCount);
             if (verifiedDelta > 0) {
@@ -1175,7 +1182,7 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
       }
     }
 
-    if (totalGeneratedForBatch >= batch.target) {
+    if (totalGeneratedForBatch >= effectiveTarget) {
       progress.batches[batch.id].status = 'completed';
       progress.batches[batch.id].completedAt = new Date().toISOString();
     } else if (batchFailed) {
