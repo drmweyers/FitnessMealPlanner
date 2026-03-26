@@ -807,18 +807,20 @@ async function pollBatchStatus(baseUrl: string, token: string, serverBatchId: st
 
   const data = await resp.json() as any;
   const progress = data.progress || {};
-  const recipesGenerated = progress.savedCount || progress.recipesGenerated ||
+  const recipesGenerated = progress.recipesCompleted || progress.savedCount || progress.recipesGenerated ||
                            progress.completedRecipes || data.recipesGenerated ||
                            data.savedCount || 0;
-  const status = data.status === 'complete' ? 'completed' : data.status || 'unknown';
+  const phase = progress.phase || '';
+  const status = (data.status === 'complete' || phase === 'complete') ? 'completed' : data.status || 'unknown';
 
   return { status, recipesGenerated };
 }
 
 async function waitForBatchCompletion(
-  baseUrl: string, token: string, serverBatchId: string, batchSpec: BatchSpec
+  baseUrl: string, token: string, serverBatchId: string, batchSpec: BatchSpec,
+  dbCountBefore?: number
 ): Promise<{ recipesGenerated: number; success: boolean }> {
-  const maxWaitMs = batchSpec.target * 25 * 1000; // ~25s per recipe max
+  const maxWaitMs = batchSpec.target * 90 * 1000; // ~90s per recipe (DALL-E images take 60-90s each)
   const pollIntervalMs = 30_000; // poll every 30s
   const startTime = Date.now();
 
@@ -836,13 +838,28 @@ async function waitForBatchCompletion(
       return { recipesGenerated, success: false };
     }
     if (status === 'not_found') {
-      // Batch disappeared — server may have restarted. Check recipe count to verify.
-      console.log(`  Batch ${batchSpec.id}: batch not found (server restart?). Checking recipe count...`);
-      return { recipesGenerated: 0, success: false };
+      // Batch disappeared — server may have restarted. Check DB count as ground truth.
+      console.log(`  Batch ${batchSpec.id}: batch not found. Checking DB count...`);
+      break;
     }
   }
 
-  console.log(`  Batch ${batchSpec.id}: timed out after ${maxWaitMs / 1000}s`);
+  // Timeout or not_found: check DB count as ground truth
+  console.log(`  Batch ${batchSpec.id}: polling ended after ${Math.round((Date.now() - startTime) / 1000)}s. Checking DB count as ground truth...`);
+  try {
+    const dbCountNow = await fetchRecipeCount(baseUrl, token, {
+      tierLevel: batchSpec.tierLevel,
+      mainIngredient: batchSpec.mainIngredient,
+    });
+    const generated = dbCountBefore !== undefined ? Math.max(0, dbCountNow - dbCountBefore) : 0;
+    if (generated > 0) {
+      console.log(`  DB ground truth: ${generated} new recipes detected (was ${dbCountBefore}, now ${dbCountNow})`);
+      return { recipesGenerated: generated, success: true };
+    }
+    console.log(`  DB ground truth: no new recipes (count=${dbCountNow}, before=${dbCountBefore})`);
+  } catch (e) {
+    console.log(`  Could not check DB count: ${e}`);
+  }
   return { recipesGenerated: 0, success: false };
 }
 
@@ -1110,10 +1127,20 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
         try { token = await login(baseUrl); } catch {}
 
         const chunkBatch = { ...batch, target: chunk.count };
+
+        // Snapshot DB count before starting chunk for ground-truth fallback
+        let dbCountBefore: number | undefined;
+        try {
+          dbCountBefore = await fetchRecipeCount(baseUrl, token, {
+            tierLevel: batch.tierLevel,
+            mainIngredient: batch.mainIngredient,
+          });
+        } catch { /* best-effort */ }
+
         const serverBatchId = await startBatch(baseUrl, token, chunkBatch);
         saveProgress(progress);
 
-        const result = await waitForBatchCompletion(baseUrl, token, serverBatchId, chunkBatch);
+        const result = await waitForBatchCompletion(baseUrl, token, serverBatchId, chunkBatch, dbCountBefore);
 
         if (result.success) {
           totalGeneratedForBatch += result.recipesGenerated;
@@ -1138,8 +1165,15 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
           // Retry once
           try { token = await login(baseUrl); } catch {}
           try {
+            let retryDbBefore: number | undefined;
+            try {
+              retryDbBefore = await fetchRecipeCount(baseUrl, token, {
+                tierLevel: batch.tierLevel,
+                mainIngredient: batch.mainIngredient,
+              });
+            } catch { /* best-effort */ }
             const retryBatchId = await startBatch(baseUrl, token, chunkBatch);
-            const retryResult = await waitForBatchCompletion(baseUrl, token, retryBatchId, chunkBatch);
+            const retryResult = await waitForBatchCompletion(baseUrl, token, retryBatchId, chunkBatch, retryDbBefore);
             if (retryResult.success) {
               totalGeneratedForBatch += retryResult.recipesGenerated;
               progress.batches[batch.id].recipesGenerated = totalGeneratedForBatch;

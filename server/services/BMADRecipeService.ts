@@ -294,9 +294,14 @@ export class BMADRecipeService {
           } : 'none');
           allSavedRecipes.push(...savedRecipes);
 
+          // Update progress after DB save so status polling reflects saved count before imaging
+          await this.progressAgent.updateProgress(batchId, {
+            recipesCompleted: allSavedRecipes.length,
+          });
+
           // Step 4: Image Generation (if enabled)
           if (options.enableImageGeneration !== false) {
-            await this.progressAgent.updateProgress(batchId, { phase: 'imaging' });
+            await this.progressAgent.updateProgress(batchId, { phase: 'imaging', recipesCompleted: allSavedRecipes.length });
 
             // Broadcast imaging phase via SSE
             const imagingProgress = this.progressAgent.getProgress(batchId);
