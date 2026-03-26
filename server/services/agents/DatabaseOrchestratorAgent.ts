@@ -270,7 +270,7 @@ export class DatabaseOrchestratorAgent extends BaseAgent {
       }
 
       try {
-        const recipeData = this.convertToInsertRecipe(validatedRecipe.recipe, defaultImageUrl, 'starter'); // tierLevel defaults to starter if not provided
+        const recipeData = this.convertToInsertRecipe(validatedRecipe.recipe, defaultImageUrl, tierLevel);
         const createdRecipe = await storage.createRecipe(recipeData);
 
         savedRecipes.push({
