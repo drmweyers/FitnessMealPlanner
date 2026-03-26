@@ -1102,16 +1102,6 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
       // Skip chunks that are already accounted for
       if (totalGeneratedForBatch >= effectiveTarget) break;
 
-      // Get baseline recipe count for verification (scoped to this batch run)
-      let baselineCount = 0;
-      try {
-        baselineCount = await fetchRecipeCount(baseUrl, token, {
-          tierLevel: batch.tierLevel,
-          mainIngredient: batch.mainIngredient,
-          createdAfter: batchStartTime,
-        });
-      } catch { /* baseline check is best-effort */ }
-
       console.log(`\n🚀 Starting ${chunk.subId}: ${batch.name} (${chunk.count} recipes)`);
       console.log(`   Tier: ${batch.tierLevel} | Phase: ${batch.phase} | Progress: ${totalGeneratedForBatch}/${batch.target}`);
 
@@ -1130,17 +1120,16 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
           progress.batches[batch.id].recipesGenerated = totalGeneratedForBatch;
           console.log(`✅ Chunk ${chunk.subId} done: +${result.recipesGenerated} recipes (total: ${totalGeneratedForBatch}/${batch.target})`);
 
-          // Verify with DB ground truth (scoped to recipes created during this batch)
+          // Verify with DB ground truth (cumulative count since batch start)
           try {
-            const postCount = await fetchRecipeCount(baseUrl, token, {
+            const cumulativeCount = await fetchRecipeCount(baseUrl, token, {
               tierLevel: batch.tierLevel,
               mainIngredient: batch.mainIngredient,
               createdAfter: batchStartTime,
             });
-            const verifiedDelta = calculateBatchDelta(baselineCount, postCount);
-            if (verifiedDelta > 0) {
-              console.log(`  📊 DB verification: +${verifiedDelta} recipes confirmed in database`);
-              totalGeneratedForBatch = Math.max(totalGeneratedForBatch, verifiedDelta);
+            if (cumulativeCount > 0) {
+              console.log(`  📊 DB verification: ${cumulativeCount} total recipes since batch start`);
+              totalGeneratedForBatch = Math.max(totalGeneratedForBatch, cumulativeCount);
             }
           } catch { /* verification is best-effort */ }
         } else {
