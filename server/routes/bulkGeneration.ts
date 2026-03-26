@@ -165,9 +165,9 @@ router.post('/stop/:batchId', requireAdmin, async (req: Request, res: Response) 
  * GET /api/admin/generate-bulk/recipe-count
  * Query actual DB recipe count matching criteria — ground truth for executor
  */
-router.get('/recipe-count', requireAdmin, async (req: Request, res: Response) => {
+router.post('/recipe-count', requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { tierLevel, mainIngredient, createdAfter } = req.query;
+    const { tierLevel, mainIngredient, createdAfter } = { ...req.query, ...req.body };
 
     const { db } = await import('../db');
     const { recipes } = await import('../../shared/schema');

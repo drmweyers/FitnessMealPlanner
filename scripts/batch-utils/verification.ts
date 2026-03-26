@@ -28,13 +28,14 @@ export async function fetchRecipeCount(
     createdAfter?: string;
   }
 ): Promise<number> {
-  const url = new URL(`${baseUrl}/api/admin/generate-bulk/recipe-count`);
-  if (params.tierLevel) url.searchParams.set('tierLevel', params.tierLevel);
-  if (params.mainIngredient) url.searchParams.set('mainIngredient', params.mainIngredient);
-  if (params.createdAfter) url.searchParams.set('createdAfter', params.createdAfter);
-
-  const resp = await fetch(url.toString(), {
-    headers: { 'Authorization': `Bearer ${token}` },
+  // Use POST to avoid ViteExpress HTML interception on GET requests in dev mode
+  const resp = await fetch(`${baseUrl}/api/admin/generate-bulk/recipe-count`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
   });
 
   if (!resp.ok) {
