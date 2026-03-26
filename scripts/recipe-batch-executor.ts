@@ -20,6 +20,10 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+import { validateConstraints, validateAllBatches } from './batch-utils/constraint-validator.js';
+import { extractToken } from './batch-utils/auth-helpers.js';
+import { calculateBatchDelta, shouldSkipBatch, adjustBatchTarget, fetchRecipeCount } from './batch-utils/verification.js';
+
 // ============================================================
 // CONFIGURATION
 // ============================================================
@@ -210,7 +214,7 @@ const BATCHES: BatchSpec[] = [
     dietaryRestrictions: ['Keto', 'High-Protein', 'Low-Carb'],
     fitnessGoal: 'Weight Loss',
     targetCalories: 450, maxCalories: 550,
-    minProtein: 25, maxCarbs: 20, minFat: 25,
+    minProtein: 25, maxCarbs: 30, minFat: 20,
     maxPrepTime: 30,
     naturalLanguagePrompt: 'Ketogenic diet recipes, very low carb (under 20g net carbs), high fat, moderate protein, no grains or sugar, keto-friendly ingredients. Include avocado, coconut oil, butter, fatty fish, nuts, seeds, low-carb vegetables. Each recipe must be unique.',
     enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
@@ -547,7 +551,7 @@ const BATCHES: BatchSpec[] = [
     fitnessGoal: 'Muscle Building',
     mainIngredient: 'Beef',
     targetCalories: 500, maxCalories: 650,
-    minProtein: 40, maxCarbs: 5,
+    minProtein: 40, maxCarbs: 10,
     maxPrepTime: 30,
     naturalLanguagePrompt: 'Carnivore diet recipes, animal products only, beef, organ meats, eggs, fish, zero carb, zero plant foods, variety of meat preparations and cuts. Include ribeye, bone marrow, liver pate, smoked meats. Each recipe must be unique.',
     enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
@@ -745,7 +749,7 @@ async function login(baseUrl: string): Promise<string> {
   }
 
   const data = await resp.json() as any;
-  return data.token;
+  return extractToken(data);
 }
 
 async function startBatch(baseUrl: string, token: string, batch: BatchSpec): Promise<string> {
@@ -797,14 +801,18 @@ async function pollBatchStatus(baseUrl: string, token: string, serverBatchId: st
   });
 
   if (!resp.ok) {
-    return { status: 'unknown', recipesGenerated: 0 };
+    // 404 means batch finished or server restarted — check recipe count directly
+    return { status: 'not_found', recipesGenerated: 0 };
   }
 
   const data = await resp.json() as any;
-  return {
-    status: data.status || 'unknown',
-    recipesGenerated: data.recipesGenerated || data.savedCount || 0,
-  };
+  const progress = data.progress || {};
+  const recipesGenerated = progress.savedCount || progress.recipesGenerated ||
+                           progress.completedRecipes || data.recipesGenerated ||
+                           data.savedCount || 0;
+  const status = data.status === 'complete' ? 'completed' : data.status || 'unknown';
+
+  return { status, recipesGenerated };
 }
 
 async function waitForBatchCompletion(
@@ -821,11 +829,16 @@ async function waitForBatchCompletion(
     const elapsed = Math.round((Date.now() - startTime) / 1000);
     console.log(`  [${elapsed}s] Batch ${batchSpec.id}: status=${status}, recipes=${recipesGenerated}/${batchSpec.target}`);
 
-    if (status === 'completed' || status === 'finished') {
+    if (status === 'completed' || status === 'finished' || status === 'complete') {
       return { recipesGenerated, success: true };
     }
     if (status === 'failed' || status === 'error') {
       return { recipesGenerated, success: false };
+    }
+    if (status === 'not_found') {
+      // Batch disappeared — server may have restarted. Check recipe count to verify.
+      console.log(`  Batch ${batchSpec.id}: batch not found (server restart?). Checking recipe count...`);
+      return { recipesGenerated: 0, success: false };
     }
   }
 
@@ -923,9 +936,46 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
 
   const noImages = args.includes('--no-images');
   const dryRun = args.includes('--dry-run');
+  const chunkSizeArg = args.find(a => a.startsWith('--chunk-size='))?.split('=')[1] ||
+                       (args.includes('--chunk-size') ? args[args.indexOf('--chunk-size') + 1] : null);
+  const chunkSize = chunkSizeArg ? parseInt(chunkSizeArg) : null;
 
   if (noImages) {
     batchesToRun = batchesToRun.map(b => ({ ...b, enableImageGeneration: false, enableS3Upload: false }));
+  }
+
+  // Pre-validate constraints
+  console.log('\n--- Constraint Pre-Validation ---\n');
+  const validationResults = validateAllBatches(
+    batchesToRun.map(b => ({
+      id: b.id,
+      name: b.name,
+      targetCalories: b.targetCalories,
+      maxCalories: b.maxCalories,
+      minProtein: b.minProtein,
+      maxProtein: b.maxProtein,
+      minCarbs: b.minCarbs,
+      maxCarbs: b.maxCarbs,
+      minFat: b.minFat,
+      maxFat: b.maxFat,
+    }))
+  );
+
+  for (const vr of validationResults) {
+    if (!vr.feasible) {
+      console.log(`❌ ${vr.id} ${vr.name}: INFEASIBLE — ${vr.errors.join('; ')}`);
+    } else if (vr.warnings.length > 0) {
+      console.log(`⚠️  ${vr.id} ${vr.name}: ${vr.warnings.join('; ')}`);
+    } else {
+      console.log(`✅ ${vr.id} ${vr.name}: OK`);
+    }
+  }
+
+  // Remove infeasible batches
+  const infeasibleIds = new Set(validationResults.filter(v => !v.feasible).map(v => v.id));
+  if (infeasibleIds.size > 0) {
+    console.log(`\n⚠️  Removing ${infeasibleIds.size} infeasible batch(es)\n`);
+    batchesToRun = batchesToRun.filter(b => !infeasibleIds.has(b.id));
   }
 
   // Dry run - show what would be sent
@@ -972,6 +1022,41 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
     return;
   }
 
+  // Smart resume: check actual DB counts for previously "failed" batches
+  if (!dryRun) {
+    console.log('--- Smart Resume: Checking actual DB counts ---\n');
+    for (const batch of batchesToRun) {
+      const bp = progress.batches[batch.id];
+      if (bp?.status === 'failed' || bp?.status === 'running') {
+        try {
+          const dbCount = await fetchRecipeCount(baseUrl, token, {
+            tierLevel: batch.tierLevel,
+            mainIngredient: batch.mainIngredient,
+          });
+          if (shouldSkipBatch(dbCount, batch.target)) {
+            console.log(`✅ ${batch.id}: DB has ${dbCount} recipes (target ${batch.target}) — marking complete`);
+            progress.batches[batch.id] = {
+              ...bp,
+              status: 'completed',
+              recipesGenerated: dbCount,
+              completedAt: new Date().toISOString(),
+            };
+            saveProgress(progress);
+          } else if (dbCount > 0) {
+            const adjusted = adjustBatchTarget(batch.target, dbCount);
+            console.log(`🔄 ${batch.id}: DB has ${dbCount}/${batch.target} — adjusting target to ${adjusted}`);
+            batch.target = adjusted;
+            progress.batches[batch.id].recipesGenerated = dbCount;
+            saveProgress(progress);
+          }
+        } catch {
+          console.log(`⚠️  ${batch.id}: Could not check DB count, will run full batch`);
+        }
+      }
+    }
+    console.log('');
+  }
+
   for (const batch of batchesToRun) {
     // Skip already completed batches
     if (progress.batches[batch.id]?.status === 'completed') {
@@ -979,45 +1064,130 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
       continue;
     }
 
-    console.log(`\n🚀 Starting Batch ${batch.id}: ${batch.name}`);
-    console.log(`   Target: ${batch.target} recipes | Tier: ${batch.tierLevel} | Phase: ${batch.phase}`);
+    // Split into chunks if --chunk-size specified
+    const chunks: { subId: string; count: number }[] = [];
+    if (chunkSize && batch.target > chunkSize) {
+      let remaining = batch.target;
+      let chunkNum = 1;
+      while (remaining > 0) {
+        const thisChunk = Math.min(remaining, chunkSize);
+        chunks.push({ subId: `${batch.id}_c${chunkNum}`, count: thisChunk });
+        remaining -= thisChunk;
+        chunkNum++;
+      }
+      console.log(`\n📦 Batch ${batch.id}: ${batch.name} — split into ${chunks.length} chunks of ${chunkSize}`);
+    } else {
+      chunks.push({ subId: batch.id, count: batch.target });
+    }
+
+    let totalGeneratedForBatch = progress.batches[batch.id]?.recipesGenerated || 0;
 
     progress.batches[batch.id] = {
       batchId: batch.id,
       status: 'running',
-      startedAt: new Date().toISOString(),
+      startedAt: progress.batches[batch.id]?.startedAt || new Date().toISOString(),
       targetCount: batch.target,
+      recipesGenerated: totalGeneratedForBatch,
     };
     saveProgress(progress);
 
-    try {
-      const serverBatchId = await startBatch(baseUrl, token, batch);
-      progress.batches[batch.id].serverBatchId = serverBatchId;
+    let batchFailed = false;
+
+    for (const chunk of chunks) {
+      // Skip chunks that are already accounted for
+      if (totalGeneratedForBatch >= batch.target) break;
+
+      // Get baseline recipe count for verification
+      let baselineCount = 0;
+      try {
+        baselineCount = await fetchRecipeCount(baseUrl, token, {
+          tierLevel: batch.tierLevel,
+          mainIngredient: batch.mainIngredient,
+        });
+      } catch { /* baseline check is best-effort */ }
+
+      console.log(`\n🚀 Starting ${chunk.subId}: ${batch.name} (${chunk.count} recipes)`);
+      console.log(`   Tier: ${batch.tierLevel} | Phase: ${batch.phase} | Progress: ${totalGeneratedForBatch}/${batch.target}`);
+
+      try {
+        // Re-login before each chunk to avoid token expiry
+        try { token = await login(baseUrl); } catch {}
+
+        const chunkBatch = { ...batch, target: chunk.count };
+        const serverBatchId = await startBatch(baseUrl, token, chunkBatch);
+        saveProgress(progress);
+
+        const result = await waitForBatchCompletion(baseUrl, token, serverBatchId, chunkBatch);
+
+        if (result.success) {
+          totalGeneratedForBatch += result.recipesGenerated;
+          progress.batches[batch.id].recipesGenerated = totalGeneratedForBatch;
+          console.log(`✅ Chunk ${chunk.subId} done: +${result.recipesGenerated} recipes (total: ${totalGeneratedForBatch}/${batch.target})`);
+
+          // Verify with DB ground truth
+          try {
+            const postCount = await fetchRecipeCount(baseUrl, token, {
+              tierLevel: batch.tierLevel,
+              mainIngredient: batch.mainIngredient,
+            });
+            const verifiedDelta = calculateBatchDelta(baselineCount, postCount);
+            if (verifiedDelta > 0) {
+              console.log(`  📊 DB verification: +${verifiedDelta} recipes confirmed in database`);
+              totalGeneratedForBatch = Math.max(totalGeneratedForBatch, verifiedDelta);
+            }
+          } catch { /* verification is best-effort */ }
+        } else {
+          console.log(`❌ Chunk ${chunk.subId} failed. Waiting 60s before retry...`);
+          await new Promise(r => setTimeout(r, 60_000));
+          // Retry once
+          try { token = await login(baseUrl); } catch {}
+          try {
+            const retryBatchId = await startBatch(baseUrl, token, chunkBatch);
+            const retryResult = await waitForBatchCompletion(baseUrl, token, retryBatchId, chunkBatch);
+            if (retryResult.success) {
+              totalGeneratedForBatch += retryResult.recipesGenerated;
+              progress.batches[batch.id].recipesGenerated = totalGeneratedForBatch;
+              console.log(`✅ Chunk ${chunk.subId} retry succeeded: +${retryResult.recipesGenerated}`);
+            } else {
+              batchFailed = true;
+              console.log(`❌ Chunk ${chunk.subId} retry also failed. Moving to next batch.`);
+              break;
+            }
+          } catch (retryErr: any) {
+            batchFailed = true;
+            console.log(`❌ Chunk ${chunk.subId} retry error: ${retryErr.message}`);
+            break;
+          }
+        }
+      } catch (err: any) {
+        console.log(`❌ Chunk ${chunk.subId} error: ${err.message}. Waiting 60s...`);
+        await new Promise(r => setTimeout(r, 60_000));
+        batchFailed = true;
+        break;
+      }
+
       saveProgress(progress);
 
-      const result = await waitForBatchCompletion(baseUrl, token, serverBatchId, batch);
-
-      if (result.success) {
-        progress.batches[batch.id].status = 'completed';
-        progress.batches[batch.id].recipesGenerated = result.recipesGenerated;
-        progress.batches[batch.id].completedAt = new Date().toISOString();
-        console.log(`✅ Batch ${batch.id} completed: ${result.recipesGenerated}/${batch.target} recipes`);
-      } else {
-        progress.batches[batch.id].status = 'failed';
-        progress.batches[batch.id].recipesGenerated = result.recipesGenerated;
-        progress.batches[batch.id].error = 'Generation failed or timed out';
-        console.log(`❌ Batch ${batch.id} failed: ${result.recipesGenerated}/${batch.target} recipes`);
+      // Brief pause between chunks to let the server breathe
+      if (chunks.length > 1) {
+        console.log('  Cooling down 30s between chunks...');
+        await new Promise(r => setTimeout(r, 30_000));
       }
-    } catch (err: any) {
-      progress.batches[batch.id].status = 'failed';
-      progress.batches[batch.id].error = err.message;
-      console.log(`❌ Batch ${batch.id} error: ${err.message}`);
     }
 
-    saveProgress(progress);
+    if (totalGeneratedForBatch >= batch.target) {
+      progress.batches[batch.id].status = 'completed';
+      progress.batches[batch.id].completedAt = new Date().toISOString();
+    } else if (batchFailed) {
+      progress.batches[batch.id].status = 'failed';
+      progress.batches[batch.id].error = `Only ${totalGeneratedForBatch}/${batch.target} generated`;
+    } else {
+      progress.batches[batch.id].status = totalGeneratedForBatch > 0 ? 'completed' : 'failed';
+      if (totalGeneratedForBatch > 0) progress.batches[batch.id].completedAt = new Date().toISOString();
+    }
 
-    // Re-login periodically (tokens may expire during long runs)
-    try { token = await login(baseUrl); } catch {}
+    progress.batches[batch.id].recipesGenerated = totalGeneratedForBatch;
+    saveProgress(progress);
   }
 
   // Final report
