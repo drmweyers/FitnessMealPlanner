@@ -12,6 +12,9 @@ import { bmadRecipeService } from '../services/BMADRecipeService';
 import { sseManager } from '../services/utils/SSEManager';
 import { z } from 'zod';
 import { nanoid } from 'nanoid';
+import { db } from '../db';
+import { recipes } from '../../shared/schema';
+import { count, and, eq, gte, sql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -168,10 +171,6 @@ router.post('/stop/:batchId', requireAdmin, async (req: Request, res: Response) 
 router.post('/recipe-count', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { tierLevel, mainIngredient, createdAfter } = { ...req.query, ...req.body };
-
-    const { db } = await import('../db');
-    const { recipes } = await import('../../shared/schema');
-    const { count, and, eq, gte, sql } = await import('drizzle-orm');
 
     const conditions: any[] = [];
 
