@@ -1045,6 +1045,14 @@ Batches (${BATCHES.length} total, ${BATCHES.reduce((s, b) => s + b.target, 0)} r
     for (const batch of batchesToRun) {
       const bp = progress.batches[batch.id];
       if (bp?.status === 'failed' || bp?.status === 'running') {
+        // Only use DB count for smart skip when mainIngredient provides a specific filter.
+        // Without it, the count is just the total tier count which is always inflated.
+        if (!batch.mainIngredient) {
+          console.log(`🔄 ${batch.id}: No mainIngredient filter — must re-run (was ${bp.status})`);
+          progress.batches[batch.id] = { ...bp, status: 'failed', recipesGenerated: bp.recipesGenerated || 0 };
+          saveProgress(progress);
+          continue;
+        }
         try {
           const dbCount = await fetchRecipeCount(baseUrl, token, {
             tierLevel: batch.tierLevel,

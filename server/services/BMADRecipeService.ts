@@ -355,6 +355,21 @@ export class BMADRecipeService {
               errors: imageResponse.data?.errors
             });
 
+            if (!imageResponse.success || !imageResponse.data) {
+              // Image generation failed entirely — delete all recipes saved in this chunk
+              console.warn(`[BMAD] Image generation failed for chunk. Deleting ${savedRecipes.length} orphan recipes...`);
+              for (const savedRecipe of savedRecipes) {
+                try {
+                  const recipeId = savedRecipe.id || savedRecipe.recipeId;
+                  await storage.deleteRecipe(recipeId);
+                  const idx = allSavedRecipes.findIndex(r => (r.id || r.recipeId) === recipeId);
+                  if (idx >= 0) allSavedRecipes.splice(idx, 1);
+                } catch (e) { /* best effort */ }
+              }
+              allErrors.push(`Image generation failed: ${imageResponse.error || 'unknown'}`);
+              continue;
+            }
+
             if (imageResponse.success && imageResponse.data) {
               imagesGenerated += imageResponse.data.totalGenerated;
 
@@ -606,6 +621,23 @@ export class BMADRecipeService {
           const errorMsg = chunkError instanceof Error ? chunkError.message : String(chunkError);
           allErrors.push(`Chunk ${chunkIndex + 1}: ${errorMsg}`);
           console.error(`[BMAD] Chunk ${chunkIndex + 1} failed:`, chunkError);
+
+          // Safety net: delete any recipes saved in this chunk that have no image
+          // (recipes are saved to DB before image generation, so a crash leaves orphans)
+          for (const savedRecipe of allSavedRecipes) {
+            try {
+              const recipeId = savedRecipe.id || savedRecipe.recipeId;
+              const fullRecipe = await storage.getRecipe(recipeId);
+              if (fullRecipe && !fullRecipe.imageUrl) {
+                await storage.deleteRecipe(recipeId);
+                console.log(`[BMAD] Cleanup: deleted orphan recipe ${recipeId} (${savedRecipe.recipeName}) - no image after chunk error`);
+                const idx = allSavedRecipes.indexOf(savedRecipe);
+                if (idx >= 0) allSavedRecipes.splice(idx, 1);
+              }
+            } catch (cleanupErr) {
+              console.error(`[BMAD] Cleanup failed for ${savedRecipe.recipeName}:`, cleanupErr);
+            }
+          }
 
           // Broadcast chunk error via SSE so UI can display it
           sseManager.broadcastError(batchId, {
