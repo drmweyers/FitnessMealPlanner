@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { fromZodError } from 'zod-validation-error';
+import { fromZodError } from 'zod-validation-error/v3';
 import { storage } from './storage';
 import { hashPassword, comparePasswords, generateTokens, verifyToken, verifyRefreshToken } from './auth';
 import { users } from '../shared/schema';
