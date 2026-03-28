@@ -97,6 +97,8 @@ export default [
         Headers: 'readonly',
         HeadersInit: 'readonly',
         RequestInit: 'readonly',
+        // Crypto API
+        crypto: 'readonly',
         // Performance API
         performance: 'readonly',
         PerformanceObserver: 'readonly',

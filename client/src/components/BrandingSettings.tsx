@@ -8,7 +8,7 @@
  * - Custom domain (Enterprise)
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -21,7 +21,7 @@ import { useToast } from '../hooks/use-toast';
 import { useTier } from '../hooks/useTier';
 import { Upload, Image, Palette, Eye, EyeOff, Lock, Check, X, AlertCircle, Globe } from 'lucide-react';
 
-interface BrandingSettings {
+interface BrandingSettingsData {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
@@ -43,11 +43,7 @@ export default function BrandingSettings() {
   const [customDomain, setCustomDomain] = useState<string>('');
 
   // Fetch branding settings
-<<<<<<< HEAD
-  const { data: settings, isLoading } = useQuery({
-=======
-  const { data: settings, isLoading } = useQuery<BrandingSettings>({
->>>>>>> 7b06368c452285bf41ed3cfc2bcfdcb1c0a61ff7
+  const { data: settings, isLoading } = useQuery<BrandingSettingsData>({
     queryKey: ['branding-settings'],
     queryFn: async () => {
       const response = await fetch('/api/branding', {
@@ -55,18 +51,8 @@ export default function BrandingSettings() {
       });
       if (!response.ok) throw new Error('Failed to fetch branding settings');
       const data = await response.json();
-      return data.data as BrandingSettings;
+      return data.data as BrandingSettingsData;
     },
-<<<<<<< HEAD
-    onSuccess: (data) => {
-      setPrimaryColor(data.primaryColor || '');
-      setSecondaryColor(data.secondaryColor || '');
-      setAccentColor(data.accentColor || '');
-      setCustomDomain(data.customDomain || '');
-    },
-  });
-
-=======
   });
 
   // Update local state when settings are loaded (replaces onSuccess from React Query v4)
@@ -79,7 +65,6 @@ export default function BrandingSettings() {
     }
   }, [settings]);
 
->>>>>>> 7b06368c452285bf41ed3cfc2bcfdcb1c0a61ff7
   // Upload logo mutation
   const uploadLogoMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -368,11 +353,7 @@ export default function BrandingSettings() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-<<<<<<< HEAD
-          {settings?.logoUrl && (
-=======
           {settings && settings.logoUrl && (
->>>>>>> 7b06368c452285bf41ed3cfc2bcfdcb1c0a61ff7
             <div className="flex items-center gap-4 p-4 border rounded-lg bg-slate-50">
               <img
                 src={settings.logoUrl}
@@ -584,11 +565,7 @@ export default function BrandingSettings() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-<<<<<<< HEAD
-          {settings?.customDomain && (
-=======
           {settings && settings.customDomain && (
->>>>>>> 7b06368c452285bf41ed3cfc2bcfdcb1c0a61ff7
             <div className="flex items-center gap-3 p-4 border rounded-lg bg-slate-50">
               <Globe className="h-5 w-5 text-slate-600" />
               <div className="flex-1">

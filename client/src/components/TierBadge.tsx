@@ -5,6 +5,7 @@
  * Shows in navbar/dashboard to make tier status always visible
  */
 
+import React from 'react';
 import { useTier, TierLevel } from '@/hooks/useTier';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Zap, Star } from 'lucide-react';
