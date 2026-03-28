@@ -25,6 +25,8 @@ import MacroTrackingDashboard from "./components/MacroTrackingDashboard";
 import GroceryListWrapper from "./components/GroceryListWrapper";
 import HybridPricing from "./pages/HybridPricing";
 import Billing from "./pages/Billing";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -62,6 +64,8 @@ export default function Router() {
         <Route path="/forgot-password" component={ForgotPasswordPage} />
         <Route path="/reset-password" component={ResetPasswordPage} />
         <Route path="/pricing" component={HybridPricing} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:slug" component={BlogPost} />
         <Route path="/">
           <Redirect to="/login" />
         </Route>
@@ -87,6 +91,10 @@ export default function Router() {
               return <Trainer />;
           }
         }} />
+
+        {/* Public Routes */}
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:slug" component={BlogPost} />
 
         {/* Public/Common Routes */}
         <Route path="/pricing" component={HybridPricing} />
