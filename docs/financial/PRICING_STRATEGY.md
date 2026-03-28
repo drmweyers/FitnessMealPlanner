@@ -84,9 +84,9 @@ This document provides specific, actionable pricing recommendations to transitio
 
 | Tier | One-Time Price | Clients | Monthly Limit | Storage Limit | Annual Cost | Break-Even |
 |------|----------------|---------|---------------|---------------|-------------|------------|
-| **Starter** | **$399** (+100%) | 9 | 20 plans/mo | 50 photos | $30.74 | **13 years** |
-| **Professional** | **$599** (+100%) | 20 | 50 plans/mo | 100 photos | $60.17 | **10 years** |
-| **Enterprise** | **$999** (+150%) | 50 | 150 plans/mo | 250 photos | $140.52 | **7.1 years** |
+| **Starter** | **$199** | 9 | 20 plans/mo | 50 photos | $30.74 | **6.5 years** |
+| **Professional** | **$299** | 20 | 50 plans/mo | 100 photos | $60.17 | **5 years** |
+| **Enterprise** | **$399** | 50 | 150 plans/mo | 250 photos | $140.52 | **2.8 years** |
 
 **Key Features:**
 - ✅ 100-150% price increase justified by "lifetime access"
@@ -118,7 +118,7 @@ This document provides specific, actionable pricing recommendations to transitio
 │   STARTER          PROFESSIONAL         ENTERPRISE               │
 │                                                                  │
 │   ONE-TIME:        ONE-TIME:            ONE-TIME:                │
-│   $399             $599                 $999                     │
+│   $199             $299                 $399                     │
 │   ───────          ───────              ───────                  │
 │   • 9 clients      • 20 clients         • 50 clients             │
 │   • 20 plans/mo    • 50 plans/mo        • 150 plans/mo           │
@@ -164,13 +164,13 @@ This document provides specific, actionable pricing recommendations to transitio
 
 **Show Enterprise First:**
 - Place Enterprise tier on LEFT or TOP (prime position)
-- Creates high anchor ($999 or $59.99/mo)
+- Creates high anchor ($399 or $59.99/mo)
 - Makes Starter/Professional seem more affordable
 
 **Example:**
 ```
 ENTERPRISE          PROFESSIONAL        STARTER
-$999 one-time      $599 one-time       $399 one-time
+$399 one-time      $299 one-time       $199 one-time
 OR                 OR                  OR
 $59.99/mo          $29.99/mo           $14.99/mo
     ↓                   ↓                   ↓
@@ -180,9 +180,9 @@ Looks expensive → This looks fair → This looks cheap!
 ### 3.2 Decoy Pricing
 
 **Use Professional as "Decoy":**
-- Starter: $399 or $14.99/mo (budget option)
-- **Professional: $599 or $29.99/mo (MOST POPULAR)** ← Decoy
-- Enterprise: $999 or $59.99/mo (premium)
+- Starter: $199 or $14.99/mo (budget option)
+- **Professional: $299 or $29.99/mo (MOST POPULAR)** ← Decoy
+- Enterprise: $399 or $59.99/mo (premium)
 
 **Why Professional is the decoy:**
 - 20 clients is "sweet spot" for most trainers
@@ -199,8 +199,8 @@ Looks expensive → This looks fair → This looks cheap!
 ### 3.3 Loss Aversion Framing
 
 **One-Time Payment Framing:**
-- ❌ Avoid: "Pay $399 upfront"
-- ✅ Better: "Get LIFETIME ACCESS for just $399"
+- ❌ Avoid: "Pay $199 upfront"
+- ✅ Better: "Get LIFETIME ACCESS for just $199"
 - ✅ Best: "Pay once, use forever - never worry about subscriptions!"
 
 **Subscription Framing:**
@@ -276,7 +276,7 @@ Looks expensive → This looks fair → This looks cheap!
 
 **Optimization:**
 - [ ] A/B test pricing page variations
-- [ ] Test different anchor prices ($999 vs $1,199)
+- [ ] Test different anchor prices ($399 vs $499)
 - [ ] Experiment with annual plan discount (10% vs 16.67%)
 - [ ] Refine tier limits based on usage data
 
@@ -368,7 +368,7 @@ LOW PRICE                              HIGH VALUE
 **Persona 1: Sarah the Solo Trainer**
 - **Profile:** Independent trainer, 5-10 clients, budget-conscious
 - **Needs:** Affordable, easy to use, professional-looking meal plans
-- **Recommended Tier:** **Starter One-Time ($399)**
+- **Recommended Tier:** **Starter One-Time ($199)**
 - **Messaging:** "Pay once, use forever - perfect for getting started"
 - **Conversion Strategy:** Emphasize no monthly bills, lifetime access
 
@@ -478,7 +478,7 @@ LOW PRICE                              HIGH VALUE
 - 10-year profit: **+$1,160,749**
 
 **Scenario 3: Conservative Pricing (50% lower than recommended)**
-- One-time: $299 (vs $399)
+- One-time: $149 (vs $199)
 - Subscription: $9.99/mo (vs $14.99/mo)
 - 10-year profit: **+$524,238** (still profitable!)
 
@@ -531,9 +531,9 @@ LOW PRICE                              HIGH VALUE
 
 | Tier | One-Time | Monthly | Annual | Target % |
 |------|----------|---------|--------|----------|
-| **Starter** | $399 | $14.99 | $149.90 | 40% |
-| **Professional** | $599 | $29.99 | $299.90 | 45% |
-| **Enterprise** | $999 | $59.99 | $599.90 | 15% |
+| **Starter** | $199 | $14.99 | $149.90 | 40% |
+| **Professional** | $299 | $29.99 | $299.90 | 45% |
+| **Enterprise** | $399 | $59.99 | $599.90 | 15% |
 
 **Expected Outcomes:**
 - 10-year revenue: +$1.92M (vs -$91k current)

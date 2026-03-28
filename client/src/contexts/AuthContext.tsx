@@ -116,14 +116,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
               // Clear everything and redirect to login
               localStorage.removeItem('token');
               setAuthToken(null);
-              navigate('/login');
+              const publicPaths = ['/get-started', '/starter', '/professional', '/enterprise', '/free-blueprint', '/special-offer', '/pricing', '/login', '/register'];
+              const isPublic = publicPaths.some(p => window.location.pathname.startsWith(p));
+              if (!isPublic) navigate('/login');
               throw new Error('Session expired. Please login again.');
             }
             // Retry with new token
             response = await makeRequest(newToken);
           } else if (error instanceof Error && error.message.includes('Session expired')) {
             // Session expired - redirect to login
-            navigate('/login');
+            const publicPaths = ['/get-started', '/starter', '/professional', '/enterprise', '/free-blueprint', '/special-offer', '/pricing', '/login', '/register'];
+            const isPublic = publicPaths.some(p => window.location.pathname.startsWith(p));
+            if (!isPublic) navigate('/login');
             throw error;
           } else {
             throw error;
@@ -138,7 +142,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Ensure we're logged out and redirected
           localStorage.removeItem('token');
           setAuthToken(null);
-          navigate('/login');
+          // Don't redirect if on a public funnel/marketing page
+          const publicPaths = ['/get-started', '/starter', '/professional', '/enterprise', '/free-blueprint', '/special-offer', '/pricing', '/login', '/register', '/forgot-password', '/reset-password'];
+          const isPublic = publicPaths.some(p => window.location.pathname.startsWith(p));
+          if (!isPublic) {
+            navigate('/login');
+          }
         }
         throw error;
       }
@@ -175,7 +184,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Effect to handle session expiration - redirect to login when user becomes null
   useEffect(() => {
-    const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/shared/'];
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/shared/', '/get-started', '/starter', '/professional', '/enterprise', '/free-blueprint', '/special-offer', '/pricing'];
     const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
 
     // If user is null, not loading, and we're not on a public route, redirect to login

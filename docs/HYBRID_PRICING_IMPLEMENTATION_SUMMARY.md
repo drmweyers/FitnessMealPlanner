@@ -53,9 +53,9 @@ Enterprise Pro: $59.99/month (50 clients, unlimited usage)
 
 **One-Time Tiers Configured:**
 ```typescript
-Starter: $399 one-time (9 clients, 20 plans/month)
-Professional: $599 one-time (20 clients, 50 plans/month)
-Enterprise: $999 one-time (50 clients, 150 plans/month)
+Starter: $199 one-time (9 clients, 20 plans/month)
+Professional: $299 one-time (20 clients, 50 plans/month)
+Enterprise: $399 one-time (50 clients, 150 plans/month)
 ```
 
 #### **API Routes**

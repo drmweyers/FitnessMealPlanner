@@ -298,9 +298,9 @@ LOW (0-40%)
 **Pricing Structure:**
 
 **One-Time Option (with limits):**
-- Starter: $399 (up from $199) - 20 meal plans/month limit
-- Professional: $599 (up from $299) - 50 meal plans/month limit
-- Enterprise: $999 (up from $399) - 150 meal plans/month limit
+- Starter: $199 - 20 meal plans/month limit
+- Professional: $299 - 50 meal plans/month limit
+- Enterprise: $399 - 150 meal plans/month limit
 
 **Subscription Option:**
 - Starter Pro: $14.99/month - unlimited meal plans
@@ -459,7 +459,7 @@ LOW (0-40%)
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐            │
 │  │ STARTER  │  │   PRO    │  │ENTERPRISE│            │
 │  │          │  │ ⭐POPULAR│  │          │            │
-│  │  $399    │  │  $599    │  │  $999    │            │
+│  │  $199    │  │  $299    │  │  $399    │            │
 │  │ ONE-TIME │  │ ONE-TIME │  │ ONE-TIME │            │
 │  │          │  │          │  │          │            │
 │  │ • 9 clients │ • 20 clients │ • 50 clients│         │
@@ -511,7 +511,7 @@ LOW (0-40%)
 **Segment 1: Budget-Conscious Solo Trainers**
 - **Size:** 60% of market
 - **Characteristics:** 1-10 clients, price-sensitive, basic needs
-- **Recommended Tier:** Starter One-Time ($399)
+- **Recommended Tier:** Starter One-Time ($199)
 - **Value Prop:** "Pay once, use forever - perfect for getting started"
 
 **Segment 2: Growing Training Businesses**
@@ -577,7 +577,7 @@ LOW (0-40%)
 
 **Financial Goals:**
 - Total customers: 500
-- Mix: 60% one-time ($399 avg), 40% subscription ($29.99 avg)
+- Mix: 60% one-time ($299 avg), 40% subscription ($29.99 avg)
 - One-time revenue: $119,700
 - Subscription ARR: $71,976
 - Total Year 1 revenue: $191,676
@@ -633,7 +633,7 @@ LOW (0-40%)
 ### 8.2 Critical Success Factors
 
 **1. Pricing Execution**
-- Must increase one-time prices by 100% ($199 → $399)
+- One-time prices set at $199/$299/$399
 - Subscription pricing must be competitive ($19.99-$69.99/mo)
 - Grandfather existing customers (minimize churn)
 

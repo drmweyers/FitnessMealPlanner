@@ -26,7 +26,7 @@ import { recipeGenerator } from "./services/recipeGenerator";
 import { mealPlanGenerator } from "./services/mealPlanGenerator";
 import { recipeFilterSchema, insertRecipeSchema, updateRecipeSchema, mealPlanGenerationSchema } from "@shared/schema";
 import { z } from "zod";
-import { fromZodError } from "zod-validation-error/v3";
+import { fromZodError } from "zod-validation-error";
 
 /**
  * Register all API routes and middleware

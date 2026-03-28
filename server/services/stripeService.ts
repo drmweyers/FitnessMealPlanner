@@ -57,7 +57,7 @@ export const SUBSCRIPTION_TIERS = {
 export const ONETIME_TIERS = {
   STARTER: {
     name: 'Starter',
-    price: 39900, // $399 in cents
+    price: 19900, // $199 in cents
     maxClients: 9,
     usageLimit: 50, // meal plans per month
     features: [
@@ -72,7 +72,7 @@ export const ONETIME_TIERS = {
   },
   PROFESSIONAL: {
     name: 'Professional',
-    price: 59900, // $599 in cents
+    price: 29900, // $299 in cents
     maxClients: 20,
     usageLimit: 200, // meal plans per month
     features: [
@@ -88,7 +88,7 @@ export const ONETIME_TIERS = {
   },
   ENTERPRISE: {
     name: 'Enterprise',
-    price: 99900, // $999 in cents
+    price: 39900, // $399 in cents
     maxClients: 50,
     usageLimit: 500, // meal plans per month
     features: [

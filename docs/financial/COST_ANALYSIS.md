@@ -405,10 +405,10 @@
 - Grandfather existing customers at discounted rate
 - New customers: $19.99/month (Starter), $39.99/month (Professional), $69.99/month (Enterprise)
 
-**Option C: Increase One-Time Prices**
-- Starter: $199 → $399
-- Professional: $299 → $599
-- Enterprise: $399 → $999
+**Option C: Canonical One-Time Prices**
+- Starter: $199
+- Professional: $299
+- Enterprise: $399
 - Add lifetime usage limits
 
 ---

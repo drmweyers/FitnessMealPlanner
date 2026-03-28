@@ -99,12 +99,12 @@
 
 | Tier | One-Time | Monthly Subscription | Annual Subscription |
 |------|----------|---------------------|---------------------|
-| **Starter** | $399 (+100%) | $14.99 | $149.90 (save 2 months) |
-| **Professional** | $599 (+100%) | $29.99 | $299.90 (save 2 months) |
-| **Enterprise** | $999 (+150%) | $59.99 | $599.90 (save 2 months) |
+| **Starter** | $199 | $14.99 | $149.90 (save 2 months) |
+| **Professional** | $299 | $29.99 | $299.90 (save 2 months) |
+| **Enterprise** | $399 | $59.99 | $599.90 (save 2 months) |
 
 **One-Time Option:**
-- DOUBLED prices ($199 → $399, etc.)
+- Canonical prices: $199/$299/$399
 - Includes usage limits (20-150 meal plans/month)
 - Storage caps (50-250 progress photos)
 - Justified by "lifetime access" messaging
@@ -210,13 +210,13 @@
 ### 5.1 Why Hybrid Model Wins
 
 **Captures Both Customer Segments:**
-1. **Budget-conscious trainers:** Choose one-time ($399-$999) with usage limits
+1. **Budget-conscious trainers:** Choose one-time ($199-$399) with usage limits
 2. **Growth-focused trainers:** Choose subscription ($14.99-$59.99/mo) for unlimited usage
 
 **Financial Benefits:**
 - ✅ Immediate profitability (Year 1: +$50,400 vs +$12,079 current)
 - ✅ Recurring revenue stream (subscription ARR grows to $325k by Year 10)
-- ✅ Higher one-time prices ($399-$999) extend break-even to 7-13 years
+- ✅ One-time prices ($199-$399) with usage limits for sustainability
 - ✅ Usage limits prevent cost overruns on one-time customers
 - ✅ Sustainable long-term (10-year profit: +$1.8M)
 
@@ -434,7 +434,7 @@
 **Adoption:**
 - 30% of new customers choose subscription (vs 70% one-time)
 - 100 total new customers acquired
-- 60 one-time ($399 avg) + 40 subscription ($30/mo avg)
+- 60 one-time ($299 avg) + 40 subscription ($30/mo avg)
 
 **Revenue:**
 - One-time revenue: $24,000

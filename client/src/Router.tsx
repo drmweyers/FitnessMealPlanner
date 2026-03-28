@@ -25,6 +25,12 @@ import MacroTrackingDashboard from "./components/MacroTrackingDashboard";
 import GroceryListWrapper from "./components/GroceryListWrapper";
 import HybridPricing from "./pages/HybridPricing";
 import Billing from "./pages/Billing";
+import FunnelLanding from "./pages/FunnelLanding";
+import StarterSalesPage from "./pages/StarterSalesPage";
+import ProfessionalSalesPage from "./pages/ProfessionalSalesPage";
+import EnterpriseSalesPage from "./pages/EnterpriseSalesPage";
+import LeadMagnetPage from "./pages/LeadMagnetPage";
+import TripwirePage from "./pages/TripwirePage";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -62,11 +68,17 @@ export default function Router() {
         <Route path="/forgot-password" component={ForgotPasswordPage} />
         <Route path="/reset-password" component={ResetPasswordPage} />
         <Route path="/pricing" component={HybridPricing} />
+        <Route path="/get-started" component={FunnelLanding} />
+        <Route path="/starter" component={StarterSalesPage} />
+        <Route path="/professional" component={ProfessionalSalesPage} />
+        <Route path="/enterprise" component={EnterpriseSalesPage} />
+        <Route path="/free-blueprint" component={LeadMagnetPage} />
+        <Route path="/special-offer" component={TripwirePage} />
         <Route path="/">
-          <Redirect to="/login" />
+          <Redirect to="/get-started" />
         </Route>
         <Route path="*">
-          <Redirect to="/login" />
+          <Redirect to="/get-started" />
         </Route>
       </Switch>
     );
@@ -90,6 +102,12 @@ export default function Router() {
 
         {/* Public/Common Routes */}
         <Route path="/pricing" component={HybridPricing} />
+        <Route path="/get-started" component={FunnelLanding} />
+        <Route path="/starter" component={StarterSalesPage} />
+        <Route path="/professional" component={ProfessionalSalesPage} />
+        <Route path="/enterprise" component={EnterpriseSalesPage} />
+        <Route path="/free-blueprint" component={LeadMagnetPage} />
+        <Route path="/special-offer" component={TripwirePage} />
         <Route path="/billing" component={() => (
           <ProtectedRoute requiredRole="trainer">
             <Billing />

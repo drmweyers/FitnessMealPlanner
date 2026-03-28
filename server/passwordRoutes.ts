@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { fromZodError } from 'zod-validation-error/v3';
+import { fromZodError } from 'zod-validation-error';
 import crypto from 'crypto';
 import { storage } from './storage';
 import { hashPassword } from './auth';
