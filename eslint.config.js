@@ -107,6 +107,14 @@ export default [
         PerformanceMark: 'readonly',
         PerformanceNavigationTiming: 'readonly',
         PerformanceResourceTiming: 'readonly',
+        // React (for React.ReactNode, React.ElementType etc. without explicit import)
+        React: 'readonly',
+        // ServiceWorker types (used in hooks)
+        ServiceWorkerRegistration: 'readonly',
+        ServiceWorker: 'readonly',
+        // Animation globals
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
         // Node/TypeScript globals
         NodeJS: 'readonly',
         process: 'readonly',
@@ -167,9 +175,51 @@ export default [
     }
   },
 
+  // ServiceWorker files configuration
+  {
+    files: ['client/public/sw.js', '**/sw.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'script',
+      globals: {
+        // ServiceWorker globals
+        self: 'readonly',
+        caches: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
+        Response: 'readonly',
+        Request: 'readonly',
+        Headers: 'readonly',
+        Cache: 'readonly',
+        CacheStorage: 'readonly',
+        clients: 'readonly',
+        skipWaiting: 'readonly',
+        console: 'readonly',
+        addEventListener: 'readonly',
+        removeEventListener: 'readonly',
+        importScripts: 'readonly',
+        location: 'readonly',
+        registration: 'readonly',
+        indexedDB: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly'
+      }
+    },
+    rules: {
+      'no-console': 'off',
+      'no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_'
+      }]
+    }
+  },
+
   // JavaScript files configuration - Browser (client-side)
   {
     files: ['client/**/*.js', 'public/**/*.js'],
+    ignores: ['client/public/sw.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'script',

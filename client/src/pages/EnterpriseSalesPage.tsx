@@ -35,7 +35,7 @@ import {
   Code2,
   Layers,
   Timer,
-  Infinity,
+  Infinity as InfinityIcon,
   UserCog,
   Cpu,
   PackageOpen,
@@ -404,7 +404,7 @@ export default function EnterpriseSalesPage() {
               </div>
             </div>
             <ValueStackItem icon={Crown} label="Everything in Professional Plan" value="$13,500/yr" delay={0} />
-            <ValueStackItem icon={Infinity} label="Unlimited Clients" value="$5,000/yr" delay={0.04} />
+            <ValueStackItem icon={InfinityIcon} label="Unlimited Clients" value="$5,000/yr" delay={0.04} />
             <ValueStackItem icon={Layers} label="Unlimited Meal Plans" value="$3,000/yr" delay={0.08} />
             <ValueStackItem icon={Globe} label="White-Label + Custom Domain" value="$3,000/yr" delay={0.12} />
             <ValueStackItem icon={Users} label="Team Accounts" value="$1,500/yr" delay={0.16} />
@@ -502,7 +502,7 @@ export default function EnterpriseSalesPage() {
                 desc: "Priority support with a dedicated account manager. Get help within hours, not days. Includes custom onboarding for your team.",
               },
               {
-                icon: Infinity,
+                icon: InfinityIcon,
                 title: "Unlimited Clients",
                 desc: "No caps. No per-client fees. Whether you have 50 clients or 5,000, your price is the same: $399.",
               },
