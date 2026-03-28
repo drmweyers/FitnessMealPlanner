@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Intermittent Fasting Protocol Guide | EvoFit Meals</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --purple:#9333EA;--purple-light:#A855F7;--purple-dark:#7E22CE;
+    --orange:#F97316;--orange-light:#FB923C;--orange-dark:#EA580C;
+    --dark:#0A0A0F;--dark-card:#131320;--dark-card-alt:#1A1A2E;
+    --gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-300:#D1D5DB;
+    --gray-400:#9CA3AF;--gray-500:#6B7280;--gray-600:#4B5563;
+    --white:#FFFFFF;
+  }
+  html{font-size:15px}
+  body{font-family:'Inter',sans-serif;color:var(--dark);background:var(--white);line-height:1.6}
+  h1,h2,h3,h4,h5,h6{font-family:'Outfit',sans-serif;line-height:1.2}
+
+  .page{
+    width:210mm;min-height:297mm;padding:18mm 20mm;
+    page-break-after:always;position:relative;overflow:hidden;
+  }
+  .page:last-child{page-break-after:auto}
+
+  @media print{
+    body{background:none}
+    .page{padding:15mm 18mm;box-shadow:none!important;border:none!important}
+  }
+  @media screen{
+    body{background:#e2e2e2;padding:20px 0}
+    .page{max-width:210mm;margin:0 auto 30px;box-shadow:0 4px 24px rgba(0,0,0,.12);border-radius:4px}
+  }
+
+  /* ========== PAGE 1: COVER ========== */
+  .cover{
+    background:linear-gradient(145deg,#07060E 0%,#0F0D1A 25%,#1A1035 50%,#251545 75%,#0A0A0F 100%);
+    color:var(--white);display:flex;flex-direction:column;justify-content:center;align-items:center;
+    text-align:center;position:relative;
+  }
+  .cover::before{
+    content:'';position:absolute;top:-120px;right:-120px;width:450px;height:450px;
+    background:radial-gradient(circle,rgba(147,51,234,.25) 0%,transparent 70%);border-radius:50%;
+  }
+  .cover::after{
+    content:'';position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;
+    background:radial-gradient(circle,rgba(249,115,22,.15) 0%,transparent 70%);border-radius:50%;
+  }
+  .cover-content{position:relative;z-index:2}
+  .cover-badge{
+    display:inline-block;background:linear-gradient(135deg,var(--purple),var(--orange));
+    padding:8px 28px;border-radius:50px;font-size:.75rem;font-weight:700;
+    letter-spacing:2.5px;text-transform:uppercase;margin-bottom:32px;
+  }
+  .cover h1{font-size:3rem;font-weight:900;margin-bottom:12px;letter-spacing:-.5px}
+  .cover h1 span{
+    background:linear-gradient(135deg,var(--purple-light),var(--orange));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .cover .subtitle{font-size:1.35rem;color:var(--gray-400);margin-bottom:48px;font-weight:300}
+  .cover-protocols{
+    display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:48px;
+  }
+  .cover-protocols .proto-chip{
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    padding:10px 22px;border-radius:12px;font-size:.85rem;font-weight:600;
+    backdrop-filter:blur(10px);
+  }
+  .cover-brand{
+    font-family:'Outfit',sans-serif;font-weight:700;font-size:1rem;
+    color:var(--gray-400);letter-spacing:1px;margin-top:8px;
+  }
+  .cover-brand span{color:var(--orange)}
+  .cover-line{width:60px;height:3px;background:linear-gradient(90deg,var(--purple),var(--orange));border-radius:3px;margin:0 auto 16px}
+
+  /* ========== COMMON PAGE STYLES ========== */
+  .page-header{margin-bottom:24px}
+  .page-header .tag{
+    display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:2px;
+    text-transform:uppercase;color:var(--purple);margin-bottom:8px;
+  }
+  .page-header h2{font-size:1.85rem;font-weight:800;color:var(--dark);margin-bottom:6px}
+  .page-header .lead{font-size:.9rem;color:var(--gray-500);line-height:1.5}
+  .header-line{width:50px;height:3px;background:linear-gradient(90deg,var(--purple),var(--orange));border-radius:3px;margin-top:10px}
+
+  /* Timeline */
+  .timeline{position:relative;padding-left:36px;margin:16px 0}
+  .timeline::before{
+    content:'';position:absolute;left:12px;top:0;bottom:0;width:2px;
+    background:linear-gradient(to bottom,var(--purple),var(--orange));border-radius:2px;
+  }
+  .timeline-item{position:relative;margin-bottom:18px}
+  .timeline-item::before{
+    content:'';position:absolute;left:-30px;top:4px;width:12px;height:12px;
+    border-radius:50%;background:var(--purple);border:2px solid var(--white);
+    box-shadow:0 0 0 3px rgba(147,51,234,.2);
+  }
+  .timeline-item h4{font-size:.9rem;font-weight:700;color:var(--dark);margin-bottom:2px}
+  .timeline-item p{font-size:.78rem;color:var(--gray-500);line-height:1.5}
+  .timeline-item .time-badge{
+    display:inline-block;background:var(--purple);color:var(--white);
+    padding:2px 10px;border-radius:6px;font-size:.68rem;font-weight:700;margin-bottom:4px;
+  }
+
+  /* Info cards */
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+  .info-card{
+    background:var(--gray-100);border-radius:12px;padding:16px;
+    border-left:3px solid var(--purple);
+  }
+  .info-card h4{font-size:.82rem;font-weight:700;color:var(--dark);margin-bottom:4px}
+  .info-card p{font-size:.75rem;color:var(--gray-500);line-height:1.45}
+  .info-card.orange{border-left-color:var(--orange)}
+
+  /* Tables */
+  .protocol-table{width:100%;border-collapse:separate;border-spacing:0;margin:12px 0;font-size:.72rem}
+  .protocol-table thead th{
+    background:var(--dark);color:var(--white);padding:10px 8px;
+    text-align:left;font-weight:700;font-family:'Outfit',sans-serif;
+    letter-spacing:.5px;font-size:.68rem;
+  }
+  .protocol-table thead th:first-child{border-radius:10px 0 0 0}
+  .protocol-table thead th:last-child{border-radius:0 10px 0 0}
+  .protocol-table tbody td{
+    padding:9px 8px;border-bottom:1px solid var(--gray-200);
+    vertical-align:top;line-height:1.4;
+  }
+  .protocol-table tbody tr:last-child td{border-bottom:none}
+  .protocol-table tbody tr:nth-child(even){background:var(--gray-100)}
+  .protocol-table .proto-name{font-weight:700;color:var(--purple);white-space:nowrap}
+  .difficulty-easy{color:#16A34A;font-weight:600}
+  .difficulty-moderate{color:var(--orange);font-weight:600}
+  .difficulty-hard{color:#DC2626;font-weight:600}
+
+  /* Decision tree */
+  .decision-tree{margin:16px 0}
+  .dt-node{
+    background:linear-gradient(135deg,var(--dark),var(--dark-card-alt));
+    color:var(--white);padding:14px 18px;border-radius:12px;margin-bottom:10px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .dt-node .dt-icon{
+    width:44px;height:44px;border-radius:10px;display:flex;
+    align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;
+  }
+  .dt-node .dt-icon.purple{background:rgba(147,51,234,.25)}
+  .dt-node .dt-icon.orange{background:rgba(249,115,22,.25)}
+  .dt-node .dt-label{font-size:.72rem;color:var(--gray-400);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+  .dt-node .dt-title{font-size:.92rem;font-weight:700;margin:2px 0}
+  .dt-node .dt-desc{font-size:.75rem;color:var(--gray-400);line-height:1.4}
+  .dt-arrow{
+    text-align:center;color:var(--purple);font-size:1.1rem;margin:-4px 0;
+  }
+
+  /* Training timing */
+  .timing-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}
+  .timing-card{
+    background:var(--dark);color:var(--white);border-radius:12px;padding:16px;
+    position:relative;overflow:hidden;
+  }
+  .timing-card::after{
+    content:'';position:absolute;top:0;right:0;width:80px;height:80px;
+    background:radial-gradient(circle,rgba(147,51,234,.2) 0%,transparent 70%);
+  }
+  .timing-card h4{font-size:.85rem;font-weight:700;margin-bottom:8px}
+  .timing-card ul{list-style:none;padding:0}
+  .timing-card li{
+    font-size:.73rem;color:var(--gray-400);padding:3px 0;
+    padding-left:16px;position:relative;line-height:1.4;
+  }
+  .timing-card li::before{
+    content:'';position:absolute;left:0;top:9px;width:6px;height:6px;
+    border-radius:50%;background:var(--purple);
+  }
+  .timing-card.orange-accent li::before{background:var(--orange)}
+  .timing-card.orange-accent::after{
+    background:radial-gradient(circle,rgba(249,115,22,.2) 0%,transparent 70%);
+  }
+
+  /* Meal plan */
+  .meal-day{margin-bottom:14px}
+  .meal-day-header{
+    display:flex;align-items:center;gap:10px;margin-bottom:6px;
+  }
+  .day-badge{
+    background:var(--purple);color:var(--white);padding:3px 12px;border-radius:6px;
+    font-size:.68rem;font-weight:700;font-family:'Outfit',sans-serif;
+  }
+  .day-title{font-size:.8rem;font-weight:600;color:var(--dark)}
+  .meal-items{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .meal-item{
+    background:var(--gray-100);border-radius:8px;padding:8px 10px;
+  }
+  .meal-item .meal-time{font-size:.6rem;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px}
+  .meal-item .meal-food{font-size:.7rem;font-weight:600;color:var(--dark);margin:2px 0}
+  .meal-item .meal-macros{font-size:.6rem;color:var(--gray-500)}
+
+  /* Breaking fast tips */
+  .tip-list{margin:12px 0}
+  .tip-item{
+    display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;
+    padding:14px;background:var(--gray-100);border-radius:12px;
+  }
+  .tip-num{
+    width:32px;height:32px;border-radius:8px;display:flex;
+    align-items:center;justify-content:center;font-weight:800;
+    font-family:'Outfit',sans-serif;font-size:.85rem;flex-shrink:0;
+    background:linear-gradient(135deg,var(--purple),var(--purple-dark));color:var(--white);
+  }
+  .tip-item h4{font-size:.82rem;font-weight:700;color:var(--dark);margin-bottom:2px}
+  .tip-item p{font-size:.73rem;color:var(--gray-500);line-height:1.45}
+
+  /* Side effects table */
+  .side-effects{width:100%;border-collapse:separate;border-spacing:0;margin:10px 0;font-size:.72rem}
+  .side-effects thead th{
+    background:var(--dark);color:var(--white);padding:8px;
+    text-align:left;font-weight:700;font-family:'Outfit',sans-serif;font-size:.68rem;
+  }
+  .side-effects thead th:first-child{border-radius:8px 0 0 0}
+  .side-effects thead th:last-child{border-radius:0 8px 0 0}
+  .side-effects tbody td{padding:7px 8px;border-bottom:1px solid var(--gray-200);line-height:1.35}
+  .side-effects tbody tr:nth-child(even){background:var(--gray-100)}
+
+  /* Electrolyte box */
+  .electrolyte-box{
+    background:linear-gradient(135deg,rgba(147,51,234,.08),rgba(249,115,22,.08));
+    border:1px solid rgba(147,51,234,.15);border-radius:12px;padding:16px;margin:12px 0;
+  }
+  .electrolyte-box h4{font-size:.85rem;font-weight:700;color:var(--purple);margin-bottom:8px}
+  .electrolyte-box ul{list-style:none;padding:0}
+  .electrolyte-box li{font-size:.73rem;color:var(--gray-600);padding:3px 0;padding-left:18px;position:relative}
+  .electrolyte-box li::before{content:'+';position:absolute;left:0;color:var(--orange);font-weight:700}
+
+  /* CTA page */
+  .cta-page{
+    background:linear-gradient(145deg,#07060E 0%,#0F0D1A 30%,#1A1035 60%,#0A0A0F 100%);
+    color:var(--white);display:flex;flex-direction:column;justify-content:center;
+    align-items:center;text-align:center;position:relative;
+  }
+  .cta-page::before{
+    content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:600px;height:600px;
+    background:radial-gradient(circle,rgba(147,51,234,.12) 0%,transparent 60%);border-radius:50%;
+  }
+  .cta-content{position:relative;z-index:2;max-width:460px}
+  .cta-content h2{font-size:2.2rem;font-weight:900;margin-bottom:10px}
+  .cta-content h2 span{
+    background:linear-gradient(135deg,var(--purple-light),var(--orange));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .cta-content .cta-lead{font-size:.95rem;color:var(--gray-400);margin-bottom:32px;line-height:1.6}
+
+  .pricing-cards{display:flex;gap:16px;margin-bottom:32px;width:100%}
+  .pricing-card{
+    flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+    border-radius:14px;padding:20px 16px;text-align:center;
+  }
+  .pricing-card.featured{
+    border-color:var(--purple);background:rgba(147,51,234,.08);
+    box-shadow:0 0 30px rgba(147,51,234,.15);position:relative;
+  }
+  .pricing-card.featured::before{
+    content:'MOST POPULAR';position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg,var(--purple),var(--orange));color:var(--white);
+    padding:3px 14px;border-radius:6px;font-size:.58rem;font-weight:700;letter-spacing:1.5px;
+  }
+  .pricing-card .plan-name{font-size:.75rem;font-weight:600;color:var(--gray-400);margin-bottom:6px}
+  .pricing-card .plan-price{font-size:1.8rem;font-weight:900;font-family:'Outfit',sans-serif}
+  .pricing-card .plan-price span{font-size:.75rem;font-weight:400;color:var(--gray-400)}
+  .pricing-card .plan-desc{font-size:.68rem;color:var(--gray-500);margin-top:4px}
+
+  .cta-btn{
+    display:inline-block;
+    background:linear-gradient(135deg,var(--purple),var(--orange));
+    color:var(--white);padding:16px 48px;border-radius:12px;
+    font-family:'Outfit',sans-serif;font-weight:700;font-size:1.05rem;
+    text-decoration:none;letter-spacing:.5px;margin-bottom:16px;
+  }
+  .cta-url{font-size:.85rem;color:var(--gray-400);font-weight:500}
+  .cta-url span{color:var(--orange);font-weight:700}
+
+  .cta-features{
+    display:flex;gap:24px;justify-content:center;margin-top:28px;flex-wrap:wrap;
+  }
+  .cta-feature{font-size:.72rem;color:var(--gray-400)}
+  .cta-feature::before{content:'';margin-right:6px;color:var(--purple)}
+
+  .footer-brand{
+    margin-top:40px;font-family:'Outfit',sans-serif;font-size:.85rem;
+    color:var(--gray-500);letter-spacing:1px;
+  }
+  .footer-brand span{color:var(--orange)}
+
+  /* Utility */
+  .text-purple{color:var(--purple)}
+  .text-orange{color:var(--orange)}
+  .font-bold{font-weight:700}
+  .text-sm{font-size:.78rem}
+  .text-xs{font-size:.68rem}
+  .mt-1{margin-top:8px}
+  .mt-2{margin-top:16px}
+  .mb-1{margin-bottom:8px}
+
+  .callout-box{
+    background:var(--dark);color:var(--white);border-radius:12px;
+    padding:16px;margin:14px 0;
+  }
+  .callout-box h4{font-size:.85rem;font-weight:700;margin-bottom:6px}
+  .callout-box p{font-size:.73rem;color:var(--gray-400);line-height:1.5}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .section-divider{
+    height:2px;
+    background:linear-gradient(90deg,transparent,var(--purple),var(--orange),transparent);
+    margin:16px 0;border-radius:2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== PAGE 1: COVER ==================== -->
+<div class="page cover">
+  <div class="cover-content">
+    <div class="cover-badge">EvoFit Meals Nutrition Guide</div>
+    <h1>The Intermittent Fasting<br><span>Protocol Guide</span></h1>
+    <p class="subtitle">16:8, 20:4, OMAD &mdash; When to Use Which</p>
+    <div class="cover-protocols">
+      <div class="proto-chip">16:8 Daily</div>
+      <div class="proto-chip">20:4 Warrior</div>
+      <div class="proto-chip">OMAD</div>
+      <div class="proto-chip">5:2 Weekly</div>
+      <div class="proto-chip">Alternate Day</div>
+    </div>
+    <div class="cover-line"></div>
+    <div class="cover-brand">EvoFit<span>Meals</span>.com</div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 2: HOW FASTING WORKS ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="tag">Chapter 01</div>
+    <h2>How Fasting Works</h2>
+    <p class="lead">Understanding the metabolic cascade that happens when you stop eating &mdash; and why the timing matters as much as the food itself.</p>
+    <div class="header-line"></div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <h4>Insulin Sensitivity</h4>
+      <p>When you fast, insulin levels drop significantly. Low insulin signals your body to switch from glucose-burning to fat-burning mode. Over time, regular fasting improves your cells' response to insulin, making nutrient partitioning more efficient and reducing fat storage from meals.</p>
+    </div>
+    <div class="info-card orange">
+      <h4>Autophagy</h4>
+      <p>Your body's cellular recycling program. During extended fasting (16+ hours), cells begin breaking down and recycling damaged proteins and organelles. This process clears out dysfunctional mitochondria, misfolded proteins, and cellular debris &mdash; essentially taking out the biological trash.</p>
+    </div>
+    <div class="info-card">
+      <h4>Growth Hormone Spike</h4>
+      <p>Fasting can increase human growth hormone (HGH) secretion by 300&ndash;500%. HGH preserves lean muscle tissue during calorie restriction, accelerates fat metabolism, and supports tissue repair. This is why fasting paired with resistance training preserves muscle.</p>
+    </div>
+    <div class="info-card orange">
+      <h4>Fat Oxidation</h4>
+      <p>After glycogen stores deplete (12&ndash;16 hours), your body upregulates lipolysis &mdash; the breakdown of stored triglycerides into free fatty acids. These fatty acids are then oxidized in the mitochondria for energy. You become a more efficient fat-burning machine.</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.05rem;font-weight:800;margin:18px 0 10px;color:var(--dark)">Fasting Timeline: What Happens at Each Stage</h3>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <span class="time-badge">0 &ndash; 12 Hours</span>
+      <h4>Fed State &rarr; Post-Absorptive State</h4>
+      <p>Blood sugar and insulin normalize. Liver glycogen begins depleting. Your body still primarily uses glucose for fuel. By hour 12, glycogen stores are roughly 50% depleted and the metabolic switch to fat begins.</p>
+    </div>
+    <div class="timeline-item">
+      <span class="time-badge">12 &ndash; 16 Hours</span>
+      <h4>Fat-Burning Zone Begins</h4>
+      <p>Insulin drops to baseline. Lipolysis accelerates. Ketone body production starts in the liver. Norepinephrine rises, increasing alertness and metabolic rate by 3.6&ndash;14%. Mild autophagy begins in most tissues.</p>
+    </div>
+    <div class="timeline-item">
+      <span class="time-badge">16 &ndash; 24 Hours</span>
+      <h4>Deep Ketosis &amp; Autophagy</h4>
+      <p>Significant autophagy activation. Growth hormone surges (up to 5x baseline). Ketone levels reach 0.5&ndash;2.0 mmol/L. Brain begins preferring ketones for fuel. Anti-inflammatory gene expression increases. Gut lining begins repair cycle.</p>
+    </div>
+    <div class="timeline-item">
+      <span class="time-badge">24 &ndash; 36 Hours</span>
+      <h4>Maximum Autophagy</h4>
+      <p>Peak cellular cleanup. AMPK (cellular energy sensor) is fully activated. Old immune cells are cleared for recycling. Stem cell regeneration signals begin. Insulin sensitivity reaches optimal levels. Not recommended for beginners.</p>
+    </div>
+    <div class="timeline-item">
+      <span class="time-badge">36 &ndash; 48 Hours</span>
+      <h4>Extended Repair &amp; Reset</h4>
+      <p>Immune system regeneration accelerates. Significant reduction in inflammatory markers (CRP, IL-6). Neuroplasticity and BDNF (brain-derived neurotrophic factor) increase. Only for experienced fasters under medical guidance. Electrolyte management becomes critical.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 3: 5 PROTOCOLS COMPARED ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="tag">Chapter 02</div>
+    <h2>5 Fasting Protocols Compared</h2>
+    <p class="lead">Not all fasting is created equal. Each protocol has specific strengths, ideal use cases, and populations who should avoid it.</p>
+    <div class="header-line"></div>
+  </div>
+
+  <table class="protocol-table">
+    <thead>
+      <tr>
+        <th>Protocol</th>
+        <th>Eating Window</th>
+        <th>Difficulty</th>
+        <th>Best For</th>
+        <th>Not Recommended For</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="proto-name">16:8<br><span style="font-weight:400;color:var(--gray-500);font-size:.65rem">Daily Fast</span></td>
+        <td>8 hours<br><span style="color:var(--gray-500);font-size:.65rem">e.g., 12pm&ndash;8pm</span></td>
+        <td class="difficulty-easy">Easy</td>
+        <td>Beginners, sustainable fat loss, general health improvement, muscle maintenance, anyone with a busy morning schedule</td>
+        <td>Pregnant/nursing women, those with history of eating disorders, type 1 diabetics without medical supervision</td>
+      </tr>
+      <tr>
+        <td class="proto-name">20:4<br><span style="font-weight:400;color:var(--gray-500);font-size:.65rem">Warrior Diet</span></td>
+        <td>4 hours<br><span style="color:var(--gray-500);font-size:.65rem">e.g., 4pm&ndash;8pm</span></td>
+        <td class="difficulty-moderate">Moderate</td>
+        <td>Aggressive fat loss, plateau-breaking, experienced dieters who want faster results, improved autophagy</td>
+        <td>Beginners, those with high caloric needs (3000+ kcal), athletes in heavy training blocks, underweight individuals</td>
+      </tr>
+      <tr>
+        <td class="proto-name">OMAD<br><span style="font-weight:400;color:var(--gray-500);font-size:.65rem">One Meal a Day</span></td>
+        <td>1 hour<br><span style="color:var(--gray-500);font-size:.65rem">e.g., 6pm&ndash;7pm</span></td>
+        <td class="difficulty-hard">Hard</td>
+        <td>Experienced fasters, maximum autophagy, simplicity seekers, those who prefer one large meal, short-term fat loss sprints</td>
+        <td>Beginners, anyone building muscle, those who can't consume 2000+ kcal in one sitting, adolescents, elderly</td>
+      </tr>
+      <tr>
+        <td class="proto-name">5:2<br><span style="font-weight:400;color:var(--gray-500);font-size:.65rem">Weekly Fast</span></td>
+        <td>5 normal days<br><span style="color:var(--gray-500);font-size:.65rem">2 days at 500&ndash;600 kcal</span></td>
+        <td class="difficulty-moderate">Moderate</td>
+        <td>Flexible lifestyles, social eaters, those who dislike daily restriction, slow-and-steady fat loss, metabolic health</td>
+        <td>Those who binge on "normal" days, people who need daily consistency, high-performance athletes during competition prep</td>
+      </tr>
+      <tr>
+        <td class="proto-name">ADF<br><span style="font-weight:400;color:var(--gray-500);font-size:.65rem">Alternate Day</span></td>
+        <td>Alternating<br><span style="color:var(--gray-500);font-size:.65rem">Eat &rarr; Fast &rarr; Eat</span></td>
+        <td class="difficulty-hard">Hard</td>
+        <td>Rapid fat loss, research-backed health benefits, those who prefer "all or nothing" days, metabolic flexibility training</td>
+        <td>Beginners, anyone with social eating obligations, competitive athletes, those with blood sugar regulation issues</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout-box">
+    <h4 style="color:var(--orange)">Key Insight: The Best Protocol Is the One You Can Sustain</h4>
+    <p>Research consistently shows that adherence matters more than the specific protocol. A 16:8 fast maintained for 12 months will always outperform a perfect OMAD routine abandoned after 3 weeks. Start easier than you think you need to, then progress once habits are locked in.</p>
+  </div>
+
+  <div class="two-col" style="margin-top:14px">
+    <div class="info-card">
+      <h4>Weekly Calorie Impact</h4>
+      <p><strong>16:8:</strong> ~10&ndash;15% natural deficit<br>
+      <strong>20:4:</strong> ~20&ndash;30% typical deficit<br>
+      <strong>OMAD:</strong> ~30&ndash;40% typical deficit<br>
+      <strong>5:2:</strong> ~20&ndash;25% weekly deficit<br>
+      <strong>ADF:</strong> ~30&ndash;35% weekly deficit</p>
+    </div>
+    <div class="info-card orange">
+      <h4>Progression Path</h4>
+      <p><strong>Weeks 1&ndash;2:</strong> 14:10 (ease in)<br>
+      <strong>Weeks 3&ndash;4:</strong> 16:8 (standard)<br>
+      <strong>Months 2&ndash;3:</strong> 18:6 (intermediate)<br>
+      <strong>Month 4+:</strong> 20:4 or OMAD (advanced)<br>
+      <em>Never jump levels. Earn each transition.</em></p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 4: PROTOCOL SELECTION GUIDE ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="tag">Chapter 03</div>
+    <h2>Protocol Selection Guide</h2>
+    <p class="lead">Use this decision framework to pick the right fasting protocol for your goals, experience level, and lifestyle.</p>
+    <div class="header-line"></div>
+  </div>
+
+  <div class="decision-tree">
+    <div class="dt-node">
+      <div class="dt-icon purple">&#x1F4CB;</div>
+      <div>
+        <div class="dt-label">Step 1 &mdash; Experience Check</div>
+        <div class="dt-title">Have you fasted consistently before?</div>
+        <div class="dt-desc">If you've never done intermittent fasting or have less than 4 weeks of experience, start with 16:8. No exceptions. Build the habit foundation before escalating intensity.</div>
+      </div>
+    </div>
+    <div class="dt-arrow">&darr;</div>
+
+    <div class="dt-node">
+      <div class="dt-icon orange">&#x1F3AF;</div>
+      <div>
+        <div class="dt-label">Step 2 &mdash; Primary Goal</div>
+        <div class="dt-title">What is your #1 objective right now?</div>
+        <div class="dt-desc">
+          <strong style="color:var(--purple-light)">Fat Loss (aggressive):</strong> 20:4 Warrior &mdash; compresses eating window for deeper calorie restriction<br>
+          <strong style="color:var(--purple-light)">Fat Loss (steady):</strong> 16:8 or 5:2 &mdash; sustainable deficit without lifestyle disruption<br>
+          <strong style="color:var(--purple-light)">Muscle Gain:</strong> 16:8 only &mdash; you need adequate feeding time for 3&ndash;4 protein-rich meals<br>
+          <strong style="color:var(--purple-light)">Longevity / Autophagy:</strong> OMAD or ADF &mdash; longer fasts for maximum cellular cleanup<br>
+          <strong style="color:var(--purple-light)">Flexibility:</strong> 5:2 &mdash; eat normally most days, restrict only twice per week
+        </div>
+      </div>
+    </div>
+    <div class="dt-arrow">&darr;</div>
+
+    <div class="dt-node">
+      <div class="dt-icon purple">&#x23F0;</div>
+      <div>
+        <div class="dt-label">Step 3 &mdash; Lifestyle Fit</div>
+        <div class="dt-title">Does this fit your daily schedule?</div>
+        <div class="dt-desc">
+          <strong style="color:var(--orange-light)">Work 9&ndash;5, social dinners:</strong> 16:8 (12pm&ndash;8pm) or 5:2<br>
+          <strong style="color:var(--orange-light)">Shift worker / variable hours:</strong> 16:8 with flexible window<br>
+          <strong style="color:var(--orange-light)">No social eating pressure:</strong> 20:4 or OMAD<br>
+          <strong style="color:var(--orange-light)">Weekends are non-negotiable:</strong> 5:2 (fast on weekdays only)
+        </div>
+      </div>
+    </div>
+    <div class="dt-arrow">&darr;</div>
+
+    <div class="dt-node">
+      <div class="dt-icon orange">&#x1F3CB;</div>
+      <div>
+        <div class="dt-label">Step 4 &mdash; Training Sync</div>
+        <div class="dt-title">How does this align with your training?</div>
+        <div class="dt-desc">
+          <strong style="color:var(--purple-light)">Train in the AM (fasted):</strong> 16:8 with first meal post-workout (e.g., train 7am, eat 12pm&ndash;8pm)<br>
+          <strong style="color:var(--purple-light)">Train in the PM (fed):</strong> 16:8 or 20:4, eat before/after training (e.g., eat 2pm&ndash;8pm, train 5pm)<br>
+          <strong style="color:var(--purple-light)">No structured training:</strong> Any protocol works &mdash; choose based on goals above
+        </div>
+      </div>
+    </div>
+    <div class="dt-arrow">&darr;</div>
+
+    <div class="dt-node" style="border:1px solid var(--purple);background:linear-gradient(135deg,rgba(147,51,234,.15),rgba(249,115,22,.1))">
+      <div class="dt-icon purple">&#x2705;</div>
+      <div>
+        <div class="dt-label">Your Result</div>
+        <div class="dt-title">Commit for 4 Weeks Minimum</div>
+        <div class="dt-desc">Give any protocol at least 28 days before evaluating. Track energy, sleep quality, training performance, body composition, and hunger patterns. Adjust only after the adaptation period is complete. Most side effects resolve within 7&ndash;10 days.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 5: MEAL TIMING & TRAINING ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="tag">Chapter 04</div>
+    <h2>Meal Timing &amp; Training</h2>
+    <p class="lead">How to optimize your workouts within a compressed eating window &mdash; and whether fasted training is right for you.</p>
+    <div class="header-line"></div>
+  </div>
+
+  <div class="timing-grid">
+    <div class="timing-card">
+      <h4 style="color:var(--purple-light)">Fasted Training</h4>
+      <ul>
+        <li>Best for: steady-state cardio, light-to-moderate resistance training, fat-loss focus</li>
+        <li>Train in final 2&ndash;4 hours of fast (e.g., 10am&ndash;12pm on a 16:8)</li>
+        <li>Higher fat oxidation rate: 20&ndash;30% more fat burned vs fed cardio</li>
+        <li>May reduce peak power output by 5&ndash;10% on heavy compound lifts</li>
+        <li>Follow with your first meal within 60 minutes post-workout</li>
+        <li>Hydrate with water, black coffee, or electrolytes during session</li>
+      </ul>
+    </div>
+    <div class="timing-card orange-accent">
+      <h4 style="color:var(--orange-light)">Fed Training</h4>
+      <ul>
+        <li>Best for: heavy strength training, HIIT, muscle hypertrophy goals</li>
+        <li>Eat a meal 2&ndash;3 hours before training for optimal performance</li>
+        <li>Higher glycogen = better peak power, more reps, heavier loads</li>
+        <li>Pre-workout meal: 30&ndash;40g protein + 40&ndash;60g carbs + low fat</li>
+        <li>Post-workout: 30&ndash;40g protein + carbs within 2 hours</li>
+        <li>Schedule training early in your eating window for two post-workout meals</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:1rem;font-weight:800;margin:16px 0 10px">Sample Training Schedules by Protocol</h3>
+
+  <table class="protocol-table">
+    <thead>
+      <tr>
+        <th>Protocol</th>
+        <th>Training Time</th>
+        <th>Pre-Workout</th>
+        <th>Post-Workout</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="proto-name">16:8</td>
+        <td>11:00 AM<br><span style="color:var(--gray-500);font-size:.65rem">Fasted</span></td>
+        <td>Black coffee + 5g creatine</td>
+        <td>12:00 PM &mdash; large meal with 40g protein, 60g carbs</td>
+        <td>Ideal for morning lifters; break fast with post-workout meal</td>
+      </tr>
+      <tr>
+        <td class="proto-name">16:8</td>
+        <td>5:00 PM<br><span style="color:var(--gray-500);font-size:.65rem">Fed</span></td>
+        <td>2:00 PM meal: chicken + rice (500 kcal)</td>
+        <td>6:30 PM &mdash; protein shake + dinner by 8pm</td>
+        <td>Best for strength; two meals around training</td>
+      </tr>
+      <tr>
+        <td class="proto-name">20:4</td>
+        <td>3:00 PM<br><span style="color:var(--gray-500);font-size:.65rem">Near window</span></td>
+        <td>Black coffee only (fasted)</td>
+        <td>4:00 PM &mdash; large meal 1, then meal 2 by 8pm</td>
+        <td>Train just before window opens; maximize feeding time post-workout</td>
+      </tr>
+      <tr>
+        <td class="proto-name">OMAD</td>
+        <td>4:00 PM<br><span style="color:var(--gray-500);font-size:.65rem">Fasted</span></td>
+        <td>Water + electrolytes</td>
+        <td>6:00 PM &mdash; single large meal (2000+ kcal)</td>
+        <td>Keep training moderate; hard to fuel heavy sessions with one meal</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout-box" style="margin-top:14px">
+    <h4 style="color:var(--orange)">The BCAA Debate: During Fasting</h4>
+    <p>BCAAs (branched-chain amino acids) technically break a fast because they trigger an insulin response and stimulate mTOR, which halts autophagy. However, if your goal is <strong>muscle preservation during fasted training</strong> (not autophagy), 5&ndash;10g BCAAs before a fasted workout may help reduce muscle breakdown. <strong>Our recommendation:</strong> Skip BCAAs if autophagy/longevity is the goal. Use them if you're lean-bulking or in a deep cut and training hard while fasted. Better yet &mdash; schedule your training at the end of your fast so your post-workout meal handles recovery.</p>
+  </div>
+
+  <div class="info-grid" style="margin-top:12px">
+    <div class="info-card">
+      <h4>Supplements That Don't Break a Fast</h4>
+      <p>Black coffee, plain tea, water, electrolytes (no sugar), creatine monohydrate, vitamin D, fish oil (minimal calories), apple cider vinegar</p>
+    </div>
+    <div class="info-card orange">
+      <h4>Supplements That DO Break a Fast</h4>
+      <p>BCAAs, protein powder, pre-workouts with sugar/calories, gummy vitamins, collagen peptides, any supplement with &gt;1g protein or sugar</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 6: 7-DAY 16:8 MEAL PLAN ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="tag">Chapter 05</div>
+    <h2>7-Day 16:8 Meal Plan</h2>
+    <p class="lead">Eating window: 12:00 PM &ndash; 8:00 PM &bull; ~2,000 calories/day &bull; High protein, balanced macros</p>
+    <div class="header-line"></div>
+  </div>
+
+  <div class="meal-day">
+    <div class="meal-day-header">
+      <span class="day-badge">MON</span>
+      <span class="day-title">2,010 kcal &bull; 165g P / 195g C / 68g F</span>
+    </div>
+    <div class="meal-items">
+      <div class="meal-item">
+        <div class="meal-time">12:00 PM &mdash; Meal 1</div>
+        <div class="meal-food">Chicken Stir-Fry Bowl</div>
+        <div class="meal-macros">200g chicken breast, 150g jasmine rice, mixed veggies, soy sauce &bull; 55g P / 65g C / 12g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">4:00 PM &mdash; Meal 2</div>
+        <div class="meal-food">Greek Yogurt Power Bowl</div>
+        <div class="meal-macros">250g Greek yogurt, 40g granola, banana, 20g honey &bull; 30g P / 70g C / 8g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">7:30 PM &mdash; Meal 3</div>
+        <div class="meal-food">Salmon &amp; Sweet Potato</div>
+        <div class="meal-macros">180g salmon fillet, 200g sweet potato, broccoli, olive oil &bull; 80g P / 60g C / 48g F</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meal-day">
+    <div class="meal-day-header">
+      <span class="day-badge">TUE</span>
+      <span class="day-title">1,985 kcal &bull; 160g P / 200g C / 64g F</span>
+    </div>
+    <div class="meal-items">
+      <div class="meal-item">
+        <div class="meal-time">12:00 PM &mdash; Meal 1</div>
+        <div class="meal-food">Turkey Burrito Bowl</div>
+        <div class="meal-macros">200g ground turkey, black beans, rice, salsa, avocado &bull; 50g P / 70g C / 18g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">4:00 PM &mdash; Meal 2</div>
+        <div class="meal-food">Protein Smoothie</div>
+        <div class="meal-macros">Whey protein, oats, peanut butter, banana, almond milk &bull; 40g P / 60g C / 16g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">7:30 PM &mdash; Meal 3</div>
+        <div class="meal-food">Beef &amp; Veggie Stew</div>
+        <div class="meal-macros">200g lean beef, potatoes, carrots, onions, bone broth &bull; 70g P / 70g C / 30g F</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meal-day">
+    <div class="meal-day-header">
+      <span class="day-badge">WED</span>
+      <span class="day-title">2,020 kcal &bull; 170g P / 190g C / 66g F</span>
+    </div>
+    <div class="meal-items">
+      <div class="meal-item">
+        <div class="meal-time">12:00 PM &mdash; Meal 1</div>
+        <div class="meal-food">Egg &amp; Avocado Plate</div>
+        <div class="meal-macros">4 whole eggs, sourdough toast, avocado, spinach &bull; 35g P / 40g C / 32g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">4:00 PM &mdash; Meal 2</div>
+        <div class="meal-food">Tuna Rice Cakes</div>
+        <div class="meal-macros">2 cans tuna, rice cakes, cucumber, light mayo &bull; 55g P / 50g C / 10g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">7:30 PM &mdash; Meal 3</div>
+        <div class="meal-food">Chicken Pasta</div>
+        <div class="meal-macros">180g chicken thigh, 100g penne, marinara, parmesan &bull; 80g P / 100g C / 24g F</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meal-day">
+    <div class="meal-day-header">
+      <span class="day-badge">THU</span>
+      <span class="day-title">1,995 kcal &bull; 162g P / 198g C / 65g F</span>
+    </div>
+    <div class="meal-items">
+      <div class="meal-item">
+        <div class="meal-time">12:00 PM &mdash; Meal 1</div>
+        <div class="meal-food">Shrimp Fried Rice</div>
+        <div class="meal-macros">250g shrimp, 150g rice, egg, peas, sesame oil &bull; 48g P / 68g C / 14g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">4:00 PM &mdash; Meal 2</div>
+        <div class="meal-food">Cottage Cheese &amp; Fruit</div>
+        <div class="meal-macros">300g cottage cheese, berries, almonds, honey drizzle &bull; 38g P / 45g C / 16g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">7:30 PM &mdash; Meal 3</div>
+        <div class="meal-food">Steak &amp; Roasted Veggies</div>
+        <div class="meal-macros">200g sirloin, roasted potatoes, asparagus, butter &bull; 76g P / 85g C / 35g F</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meal-day">
+    <div class="meal-day-header">
+      <span class="day-badge">FRI</span>
+      <span class="day-title">2,005 kcal &bull; 158g P / 205g C / 67g F</span>
+    </div>
+    <div class="meal-items">
+      <div class="meal-item">
+        <div class="meal-time">12:00 PM &mdash; Meal 1</div>
+        <div class="meal-food">Chicken Caesar Wrap</div>
+        <div class="meal-macros">180g chicken, large tortilla, romaine, parmesan, dressing &bull; 45g P / 55g C / 22g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">4:00 PM &mdash; Meal 2</div>
+        <div class="meal-food">Oat &amp; Protein Pancakes</div>
+        <div class="meal-macros">Oats, whey, eggs, banana, maple syrup &bull; 38g P / 75g C / 12g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">7:30 PM &mdash; Meal 3</div>
+        <div class="meal-food">Cod &amp; Quinoa Bowl</div>
+        <div class="meal-macros">200g cod, quinoa, roasted peppers, tahini drizzle &bull; 75g P / 75g C / 33g F</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meal-day">
+    <div class="meal-day-header">
+      <span class="day-badge">SAT</span>
+      <span class="day-title">2,040 kcal &bull; 155g P / 210g C / 70g F</span>
+    </div>
+    <div class="meal-items">
+      <div class="meal-item">
+        <div class="meal-time">12:00 PM &mdash; Meal 1</div>
+        <div class="meal-food">Brunch Omelette</div>
+        <div class="meal-macros">4 eggs, cheese, mushrooms, toast, hash browns &bull; 38g P / 60g C / 30g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">4:00 PM &mdash; Meal 2</div>
+        <div class="meal-food">Protein Bar + Trail Mix</div>
+        <div class="meal-macros">Protein bar, mixed nuts, dried fruit &bull; 32g P / 55g C / 20g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">7:30 PM &mdash; Meal 3</div>
+        <div class="meal-food">BBQ Chicken &amp; Corn</div>
+        <div class="meal-macros">250g chicken thigh, corn on cob, coleslaw, baked beans &bull; 85g P / 95g C / 20g F</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="meal-day">
+    <div class="meal-day-header">
+      <span class="day-badge">SUN</span>
+      <span class="day-title">1,990 kcal &bull; 160g P / 192g C / 68g F</span>
+    </div>
+    <div class="meal-items">
+      <div class="meal-item">
+        <div class="meal-time">12:00 PM &mdash; Meal 1</div>
+        <div class="meal-food">Smoked Salmon Bagel</div>
+        <div class="meal-macros">Bagel, 100g smoked salmon, cream cheese, capers &bull; 35g P / 55g C / 18g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">4:00 PM &mdash; Meal 2</div>
+        <div class="meal-food">Chicken Soup + Bread</div>
+        <div class="meal-macros">Large bowl chicken soup, crusty bread, side salad &bull; 40g P / 62g C / 14g F</div>
+      </div>
+      <div class="meal-item">
+        <div class="meal-time">7:30 PM &mdash; Meal 3</div>
+        <div class="meal-food">Lamb Kofta &amp; Couscous</div>
+        <div class="meal-macros">200g lamb kofta, couscous, tzatziki, roasted veg &bull; 85g P / 75g C / 36g F</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 7: BREAKING YOUR FAST ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="tag">Chapter 06</div>
+    <h2>Breaking Your Fast</h2>
+    <p class="lead">What you eat first matters. The wrong foods can spike insulin, cause bloating, and undo the benefits of your fast.</p>
+    <div class="header-line"></div>
+  </div>
+
+  <h3 style="font-size:1rem;font-weight:800;margin-bottom:10px">The Ideal Fast-Breaking Sequence</h3>
+
+  <div class="tip-list">
+    <div class="tip-item">
+      <div class="tip-num">1</div>
+      <div>
+        <h4>Start with Water + Electrolytes (10 min before eating)</h4>
+        <p>Drink 500ml of water with a pinch of sea salt and a squeeze of lemon. This rehydrates your digestive system, primes stomach acid production, and prevents the bloating that comes from eating on a completely empty, dehydrated gut.</p>
+      </div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-num">2</div>
+      <div>
+        <h4>Protein + Fiber First (your first bite)</h4>
+        <p>Lead with 30&ndash;40g of protein (eggs, chicken, fish, Greek yogurt) paired with fiber-rich vegetables or greens. Protein blunts the glucose spike from carbs eaten later. Fiber slows gastric emptying and feeds gut bacteria that were resting during the fast. Never break a fast with pure sugar or refined carbs.</p>
+      </div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-num">3</div>
+      <div>
+        <h4>Add Healthy Fats (with your meal)</h4>
+        <p>Include a moderate fat source: avocado, olive oil, nuts, or fatty fish. Fats slow digestion further, improve satiety, and help absorb fat-soluble vitamins (A, D, E, K) that you may be supplementing. Avoid fried or heavily processed fats.</p>
+      </div>
+    </div>
+    <div class="tip-item">
+      <div class="tip-num">4</div>
+      <div>
+        <h4>Complex Carbs Last (15&ndash;20 min in)</h4>
+        <p>Save starches and carbs for after protein and fats are in your system. This "food sequencing" can reduce post-meal glucose spikes by up to 40% (research from Weill Cornell Medicine). Rice, potatoes, bread, fruit &mdash; all fine, just not first.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="electrolyte-box">
+    <h4>Daily Electrolyte Protocol During Fasting</h4>
+    <ul>
+      <li><strong>Sodium:</strong> 2,000&ndash;3,000mg/day &mdash; sea salt in water, bone broth, or electrolyte tablets</li>
+      <li><strong>Potassium:</strong> 1,000&ndash;2,000mg/day &mdash; lite salt (potassium chloride), avocado, spinach in meals</li>
+      <li><strong>Magnesium:</strong> 300&ndash;400mg/day &mdash; magnesium glycinate before bed (aids sleep + prevents cramps)</li>
+      <li><strong>Hydration:</strong> Minimum 2.5&ndash;3.5L water daily, more if training or in hot climates</li>
+    </ul>
+  </div>
+
+  <h3 style="font-size:1rem;font-weight:800;margin:14px 0 8px">Common Side Effects &amp; Solutions</h3>
+
+  <table class="side-effects">
+    <thead>
+      <tr>
+        <th>Side Effect</th>
+        <th>Why It Happens</th>
+        <th>Solution</th>
+        <th>Timeline</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Headaches</strong></td>
+        <td>Dehydration, caffeine withdrawal, low sodium</td>
+        <td>Increase water + add salt to morning water; don't cut caffeine simultaneously</td>
+        <td>Resolves in 3&ndash;5 days</td>
+      </tr>
+      <tr>
+        <td><strong>Irritability / Brain Fog</strong></td>
+        <td>Blood sugar adjustment, low electrolytes</td>
+        <td>Electrolyte supplement; start with 14:10 and progress to 16:8 gradually</td>
+        <td>Resolves in 5&ndash;7 days</td>
+      </tr>
+      <tr>
+        <td><strong>Hunger Pangs</strong></td>
+        <td>Ghrelin (hunger hormone) is clock-trained to meal times</td>
+        <td>Black coffee, sparkling water, stay busy; hunger comes in waves and passes in 20 min</td>
+        <td>Resolves in 7&ndash;14 days</td>
+      </tr>
+      <tr>
+        <td><strong>Bloating After Eating</strong></td>
+        <td>Eating too fast, too much volume at once, low stomach acid</td>
+        <td>Break fast with small portion first; eat slowly; add apple cider vinegar pre-meal</td>
+        <td>Resolves in 1&ndash;2 weeks</td>
+      </tr>
+      <tr>
+        <td><strong>Poor Sleep</strong></td>
+        <td>Eating too close to bedtime, elevated cortisol</td>
+        <td>Finish eating 2&ndash;3 hours before bed; magnesium glycinate at night</td>
+        <td>Resolves in 1&ndash;2 weeks</td>
+      </tr>
+      <tr>
+        <td><strong>Low Energy in Workouts</strong></td>
+        <td>Glycogen depletion during adaptation phase</td>
+        <td>Train at end of fast (break fast post-workout); use caffeine pre-workout</td>
+        <td>Resolves in 2&ndash;3 weeks</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== PAGE 8: CTA + BACK ==================== -->
+<div class="page cta-page">
+  <div class="cta-content">
+    <h2>Ready to <span>Master Your Fasting</span> Protocol?</h2>
+    <p class="cta-lead">Stop guessing about meal timing, macros, and what to eat. EvoFit Meals gives you personalized fasting-optimized meal plans, auto-generated grocery lists, and trainer-designed nutrition built around your protocol.</p>
+
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">$9<span>/mo</span></div>
+        <div class="plan-desc">Basic meal plans<br>IF protocol templates</div>
+      </div>
+      <div class="pricing-card featured">
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$19<span>/mo</span></div>
+        <div class="plan-desc">Custom IF meal plans<br>Macro tracking + grocery lists</div>
+      </div>
+      <div class="pricing-card">
+        <div class="plan-name">Elite</div>
+        <div class="plan-price">$39<span>/mo</span></div>
+        <div class="plan-desc">1-on-1 trainer coaching<br>Full nutrition + training sync</div>
+      </div>
+    </div>
+
+    <a href="https://evofitmeals.com/get-started" class="cta-btn">Start Your Free Trial</a>
+    <div class="cta-url">evofitmeals.com/<span>get-started</span></div>
+
+    <div class="cta-features">
+      <span class="cta-feature">7-day free trial</span>
+      <span class="cta-feature">Cancel anytime</span>
+      <span class="cta-feature">No credit card required</span>
+    </div>
+
+    <div class="section-divider" style="margin:28px auto;width:120px"></div>
+
+    <div class="footer-brand">EvoFit<span>Meals</span></div>
+    <p style="font-size:.7rem;color:var(--gray-500);margin-top:6px">Personalized Nutrition, Engineered for Results</p>
+    <p style="font-size:.6rem;color:var(--gray-600);margin-top:16px;line-height:1.5">
+      This guide is for informational purposes only and does not constitute medical advice. Consult your healthcare provider before starting any fasting protocol, especially if you have diabetes, are pregnant or nursing, have a history of eating disorders, or take medications that require food. Individual results may vary.
+    </p>
+  </div>
+</div>
+
+</body>
+</html>

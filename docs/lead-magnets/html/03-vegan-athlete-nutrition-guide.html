@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Vegan Athlete Nutrition Guide - EvoFit Meals</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --purple: #9333EA;
+            --purple-light: #A855F7;
+            --purple-dark: #7E22CE;
+            --orange: #F97316;
+            --orange-light: #FB923C;
+            --dark: #0A0A0F;
+            --dark-lighter: #141420;
+            --dark-card: #1A1A2E;
+            --green: #22C55E;
+            --green-light: #4ADE80;
+            --green-dark: #16A34A;
+            --white: #FFFFFF;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--dark);
+            background: var(--white);
+            line-height: 1.6;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.2;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 0;
+            page-break-after: always;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .page:last-child {
+            page-break-after: auto;
+        }
+
+        @media print {
+            body { background: none; }
+            .page {
+                margin: 0;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .page:last-child {
+                page-break-after: auto;
+            }
+        }
+
+        @media screen {
+            body {
+                background: #E5E7EB;
+                padding: 20px 0;
+            }
+            .page {
+                box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+                margin-bottom: 30px;
+            }
+        }
+
+        /* ===== PAGE 1: COVER ===== */
+        .cover {
+            background: linear-gradient(145deg, var(--dark) 0%, #1a0a2e 40%, #0d1a0d 70%, var(--dark) 100%);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 50mm 25mm;
+            position: relative;
+        }
+
+        .cover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 30%, rgba(34, 197, 94, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(34, 197, 94, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cover-leaf-accent {
+            position: absolute;
+            top: 30mm;
+            right: 25mm;
+            font-size: 72px;
+            opacity: 0.3;
+            filter: drop-shadow(0 0 20px rgba(34, 197, 94, 0.4));
+        }
+
+        .cover-leaf-accent-2 {
+            position: absolute;
+            bottom: 40mm;
+            left: 25mm;
+            font-size: 56px;
+            opacity: 0.2;
+            filter: drop-shadow(0 0 20px rgba(34, 197, 94, 0.3));
+        }
+
+        .cover-badge {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, var(--green), var(--green-dark));
+            color: var(--white);
+            padding: 6px 24px;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        .cover h1 {
+            position: relative;
+            z-index: 1;
+            font-size: 44px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--green-light) 0%, var(--white) 50%, var(--purple-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cover .subtitle {
+            position: relative;
+            z-index: 1;
+            font-size: 20px;
+            font-weight: 300;
+            color: var(--gray-300);
+            margin-bottom: 40px;
+            max-width: 400px;
+        }
+
+        .cover-divider {
+            position: relative;
+            z-index: 1;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--green), var(--purple));
+            border-radius: 2px;
+            margin-bottom: 40px;
+        }
+
+        .cover-brand {
+            position: relative;
+            z-index: 1;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
+        .cover-brand span {
+            color: var(--green-light);
+        }
+
+        .cover-url {
+            position: relative;
+            z-index: 1;
+            color: var(--gray-400);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .cover-bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--green), var(--purple), var(--orange));
+        }
+
+        /* ===== CONTENT PAGES ===== */
+        .content-page {
+            background: var(--white);
+            padding: 20mm 22mm 25mm;
+            position: relative;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6mm;
+            padding-bottom: 4mm;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .page-number {
+            background: linear-gradient(135deg, var(--green), var(--green-dark));
+            color: var(--white);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .page-number.purple {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+        }
+
+        .page-number.orange {
+            background: linear-gradient(135deg, var(--orange), #EA580C);
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .page-title .accent {
+            color: var(--green);
+        }
+
+        .page-title .accent-purple {
+            color: var(--purple);
+        }
+
+        .page-title .accent-orange {
+            color: var(--orange);
+        }
+
+        .section-intro {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 6mm;
+            line-height: 1.7;
+        }
+
+        /* Cards & Boxes */
+        .info-card {
+            background: var(--gray-100);
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--green);
+        }
+
+        .info-card.purple {
+            border-left-color: var(--purple);
+        }
+
+        .info-card.orange {
+            border-left-color: var(--orange);
+        }
+
+        .info-card h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .info-card p, .info-card li {
+            font-size: 12px;
+            color: var(--gray-600);
+            line-height: 1.6;
+        }
+
+        .info-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-card ul li::before {
+            content: '\2713';
+            color: var(--green);
+            font-weight: 700;
+            margin-right: 6px;
+        }
+
+        .info-card.purple ul li::before {
+            color: var(--purple);
+        }
+
+        .info-card.orange ul li::before {
+            color: var(--orange);
+        }
+
+        .myth-box {
+            background: linear-gradient(135deg, #FEF2F2, #FFF1F2);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            border-left: 4px solid #EF4444;
+        }
+
+        .myth-box .myth-label {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            color: #EF4444;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .myth-box .myth-text {
+            font-size: 12.5px;
+            color: var(--dark);
+            font-style: italic;
+        }
+
+        .truth-box {
+            background: linear-gradient(135deg, #F0FDF4, #ECFDF5);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            border-left: 4px solid var(--green);
+        }
+
+        .truth-box .truth-label {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--green-dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .truth-box .truth-text {
+            font-size: 12.5px;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* Athlete quote */
+        .athlete-quote {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--dark);
+            color: var(--white);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+
+        .athlete-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--green), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .athlete-info {
+            flex: 1;
+        }
+
+        .athlete-name {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--green-light);
+        }
+
+        .athlete-sport {
+            font-size: 11px;
+            color: var(--gray-400);
+        }
+
+        .athlete-detail {
+            font-size: 11.5px;
+            color: var(--gray-300);
+            margin-top: 3px;
+        }
+
+        /* Protein Grid */
+        .protein-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .protein-item {
+            background: var(--gray-100);
+            border-radius: 10px;
+            padding: 14px;
+            border-top: 3px solid var(--green);
+            position: relative;
+        }
+
+        .protein-item:nth-child(even) {
+            border-top-color: var(--purple);
+        }
+
+        .protein-item h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 3px;
+        }
+
+        .protein-item .protein-per {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--green-dark);
+            margin-bottom: 4px;
+        }
+
+        .protein-item:nth-child(even) .protein-per {
+            color: var(--purple);
+        }
+
+        .protein-item .protein-aminos {
+            font-size: 10.5px;
+            color: var(--gray-500);
+            line-height: 1.5;
+        }
+
+        /* Supplement Cards */
+        .supplement-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .supplement-card {
+            background: var(--gray-100);
+            border-radius: 10px;
+            padding: 13px 14px;
+            position: relative;
+        }
+
+        .supplement-card .supp-icon {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .supplement-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 3px;
+        }
+
+        .supplement-card .supp-dose {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--purple);
+            margin-bottom: 3px;
+        }
+
+        .supplement-card .supp-form {
+            font-size: 10.5px;
+            color: var(--gray-500);
+            line-height: 1.4;
+        }
+
+        .supplement-card .supp-why {
+            font-size: 10.5px;
+            color: var(--gray-600);
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        /* Meal Plan Table */
+        .meal-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-bottom: 8px;
+        }
+
+        .meal-table th {
+            background: var(--dark);
+            color: var(--white);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            padding: 7px 6px;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        .meal-table th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        .meal-table th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+        .meal-table td {
+            padding: 5px 6px;
+            border-bottom: 1px solid var(--gray-200);
+            vertical-align: top;
+            line-height: 1.4;
+        }
+
+        .meal-table tr:nth-child(even) {
+            background: var(--gray-100);
+        }
+
+        .meal-table .day-cell {
+            font-weight: 700;
+            color: var(--green-dark);
+            font-family: 'Outfit', sans-serif;
+            white-space: nowrap;
+            font-size: 10px;
+        }
+
+        .meal-table .macros {
+            font-size: 9px;
+            color: var(--gray-500);
+            white-space: nowrap;
+        }
+
+        /* Combining Chart */
+        .combine-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--gray-100);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+        }
+
+        .combine-item {
+            flex: 1;
+            text-align: center;
+            background: var(--white);
+            border-radius: 8px;
+            padding: 8px;
+            border: 2px solid var(--green);
+        }
+
+        .combine-item.legume {
+            border-color: var(--purple);
+        }
+
+        .combine-item .combine-emoji {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+
+        .combine-item .combine-name {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--dark);
+        }
+
+        .combine-item .combine-provides {
+            font-size: 9.5px;
+            color: var(--gray-500);
+        }
+
+        .combine-plus {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 20px;
+            color: var(--orange);
+            flex-shrink: 0;
+        }
+
+        .combine-equals {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 16px;
+            color: var(--green-dark);
+            flex-shrink: 0;
+        }
+
+        .combine-result {
+            flex: 1;
+            text-align: center;
+            background: linear-gradient(135deg, #F0FDF4, #ECFDF5);
+            border-radius: 8px;
+            padding: 8px;
+            border: 2px solid var(--green);
+        }
+
+        .combine-result .combine-name {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--green-dark);
+        }
+
+        .combine-result .combine-provides {
+            font-size: 9.5px;
+            color: var(--green-dark);
+        }
+
+        /* Meal Prep Tips */
+        .prep-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .prep-card {
+            background: var(--gray-100);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .prep-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .prep-card .prep-icon {
+            font-size: 18px;
+        }
+
+        .prep-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .prep-card ul li {
+            font-size: 11px;
+            color: var(--gray-600);
+            padding: 2px 0;
+            padding-left: 14px;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .prep-card ul li::before {
+            content: '\25B8';
+            position: absolute;
+            left: 0;
+            color: var(--green);
+            font-weight: bold;
+        }
+
+        .smoothie-box {
+            background: linear-gradient(135deg, var(--dark), var(--dark-card));
+            color: var(--white);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 10px;
+        }
+
+        .smoothie-box h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--green-light);
+            margin-bottom: 8px;
+        }
+
+        .smoothie-formula {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .smoothie-ingredient {
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 6px 10px;
+            text-align: center;
+        }
+
+        .smoothie-ingredient .s-emoji {
+            font-size: 18px;
+        }
+
+        .smoothie-ingredient .s-name {
+            font-size: 10px;
+            color: var(--gray-300);
+            display: block;
+        }
+
+        .smoothie-plus {
+            font-weight: 900;
+            color: var(--orange);
+            font-size: 16px;
+        }
+
+        .smoothie-examples {
+            font-size: 11px;
+            color: var(--gray-400);
+            line-height: 1.6;
+        }
+
+        .smoothie-examples strong {
+            color: var(--green-light);
+        }
+
+        /* CTA PAGE */
+        .cta-page {
+            background: linear-gradient(145deg, var(--dark) 0%, #1a0a2e 50%, var(--dark) 100%);
+            color: var(--white);
+            padding: 25mm 22mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 30% 40%, rgba(34, 197, 94, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 60%, rgba(147, 51, 234, 0.12) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .cta-badge {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, var(--green), var(--green-dark));
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .cta-title {
+            position: relative;
+            z-index: 1;
+            font-size: 34px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            line-height: 1.15;
+        }
+
+        .cta-title .green {
+            color: var(--green-light);
+        }
+
+        .cta-subtitle {
+            position: relative;
+            z-index: 1;
+            font-size: 16px;
+            color: var(--gray-300);
+            margin-bottom: 30px;
+            max-width: 420px;
+        }
+
+        .pricing-cards {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .pricing-card {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .pricing-card.featured {
+            background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(34, 197, 94, 0.15));
+            border-color: var(--green);
+            position: relative;
+        }
+
+        .pricing-card.featured::after {
+            content: 'BEST VALUE';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--green), var(--green-dark));
+            color: var(--white);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 9px;
+            letter-spacing: 1px;
+            padding: 3px 12px;
+            border-radius: 50px;
+        }
+
+        .pricing-card .plan-name {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--gray-300);
+            margin-bottom: 6px;
+        }
+
+        .pricing-card .plan-price {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 32px;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+
+        .pricing-card .plan-price span {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--gray-400);
+        }
+
+        .pricing-card .plan-desc {
+            font-size: 11px;
+            color: var(--gray-400);
+        }
+
+        .cta-button {
+            position: relative;
+            z-index: 1;
+            display: inline-block;
+            background: linear-gradient(135deg, var(--green), var(--green-dark));
+            color: var(--white);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 14px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .cta-url {
+            position: relative;
+            z-index: 1;
+            font-size: 14px;
+            color: var(--green-light);
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        .cta-features {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 24px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .cta-feature {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--gray-300);
+        }
+
+        .cta-feature .check {
+            color: var(--green-light);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .cta-bottom {
+            position: absolute;
+            bottom: 25mm;
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+
+        .cta-brand {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .cta-brand span {
+            color: var(--green-light);
+        }
+
+        .cta-legal {
+            font-size: 10px;
+            color: var(--gray-500);
+        }
+
+        .cta-bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--green), var(--purple), var(--orange));
+        }
+
+        /* Utility */
+        .note-box {
+            background: linear-gradient(135deg, #EFF6FF, #EEF2FF);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 11px;
+            color: var(--gray-600);
+            border-left: 3px solid var(--purple);
+            margin-top: 6px;
+        }
+
+        .note-box strong {
+            color: var(--purple);
+        }
+
+        .key-insight {
+            background: linear-gradient(135deg, #F0FDF4, #ECFDF5);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 11.5px;
+            color: var(--dark);
+            border-left: 3px solid var(--green);
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        .key-insight strong {
+            color: var(--green-dark);
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .footer-stripe {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--green), var(--purple), var(--orange));
+        }
+
+        .page-footer {
+            position: absolute;
+            bottom: 8mm;
+            left: 22mm;
+            right: 22mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9px;
+            color: var(--gray-400);
+        }
+
+        .page-footer .brand {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        .page-footer .brand span { color: var(--green); }
+
+        /* Amino chart mini */
+        .amino-chart {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 3px;
+            margin-top: 8px;
+        }
+
+        .amino-bar {
+            text-align: center;
+        }
+
+        .amino-bar .bar {
+            width: 100%;
+            border-radius: 3px 3px 0 0;
+            margin-bottom: 2px;
+        }
+
+        .amino-bar .bar-label {
+            font-size: 7px;
+            color: var(--gray-500);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== PAGE 1: COVER ===== -->
+<div class="page cover">
+    <div class="cover-leaf-accent">&#127793;</div>
+    <div class="cover-leaf-accent-2">&#127807;</div>
+
+    <div class="cover-badge">Plant-Powered Performance</div>
+
+    <h1>The Vegan Athlete<br>Nutrition Guide</h1>
+
+    <p class="subtitle">Complete Amino Acid Coverage Without Meat</p>
+
+    <div class="cover-divider"></div>
+
+    <div class="cover-brand">EvoFit <span>Meals</span></div>
+    <div class="cover-url">evofitmeals.com</div>
+
+    <div class="cover-bottom-bar"></div>
+</div>
+
+<!-- ===== PAGE 2: CAN YOU BUILD MUSCLE ON PLANTS? ===== -->
+<div class="page content-page">
+    <div class="page-header">
+        <div class="page-number">1</div>
+        <h2 class="page-title">Can You Build Muscle on <span class="accent">Plants</span>?</h2>
+    </div>
+
+    <p class="section-intro">
+        The idea that you need animal protein to build serious muscle is one of the most persistent myths in sports nutrition. Science and world-class athletes are proving otherwise every single day.
+    </p>
+
+    <div class="myth-box">
+        <div class="myth-label">Myth #1</div>
+        <div class="myth-text">"Plant proteins are incomplete and can't support muscle growth."</div>
+    </div>
+    <div class="truth-box">
+        <div class="truth-label">Reality</div>
+        <div class="truth-text">Multiple plant foods (soy, quinoa, hemp, buckwheat) contain all 9 essential amino acids. A 2019 study in the <em>Journal of the International Society of Sports Nutrition</em> found no significant difference in muscle gains between plant and animal protein groups when total protein intake was matched at 1.6g/kg/day.</div>
+    </div>
+
+    <div class="myth-box">
+        <div class="myth-label">Myth #2</div>
+        <div class="myth-text">"You have to combine proteins at every meal."</div>
+    </div>
+    <div class="truth-box">
+        <div class="truth-label">Reality</div>
+        <div class="truth-text">Your body pools amino acids throughout the day. As long as you eat a variety of protein sources across your meals, your body will assemble complete proteins. You do NOT need complementary proteins at the same sitting.</div>
+    </div>
+
+    <div class="myth-box">
+        <div class="myth-label">Myth #3</div>
+        <div class="myth-text">"No elite athletes are vegan."</div>
+    </div>
+
+    <div style="margin-top: 10px;">
+        <div class="athlete-quote">
+            <div class="athlete-icon">&#127934;</div>
+            <div class="athlete-info">
+                <div class="athlete-name">Novak Djokovic</div>
+                <div class="athlete-sport">Tennis - 24x Grand Slam Champion</div>
+                <div class="athlete-detail">Plant-based since 2011. Attributes his longevity, recovery speed, and sustained dominance to his diet.</div>
+            </div>
+        </div>
+        <div class="athlete-quote">
+            <div class="athlete-icon">&#127946;</div>
+            <div class="athlete-info">
+                <div class="athlete-name">Lewis Hamilton</div>
+                <div class="athlete-sport">Formula 1 - 7x World Champion</div>
+                <div class="athlete-detail">Vegan since 2017. Reports improved energy, mental clarity, and faster recovery between races.</div>
+            </div>
+        </div>
+        <div class="athlete-quote">
+            <div class="athlete-icon">&#127947;</div>
+            <div class="athlete-info">
+                <div class="athlete-name">Patrik Baboumian</div>
+                <div class="athlete-sport">Strongman - World Record Holder</div>
+                <div class="athlete-detail">Held the world log lift record at 165kg. Set yoke carry world record (555kg) while fully vegan.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="key-insight">
+        <strong>Key Takeaway:</strong> Aim for 1.6-2.2g protein per kg bodyweight daily from diverse plant sources. An 80kg athlete needs 128-176g protein/day, which is absolutely achievable on plants.
+    </div>
+
+    <div class="page-footer">
+        <div class="brand">EvoFit <span>Meals</span></div>
+        <div>evofitmeals.com | Page 2</div>
+    </div>
+    <div class="footer-stripe"></div>
+</div>
+
+<!-- ===== PAGE 3: COMPLETE PLANT PROTEINS ===== -->
+<div class="page content-page">
+    <div class="page-header">
+        <div class="page-number">2</div>
+        <h2 class="page-title"><span class="accent">Complete</span> Plant Proteins</h2>
+    </div>
+
+    <p class="section-intro">
+        These 8 plant foods contain all 9 essential amino acids (histidine, isoleucine, leucine, lysine, methionine, phenylalanine, threonine, tryptophan, valine) making them complete protein sources on their own.
+    </p>
+
+    <div class="protein-grid">
+        <div class="protein-item">
+            <h4>&#127834; Soy (Tofu/Tempeh/Edamame)</h4>
+            <div class="protein-per">36g protein per cup (tempeh)</div>
+            <div class="protein-aminos">Highest leucine of any plant (key for muscle protein synthesis). Tempeh also provides probiotics for gut health. 18g per 100g tofu.</div>
+        </div>
+        <div class="protein-item">
+            <h4>&#127806; Quinoa</h4>
+            <div class="protein-per">8g protein per cup (cooked)</div>
+            <div class="protein-aminos">Exceptionally high in lysine, the amino acid most plants lack. Also rich in iron, magnesium, and manganese. A true superfood grain.</div>
+        </div>
+        <div class="protein-item">
+            <h4>&#127807; Hemp Seeds</h4>
+            <div class="protein-per">10g protein per 3 tbsp</div>
+            <div class="protein-aminos">Ideal 3:1 omega-6 to omega-3 ratio. Rich in arginine (supports blood flow). Easy to add to smoothies, salads, and bowls.</div>
+        </div>
+        <div class="protein-item">
+            <h4>&#127838; Buckwheat</h4>
+            <div class="protein-per">6g protein per cup (cooked)</div>
+            <div class="protein-aminos">Gluten-free despite the name. High in rutin (supports circulation). Excellent as soba noodles, porridge, or flour for pancakes.</div>
+        </div>
+        <div class="protein-item">
+            <h4>&#129361; Chia Seeds</h4>
+            <div class="protein-per">5g protein per 2 tbsp</div>
+            <div class="protein-aminos">Packed with omega-3 ALA (5g per serving). Absorb 12x their weight in water for sustained hydration. High fiber (10g per serving).</div>
+        </div>
+        <div class="protein-item">
+            <h4>&#127793; Amaranth</h4>
+            <div class="protein-per">9g protein per cup (cooked)</div>
+            <div class="protein-aminos">Higher in lysine than any other grain. Rich in iron (5mg per cup) and calcium. Excellent popped, as porridge, or in baked goods.</div>
+        </div>
+        <div class="protein-item">
+            <h4>&#128154; Spirulina</h4>
+            <div class="protein-per">8g protein per 2 tbsp</div>
+            <div class="protein-aminos">60-70% protein by weight, the highest of any food. Rich in B12 analogue, iron, and phycocyanin (powerful antioxidant). Add to smoothies.</div>
+        </div>
+        <div class="protein-item">
+            <h4>&#129472; Nutritional Yeast</h4>
+            <div class="protein-per">8g protein per 3 tbsp</div>
+            <div class="protein-aminos">Fortified with all B vitamins including B12. Cheesy flavor makes it perfect on pasta, popcorn, and sauces. Rich in zinc and selenium.</div>
+        </div>
+    </div>
+
+    <div class="note-box">
+        <strong>Pro Tip:</strong> For maximum muscle protein synthesis, aim for at least 3g of leucine per meal. Combine soy (highest leucine) with hemp or chia seeds for an amino acid powerhouse. Tempeh + quinoa bowl = roughly 44g complete protein with optimal leucine content.
+    </div>
+
+    <div class="page-footer">
+        <div class="brand">EvoFit <span>Meals</span></div>
+        <div>evofitmeals.com | Page 3</div>
+    </div>
+    <div class="footer-stripe"></div>
+</div>
+
+<!-- ===== PAGE 4: ESSENTIAL SUPPLEMENTS ===== -->
+<div class="page content-page">
+    <div class="page-header">
+        <div class="page-number purple">3</div>
+        <h2 class="page-title">Essential <span class="accent-purple">Supplements</span></h2>
+    </div>
+
+    <p class="section-intro">
+        A well-planned vegan diet covers most nutritional needs, but these 6 supplements fill critical gaps that are difficult to meet through food alone. Every vegan athlete should consider these non-negotiables.
+    </p>
+
+    <div class="supplement-grid">
+        <div class="supplement-card">
+            <div class="supp-icon">&#128137;</div>
+            <h4>Vitamin B12</h4>
+            <div class="supp-dose">2,500mcg/week (cyanocobalamin)</div>
+            <div class="supp-form"><strong>Best form:</strong> Cyanocobalamin sublingual tablet or spray</div>
+            <div class="supp-why">Critical for nerve function and red blood cell production. No reliable plant source exists. Deficiency causes fatigue, weakness, and neurological damage. Non-negotiable for every vegan.</div>
+        </div>
+        <div class="supplement-card">
+            <div class="supp-icon">&#9883;</div>
+            <h4>Iron</h4>
+            <div class="supp-dose">18-27mg/day (if levels are low)</div>
+            <div class="supp-form"><strong>Best form:</strong> Iron bisglycinate (gentle on stomach)</div>
+            <div class="supp-why">Plant iron (non-heme) absorbs at 2-20% vs 15-35% for heme iron. Take with vitamin C to boost absorption 3-6x. Avoid taking with calcium, coffee, or tea.</div>
+        </div>
+        <div class="supplement-card">
+            <div class="supp-icon">&#127799;</div>
+            <h4>Omega-3 (EPA/DHA)</h4>
+            <div class="supp-dose">250-500mg combined EPA+DHA daily</div>
+            <div class="supp-form"><strong>Best form:</strong> Algae-derived oil (skip fish, go straight to the source)</div>
+            <div class="supp-why">ALA from flax/chia converts to EPA/DHA at only 5-10%. Direct algae supplementation ensures adequate anti-inflammatory omega-3s for recovery and joint health.</div>
+        </div>
+        <div class="supplement-card">
+            <div class="supp-icon">&#9728;</div>
+            <h4>Vitamin D3</h4>
+            <div class="supp-dose">2,000-4,000 IU/day</div>
+            <div class="supp-form"><strong>Best form:</strong> Vegan D3 from lichen (not lanolin-based D3)</div>
+            <div class="supp-why">Essential for calcium absorption, bone density, immune function, and testosterone production. Most people are deficient regardless of diet. Get levels tested annually.</div>
+        </div>
+        <div class="supplement-card">
+            <div class="supp-icon">&#128171;</div>
+            <h4>Zinc</h4>
+            <div class="supp-dose">15-30mg/day</div>
+            <div class="supp-form"><strong>Best form:</strong> Zinc picolinate or citrate</div>
+            <div class="supp-why">Phytates in grains and legumes reduce zinc absorption by up to 45%. Critical for testosterone production, immune function, and protein synthesis. Take away from iron supplements.</div>
+        </div>
+        <div class="supplement-card">
+            <div class="supp-icon">&#9889;</div>
+            <h4>Creatine Monohydrate</h4>
+            <div class="supp-dose">5g/day (no loading phase needed)</div>
+            <div class="supp-form"><strong>Best form:</strong> Micronized creatine monohydrate</div>
+            <div class="supp-why">Vegans have 20-30% lower baseline creatine stores than omnivores. Supplementation improves power output, strength, and cognitive function. The most researched sports supplement ever.</div>
+        </div>
+    </div>
+
+    <div class="info-card purple">
+        <h4>Supplement Stack Timing</h4>
+        <ul>
+            <li><strong>Morning with food:</strong> B12 + Vitamin D3 + Omega-3 (fat-soluble vitamins need dietary fat)</li>
+            <li><strong>Post-workout:</strong> Creatine (5g with your protein shake)</li>
+            <li><strong>Evening with food:</strong> Iron + Vitamin C (separate from zinc by 2 hours)</li>
+            <li><strong>Before bed:</strong> Zinc (on an empty stomach for best absorption)</li>
+        </ul>
+    </div>
+
+    <div class="note-box">
+        <strong>Important:</strong> Get blood work done every 6-12 months to track B12, iron (ferritin), vitamin D, and zinc levels. Supplement dosages should be personalized based on your lab results, not generic recommendations.
+    </div>
+
+    <div class="page-footer">
+        <div class="brand">EvoFit <span>Meals</span></div>
+        <div>evofitmeals.com | Page 4</div>
+    </div>
+    <div class="footer-stripe"></div>
+</div>
+
+<!-- ===== PAGE 5: 7-DAY VEGAN MEAL PLAN ===== -->
+<div class="page content-page">
+    <div class="page-header">
+        <div class="page-number">4</div>
+        <h2 class="page-title">7-Day Vegan Meal Plan <span class="accent">(2,200 cal)</span></h2>
+    </div>
+
+    <p class="section-intro" style="margin-bottom: 3mm;">
+        Daily targets: ~2,200 calories | 140g protein | 260g carbs | 75g fat. Designed for a 75kg athlete in a lean gaining or maintenance phase.
+    </p>
+
+    <table class="meal-table">
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>Breakfast</th>
+                <th>Lunch</th>
+                <th>Dinner</th>
+                <th>Snack</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="day-cell">Mon</td>
+                <td>Tofu scramble w/ spinach, mushrooms, nutritional yeast, 2 slices sourdough<br><span class="macros">P: 32g | C: 45g | F: 14g</span></td>
+                <td>Chickpea curry w/ brown rice, roasted cauliflower, side salad<br><span class="macros">P: 28g | C: 72g | F: 18g</span></td>
+                <td>Lentil bolognese over whole wheat pasta, side of steamed broccoli<br><span class="macros">P: 34g | C: 78g | F: 12g</span></td>
+                <td>Protein shake w/ banana, peanut butter, soy milk<br><span class="macros">P: 38g | C: 42g | F: 16g</span></td>
+            </tr>
+            <tr>
+                <td class="day-cell">Tue</td>
+                <td>Overnight oats: oats, chia, hemp seeds, berries, almond butter, soy milk<br><span class="macros">P: 26g | C: 58g | F: 18g</span></td>
+                <td>Tempeh stir-fry w/ bell peppers, snap peas, brown rice noodles, tamari<br><span class="macros">P: 36g | C: 52g | F: 16g</span></td>
+                <td>Black bean tacos: corn tortillas, guac, pico de gallo, shredded cabbage<br><span class="macros">P: 30g | C: 68g | F: 20g</span></td>
+                <td>Edamame (1 cup) + handful of almonds<br><span class="macros">P: 24g | C: 18g | F: 16g</span></td>
+            </tr>
+            <tr>
+                <td class="day-cell">Wed</td>
+                <td>Smoothie bowl: pea protein, frozen acai, banana, granola, hemp seeds<br><span class="macros">P: 34g | C: 62g | F: 12g</span></td>
+                <td>Quinoa power bowl: roasted sweet potato, chickpeas, tahini dressing, kale<br><span class="macros">P: 26g | C: 72g | F: 18g</span></td>
+                <td>Stuffed bell peppers w/ lentils, brown rice, tomato sauce, nutritional yeast<br><span class="macros">P: 30g | C: 64g | F: 14g</span></td>
+                <td>Protein bar (vegan) + apple w/ almond butter<br><span class="macros">P: 28g | C: 38g | F: 18g</span></td>
+            </tr>
+            <tr>
+                <td class="day-cell">Thu</td>
+                <td>Chickpea flour omelette w/ veggies, avocado toast on rye<br><span class="macros">P: 28g | C: 48g | F: 20g</span></td>
+                <td>Buddha bowl: baked tofu, edamame, brown rice, pickled ginger, miso dressing<br><span class="macros">P: 38g | C: 58g | F: 16g</span></td>
+                <td>Red lentil dal w/ basmati rice, roasted eggplant, naan (vegan)<br><span class="macros">P: 28g | C: 82g | F: 10g</span></td>
+                <td>Trail mix (walnuts, pumpkin seeds, dark chocolate, dried mango)<br><span class="macros">P: 14g | C: 32g | F: 22g</span></td>
+            </tr>
+            <tr>
+                <td class="day-cell">Fri</td>
+                <td>Peanut butter banana protein pancakes (oat flour, pea protein, soy milk)<br><span class="macros">P: 36g | C: 56g | F: 16g</span></td>
+                <td>Mediterranean wrap: hummus, falafel, cucumber, tomato, mixed greens<br><span class="macros">P: 24g | C: 62g | F: 20g</span></td>
+                <td>Tempeh stir-fry w/ broccoli, cashews, jasmine rice, sriracha<br><span class="macros">P: 38g | C: 64g | F: 18g</span></td>
+                <td>Greek-style soy yogurt w/ granola and mixed berries<br><span class="macros">P: 20g | C: 36g | F: 8g</span></td>
+            </tr>
+            <tr>
+                <td class="day-cell">Sat</td>
+                <td>Loaded avocado toast: sourdough, white beans, cherry tomatoes, hemp seeds<br><span class="macros">P: 22g | C: 42g | F: 22g</span></td>
+                <td>Thai peanut noodles: rice noodles, tofu, shredded carrots, cilantro, lime<br><span class="macros">P: 32g | C: 68g | F: 20g</span></td>
+                <td>Chickpea curry w/ coconut milk, spinach, basmati rice<br><span class="macros">P: 26g | C: 74g | F: 16g</span></td>
+                <td>Protein shake: pea protein, frozen cherries, oats, soy milk<br><span class="macros">P: 40g | C: 48g | F: 8g</span></td>
+            </tr>
+            <tr>
+                <td class="day-cell">Sun</td>
+                <td>Breakfast burrito: scrambled tofu, black beans, salsa, avocado, tortilla<br><span class="macros">P: 34g | C: 52g | F: 18g</span></td>
+                <td>Lentil soup w/ crusty bread, side of quinoa tabbouleh<br><span class="macros">P: 28g | C: 66g | F: 12g</span></td>
+                <td>Spaghetti w/ walnut-mushroom meat sauce, garlic bread, side salad<br><span class="macros">P: 30g | C: 72g | F: 20g</span></td>
+                <td>Hummus w/ veggie sticks + 2 tbsp pumpkin seeds<br><span class="macros">P: 16g | C: 24g | F: 14g</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="key-insight">
+        <strong>Daily Average:</strong> 2,185 cal | 138g protein | 262g carbs | 74g fat. Protein hits 1.84g/kg for a 75kg athlete, well within the optimal 1.6-2.2g/kg range for muscle growth.
+    </div>
+
+    <div class="note-box">
+        <strong>Customization Tip:</strong> Need more calories? Add an extra tablespoon of nut butter (+100 cal, +4g protein). Cutting? Remove the snack and reduce rice portions by half (-400 cal).
+    </div>
+
+    <div class="page-footer">
+        <div class="brand">EvoFit <span>Meals</span></div>
+        <div>evofitmeals.com | Page 5</div>
+    </div>
+    <div class="footer-stripe"></div>
+</div>
+
+<!-- ===== PAGE 6: PROTEIN COMBINING CHART ===== -->
+<div class="page content-page">
+    <div class="page-header">
+        <div class="page-number orange">5</div>
+        <h2 class="page-title">Protein <span class="accent-orange">Combining</span> Chart</h2>
+    </div>
+
+    <p class="section-intro">
+        While combining isn't required at every meal, these classic pairings create complete amino acid profiles by pairing foods that complement each other's limiting amino acids. Grains are low in lysine; legumes are low in methionine. Together, they cover all bases.
+    </p>
+
+    <div class="combine-row">
+        <div class="combine-item">
+            <div class="combine-emoji">&#127834;</div>
+            <div class="combine-name">Rice</div>
+            <div class="combine-provides">High methionine</div>
+        </div>
+        <div class="combine-plus">+</div>
+        <div class="combine-item legume">
+            <div class="combine-emoji">&#129385;</div>
+            <div class="combine-name">Beans</div>
+            <div class="combine-provides">High lysine</div>
+        </div>
+        <div class="combine-equals">=</div>
+        <div class="combine-result">
+            <div class="combine-name">Complete Protein</div>
+            <div class="combine-provides">~14g per serving</div>
+        </div>
+    </div>
+
+    <div class="combine-row">
+        <div class="combine-item">
+            <div class="combine-emoji">&#129366;</div>
+            <div class="combine-name">Pita Bread</div>
+            <div class="combine-provides">High methionine</div>
+        </div>
+        <div class="combine-plus">+</div>
+        <div class="combine-item legume">
+            <div class="combine-emoji">&#129746;</div>
+            <div class="combine-name">Hummus</div>
+            <div class="combine-provides">High lysine</div>
+        </div>
+        <div class="combine-equals">=</div>
+        <div class="combine-result">
+            <div class="combine-name">Complete Protein</div>
+            <div class="combine-provides">~12g per serving</div>
+        </div>
+    </div>
+
+    <div class="combine-row">
+        <div class="combine-item">
+            <div class="combine-emoji">&#127838;</div>
+            <div class="combine-name">Whole Wheat Bread</div>
+            <div class="combine-provides">High methionine</div>
+        </div>
+        <div class="combine-plus">+</div>
+        <div class="combine-item legume">
+            <div class="combine-emoji">&#129372;</div>
+            <div class="combine-name">Peanut Butter</div>
+            <div class="combine-provides">High lysine</div>
+        </div>
+        <div class="combine-equals">=</div>
+        <div class="combine-result">
+            <div class="combine-name">Complete Protein</div>
+            <div class="combine-provides">~15g per serving</div>
+        </div>
+    </div>
+
+    <div class="combine-row">
+        <div class="combine-item">
+            <div class="combine-emoji">&#127854;</div>
+            <div class="combine-name">Corn Tortillas</div>
+            <div class="combine-provides">High methionine</div>
+        </div>
+        <div class="combine-plus">+</div>
+        <div class="combine-item legume">
+            <div class="combine-emoji">&#11035;</div>
+            <div class="combine-name">Black Beans</div>
+            <div class="combine-provides">High lysine</div>
+        </div>
+        <div class="combine-equals">=</div>
+        <div class="combine-result">
+            <div class="combine-name">Complete Protein</div>
+            <div class="combine-provides">~13g per serving</div>
+        </div>
+    </div>
+
+    <div class="combine-row">
+        <div class="combine-item">
+            <div class="combine-emoji">&#127836;</div>
+            <div class="combine-name">Pasta</div>
+            <div class="combine-provides">High methionine</div>
+        </div>
+        <div class="combine-plus">+</div>
+        <div class="combine-item legume">
+            <div class="combine-emoji">&#129389;</div>
+            <div class="combine-name">Lentil Sauce</div>
+            <div class="combine-provides">High lysine</div>
+        </div>
+        <div class="combine-equals">=</div>
+        <div class="combine-result">
+            <div class="combine-name">Complete Protein</div>
+            <div class="combine-provides">~18g per serving</div>
+        </div>
+    </div>
+
+    <div class="two-col" style="margin-top: 12px;">
+        <div class="info-card">
+            <h4>Other Winning Combos</h4>
+            <ul>
+                <li>Oatmeal + soy milk + hemp seeds</li>
+                <li>Lentil soup + crusty bread</li>
+                <li>Stir-fry tofu + brown rice</li>
+                <li>Granola + soy yogurt + walnuts</li>
+                <li>Minestrone soup + white beans</li>
+            </ul>
+        </div>
+        <div class="info-card purple">
+            <h4>Limiting Amino Acids</h4>
+            <ul>
+                <li><strong>Grains:</strong> Low in lysine, threonine</li>
+                <li><strong>Legumes:</strong> Low in methionine, cysteine</li>
+                <li><strong>Nuts/Seeds:</strong> Low in lysine</li>
+                <li><strong>Vegetables:</strong> Low in methionine</li>
+                <li><strong>Soy:</strong> Complete (no limiting AA!)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="key-insight">
+        <strong>Remember:</strong> You don't need to combine at every meal. Eating a variety of grains, legumes, nuts, and seeds throughout the day naturally provides all essential amino acids. Combining is a bonus, not a requirement.
+    </div>
+
+    <div class="page-footer">
+        <div class="brand">EvoFit <span>Meals</span></div>
+        <div>evofitmeals.com | Page 6</div>
+    </div>
+    <div class="footer-stripe"></div>
+</div>
+
+<!-- ===== PAGE 7: VEGAN MEAL PREP TIPS ===== -->
+<div class="page content-page">
+    <div class="page-header">
+        <div class="page-number">6</div>
+        <h2 class="page-title">Vegan <span class="accent">Meal Prep</span> Tips</h2>
+    </div>
+
+    <p class="section-intro">
+        Consistency beats perfection. These meal prep strategies ensure you always have high-protein vegan meals ready to go, eliminating the #1 reason athletes fall off their nutrition plan: convenience.
+    </p>
+
+    <div class="prep-grid">
+        <div class="prep-card">
+            <h4><span class="prep-icon">&#127858;</span> Batch Cook Beans & Lentils</h4>
+            <ul>
+                <li>Cook 2-3 varieties weekly (chickpeas, black beans, lentils)</li>
+                <li>Use an Instant Pot: dried beans in 25-40 min, no soaking</li>
+                <li>Store in 2-cup portions in fridge (5 days) or freezer (3 months)</li>
+                <li>Season differently: Mexican (cumin, chili), Indian (turmeric, garam masala), Mediterranean (oregano, lemon)</li>
+            </ul>
+        </div>
+        <div class="prep-card">
+            <h4><span class="prep-icon">&#127834;</span> Prep Grains in Bulk</h4>
+            <ul>
+                <li>Cook 4-5 cups dry rice/quinoa for the week</li>
+                <li>Quinoa: 1:2 ratio, 15 min simmer, fluff and cool</li>
+                <li>Brown rice: 1:2.5 ratio, 45 min or rice cooker</li>
+                <li>Divide into meal-sized containers immediately</li>
+                <li>Freeze extra portions flat in bags for quick reheating</li>
+            </ul>
+        </div>
+        <div class="prep-card">
+            <h4><span class="prep-icon">&#129482;</span> Freezer-Friendly Meals</h4>
+            <ul>
+                <li><strong>Lentil bolognese:</strong> Makes 8 servings, freezes 3 months</li>
+                <li><strong>Chickpea curry:</strong> Even better after freezing/reheating</li>
+                <li><strong>Bean chili:</strong> Portion into single servings for grab-and-go</li>
+                <li><strong>Veggie burgers:</strong> Shape, freeze on tray, bag once solid</li>
+                <li><strong>Soup portions:</strong> Freeze in muffin tins for perfect sizes</li>
+            </ul>
+        </div>
+        <div class="prep-card">
+            <h4><span class="prep-icon">&#128293;</span> Tofu & Tempeh Mastery</h4>
+            <ul>
+                <li><strong>Press tofu:</strong> 30 min under weight, then cube and marinate</li>
+                <li><strong>Freeze tofu first:</strong> Changes texture to chewy/meaty</li>
+                <li><strong>Batch bake tofu:</strong> 400F for 25 min, toss in sauce</li>
+                <li><strong>Crumble tempeh:</strong> Sautee with taco seasoning for quick protein</li>
+                <li>Marinated tofu keeps 5 days in fridge</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="smoothie-box">
+        <h4>High-Protein Smoothie Formulas (30-40g protein each)</h4>
+        <div class="smoothie-formula">
+            <div class="smoothie-ingredient">
+                <div class="s-emoji">&#129371;</div>
+                <span class="s-name">Protein Powder<br>(1 scoop pea/soy)</span>
+            </div>
+            <div class="smoothie-plus">+</div>
+            <div class="smoothie-ingredient">
+                <div class="s-emoji">&#127820;</div>
+                <span class="s-name">Frozen Fruit<br>(1 cup)</span>
+            </div>
+            <div class="smoothie-plus">+</div>
+            <div class="smoothie-ingredient">
+                <div class="s-emoji">&#129361;</div>
+                <span class="s-name">Seeds/Nut Butter<br>(1-2 tbsp)</span>
+            </div>
+            <div class="smoothie-plus">+</div>
+            <div class="smoothie-ingredient">
+                <div class="s-emoji">&#129376;</div>
+                <span class="s-name">Soy/Oat Milk<br>(1.5 cups)</span>
+            </div>
+            <div class="smoothie-plus">+</div>
+            <div class="smoothie-ingredient">
+                <div class="s-emoji">&#127811;</div>
+                <span class="s-name">Greens<br>(handful spinach)</span>
+            </div>
+        </div>
+        <div class="smoothie-examples">
+            <strong>Chocolate Power:</strong> Pea protein + frozen banana + cacao + PB + soy milk (38g protein)<br>
+            <strong>Berry Blast:</strong> Soy protein + mixed berries + hemp seeds + oat milk + spinach (34g protein)<br>
+            <strong>Tropical Green:</strong> Pea protein + mango + chia seeds + coconut water + kale (32g protein)<br>
+            <strong>Recovery Shake:</strong> Pea/rice blend + tart cherry + almond butter + soy milk + creatine (40g protein)
+        </div>
+    </div>
+
+    <div class="two-col">
+        <div class="info-card">
+            <h4>Sunday Prep Checklist (2 hours)</h4>
+            <ul>
+                <li>Cook 2 types of beans (Instant Pot)</li>
+                <li>Make 4 cups quinoa + 4 cups rice</li>
+                <li>Bake 2 blocks of tofu</li>
+                <li>Prep overnight oats x 3</li>
+                <li>Wash and chop all vegetables</li>
+                <li>Make 1 big batch sauce or curry</li>
+            </ul>
+        </div>
+        <div class="info-card orange">
+            <h4>Pantry Essentials</h4>
+            <ul>
+                <li>Canned beans (chickpeas, black, kidney)</li>
+                <li>Dried lentils (red and green)</li>
+                <li>Nutritional yeast (bulk bag)</li>
+                <li>Pea protein powder (unflavored)</li>
+                <li>Tahini, soy sauce, miso paste</li>
+                <li>Hemp seeds, chia seeds, flax meal</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page-footer">
+        <div class="brand">EvoFit <span>Meals</span></div>
+        <div>evofitmeals.com | Page 7</div>
+    </div>
+    <div class="footer-stripe"></div>
+</div>
+
+<!-- ===== PAGE 8: CTA + BACK ===== -->
+<div class="page cta-page">
+    <div class="cta-badge">Ready to Go Plant-Powered?</div>
+
+    <h2 class="cta-title">
+        AI-Powered <span class="green">Vegan</span> Meal Plans<br>Generated in Seconds
+    </h2>
+
+    <p class="cta-subtitle">
+        Stop guessing macros and Googling recipes. EvoFit Meals builds complete vegan meal plans tailored to your body, goals, and taste preferences using AI.
+    </p>
+
+    <div class="pricing-cards">
+        <div class="pricing-card">
+            <div class="plan-name">Starter</div>
+            <div class="plan-price">Free</div>
+            <div class="plan-desc">5 AI meal plans/month<br>Basic macro tracking<br>50+ vegan recipes</div>
+        </div>
+        <div class="pricing-card featured">
+            <div class="plan-name">Pro Athlete</div>
+            <div class="plan-price">$9<span>/mo</span></div>
+            <div class="plan-desc">Unlimited AI plans<br>Custom macro targets<br>500+ vegan recipes<br>Supplement tracking</div>
+        </div>
+        <div class="pricing-card">
+            <div class="plan-name">Team</div>
+            <div class="plan-price">$29<span>/mo</span></div>
+            <div class="plan-desc">Up to 10 athletes<br>Coach dashboard<br>Meal plan sharing<br>Priority support</div>
+        </div>
+    </div>
+
+    <a href="https://evofitmeals.com/get-started" class="cta-button">Start Your Free Vegan Plan</a>
+    <div class="cta-url">evofitmeals.com/get-started</div>
+
+    <div class="cta-features">
+        <div class="cta-feature"><span class="check">&#10003;</span> No credit card required</div>
+        <div class="cta-feature"><span class="check">&#10003;</span> Vegan-optimized AI</div>
+        <div class="cta-feature"><span class="check">&#10003;</span> Complete amino acid tracking</div>
+        <div class="cta-feature"><span class="check">&#10003;</span> Auto grocery lists</div>
+    </div>
+
+    <div class="cta-bottom">
+        <div class="cta-brand">EvoFit <span>Meals</span></div>
+        <div class="cta-legal">Copyright 2026 EvoFit Meals. All rights reserved. evofitmeals.com</div>
+    </div>
+
+    <div class="cta-bottom-bar"></div>
+</div>
+
+</body>
+</html>

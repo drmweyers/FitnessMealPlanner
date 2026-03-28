@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Macro Counting Made Easy - EvoFit Meals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #9333EA;
+    --purple-light: #A855F7;
+    --purple-dark: #7E22CE;
+    --orange: #F97316;
+    --orange-light: #FB923C;
+    --dark: #0A0A0F;
+    --dark-card: #141420;
+    --dark-surface: #1C1C2E;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --white: #FFFFFF;
+    --protein-color: #EF4444;
+    --carb-color: #3B82F6;
+    --fat-color: #EAB308;
+    --veg-color: #22C55E;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--dark);
+    background: var(--white);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .page {
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0.6in;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page:last-child {
+    page-break-after: auto;
+  }
+
+  /* ===== PAGE 1: COVER ===== */
+  .cover {
+    background: linear-gradient(135deg, var(--dark) 0%, #1a1035 40%, #2d1654 70%, var(--purple-dark) 100%);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -40%;
+    left: -20%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cover-badge {
+    background: linear-gradient(135deg, var(--orange), var(--orange-light));
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 24px;
+    border-radius: 50px;
+    margin-bottom: 40px;
+    z-index: 1;
+  }
+
+  .cover-icon {
+    font-size: 72px;
+    margin-bottom: 30px;
+    z-index: 1;
+  }
+
+  .cover h1 {
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    z-index: 1;
+    background: linear-gradient(135deg, var(--white) 0%, var(--gray-200) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cover h2 {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--gray-400);
+    max-width: 480px;
+    line-height: 1.5;
+    margin-bottom: 50px;
+    z-index: 1;
+  }
+
+  .cover-logo {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    z-index: 1;
+  }
+
+  .cover-logo span:first-child { color: var(--purple-light); }
+  .cover-logo span:last-child { color: var(--orange); }
+
+  .cover-url {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-top: 8px;
+    z-index: 1;
+  }
+
+  .cover-decorative-line {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--purple), var(--orange));
+    border-radius: 2px;
+    margin: 20px auto;
+    z-index: 1;
+  }
+
+  /* ===== INNER PAGES ===== */
+  .inner-page {
+    background: var(--white);
+    position: relative;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--gray-200);
+  }
+
+  .page-number {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--white);
+    background: var(--purple);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .page-brand {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-400);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .section-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+
+  .section-title .accent {
+    color: var(--purple);
+  }
+
+  .section-subtitle {
+    font-size: 14px;
+    color: var(--gray-500);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .intro-text {
+    font-size: 13.5px;
+    color: var(--gray-600);
+    line-height: 1.7;
+    margin-bottom: 18px;
+  }
+
+  /* ===== MACRO CARDS (Page 2) ===== */
+  .macro-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .macro-card {
+    border-radius: 12px;
+    padding: 18px 14px;
+    text-align: center;
+    color: var(--white);
+  }
+
+  .macro-card.protein { background: linear-gradient(135deg, #DC2626, #EF4444); }
+  .macro-card.carbs { background: linear-gradient(135deg, #2563EB, #3B82F6); }
+  .macro-card.fat { background: linear-gradient(135deg, #CA8A04, #EAB308); }
+
+  .macro-card-icon { font-size: 32px; margin-bottom: 8px; }
+
+  .macro-card h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .macro-card .cal-value {
+    font-size: 26px;
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .macro-card .cal-unit {
+    font-size: 12px;
+    opacity: 0.85;
+  }
+
+  .macro-card p {
+    font-size: 11px;
+    opacity: 0.9;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  .why-box {
+    background: var(--gray-100);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+
+  .why-box h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 8px;
+  }
+
+  .why-box ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .why-box ul li {
+    font-size: 12.5px;
+    color: var(--gray-600);
+    padding: 4px 0;
+    padding-left: 20px;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .why-box ul li::before {
+    content: '\2713';
+    position: absolute;
+    left: 0;
+    color: var(--purple);
+    font-weight: 700;
+  }
+
+  /* Pie charts */
+  .pie-charts-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .pie-chart-box {
+    text-align: center;
+    background: var(--dark);
+    border-radius: 12px;
+    padding: 14px 10px;
+    color: var(--white);
+  }
+
+  .pie-chart-box h5 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--gray-300);
+  }
+
+  .pie-svg { width: 90px; height: 90px; }
+
+  .pie-legend {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pie-legend span {
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* ===== CALCULATION (Page 3) ===== */
+  .calc-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .calc-step {
+    background: var(--gray-100);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-left: 4px solid var(--purple);
+  }
+
+  .calc-step-num {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 12px;
+    color: var(--purple);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .calc-step h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 4px;
+  }
+
+  .calc-step p {
+    font-size: 11.5px;
+    color: var(--gray-600);
+    line-height: 1.5;
+  }
+
+  .formula-box {
+    background: var(--dark);
+    color: var(--white);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-family: 'Inter', monospace;
+    font-size: 11.5px;
+    line-height: 1.8;
+    margin: 8px 0;
+  }
+
+  .formula-box .label {
+    color: var(--orange);
+    font-weight: 600;
+  }
+
+  .formula-box .highlight {
+    color: var(--purple-light);
+    font-weight: 600;
+  }
+
+  .example-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  .example-card {
+    background: var(--gray-100);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .example-card h5 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+
+  .example-card .detail {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-bottom: 6px;
+  }
+
+  .example-card table {
+    width: 100%;
+    font-size: 11px;
+  }
+
+  .example-card table td {
+    padding: 2px 0;
+    color: var(--gray-600);
+  }
+
+  .example-card table td:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: var(--dark);
+  }
+
+  /* ===== SPLITS TABLE (Page 4) ===== */
+  .splits-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+  }
+
+  .splits-table thead th {
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 10px 12px;
+    text-align: left;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .splits-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--gray-700);
+  }
+
+  .splits-table tbody tr:nth-child(even) {
+    background: var(--gray-100);
+  }
+
+  .splits-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .goal-badge {
+    display: inline-block;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    color: var(--white);
+  }
+
+  .goal-badge.fat-loss { background: var(--protein-color); }
+  .goal-badge.muscle { background: var(--carb-color); }
+  .goal-badge.maintain { background: var(--veg-color); }
+  .goal-badge.endurance { background: var(--orange); }
+  .goal-badge.keto { background: var(--fat-color); color: var(--dark); }
+
+  .calorie-examples {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .cal-example {
+    background: var(--dark);
+    color: var(--white);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .cal-example h5 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--orange);
+    margin-bottom: 4px;
+  }
+
+  .cal-example .cal-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .cal-example table {
+    width: 100%;
+    font-size: 10.5px;
+  }
+
+  .cal-example table td {
+    padding: 2px 0;
+    color: var(--gray-400);
+  }
+
+  .cal-example table td:last-child {
+    text-align: right;
+    color: var(--white);
+    font-weight: 600;
+  }
+
+  .split-tip {
+    background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+    color: var(--white);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 14px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .split-tip strong {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  /* ===== HAND PORTIONS (Page 5) ===== */
+  .hand-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .hand-card {
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    color: var(--white);
+    position: relative;
+  }
+
+  .hand-card.protein-hand { background: linear-gradient(135deg, #DC2626, #EF4444); }
+  .hand-card.carb-hand { background: linear-gradient(135deg, #2563EB, #3B82F6); }
+  .hand-card.fat-hand { background: linear-gradient(135deg, #CA8A04, #EAB308); }
+  .hand-card.veg-hand { background: linear-gradient(135deg, #16A34A, #22C55E); }
+
+  .hand-icon { font-size: 42px; margin-bottom: 8px; }
+
+  .hand-card h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .hand-card .hand-measure {
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 8px;
+  }
+
+  .hand-card .hand-grams {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .hand-card .hand-desc {
+    font-size: 11px;
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+
+  .portions-example {
+    background: var(--dark);
+    border-radius: 12px;
+    padding: 18px;
+    color: var(--white);
+  }
+
+  .portions-example h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--orange);
+  }
+
+  .portions-table {
+    width: 100%;
+    font-size: 11.5px;
+    border-collapse: collapse;
+  }
+
+  .portions-table th {
+    text-align: left;
+    color: var(--gray-400);
+    font-weight: 600;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--dark-surface);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .portions-table td {
+    padding: 5px 0;
+    color: var(--gray-300);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .portions-table td:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  /* ===== FOOD TABLE (Page 6) ===== */
+  .food-table-wrapper {
+    margin-bottom: 10px;
+  }
+
+  .food-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 9.2px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+  }
+
+  .food-table thead th {
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 8.5px;
+    padding: 5px 4px;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .food-table thead th:not(:first-child) {
+    text-align: center;
+  }
+
+  .food-table tbody td {
+    padding: 3.5px 4px;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--gray-700);
+  }
+
+  .food-table tbody td:not(:first-child) {
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .food-table tbody tr:nth-child(even) {
+    background: #FAFAFA;
+  }
+
+  .food-section-label {
+    background: var(--purple) !important;
+    color: var(--white) !important;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 9px !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .food-section-label td {
+    color: var(--white) !important;
+    padding: 4px 6px !important;
+    border-bottom: none !important;
+  }
+
+  /* ===== PLATE METHOD (Page 7) ===== */
+  .plate-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .plate-visual {
+    flex-shrink: 0;
+    width: 220px;
+    height: 220px;
+    position: relative;
+  }
+
+  .plate-info {
+    flex: 1;
+  }
+
+  .plate-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .plate-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .plate-item-text h5 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+
+  .plate-item-text p {
+    font-size: 11px;
+    color: var(--gray-500);
+    line-height: 1.4;
+  }
+
+  .prep-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .prep-card {
+    background: var(--gray-100);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .prep-card h5 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+
+  .prep-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .prep-card ul li {
+    font-size: 11px;
+    color: var(--gray-600);
+    padding: 2px 0;
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .prep-card ul li::before {
+    content: '\2022';
+    position: absolute;
+    left: 0;
+    color: var(--purple);
+    font-weight: 700;
+  }
+
+  .template-box {
+    background: var(--dark);
+    border-radius: 12px;
+    padding: 16px 18px;
+    color: var(--white);
+  }
+
+  .template-box h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--orange);
+    margin-bottom: 10px;
+  }
+
+  .template-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 11.5px;
+  }
+
+  .template-row:last-child { border-bottom: none; }
+
+  .template-meal {
+    font-weight: 600;
+    color: var(--gray-300);
+    width: 70px;
+    flex-shrink: 0;
+  }
+
+  .template-desc {
+    color: var(--gray-400);
+    flex: 1;
+  }
+
+  .template-macros {
+    color: var(--purple-light);
+    font-weight: 600;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  /* ===== CTA PAGE (Page 8) ===== */
+  .cta-page {
+    background: linear-gradient(135deg, var(--dark) 0%, #1a1035 40%, #2d1654 70%, var(--purple-dark) 100%);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+
+  .cta-page::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    left: -20%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cta-heading {
+    font-family: 'Outfit', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    z-index: 1;
+    line-height: 1.2;
+  }
+
+  .cta-subtext {
+    font-size: 16px;
+    color: var(--gray-400);
+    max-width: 440px;
+    line-height: 1.6;
+    margin-bottom: 36px;
+    z-index: 1;
+  }
+
+  .pricing-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 36px;
+    z-index: 1;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .pricing-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 20px 14px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .pricing-card.featured {
+    background: rgba(147, 51, 234, 0.2);
+    border-color: var(--purple);
+    position: relative;
+  }
+
+  .pricing-card.featured::before {
+    content: 'MOST POPULAR';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--orange);
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+
+  .pricing-card h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-400);
+    margin-bottom: 8px;
+  }
+
+  .pricing-price {
+    font-family: 'Outfit', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .pricing-price span {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--gray-500);
+  }
+
+  .pricing-desc {
+    font-size: 11px;
+    color: var(--gray-500);
+    line-height: 1.4;
+  }
+
+  .cta-button {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--orange), var(--orange-light));
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 16px 48px;
+    border-radius: 50px;
+    text-decoration: none;
+    z-index: 1;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 30px rgba(249, 115, 22, 0.3);
+  }
+
+  .cta-url {
+    font-size: 14px;
+    color: var(--gray-400);
+    z-index: 1;
+    margin-bottom: 40px;
+  }
+
+  .cta-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 30px;
+  }
+
+  .cta-feature {
+    text-align: center;
+  }
+
+  .cta-feature-icon {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+
+  .cta-feature p {
+    font-size: 11px;
+    color: var(--gray-400);
+    line-height: 1.3;
+  }
+
+  .cta-footer {
+    z-index: 1;
+    text-align: center;
+  }
+
+  .cta-footer .cover-logo {
+    margin-bottom: 6px;
+  }
+
+  .cta-footer p {
+    font-size: 11px;
+    color: var(--gray-500);
+  }
+
+  /* ===== PRINT ===== */
+  @media print {
+    .page { margin: 0; box-shadow: none; }
+    body { background: white; }
+  }
+
+  @page {
+    size: letter;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1: COVER ============ -->
+<div class="page cover">
+  <div class="cover-badge">Free Guide for Fitness Professionals</div>
+  <div class="cover-icon">&#x1F4CA;</div>
+  <h1>Macro Counting<br>Made Easy</h1>
+  <div class="cover-decorative-line"></div>
+  <h2>The Visual Guide Your Clients Will Actually Use</h2>
+  <div class="cover-logo">
+    <span>EvoFit</span><span>Meals</span>
+  </div>
+  <div class="cover-url">evofitmeals.com</div>
+</div>
+
+<!-- ============ PAGE 2: WHAT ARE MACROS ============ -->
+<div class="page inner-page">
+  <div class="page-header">
+    <div class="page-number">2</div>
+    <div class="page-brand">EvoFit Meals</div>
+  </div>
+
+  <h2 class="section-title">What Are <span class="accent">Macros?</span></h2>
+  <p class="section-subtitle">The three macronutrients that make up every calorie you eat.</p>
+
+  <p class="intro-text">
+    "Macros" is short for macronutrients -- the three nutrients your body needs in large amounts. Every food you eat is made up of some combination of protein, carbohydrates, and fat. Understanding macros lets you control <em>what</em> those calories do, not just how many you eat.
+  </p>
+
+  <div class="macro-cards">
+    <div class="macro-card protein">
+      <div class="macro-card-icon">&#x1F969;</div>
+      <h4>Protein</h4>
+      <div class="cal-value">4</div>
+      <div class="cal-unit">calories per gram</div>
+      <p>Builds and repairs muscle. Highest satiety. Essential for recovery and body composition.</p>
+    </div>
+    <div class="macro-card carbs">
+      <div class="macro-card-icon">&#x1F35E;</div>
+      <h4>Carbs</h4>
+      <div class="cal-value">4</div>
+      <div class="cal-unit">calories per gram</div>
+      <p>Primary energy source. Fuels workouts and brain function. Stored as glycogen in muscles.</p>
+    </div>
+    <div class="macro-card fat">
+      <div class="macro-card-icon">&#x1F951;</div>
+      <h4>Fat</h4>
+      <div class="cal-value">9</div>
+      <div class="cal-unit">calories per gram</div>
+      <p>Hormone production. Vitamin absorption. Cell health. Most calorie-dense macro.</p>
+    </div>
+  </div>
+
+  <div class="why-box">
+    <h4>&#x1F4A1; Why Macros Matter More Than Calories Alone</h4>
+    <ul>
+      <li>1,800 cal of protein-rich food builds muscle; 1,800 cal of sugar does not</li>
+      <li>Hitting protein targets preserves lean mass during fat loss phases</li>
+      <li>Adequate fat intake supports testosterone, estrogen, and thyroid hormones</li>
+      <li>Carb timing around workouts directly impacts performance and recovery</li>
+      <li>Two people at the same calorie level get vastly different results based on macro split</li>
+    </ul>
+  </div>
+
+  <div class="pie-charts-row">
+    <div class="pie-chart-box">
+      <h5>Fat Loss</h5>
+      <svg class="pie-svg" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EF4444" stroke-width="4" stroke-dasharray="40 60" stroke-dashoffset="25"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#3B82F6" stroke-width="4" stroke-dasharray="30 70" stroke-dashoffset="85"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EAB308" stroke-width="4" stroke-dasharray="30 70" stroke-dashoffset="55"/>
+      </svg>
+      <div class="pie-legend">
+        <span><span class="legend-dot" style="background:#EF4444"></span>P 40%</span>
+        <span><span class="legend-dot" style="background:#3B82F6"></span>C 30%</span>
+        <span><span class="legend-dot" style="background:#EAB308"></span>F 30%</span>
+      </div>
+    </div>
+    <div class="pie-chart-box">
+      <h5>Muscle Gain</h5>
+      <svg class="pie-svg" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EF4444" stroke-width="4" stroke-dasharray="30 70" stroke-dashoffset="25"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#3B82F6" stroke-width="4" stroke-dasharray="40 60" stroke-dashoffset="95"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EAB308" stroke-width="4" stroke-dasharray="30 70" stroke-dashoffset="55"/>
+      </svg>
+      <div class="pie-legend">
+        <span><span class="legend-dot" style="background:#EF4444"></span>P 30%</span>
+        <span><span class="legend-dot" style="background:#3B82F6"></span>C 40%</span>
+        <span><span class="legend-dot" style="background:#EAB308"></span>F 30%</span>
+      </div>
+    </div>
+    <div class="pie-chart-box">
+      <h5>Maintenance</h5>
+      <svg class="pie-svg" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EF4444" stroke-width="4" stroke-dasharray="30 70" stroke-dashoffset="25"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#3B82F6" stroke-width="4" stroke-dasharray="35 65" stroke-dashoffset="95"/>
+        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EAB308" stroke-width="4" stroke-dasharray="35 65" stroke-dashoffset="60"/>
+      </svg>
+      <div class="pie-legend">
+        <span><span class="legend-dot" style="background:#EF4444"></span>P 30%</span>
+        <span><span class="legend-dot" style="background:#3B82F6"></span>C 35%</span>
+        <span><span class="legend-dot" style="background:#EAB308"></span>F 35%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 3: HOW TO CALCULATE ============ -->
+<div class="page inner-page">
+  <div class="page-header">
+    <div class="page-number">3</div>
+    <div class="page-brand">EvoFit Meals</div>
+  </div>
+
+  <h2 class="section-title">How to <span class="accent">Calculate</span> Macros</h2>
+  <p class="section-subtitle">Three steps from body stats to a personalized macro plan.</p>
+
+  <div class="calc-steps">
+    <div class="calc-step">
+      <div class="calc-step-num">Step 1</div>
+      <h4>Calculate Basal Metabolic Rate (BMR)</h4>
+      <p>Calories your body burns at complete rest. Use the Mifflin-St Jeor equation:</p>
+      <div class="formula-box">
+        <span class="label">Men:</span> BMR = <span class="highlight">10</span> x weight(kg) + <span class="highlight">6.25</span> x height(cm) - <span class="highlight">5</span> x age - <span class="highlight">5</span><br>
+        <span class="label">Women:</span> BMR = <span class="highlight">10</span> x weight(kg) + <span class="highlight">6.25</span> x height(cm) - <span class="highlight">5</span> x age - <span class="highlight">161</span>
+      </div>
+    </div>
+
+    <div class="calc-step">
+      <div class="calc-step-num">Step 2</div>
+      <h4>Determine TDEE (Total Daily Energy Expenditure)</h4>
+      <p>Multiply BMR by your activity factor to get total calories burned per day:</p>
+      <div class="formula-box">
+        <span class="label">Sedentary</span> (desk job): BMR x <span class="highlight">1.2</span><br>
+        <span class="label">Light</span> (1-3 days/wk): BMR x <span class="highlight">1.375</span><br>
+        <span class="label">Moderate</span> (3-5 days/wk): BMR x <span class="highlight">1.55</span><br>
+        <span class="label">Active</span> (6-7 days/wk): BMR x <span class="highlight">1.725</span><br>
+        <span class="label">Very Active</span> (2x/day): BMR x <span class="highlight">1.9</span>
+      </div>
+    </div>
+
+    <div class="calc-step">
+      <div class="calc-step-num">Step 3</div>
+      <h4>Set Your Macro Split</h4>
+      <p>Apply your goal-based percentages (see page 4) to your TDEE. Divide protein and carb grams by 4, fat grams by 9.</p>
+      <div class="formula-box">
+        <span class="label">Protein grams</span> = (TDEE x <span class="highlight">protein %</span>) / 4<br>
+        <span class="label">Carb grams</span> = (TDEE x <span class="highlight">carb %</span>) / 4<br>
+        <span class="label">Fat grams</span> = (TDEE x <span class="highlight">fat %</span>) / 9
+      </div>
+    </div>
+  </div>
+
+  <div class="example-grid">
+    <div class="example-card">
+      <h5>&#x1F468; Male Example</h5>
+      <div class="detail">30 yrs, 82 kg (180 lb), 178 cm, Moderate Activity</div>
+      <table>
+        <tr><td>BMR</td><td>1,780 cal</td></tr>
+        <tr><td>TDEE (x 1.55)</td><td>2,759 cal</td></tr>
+        <tr><td>Goal: Fat Loss (-500)</td><td>2,259 cal</td></tr>
+      </table>
+      <div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--gray-200);">
+        <table>
+          <tr><td>Protein (40%)</td><td>226g</td></tr>
+          <tr><td>Carbs (30%)</td><td>169g</td></tr>
+          <tr><td>Fat (30%)</td><td>75g</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="example-card">
+      <h5>&#x1F469; Female Example</h5>
+      <div class="detail">28 yrs, 63 kg (139 lb), 165 cm, Light Activity</div>
+      <table>
+        <tr><td>BMR</td><td>1,370 cal</td></tr>
+        <tr><td>TDEE (x 1.375)</td><td>1,884 cal</td></tr>
+        <tr><td>Goal: Fat Loss (-400)</td><td>1,484 cal</td></tr>
+      </table>
+      <div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--gray-200);">
+        <table>
+          <tr><td>Protein (40%)</td><td>148g</td></tr>
+          <tr><td>Carbs (30%)</td><td>111g</td></tr>
+          <tr><td>Fat (30%)</td><td>49g</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 4: MACRO SPLITS BY GOAL ============ -->
+<div class="page inner-page">
+  <div class="page-header">
+    <div class="page-number">4</div>
+    <div class="page-brand">EvoFit Meals</div>
+  </div>
+
+  <h2 class="section-title">Macro Splits <span class="accent">by Goal</span></h2>
+  <p class="section-subtitle">Choose the right ratio based on your client's primary objective.</p>
+
+  <table class="splits-table">
+    <thead>
+      <tr>
+        <th>Goal</th>
+        <th>Protein</th>
+        <th>Carbs</th>
+        <th>Fat</th>
+        <th>Split</th>
+        <th>Best For</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="goal-badge fat-loss">Fat Loss</span></td>
+        <td><strong>40%</strong></td>
+        <td>30%</td>
+        <td>30%</td>
+        <td>40/30/30</td>
+        <td>Preserving muscle during deficit</td>
+      </tr>
+      <tr>
+        <td><span class="goal-badge muscle">Muscle Gain</span></td>
+        <td>30%</td>
+        <td><strong>40%</strong></td>
+        <td>30%</td>
+        <td>30/40/30</td>
+        <td>Fueling growth with surplus carbs</td>
+      </tr>
+      <tr>
+        <td><span class="goal-badge maintain">Maintenance</span></td>
+        <td>30%</td>
+        <td>35%</td>
+        <td>35%</td>
+        <td>30/35/35</td>
+        <td>Balanced long-term health</td>
+      </tr>
+      <tr>
+        <td><span class="goal-badge endurance">Endurance</span></td>
+        <td>25%</td>
+        <td><strong>50%</strong></td>
+        <td>25%</td>
+        <td>25/50/25</td>
+        <td>Runners, cyclists, triathletes</td>
+      </tr>
+      <tr>
+        <td><span class="goal-badge keto">Keto</span></td>
+        <td>25%</td>
+        <td>5%</td>
+        <td><strong>70%</strong></td>
+        <td>5/25/70</td>
+        <td>Therapeutic or fat-adapted athletes</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="calorie-examples">
+    <div class="cal-example">
+      <h5>Fat Loss @ 1,800 cal</h5>
+      <div class="cal-num">1,800</div>
+      <table>
+        <tr><td>Protein (40%)</td><td>180g</td></tr>
+        <tr><td>Carbs (30%)</td><td>135g</td></tr>
+        <tr><td>Fat (30%)</td><td>60g</td></tr>
+      </table>
+    </div>
+    <div class="cal-example">
+      <h5>Muscle Gain @ 2,800 cal</h5>
+      <div class="cal-num">2,800</div>
+      <table>
+        <tr><td>Protein (30%)</td><td>210g</td></tr>
+        <tr><td>Carbs (40%)</td><td>280g</td></tr>
+        <tr><td>Fat (30%)</td><td>93g</td></tr>
+      </table>
+    </div>
+    <div class="cal-example">
+      <h5>Endurance @ 3,200 cal</h5>
+      <div class="cal-num">3,200</div>
+      <table>
+        <tr><td>Protein (25%)</td><td>200g</td></tr>
+        <tr><td>Carbs (50%)</td><td>400g</td></tr>
+        <tr><td>Fat (25%)</td><td>89g</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="split-tip">
+    <strong>&#x1F4A1; Pro Tip:</strong> These are starting points, not rigid rules. Adjust every 2-4 weeks based on progress photos, measurements, and performance. If energy drops, increase carbs by 5%. If hunger spikes, increase protein by 5%. The best split is the one your client can actually stick with.
+  </div>
+</div>
+
+<!-- ============ PAGE 5: HAND PORTION GUIDE ============ -->
+<div class="page inner-page">
+  <div class="page-header">
+    <div class="page-number">5</div>
+    <div class="page-brand">EvoFit Meals</div>
+  </div>
+
+  <h2 class="section-title">The Hand <span class="accent">Portion Guide</span></h2>
+  <p class="section-subtitle">No scale? No problem. Your hand is a built-in portion tool that scales to your body size.</p>
+
+  <div class="hand-grid">
+    <div class="hand-card protein-hand">
+      <div class="hand-icon">&#x270B;</div>
+      <h4>Palm = 1 Protein Serving</h4>
+      <div class="hand-measure">Flat palm, fingers excluded</div>
+      <div class="hand-grams">~25g protein</div>
+      <div class="hand-desc">Chicken breast, fish fillet, lean beef, tofu block. Thickness and area of your palm.</div>
+    </div>
+    <div class="hand-card carb-hand">
+      <div class="hand-icon">&#x270A;</div>
+      <h4>Fist = 1 Carb Serving</h4>
+      <div class="hand-measure">Closed fist</div>
+      <div class="hand-grams">~25g carbs</div>
+      <div class="hand-desc">Cooked rice, pasta, potato, oats. One fist-sized portion of starchy carbs.</div>
+    </div>
+    <div class="hand-card fat-hand">
+      <div class="hand-icon">&#x1F44D;</div>
+      <h4>Thumb = 1 Fat Serving</h4>
+      <div class="hand-measure">Entire thumb length</div>
+      <div class="hand-grams">~10g fat</div>
+      <div class="hand-desc">Butter, oil, nut butter, cheese. One thumb-sized portion of added fats.</div>
+    </div>
+    <div class="hand-card veg-hand">
+      <div class="hand-icon">&#x1F932;</div>
+      <h4>Cupped Hand = 1 Fruit/Veg</h4>
+      <div class="hand-measure">Open cupped hand</div>
+      <div class="hand-grams">~1 serving</div>
+      <div class="hand-desc">Berries, chopped vegetables, fruit pieces. Fill your cupped hand for one serving.</div>
+    </div>
+  </div>
+
+  <div class="portions-example">
+    <h4>Daily Portions by Goal (Example: 2,000 cal Fat Loss)</h4>
+    <table class="portions-table">
+      <thead>
+        <tr>
+          <th>Meal</th>
+          <th>Protein (palms)</th>
+          <th>Carbs (fists)</th>
+          <th>Fats (thumbs)</th>
+          <th>Veggies (cups)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Breakfast</td>
+          <td>1 palm</td>
+          <td>1 fist</td>
+          <td>1 thumb</td>
+          <td>1 cupped hand</td>
+        </tr>
+        <tr>
+          <td>Lunch</td>
+          <td>2 palms</td>
+          <td>1 fist</td>
+          <td>1 thumb</td>
+          <td>2 cupped hands</td>
+        </tr>
+        <tr>
+          <td>Snack</td>
+          <td>1 palm</td>
+          <td>1 fist</td>
+          <td>1 thumb</td>
+          <td>1 cupped hand</td>
+        </tr>
+        <tr>
+          <td>Dinner</td>
+          <td>2 palms</td>
+          <td>1 fist</td>
+          <td>1 thumb</td>
+          <td>2 cupped hands</td>
+        </tr>
+        <tr style="border-top:2px solid rgba(255,255,255,0.15);">
+          <td><strong>Daily Total</strong></td>
+          <td><strong>6 palms</strong></td>
+          <td><strong>4 fists</strong></td>
+          <td><strong>4 thumbs</strong></td>
+          <td><strong>6 cups</strong></td>
+        </tr>
+        <tr>
+          <td><em>Approx grams</em></td>
+          <td><em>~150g P</em></td>
+          <td><em>~100g C</em></td>
+          <td><em>~40g F</em></td>
+          <td><em>unlimited</em></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ PAGE 6: 50 COMMON FOODS ============ -->
+<div class="page inner-page" style="padding: 0.45in 0.5in;">
+  <div class="page-header">
+    <div class="page-number">6</div>
+    <div class="page-brand">EvoFit Meals</div>
+  </div>
+
+  <h2 class="section-title" style="font-size:26px;">50 Common Foods <span class="accent">Macro Table</span></h2>
+  <p class="section-subtitle" style="margin-bottom:12px;">Per-serving macros organized by dominant macronutrient. Keep this page handy.</p>
+
+  <div class="food-table-wrapper">
+    <table class="food-table">
+      <thead>
+        <tr>
+          <th style="width:28%;">Food</th>
+          <th style="width:18%;">Serving</th>
+          <th>Cal</th>
+          <th>Protein</th>
+          <th>Carbs</th>
+          <th>Fat</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- PROTEIN DOMINANT -->
+        <tr class="food-section-label"><td colspan="6">&#x1F7E5; Protein-Dominant Foods</td></tr>
+        <tr><td>Chicken Breast</td><td>4 oz (113g)</td><td>130</td><td>26g</td><td>0g</td><td>3g</td></tr>
+        <tr><td>Turkey Breast</td><td>4 oz (113g)</td><td>120</td><td>26g</td><td>0g</td><td>1g</td></tr>
+        <tr><td>Lean Ground Beef (93%)</td><td>4 oz (113g)</td><td>170</td><td>22g</td><td>0g</td><td>9g</td></tr>
+        <tr><td>Salmon Fillet</td><td>4 oz (113g)</td><td>206</td><td>23g</td><td>0g</td><td>12g</td></tr>
+        <tr><td>Tuna (canned, water)</td><td>3 oz (85g)</td><td>90</td><td>20g</td><td>0g</td><td>1g</td></tr>
+        <tr><td>Shrimp</td><td>4 oz (113g)</td><td>100</td><td>24g</td><td>0g</td><td>1g</td></tr>
+        <tr><td>Cod Fillet</td><td>4 oz (113g)</td><td>90</td><td>20g</td><td>0g</td><td>1g</td></tr>
+        <tr><td>Egg (whole)</td><td>1 large</td><td>72</td><td>6g</td><td>0g</td><td>5g</td></tr>
+        <tr><td>Egg Whites</td><td>3 large</td><td>51</td><td>11g</td><td>0g</td><td>0g</td></tr>
+        <tr><td>Greek Yogurt (nonfat)</td><td>170g (6 oz)</td><td>100</td><td>17g</td><td>6g</td><td>1g</td></tr>
+        <tr><td>Cottage Cheese (low-fat)</td><td>1/2 cup (113g)</td><td>92</td><td>12g</td><td>5g</td><td>2g</td></tr>
+        <tr><td>Whey Protein Powder</td><td>1 scoop (30g)</td><td>120</td><td>24g</td><td>3g</td><td>1g</td></tr>
+        <tr><td>Tofu (firm)</td><td>1/2 cup (126g)</td><td>88</td><td>10g</td><td>2g</td><td>5g</td></tr>
+        <tr><td>Tempeh</td><td>3 oz (85g)</td><td>162</td><td>15g</td><td>9g</td><td>9g</td></tr>
+        <tr><td>Pork Tenderloin</td><td>4 oz (113g)</td><td>136</td><td>24g</td><td>0g</td><td>4g</td></tr>
+
+        <!-- CARB DOMINANT -->
+        <tr class="food-section-label"><td colspan="6">&#x1F7E6; Carb-Dominant Foods</td></tr>
+        <tr><td>White Rice (cooked)</td><td>1 cup (158g)</td><td>206</td><td>4g</td><td>45g</td><td>0g</td></tr>
+        <tr><td>Brown Rice (cooked)</td><td>1 cup (195g)</td><td>216</td><td>5g</td><td>45g</td><td>2g</td></tr>
+        <tr><td>Oats (dry)</td><td>1/2 cup (40g)</td><td>150</td><td>5g</td><td>27g</td><td>3g</td></tr>
+        <tr><td>Sweet Potato</td><td>1 medium (130g)</td><td>112</td><td>2g</td><td>26g</td><td>0g</td></tr>
+        <tr><td>Russet Potato</td><td>1 medium (173g)</td><td>164</td><td>4g</td><td>37g</td><td>0g</td></tr>
+        <tr><td>Banana</td><td>1 medium (118g)</td><td>105</td><td>1g</td><td>27g</td><td>0g</td></tr>
+        <tr><td>Apple</td><td>1 medium (182g)</td><td>95</td><td>0g</td><td>25g</td><td>0g</td></tr>
+        <tr><td>Blueberries</td><td>1 cup (148g)</td><td>84</td><td>1g</td><td>21g</td><td>0g</td></tr>
+        <tr><td>Whole Wheat Bread</td><td>1 slice (43g)</td><td>110</td><td>4g</td><td>20g</td><td>2g</td></tr>
+        <tr><td>Pasta (cooked)</td><td>1 cup (140g)</td><td>220</td><td>8g</td><td>43g</td><td>1g</td></tr>
+        <tr><td>Quinoa (cooked)</td><td>1 cup (185g)</td><td>222</td><td>8g</td><td>39g</td><td>4g</td></tr>
+        <tr><td>Black Beans (cooked)</td><td>1/2 cup (86g)</td><td>114</td><td>8g</td><td>20g</td><td>0g</td></tr>
+        <tr><td>Lentils (cooked)</td><td>1/2 cup (99g)</td><td>115</td><td>9g</td><td>20g</td><td>0g</td></tr>
+        <tr><td>Corn Tortilla</td><td>1 tortilla (26g)</td><td>52</td><td>1g</td><td>11g</td><td>1g</td></tr>
+        <tr><td>Honey</td><td>1 tbsp (21g)</td><td>64</td><td>0g</td><td>17g</td><td>0g</td></tr>
+
+        <!-- FAT DOMINANT -->
+        <tr class="food-section-label"><td colspan="6">&#x1F7E8; Fat-Dominant Foods</td></tr>
+        <tr><td>Avocado</td><td>1/2 medium (68g)</td><td>114</td><td>1g</td><td>6g</td><td>10g</td></tr>
+        <tr><td>Almonds</td><td>1 oz (28g)</td><td>164</td><td>6g</td><td>6g</td><td>14g</td></tr>
+        <tr><td>Walnuts</td><td>1 oz (28g)</td><td>185</td><td>4g</td><td>4g</td><td>18g</td></tr>
+        <tr><td>Peanut Butter</td><td>2 tbsp (32g)</td><td>190</td><td>7g</td><td>7g</td><td>16g</td></tr>
+        <tr><td>Almond Butter</td><td>2 tbsp (32g)</td><td>196</td><td>7g</td><td>6g</td><td>18g</td></tr>
+        <tr><td>Olive Oil</td><td>1 tbsp (14g)</td><td>119</td><td>0g</td><td>0g</td><td>14g</td></tr>
+        <tr><td>Coconut Oil</td><td>1 tbsp (14g)</td><td>121</td><td>0g</td><td>0g</td><td>14g</td></tr>
+        <tr><td>Butter</td><td>1 tbsp (14g)</td><td>102</td><td>0g</td><td>0g</td><td>12g</td></tr>
+        <tr><td>Cheddar Cheese</td><td>1 oz (28g)</td><td>113</td><td>7g</td><td>0g</td><td>9g</td></tr>
+        <tr><td>Dark Chocolate (70%)</td><td>1 oz (28g)</td><td>170</td><td>2g</td><td>13g</td><td>12g</td></tr>
+
+        <!-- MIXED / VEGGIES -->
+        <tr class="food-section-label"><td colspan="6">&#x1F7E9; Vegetables &amp; Low-Cal Staples</td></tr>
+        <tr><td>Broccoli</td><td>1 cup (91g)</td><td>31</td><td>3g</td><td>6g</td><td>0g</td></tr>
+        <tr><td>Spinach (raw)</td><td>2 cups (60g)</td><td>14</td><td>2g</td><td>2g</td><td>0g</td></tr>
+        <tr><td>Bell Pepper</td><td>1 medium (119g)</td><td>31</td><td>1g</td><td>6g</td><td>0g</td></tr>
+        <tr><td>Zucchini</td><td>1 medium (196g)</td><td>33</td><td>2g</td><td>6g</td><td>1g</td></tr>
+        <tr><td>Asparagus</td><td>6 spears (90g)</td><td>20</td><td>2g</td><td>4g</td><td>0g</td></tr>
+        <tr><td>Tomato</td><td>1 medium (123g)</td><td>22</td><td>1g</td><td>5g</td><td>0g</td></tr>
+        <tr><td>Cucumber</td><td>1/2 medium (100g)</td><td>15</td><td>1g</td><td>4g</td><td>0g</td></tr>
+        <tr><td>Cauliflower</td><td>1 cup (107g)</td><td>27</td><td>2g</td><td>5g</td><td>0g</td></tr>
+        <tr><td>Green Beans</td><td>1 cup (125g)</td><td>34</td><td>2g</td><td>8g</td><td>0g</td></tr>
+        <tr><td>Mixed Greens Salad</td><td>2 cups (85g)</td><td>18</td><td>2g</td><td>3g</td><td>0g</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ PAGE 7: TRACKING WITHOUT AN APP ============ -->
+<div class="page inner-page">
+  <div class="page-header">
+    <div class="page-number">7</div>
+    <div class="page-brand">EvoFit Meals</div>
+  </div>
+
+  <h2 class="section-title">Tracking <span class="accent">Without an App</span></h2>
+  <p class="section-subtitle">The plate method, pre-portioned prep, and visual templates your clients can use immediately.</p>
+
+  <div class="plate-container">
+    <div class="plate-visual">
+      <svg viewBox="0 0 220 220" width="220" height="220">
+        <!-- Plate circle -->
+        <circle cx="110" cy="110" r="105" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="2"/>
+        <!-- Vegetables half -->
+        <path d="M110,5 A105,105 0 0,1 110,215 L110,110 Z" fill="#22C55E" opacity="0.25"/>
+        <path d="M110,5 A105,105 0 0,1 110,215 L110,110 Z" fill="none" stroke="#22C55E" stroke-width="2"/>
+        <!-- Protein quarter -->
+        <path d="M110,215 A105,105 0 0,1 5,110 L110,110 Z" fill="#EF4444" opacity="0.2"/>
+        <path d="M110,215 A105,105 0 0,1 5,110 L110,110 Z" fill="none" stroke="#EF4444" stroke-width="2"/>
+        <!-- Carbs quarter -->
+        <path d="M5,110 A105,105 0 0,1 110,5 L110,110 Z" fill="#3B82F6" opacity="0.2"/>
+        <path d="M5,110 A105,105 0 0,1 110,5 L110,110 Z" fill="none" stroke="#3B82F6" stroke-width="2"/>
+        <!-- Labels -->
+        <text x="150" y="100" font-family="Outfit" font-size="13" font-weight="700" fill="#16A34A">1/2</text>
+        <text x="138" y="116" font-family="Outfit" font-size="10" fill="#16A34A">Veggies</text>
+        <text x="58" y="155" font-family="Outfit" font-size="13" font-weight="700" fill="#DC2626">1/4</text>
+        <text x="48" y="171" font-family="Outfit" font-size="10" fill="#DC2626">Protein</text>
+        <text x="55" y="70" font-family="Outfit" font-size="13" font-weight="700" fill="#2563EB">1/4</text>
+        <text x="50" y="86" font-family="Outfit" font-size="10" fill="#2563EB">Carbs</text>
+      </svg>
+    </div>
+    <div class="plate-info">
+      <div class="plate-item">
+        <div class="plate-dot" style="background:rgba(34,197,94,0.15);">&#x1F96C;</div>
+        <div class="plate-item-text">
+          <h5 style="color:#16A34A;">1/2 Plate: Vegetables</h5>
+          <p>Non-starchy veggies. Broccoli, spinach, peppers, salad greens. Nearly unlimited -- high volume, low calories, loaded with fiber and micronutrients.</p>
+        </div>
+      </div>
+      <div class="plate-item">
+        <div class="plate-dot" style="background:rgba(239,68,68,0.15);">&#x1F357;</div>
+        <div class="plate-item-text">
+          <h5 style="color:#DC2626;">1/4 Plate: Protein</h5>
+          <p>Lean meat, fish, eggs, tofu. About 1-2 palm-sized portions. Prioritize this quarter first to hit protein targets.</p>
+        </div>
+      </div>
+      <div class="plate-item">
+        <div class="plate-dot" style="background:rgba(59,130,246,0.15);">&#x1F35A;</div>
+        <div class="plate-item-text">
+          <h5 style="color:#2563EB;">1/4 Plate: Carbs</h5>
+          <p>Rice, potato, pasta, bread. About 1 fist-sized portion. Increase this quarter on training days, reduce on rest days.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prep-grid">
+    <div class="prep-card">
+      <h5>&#x1F4E6; Pre-Portioned Meal Prep</h5>
+      <ul>
+        <li>Cook proteins in bulk (Sunday batch cook)</li>
+        <li>Pre-portion into containers with a scale once</li>
+        <li>Pair each protein with a carb and vegetable</li>
+        <li>Label containers with macro totals</li>
+        <li>Stack 4-5 days in the fridge at once</li>
+        <li>Grab-and-go eliminates daily decisions</li>
+      </ul>
+    </div>
+    <div class="prep-card">
+      <h5>&#x1F4CB; The Mental Checklist Method</h5>
+      <ul>
+        <li>Each meal: "Do I have a protein source?"</li>
+        <li>Each meal: "Do I have vegetables?"</li>
+        <li>Each meal: "Is my carb portion fist-sized?"</li>
+        <li>Each meal: "Is my fat portion thumb-sized?"</li>
+        <li>End of day: tally palm/fist/thumb counts</li>
+        <li>Adjust tomorrow if today was off-target</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="template-box">
+    <h4>Sample Day Template (Fat Loss, ~1,800 cal)</h4>
+    <div class="template-row">
+      <div class="template-meal">Breakfast</div>
+      <div class="template-desc">3 egg whites + 1 whole egg, 1/2 cup oats, 1 cup berries</div>
+      <div class="template-macros">P 22g | C 35g | F 8g</div>
+    </div>
+    <div class="template-row">
+      <div class="template-meal">Lunch</div>
+      <div class="template-desc">6 oz chicken breast, 1 cup rice, 2 cups mixed greens, 1 tbsp olive oil</div>
+      <div class="template-macros">P 42g | C 50g | F 16g</div>
+    </div>
+    <div class="template-row">
+      <div class="template-meal">Snack</div>
+      <div class="template-desc">1 scoop whey protein, 1 medium apple, 1 tbsp almond butter</div>
+      <div class="template-macros">P 28g | C 30g | F 10g</div>
+    </div>
+    <div class="template-row">
+      <div class="template-meal">Dinner</div>
+      <div class="template-desc">5 oz salmon, 1 medium sweet potato, 2 cups broccoli</div>
+      <div class="template-macros">P 32g | C 32g | F 14g</div>
+    </div>
+    <div class="template-row" style="border-top:2px solid rgba(255,255,255,0.15); padding-top:8px;">
+      <div class="template-meal" style="color:var(--orange);font-weight:700;">TOTAL</div>
+      <div class="template-desc" style="color:var(--gray-300);font-weight:600;">~1,790 calories</div>
+      <div class="template-macros" style="color:var(--white);">P 124g | C 147g | F 48g</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 8: CTA + BACK ============ -->
+<div class="page cta-page">
+  <div class="cta-heading">
+    Stop Guessing.<br>Start <span style="color:var(--orange);">Serving.</span>
+  </div>
+  <p class="cta-subtext">
+    Your clients deserve nutrition plans built on real data, not generic templates. EvoFit Meals automates macro-perfect meal plans so you can focus on coaching.
+  </p>
+
+  <div class="pricing-cards">
+    <div class="pricing-card">
+      <h4>Starter</h4>
+      <div class="pricing-price">$49<span>/mo</span></div>
+      <div class="pricing-desc">Up to 25 clients<br>Custom meal plans<br>Macro calculator</div>
+    </div>
+    <div class="pricing-card featured">
+      <h4>Professional</h4>
+      <div class="pricing-price">$99<span>/mo</span></div>
+      <div class="pricing-desc">Up to 100 clients<br>Branded PDF exports<br>Shopping lists + prep guides</div>
+    </div>
+    <div class="pricing-card">
+      <h4>Enterprise</h4>
+      <div class="pricing-price">$199<span>/mo</span></div>
+      <div class="pricing-desc">Unlimited clients<br>White-label branding<br>API access + integrations</div>
+    </div>
+  </div>
+
+  <a href="https://evofitmeals.com/get-started" class="cta-button">Get Started Free</a>
+  <div class="cta-url">evofitmeals.com/get-started</div>
+
+  <div class="cta-features">
+    <div class="cta-feature">
+      <div class="cta-feature-icon">&#x26A1;</div>
+      <p><strong>Auto-Generated</strong><br>Meal plans in seconds,<br>not hours</p>
+    </div>
+    <div class="cta-feature">
+      <div class="cta-feature-icon">&#x1F4CA;</div>
+      <p><strong>Macro-Perfect</strong><br>Hit exact targets for<br>every client goal</p>
+    </div>
+    <div class="cta-feature">
+      <div class="cta-feature-icon">&#x1F4F1;</div>
+      <p><strong>Client Portal</strong><br>Branded experience<br>your clients love</p>
+    </div>
+  </div>
+
+  <div class="cta-footer">
+    <div class="cover-logo">
+      <span>EvoFit</span><span>Meals</span>
+    </div>
+    <p>evofitmeals.com | hello@evofitmeals.com</p>
+  </div>
+</div>
+
+</body>
+</html>

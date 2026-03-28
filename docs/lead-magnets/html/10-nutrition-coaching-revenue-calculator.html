@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nutrition Coaching Revenue Calculator - EvoFitMeals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: #E0E0E0;
+    background: #0A0A0F;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 0;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+    background: #0A0A0F;
+  }
+
+  .page:last-child {
+    page-break-after: avoid;
+  }
+
+  .page-inner {
+    padding: 48px 52px;
+    min-height: 297mm;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Brand Colors */
+  .text-purple { color: #9333EA; }
+  .text-orange { color: #F97316; }
+  .text-green { color: #22C55E; }
+  .text-white { color: #FFFFFF; }
+  .text-light { color: #A0A0B0; }
+  .bg-purple { background-color: #9333EA; }
+  .bg-orange { background-color: #F97316; }
+
+  /* Common Elements */
+  .page-number {
+    position: absolute;
+    bottom: 28px;
+    right: 52px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: #555;
+    z-index: 10;
+  }
+
+  .page-number span {
+    color: #9333EA;
+    font-weight: 600;
+  }
+
+  .section-tag {
+    display: inline-block;
+    background: rgba(147, 51, 234, 0.15);
+    border: 1px solid rgba(147, 51, 234, 0.3);
+    color: #9333EA;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .section-subtitle {
+    font-size: 16px;
+    color: #A0A0B0;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .divider {
+    height: 3px;
+    background: linear-gradient(90deg, #9333EA, #F97316);
+    border-radius: 2px;
+    margin: 24px 0;
+    width: 80px;
+  }
+
+  .footer-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #9333EA, #F97316, #22C55E);
+  }
+
+  .logo-text {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #9333EA;
+    position: absolute;
+    bottom: 28px;
+    left: 52px;
+  }
+
+  /* Card styles */
+  .card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-highlight {
+    background: rgba(147, 51, 234, 0.08);
+    border: 1px solid rgba(147, 51, 234, 0.25);
+  }
+
+  .card-green {
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+  }
+
+  .card-orange {
+    background: rgba(249, 115, 22, 0.08);
+    border: 1px solid rgba(249, 115, 22, 0.25);
+  }
+
+  /* Table styles */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  table th {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #9333EA;
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 2px solid rgba(147, 51, 234, 0.3);
+  }
+
+  table td {
+    font-size: 14px;
+    color: #D0D0D8;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  table tr:last-child td {
+    border-bottom: none;
+  }
+
+  table .highlight-row td {
+    background: rgba(34, 197, 94, 0.08);
+    color: #22C55E;
+    font-weight: 600;
+  }
+
+  .money {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    color: #22C55E;
+  }
+
+  .money-big {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 42px;
+    color: #22C55E;
+    line-height: 1;
+  }
+
+  /* Stat boxes */
+  .stat-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-box .stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .stat-box .stat-label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Bullet list */
+  .check-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .check-list li {
+    padding: 8px 0 8px 32px;
+    position: relative;
+    font-size: 14px;
+    color: #D0D0D8;
+    line-height: 1.5;
+  }
+
+  .check-list li::before {
+    content: "\2713";
+    position: absolute;
+    left: 0;
+    color: #22C55E;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  /* Icon circles */
+  .icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  /* Pricing cards */
+  .pricing-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    flex: 1;
+  }
+
+  .pricing-card.featured {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(249, 115, 22, 0.1));
+    border: 2px solid #9333EA;
+    transform: scale(1.03);
+  }
+
+  .pricing-card .price {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 36px;
+    color: #FFFFFF;
+    margin: 12px 0 4px;
+  }
+
+  .pricing-card .price-note {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 16px;
+  }
+
+  .pricing-card .plan-name {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: #FFFFFF;
+    margin-bottom: 4px;
+  }
+
+  /* CTA Button */
+  .cta-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #9333EA, #7C3AED);
+    color: #FFFFFF;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 14px 36px;
+    border-radius: 10px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+  }
+
+  .cta-btn-orange {
+    background: linear-gradient(135deg, #F97316, #EA580C);
+  }
+
+  /* Formula box */
+  .formula-box {
+    background: rgba(147, 51, 234, 0.1);
+    border: 1px dashed rgba(147, 51, 234, 0.4);
+    border-radius: 12px;
+    padding: 20px 28px;
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .formula-box .formula {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: #FFFFFF;
+  }
+
+  .formula-box .formula span {
+    color: #F97316;
+  }
+
+  /* Glow effects */
+  .glow-purple {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(147, 51, 234, 0.15), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .glow-green {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.12), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .glow-orange {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.12), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  @media print {
+    body { background: #0A0A0F; }
+    .page { margin: 0; box-shadow: none; }
+  }
+
+  @media screen {
+    .page {
+      margin: 20px auto;
+      box-shadow: 0 0 60px rgba(147, 51, 234, 0.1);
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== PAGE 1: COVER ==================== -->
+<div class="page" style="background: linear-gradient(160deg, #0A0A0F 0%, #0D1A0F 40%, #0A0A0F 100%);">
+  <div class="glow-green" style="top: -80px; right: -60px;"></div>
+  <div class="glow-purple" style="bottom: 100px; left: -100px;"></div>
+  <div class="glow-green" style="bottom: -50px; right: 100px; width: 200px; height: 200px;"></div>
+
+  <div class="page-inner" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+
+    <div style="margin-bottom: 40px;">
+      <div style="display: inline-block; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.3); color: #22C55E; font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; padding: 8px 20px; border-radius: 24px;">
+        Revenue Growth Guide
+      </div>
+    </div>
+
+    <div style="font-size: 72px; margin-bottom: 24px;">
+      &#128176;
+    </div>
+
+    <h1 style="font-family: 'Outfit', sans-serif; font-size: 44px; font-weight: 900; color: #FFFFFF; line-height: 1.15; margin-bottom: 16px; max-width: 520px;">
+      Nutrition Coaching<br>
+      <span style="background: linear-gradient(135deg, #22C55E, #16A34A); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Revenue Calculator</span>
+    </h1>
+
+    <p style="font-size: 20px; color: #A0A0B0; max-width: 440px; line-height: 1.6; margin-bottom: 48px;">
+      How to Add <span style="color: #22C55E; font-weight: 700;">$3,000/Month</span><br>With Meal Planning
+    </p>
+
+    <div style="display: flex; gap: 24px; margin-bottom: 56px;">
+      <div style="text-align: center;">
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 36px; color: #22C55E;">$36K+</div>
+        <div style="font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 1px;">Annual Revenue</div>
+      </div>
+      <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+      <div style="text-align: center;">
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 36px; color: #F97316;">3x</div>
+        <div style="font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 1px;">Client Retention</div>
+      </div>
+      <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+      <div style="text-align: center;">
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 36px; color: #9333EA;">77%</div>
+        <div style="font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 1px;">Untapped Market</div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 10px; padding: 14px 24px;">
+      <span style="font-size: 18px;">&#9889;</span>
+      <span style="color: #D0D0D8; font-size: 13px;">Includes 3 revenue models + interactive calculator + ROI analysis</span>
+    </div>
+
+    <div style="position: absolute; bottom: 52px; left: 0; right: 0; text-align: center;">
+      <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; color: #9333EA;">EvoFit</span><span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 18px; color: #F97316;">Meals</span>
+      <span style="color: #555; font-size: 13px; margin-left: 12px;">evofitmeals.com</span>
+    </div>
+  </div>
+
+  <div class="footer-bar"></div>
+</div>
+
+<!-- ==================== PAGE 2: THE NUTRITION REVENUE OPPORTUNITY ==================== -->
+<div class="page">
+  <div class="glow-purple" style="top: -100px; right: -80px;"></div>
+  <div class="glow-green" style="bottom: -50px; left: -60px; width: 200px; height: 200px;"></div>
+
+  <div class="page-inner">
+    <div class="section-tag">The Opportunity</div>
+    <h2 class="section-title">The Nutrition Revenue<br>Opportunity</h2>
+    <p class="section-subtitle">Most trainers leave thousands on the table every month by not offering nutrition services.</p>
+    <div class="divider"></div>
+
+    <!-- Big stat -->
+    <div style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(34, 197, 94, 0.08)); border: 1px solid rgba(147, 51, 234, 0.25); border-radius: 16px; padding: 28px 32px; margin-bottom: 28px; text-align: center;">
+      <div style="font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">Trainers Currently Offering Nutrition</div>
+      <div style="font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 72px; color: #9333EA; line-height: 1;">23%</div>
+      <div style="font-size: 14px; color: #A0A0B0; margin-top: 8px;">That means <span style="color: #22C55E; font-weight: 700;">77% of trainers</span> are missing this revenue stream entirely</div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-box" style="border-color: rgba(34, 197, 94, 0.2);">
+        <div class="stat-value text-green">$75-$150</div>
+        <div class="stat-label">Add-on Revenue Per Client / Month</div>
+      </div>
+      <div class="stat-box" style="border-color: rgba(249, 115, 22, 0.2);">
+        <div class="stat-value text-orange">3x</div>
+        <div class="stat-label">Client Retention Increase</div>
+      </div>
+      <div class="stat-box" style="border-color: rgba(147, 51, 234, 0.2);">
+        <div class="stat-value text-purple">89%</div>
+        <div class="stat-label">Clients Want Nutrition Guidance</div>
+      </div>
+    </div>
+
+    <div class="card card-green">
+      <h4 style="font-size: 16px; color: #22C55E; margin-bottom: 12px;">&#128200; Why Nutrition = Revenue Growth</h4>
+      <ul class="check-list">
+        <li>Clients already trust you with their fitness -- nutrition is a natural extension</li>
+        <li>Meal plans take minutes to create with the right tool (not hours)</li>
+        <li>Nutrition clients stay <strong style="color: #22C55E;">3x longer</strong> than training-only clients</li>
+        <li>Average add-on revenue of <strong style="color: #22C55E;">$75-$150 per client per month</strong></li>
+        <li>Zero additional space, equipment, or scheduling needed</li>
+      </ul>
+    </div>
+
+    <div style="background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 10px; padding: 16px 20px; margin-top: 8px;">
+      <p style="font-size: 13px; color: #D0D0D8; line-height: 1.6;">
+        <span style="color: #F97316; font-weight: 700;">Bottom line:</span> If you have 10+ clients and no nutrition offering, you're leaving <span style="color: #22C55E; font-weight: 600;">$750-$1,500/month</span> on the table -- every single month.
+      </p>
+    </div>
+  </div>
+
+  <div class="logo-text">EvoFitMeals</div>
+  <div class="page-number">Page <span>2</span> of 8</div>
+  <div class="footer-bar"></div>
+</div>
+
+<!-- ==================== PAGE 3: REVENUE MODEL 1 - PER-PLAN PRICING ==================== -->
+<div class="page">
+  <div class="glow-purple" style="top: 50px; left: -100px;"></div>
+  <div class="glow-orange" style="bottom: -30px; right: -60px;"></div>
+
+  <div class="page-inner">
+    <div class="section-tag">Revenue Model 1</div>
+    <h2 class="section-title">Per-Plan Pricing</h2>
+    <p class="section-subtitle">The easiest entry point -- charge per custom meal plan with no ongoing commitment.</p>
+    <div class="divider"></div>
+
+    <div class="formula-box">
+      <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">Revenue Formula</div>
+      <div class="formula">Clients <span>&times;</span> Price/Plan <span>&times;</span> Plans/Month <span>=</span> Monthly Revenue</div>
+    </div>
+
+    <!-- Scenario Table -->
+    <div class="card" style="padding: 0; overflow: hidden; margin-top: 20px;">
+      <div style="background: rgba(147, 51, 234, 0.08); padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <h4 style="font-size: 14px; color: #FFFFFF;">&#128202; Per-Plan Revenue Scenarios</h4>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Clients</th>
+            <th>Price/Plan</th>
+            <th>Plans/Month</th>
+            <th>Monthly Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>5</td>
+            <td>$50</td>
+            <td>2</td>
+            <td class="money">$500</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>$50</td>
+            <td>2</td>
+            <td class="money">$1,000</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>$75</td>
+            <td>2</td>
+            <td class="money">$1,500</td>
+          </tr>
+          <tr>
+            <td>15</td>
+            <td>$75</td>
+            <td>2</td>
+            <td class="money">$2,250</td>
+          </tr>
+          <tr class="highlight-row">
+            <td>20</td>
+            <td>$100</td>
+            <td>2</td>
+            <td class="money" style="font-size: 16px;">$4,000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display: flex; gap: 16px; margin-top: 24px;">
+      <div class="card card-green" style="flex: 1; text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 8px;">&#9989;</div>
+        <h5 style="color: #22C55E; font-size: 13px; margin-bottom: 6px;">Pros</h5>
+        <p style="font-size: 12px; color: #A0A0B0; line-height: 1.5;">Low client commitment. Easy to sell as an add-on. Flexible pricing per plan complexity.</p>
+      </div>
+      <div class="card card-orange" style="flex: 1; text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 8px;">&#9888;&#65039;</div>
+        <h5 style="color: #F97316; font-size: 13px; margin-bottom: 6px;">Considerations</h5>
+        <p style="font-size: 12px; color: #A0A0B0; line-height: 1.5;">Less predictable revenue. Requires ongoing plan creation. Clients may skip months.</p>
+      </div>
+    </div>
+
+    <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 10px; padding: 16px 20px; margin-top: 20px; text-align: center;">
+      <p style="font-size: 14px; color: #D0D0D8;">
+        <strong style="color: #22C55E;">Target scenario:</strong> 10 clients &times; $75/plan &times; 2 plans/month = <span class="money" style="font-size: 18px;">$1,500/month</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="logo-text">EvoFitMeals</div>
+  <div class="page-number">Page <span>3</span> of 8</div>
+  <div class="footer-bar"></div>
+</div>
+
+<!-- ==================== PAGE 4: REVENUE MODEL 2 - MONTHLY RETAINER ==================== -->
+<div class="page">
+  <div class="glow-green" style="top: -50px; right: -80px;"></div>
+  <div class="glow-purple" style="bottom: 50px; left: -60px;"></div>
+
+  <div class="page-inner">
+    <div class="section-tag">Revenue Model 2</div>
+    <h2 class="section-title">Monthly Retainer</h2>
+    <p class="section-subtitle">Ongoing nutrition coaching with predictable, recurring revenue every month.</p>
+    <div class="divider"></div>
+
+    <div class="formula-box">
+      <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">Revenue Formula</div>
+      <div class="formula">Active Clients <span>&times;</span> Monthly Retainer <span>=</span> Recurring Revenue</div>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden; margin-top: 20px;">
+      <div style="background: rgba(34, 197, 94, 0.08); padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <h4 style="font-size: 14px; color: #FFFFFF;">&#128176; Monthly Retainer Revenue Scenarios</h4>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Clients</th>
+            <th>Monthly Rate</th>
+            <th>Monthly Revenue</th>
+            <th>Annual Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>5</td>
+            <td>$100</td>
+            <td class="money">$500</td>
+            <td class="money">$6,000</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>$100</td>
+            <td class="money">$1,000</td>
+            <td class="money">$12,000</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>$150</td>
+            <td class="money">$1,500</td>
+            <td class="money">$18,000</td>
+          </tr>
+          <tr class="highlight-row">
+            <td>15</td>
+            <td>$150</td>
+            <td class="money" style="font-size: 16px;">$2,250</td>
+            <td class="money" style="font-size: 16px;">$27,000</td>
+          </tr>
+          <tr>
+            <td>20</td>
+            <td>$200</td>
+            <td class="money">$4,000</td>
+            <td class="money">$48,000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 style="color: #FFFFFF; font-size: 15px; margin: 24px 0 14px;">What's Included in a Monthly Retainer:</h4>
+    <div style="display: flex; gap: 16px;">
+      <div class="card" style="flex: 1;">
+        <h5 style="color: #9333EA; font-size: 13px; margin-bottom: 10px;">&#128220; $100/Month Tier</h5>
+        <ul class="check-list" style="font-size: 12px;">
+          <li>2 custom meal plans/month</li>
+          <li>Macro adjustments</li>
+          <li>Grocery list included</li>
+          <li>Email support</li>
+        </ul>
+      </div>
+      <div class="card card-highlight" style="flex: 1;">
+        <h5 style="color: #9333EA; font-size: 13px; margin-bottom: 10px;">&#11088; $150/Month Tier</h5>
+        <ul class="check-list" style="font-size: 12px;">
+          <li>4 custom meal plans/month</li>
+          <li>Weekly check-ins</li>
+          <li>Recipe substitutions</li>
+          <li>Progress tracking</li>
+        </ul>
+      </div>
+      <div class="card card-green" style="flex: 1;">
+        <h5 style="color: #22C55E; font-size: 13px; margin-bottom: 10px;">&#128081; $200/Month Tier</h5>
+        <ul class="check-list" style="font-size: 12px;">
+          <li>Unlimited meal plans</li>
+          <li>Bi-weekly video calls</li>
+          <li>Supplement guidance</li>
+          <li>Priority support</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 10px; padding: 16px 20px; margin-top: 16px; text-align: center;">
+      <p style="font-size: 14px; color: #D0D0D8;">
+        <strong style="color: #22C55E;">Target scenario:</strong> 15 clients &times; $150/month = <span class="money" style="font-size: 18px;">$2,250/month</span> (<span class="money">$27,000/year</span>)
+      </p>
+    </div>
+  </div>
+
+  <div class="logo-text">EvoFitMeals</div>
+  <div class="page-number">Page <span>4</span> of 8</div>
+  <div class="footer-bar"></div>
+</div>
+
+<!-- ==================== PAGE 5: REVENUE MODEL 3 - PREMIUM BUNDLE ==================== -->
+<div class="page">
+  <div class="glow-orange" style="top: -40px; left: -60px;"></div>
+  <div class="glow-green" style="bottom: -40px; right: -80px;"></div>
+
+  <div class="page-inner">
+    <div class="section-tag">Revenue Model 3</div>
+    <h2 class="section-title">Premium Bundle</h2>
+    <p class="section-subtitle">Training + nutrition as one premium package. Highest value, best retention.</p>
+    <div class="divider"></div>
+
+    <div class="formula-box" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3);">
+      <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">Premium Bundle Formula</div>
+      <div class="formula">Training + Nutrition Package <span>&times;</span> Clients <span>=</span> <span style="color: #22C55E;">Premium Revenue</span></div>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden; margin-top: 20px;">
+      <div style="background: linear-gradient(90deg, rgba(147, 51, 234, 0.1), rgba(34, 197, 94, 0.08)); padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <h4 style="font-size: 14px; color: #FFFFFF;">&#128142; Premium Bundle Revenue Scenarios</h4>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Clients</th>
+            <th>Package Price</th>
+            <th>Monthly Revenue</th>
+            <th>Annual Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>5</td>
+            <td>$300</td>
+            <td class="money">$1,500</td>
+            <td class="money">$18,000</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>$400</td>
+            <td class="money">$2,000</td>
+            <td class="money">$24,000</td>
+          </tr>
+          <tr class="highlight-row">
+            <td>10</td>
+            <td>$400</td>
+            <td class="money" style="font-size: 16px;">$4,000</td>
+            <td class="money" style="font-size: 16px;">$48,000</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>$500</td>
+            <td class="money">$5,000</td>
+            <td class="money">$60,000</td>
+          </tr>
+          <tr>
+            <td>15</td>
+            <td>$500</td>
+            <td class="money">$7,500</td>
+            <td class="money">$90,000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 style="color: #FFFFFF; font-size: 15px; margin: 24px 0 14px;">Why Bundles Win:</h4>
+    <div style="display: flex; gap: 16px;">
+      <div class="card" style="flex: 1; text-align: center;">
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 32px; color: #22C55E; margin-bottom: 6px;">92%</div>
+        <div style="font-size: 12px; color: #A0A0B0;">Client retention rate with bundled services</div>
+      </div>
+      <div class="card" style="flex: 1; text-align: center;">
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 32px; color: #F97316;">2.5x</div>
+        <div style="font-size: 12px; color: #A0A0B0;">Higher lifetime value vs training-only</div>
+      </div>
+      <div class="card" style="flex: 1; text-align: center;">
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 32px; color: #9333EA;">68%</div>
+        <div style="font-size: 12px; color: #A0A0B0;">Clients prefer one-stop fitness + nutrition</div>
+      </div>
+    </div>
+
+    <div class="card card-highlight" style="margin-top: 16px;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="font-size: 28px;">&#128161;</div>
+        <div>
+          <h5 style="color: #9333EA; font-size: 14px; margin-bottom: 4px;">Pro Tip: Upgrade Existing Clients</h5>
+          <p style="font-size: 13px; color: #A0A0B0; line-height: 1.5;">You don't need new clients. Converting just 10 existing training clients into premium bundles at $400/month adds <span class="money">$4,000/month</span> in revenue.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 10px; padding: 16px 20px; margin-top: 16px; text-align: center;">
+      <p style="font-size: 14px; color: #D0D0D8;">
+        <strong style="color: #22C55E;">Target scenario:</strong> 10 clients &times; $400/month = <span class="money" style="font-size: 18px;">$4,000/month</span> (<span class="money">$48,000/year</span>)
+      </p>
+    </div>
+  </div>
+
+  <div class="logo-text">EvoFitMeals</div>
+  <div class="page-number">Page <span>5</span> of 8</div>
+  <div class="footer-bar"></div>
+</div>
+
+<!-- ==================== PAGE 6: THE REVENUE CALCULATOR ==================== -->
+<div class="page">
+  <div class="glow-green" style="top: -60px; left: -80px;"></div>
+  <div class="glow-purple" style="bottom: -40px; right: -60px;"></div>
+
+  <div class="page-inner">
+    <div class="section-tag">Interactive Calculator</div>
+    <h2 class="section-title">The Revenue Calculator</h2>
+    <p class="section-subtitle">Find your number. Use the table below to project your nutrition coaching revenue.</p>
+    <div class="divider"></div>
+
+    <!-- Main Calculator Table -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div style="background: linear-gradient(90deg, rgba(34, 197, 94, 0.1), rgba(147, 51, 234, 0.08)); padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <h4 style="font-size: 14px; color: #FFFFFF;">&#128178; Monthly Revenue by Clients &times; Price Point</h4>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Clients</th>
+            <th style="text-align: center;">@ $75/mo</th>
+            <th style="text-align: center;">@ $100/mo</th>
+            <th style="text-align: center;">@ $150/mo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>5 clients</strong></td>
+            <td style="text-align: center;" class="money">$375</td>
+            <td style="text-align: center;" class="money">$500</td>
+            <td style="text-align: center;" class="money">$750</td>
+          </tr>
+          <tr>
+            <td><strong>10 clients</strong></td>
+            <td style="text-align: center;" class="money">$750</td>
+            <td style="text-align: center;" class="money">$1,000</td>
+            <td style="text-align: center;" class="money">$1,500</td>
+          </tr>
+          <tr>
+            <td><strong>15 clients</strong></td>
+            <td style="text-align: center;" class="money">$1,125</td>
+            <td style="text-align: center;" class="money">$1,500</td>
+            <td style="text-align: center;" class="money">$2,250</td>
+          </tr>
+          <tr class="highlight-row">
+            <td><strong>20 clients</strong></td>
+            <td style="text-align: center;" class="money">$1,500</td>
+            <td style="text-align: center;" class="money">$2,000</td>
+            <td style="text-align: center; font-size: 16px;" class="money">$3,000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Annual Projections -->
+    <div class="card" style="padding: 0; overflow: hidden; margin-top: 16px;">
+      <div style="background: rgba(34, 197, 94, 0.1); padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <h4 style="font-size: 14px; color: #FFFFFF;">&#128197; Projected Annual Revenue</h4>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Clients</th>
+            <th style="text-align: center;">@ $75/mo</th>
+            <th style="text-align: center;">@ $100/mo</th>
+            <th style="text-align: center;">@ $150/mo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>5 clients</strong></td>
+            <td style="text-align: center;" class="money">$4,500</td>
+            <td style="text-align: center;" class="money">$6,000</td>
+            <td style="text-align: center;" class="money">$9,000</td>
+          </tr>
+          <tr>
+            <td><strong>10 clients</strong></td>
+            <td style="text-align: center;" class="money">$9,000</td>
+            <td style="text-align: center;" class="money">$12,000</td>
+            <td style="text-align: center;" class="money">$18,000</td>
+          </tr>
+          <tr>
+            <td><strong>15 clients</strong></td>
+            <td style="text-align: center;" class="money">$13,500</td>
+            <td style="text-align: center;" class="money">$18,000</td>
+            <td style="text-align: center;" class="money">$27,000</td>
+          </tr>
+          <tr class="highlight-row">
+            <td><strong>20 clients</strong></td>
+            <td style="text-align: center;" class="money">$18,000</td>
+            <td style="text-align: center;" class="money">$24,000</td>
+            <td style="text-align: center; font-size: 16px;" class="money">$36,000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Your Numbers -->
+    <div class="card card-green" style="margin-top: 20px;">
+      <h4 style="color: #22C55E; font-size: 15px; margin-bottom: 14px;">&#9999;&#65039; Calculate Your Numbers</h4>
+      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 10px;">
+        <div style="flex: 1; border-bottom: 2px dashed rgba(34, 197, 94, 0.3); padding-bottom: 4px;">
+          <span style="font-size: 12px; color: #888;">Your current clients:</span>
+          <span style="float: right; color: #555;">______</span>
+        </div>
+        <div style="font-size: 18px; color: #555;">&times;</div>
+        <div style="flex: 1; border-bottom: 2px dashed rgba(34, 197, 94, 0.3); padding-bottom: 4px;">
+          <span style="font-size: 12px; color: #888;">Your add-on price:</span>
+          <span style="float: right; color: #555;">$______</span>
+        </div>
+        <div style="font-size: 18px; color: #555;">=</div>
+        <div style="flex: 1; border-bottom: 2px solid #22C55E; padding-bottom: 4px;">
+          <span style="font-size: 12px; color: #22C55E; font-weight: 600;">Monthly revenue:</span>
+          <span style="float: right; color: #22C55E; font-weight: 700;">$______</span>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 12px;">
+        <span style="font-size: 12px; color: #A0A0B0;">Annual projection: Monthly revenue &times; 12 = </span>
+        <span style="color: #22C55E; font-weight: 700; font-size: 14px;">$____________</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="logo-text">EvoFitMeals</div>
+  <div class="page-number">Page <span>6</span> of 8</div>
+  <div class="footer-bar"></div>
+</div>
+
+<!-- ==================== PAGE 7: COST ANALYSIS ==================== -->
+<div class="page">
+  <div class="glow-purple" style="top: -50px; right: -60px;"></div>
+  <div class="glow-green" style="bottom: -60px; left: -40px;"></div>
+
+  <div class="page-inner">
+    <div class="section-tag">Cost Analysis</div>
+    <h2 class="section-title">Your Investment vs. Return</h2>
+    <p class="section-subtitle">EvoFitMeals pays for itself with just 2-4 nutrition clients. Then it's pure profit.</p>
+    <div class="divider"></div>
+
+    <!-- Comparison Table -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div style="background: rgba(147, 51, 234, 0.08); padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <h4 style="font-size: 14px; color: #FFFFFF;">&#128200; EvoFitMeals vs. Competitor Subscriptions</h4>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th style="text-align: center; color: #22C55E;">EvoFitMeals</th>
+            <th style="text-align: center; color: #F97316;">Competitors (avg)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Pricing Model</td>
+            <td style="text-align: center; color: #22C55E; font-weight: 600;">One-time purchase</td>
+            <td style="text-align: center; color: #F97316;">Monthly subscription</td>
+          </tr>
+          <tr>
+            <td>Year 1 Cost</td>
+            <td style="text-align: center;" class="money">$199 - $399</td>
+            <td style="text-align: center; color: #F97316; font-weight: 600;">$1,740</td>
+          </tr>
+          <tr>
+            <td>Year 2 Cost</td>
+            <td style="text-align: center;" class="money">$0</td>
+            <td style="text-align: center; color: #F97316; font-weight: 600;">$1,740</td>
+          </tr>
+          <tr>
+            <td>Year 5 Total</td>
+            <td style="text-align: center;" class="money">$199 - $399</td>
+            <td style="text-align: center; color: #EF4444; font-weight: 600;">$8,700</td>
+          </tr>
+          <tr>
+            <td>Year 10 Total</td>
+            <td style="text-align: center;" class="money">$199 - $399</td>
+            <td style="text-align: center; color: #EF4444; font-weight: 600;">$17,400</td>
+          </tr>
+          <tr class="highlight-row">
+            <td><strong>10-Year Savings</strong></td>
+            <td colspan="2" style="text-align: center; font-size: 18px;" class="money">$17,001 - $17,201</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ROI Breakdown -->
+    <h4 style="color: #FFFFFF; font-size: 15px; margin: 24px 0 14px;">&#128640; Break-Even Analysis</h4>
+    <div style="display: flex; gap: 16px;">
+      <div class="card" style="flex: 1; text-align: center;">
+        <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Starter ($199)</div>
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 40px; color: #22C55E;">2</div>
+        <div style="font-size: 12px; color: #A0A0B0;">clients to break even</div>
+        <div style="font-size: 11px; color: #555; margin-top: 4px;">@ $100/client/month</div>
+      </div>
+      <div class="card card-highlight" style="flex: 1; text-align: center;">
+        <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Professional ($299)</div>
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 40px; color: #22C55E;">3</div>
+        <div style="font-size: 12px; color: #A0A0B0;">clients to break even</div>
+        <div style="font-size: 11px; color: #555; margin-top: 4px;">@ $100/client/month</div>
+      </div>
+      <div class="card card-green" style="flex: 1; text-align: center;">
+        <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Premium ($399)</div>
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 40px; color: #22C55E;">4</div>
+        <div style="font-size: 12px; color: #A0A0B0;">clients to break even</div>
+        <div style="font-size: 11px; color: #555; margin-top: 4px;">@ $100/client/month</div>
+      </div>
+    </div>
+
+    <!-- ROI Stats -->
+    <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(147, 51, 234, 0.05));">
+      <h4 style="color: #FFFFFF; font-size: 14px; margin-bottom: 16px;">&#128176; First-Year ROI (with 10 clients @ $100/month)</h4>
+      <div style="display: flex; gap: 20px; text-align: center;">
+        <div style="flex: 1;">
+          <div style="font-size: 12px; color: #888; margin-bottom: 4px;">Revenue Generated</div>
+          <div class="money" style="font-size: 24px;">$12,000</div>
+        </div>
+        <div style="flex: 0; display: flex; align-items: center; color: #555; font-size: 20px;">-</div>
+        <div style="flex: 1;">
+          <div style="font-size: 12px; color: #888; margin-bottom: 4px;">EvoFitMeals Cost</div>
+          <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 24px; color: #F97316;">$299</div>
+        </div>
+        <div style="flex: 0; display: flex; align-items: center; color: #555; font-size: 20px;">=</div>
+        <div style="flex: 1;">
+          <div style="font-size: 12px; color: #888; margin-bottom: 4px;">Net Profit</div>
+          <div class="money" style="font-size: 24px;">$11,701</div>
+        </div>
+        <div style="flex: 0; display: flex; align-items: center; color: #555; font-size: 20px;">=</div>
+        <div style="flex: 1;">
+          <div style="font-size: 12px; color: #888; margin-bottom: 4px;">ROI</div>
+          <div class="money" style="font-size: 24px;">3,914%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="logo-text">EvoFitMeals</div>
+  <div class="page-number">Page <span>7</span> of 8</div>
+  <div class="footer-bar"></div>
+</div>
+
+<!-- ==================== PAGE 8: CTA + BACK ==================== -->
+<div class="page" style="background: linear-gradient(160deg, #0A0A0F 0%, #120A1F 50%, #0A0A0F 100%);">
+  <div class="glow-purple" style="top: -80px; left: 50%; transform: translateX(-50%); width: 400px; height: 400px;"></div>
+  <div class="glow-green" style="bottom: 100px; right: -60px; width: 200px; height: 200px;"></div>
+  <div class="glow-orange" style="bottom: -40px; left: 100px;"></div>
+
+  <div class="page-inner" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+
+    <div style="margin-top: 20px; margin-bottom: 24px;">
+      <div style="display: inline-block; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.3); color: #22C55E; font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; padding: 8px 20px; border-radius: 24px;">
+        Start Earning Today
+      </div>
+    </div>
+
+    <h2 style="font-family: 'Outfit', sans-serif; font-size: 36px; font-weight: 900; color: #FFFFFF; line-height: 1.2; margin-bottom: 12px;">
+      Start Earning From<br>
+      <span style="background: linear-gradient(135deg, #22C55E, #16A34A); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nutrition Today</span>
+    </h2>
+    <p style="font-size: 15px; color: #A0A0B0; max-width: 420px; line-height: 1.6; margin-bottom: 32px;">
+      Your clients already want nutrition guidance. Give it to them -- and add thousands to your monthly revenue.
+    </p>
+
+    <!-- Pricing Cards -->
+    <div style="display: flex; gap: 16px; width: 100%; margin-bottom: 28px;">
+      <div class="pricing-card">
+        <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px;">Starter</div>
+        <div class="price">$199</div>
+        <div class="price-note">One-time payment</div>
+        <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 12px 0;"></div>
+        <ul class="check-list" style="text-align: left; font-size: 12px;">
+          <li>Up to 25 clients</li>
+          <li>Custom meal plan generator</li>
+          <li>Macro calculator</li>
+          <li>Client portal access</li>
+          <li>Email support</li>
+        </ul>
+      </div>
+      <div class="pricing-card featured">
+        <div style="display: inline-block; background: #9333EA; color: #FFF; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;">Most Popular</div>
+        <div class="plan-name" style="margin-top: 4px;">Professional</div>
+        <div class="price">$299</div>
+        <div class="price-note">One-time payment</div>
+        <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 12px 0;"></div>
+        <ul class="check-list" style="text-align: left; font-size: 12px;">
+          <li>Unlimited clients</li>
+          <li>AI-powered meal plans</li>
+          <li>Branded client portal</li>
+          <li>Recipe library (1,500+)</li>
+          <li>Grocery list generation</li>
+          <li>Priority support</li>
+        </ul>
+      </div>
+      <div class="pricing-card">
+        <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1.5px;">Premium</div>
+        <div class="price">$399</div>
+        <div class="price-note">One-time payment</div>
+        <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 12px 0;"></div>
+        <ul class="check-list" style="text-align: left; font-size: 12px;">
+          <li>Everything in Professional</li>
+          <li>White-label branding</li>
+          <li>Advanced analytics</li>
+          <li>API access</li>
+          <li>Dedicated account manager</li>
+          <li>Custom integrations</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <a href="https://evofitmeals.com/get-started" class="cta-btn" style="margin-bottom: 16px; font-size: 18px; padding: 16px 48px;">
+      Get Started Now &rarr;
+    </a>
+    <p style="font-size: 13px; color: #666; margin-bottom: 32px;">evofitmeals.com/get-started</p>
+
+    <!-- Bottom Stats -->
+    <div style="display: flex; gap: 32px; margin-bottom: 24px;">
+      <div style="text-align: center;">
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; color: #22C55E;">$17,000+</div>
+        <div style="font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px;">10-Year Savings</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; color: #F97316;">3,914%</div>
+        <div style="font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px;">First-Year ROI</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 20px; color: #9333EA;">2-4</div>
+        <div style="font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Clients to Break Even</div>
+      </div>
+    </div>
+
+    <div style="height: 1px; background: rgba(255,255,255,0.06); width: 80%; margin-bottom: 20px;"></div>
+
+    <div>
+      <span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 22px; color: #9333EA;">EvoFit</span><span style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 22px; color: #F97316;">Meals</span>
+    </div>
+    <p style="font-size: 12px; color: #555; margin-top: 8px;">Professional meal planning software for fitness trainers</p>
+    <p style="font-size: 11px; color: #444; margin-top: 6px;">evofitmeals.com &nbsp;|&nbsp; hello@evofitmeals.com</p>
+  </div>
+
+  <div class="page-number">Page <span>8</span> of 8</div>
+  <div class="footer-bar"></div>
+</div>
+
+</body>
+</html>

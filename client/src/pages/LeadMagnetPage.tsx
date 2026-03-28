@@ -165,7 +165,13 @@ export default function LeadMagnetPage() {
                 />
                 <Button
                   className="w-full h-12 text-base font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:shadow-orange-500/40 hover:scale-[1.01]"
-                  onClick={() => {}}
+                  onClick={() => {
+                    // Direct download — no email gate for now
+                    const link = document.createElement('a');
+                    link.href = '/downloads/EvoFitMeals-AI-Blueprint.pdf';
+                    link.download = 'AI-Meal-Planning-Blueprint.pdf';
+                    link.click();
+                  }}
                 >
                   <Download className="w-5 h-5 mr-2" />
                   Get Your Free Blueprint

@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gluten-Free Meal Planning Made Simple | EvoFit Meals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --purple: #9333EA;
+      --purple-light: #A855F7;
+      --purple-dark: #7E22CE;
+      --orange: #F97316;
+      --orange-light: #FB923C;
+      --dark: #0A0A0F;
+      --dark-card: #141420;
+      --dark-surface: #1C1C2E;
+      --dark-border: #2A2A40;
+      --gray-100: #F3F4F6;
+      --gray-200: #E5E7EB;
+      --gray-300: #D1D5DB;
+      --gray-400: #9CA3AF;
+      --gray-500: #6B7280;
+      --gray-600: #4B5563;
+      --white: #FFFFFF;
+      --green: #22C55E;
+      --red: #EF4444;
+      --yellow: #EAB308;
+    }
+
+    html { font-size: 15px; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--dark);
+      color: var(--gray-100);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5 {
+      font-family: 'Outfit', sans-serif;
+      line-height: 1.15;
+    }
+
+    /* ── Page Structure ── */
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+      margin: 0 auto;
+      padding: 0.65in 0.7in;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page:last-child { page-break-after: auto; }
+
+    @media print {
+      body { background: white; }
+      .page { margin: 0; padding: 0.5in 0.6in; box-shadow: none; }
+    }
+
+    @media screen {
+      .page {
+        margin: 20px auto;
+        box-shadow: 0 4px 40px rgba(0,0,0,0.5);
+        border-radius: 4px;
+      }
+    }
+
+    /* ── Cover Page ── */
+    .page-cover {
+      background: linear-gradient(160deg, #0A0A0F 0%, #1a0a2e 35%, #2d1154 60%, #0A0A0F 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 1in;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+      color: white;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      padding: 8px 24px;
+      border-radius: 100px;
+      margin-bottom: 32px;
+    }
+
+    .cover-title {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 16px;
+      max-width: 7in;
+    }
+
+    .cover-title .highlight {
+      background: linear-gradient(135deg, var(--orange), var(--orange-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cover-subtitle {
+      font-size: 1.15rem;
+      color: var(--gray-400);
+      max-width: 5.5in;
+      margin-bottom: 40px;
+      font-weight: 500;
+    }
+
+    .cover-divider {
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--orange));
+      border-radius: 3px;
+      margin-bottom: 40px;
+    }
+
+    .cover-features {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .cover-feature {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--gray-300);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .cover-feature .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--purple);
+      flex-shrink: 0;
+    }
+
+    .cover-logo {
+      position: absolute;
+      bottom: 0.7in;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 1px;
+    }
+
+    .cover-logo .evo { color: var(--purple-light); }
+    .cover-logo .fit { color: var(--orange); }
+    .cover-logo .meals { color: var(--gray-400); }
+
+    /* ── Content Pages ── */
+    .page-content {
+      background: var(--dark);
+    }
+
+    .page-header {
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--dark-border);
+    }
+
+    .page-number {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--purple-light);
+      margin-bottom: 8px;
+    }
+
+    .page-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--white);
+    }
+
+    .page-title .accent {
+      color: var(--orange);
+    }
+
+    .page-intro {
+      font-size: 0.95rem;
+      color: var(--gray-400);
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+
+    /* ── Cards & Sections ── */
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title .icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    .icon-purple { background: rgba(147, 51, 234, 0.2); color: var(--purple-light); }
+    .icon-orange { background: rgba(249, 115, 22, 0.2); color: var(--orange); }
+    .icon-green { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+    .icon-red { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+
+    .card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+
+    .card-sm {
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+
+    .card p, .card li {
+      font-size: 0.82rem;
+      color: var(--gray-300);
+      line-height: 1.6;
+    }
+
+    .card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .card ul li {
+      padding-left: 16px;
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .card ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--purple);
+    }
+
+    /* ── Grid Layouts ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ── Tables ── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      margin-bottom: 14px;
+    }
+
+    .data-table th {
+      background: var(--dark-surface);
+      color: var(--purple-light);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 2px solid var(--purple);
+    }
+
+    .data-table td {
+      padding: 9px 12px;
+      color: var(--gray-300);
+      border-bottom: 1px solid var(--dark-border);
+    }
+
+    .data-table tr:last-child td { border-bottom: none; }
+
+    .data-table tbody tr:hover { background: rgba(147, 51, 234, 0.05); }
+
+    .data-table .highlight-cell {
+      color: var(--orange);
+      font-weight: 600;
+    }
+
+    /* ── Tags / Badges ── */
+    .tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tag-purple { background: rgba(147, 51, 234, 0.15); color: var(--purple-light); }
+    .tag-orange { background: rgba(249, 115, 22, 0.15); color: var(--orange); }
+    .tag-green { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+
+    /* ── Meal Plan ── */
+    .meal-day {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+
+    .meal-day-header {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--orange);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .meal-day-macros {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--gray-400);
+    }
+
+    .meal-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 4px;
+      font-size: 0.76rem;
+      line-height: 1.5;
+    }
+
+    .meal-label {
+      font-weight: 700;
+      color: var(--purple-light);
+      min-width: 68px;
+      flex-shrink: 0;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding-top: 1px;
+    }
+
+    .meal-desc {
+      color: var(--gray-300);
+    }
+
+    .meal-macros {
+      color: var(--gray-500);
+      font-size: 0.68rem;
+      margin-left: auto;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Warning / Callout Boxes ── */
+    .callout {
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    .callout-purple {
+      background: rgba(147, 51, 234, 0.1);
+      border-left: 3px solid var(--purple);
+      color: var(--gray-200);
+    }
+
+    .callout-orange {
+      background: rgba(249, 115, 22, 0.1);
+      border-left: 3px solid var(--orange);
+      color: var(--gray-200);
+    }
+
+    .callout-red {
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 3px solid var(--red);
+      color: var(--gray-200);
+    }
+
+    .callout-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+
+    /* ── Checklist ── */
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+
+    .checklist li {
+      font-size: 0.82rem;
+      color: var(--gray-300);
+      padding: 5px 0 5px 24px;
+      position: relative;
+      line-height: 1.5;
+    }
+
+    .checklist li::before {
+      content: '\2713';
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .checklist-x li::before {
+      content: '\2717';
+      color: var(--red);
+    }
+
+    /* ── CTA Page ── */
+    .page-cta {
+      background: linear-gradient(160deg, #0A0A0F 0%, #1a0a2e 40%, #2d1154 70%, #0A0A0F 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 1in;
+    }
+
+    .cta-eyebrow {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--purple-light);
+      margin-bottom: 16px;
+    }
+
+    .cta-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 16px;
+      max-width: 6in;
+    }
+
+    .cta-subtitle {
+      font-size: 1rem;
+      color: var(--gray-400);
+      margin-bottom: 36px;
+      max-width: 5in;
+      line-height: 1.7;
+    }
+
+    .cta-pricing {
+      margin-bottom: 32px;
+    }
+
+    .cta-pricing-row {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      align-items: flex-end;
+      margin-bottom: 10px;
+    }
+
+    .price-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 12px;
+      padding: 20px 28px;
+      text-align: center;
+      min-width: 160px;
+    }
+
+    .price-card.featured {
+      border-color: var(--purple);
+      background: linear-gradient(180deg, rgba(147, 51, 234, 0.1), var(--dark-card));
+      transform: scale(1.05);
+    }
+
+    .price-card-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--gray-400);
+      margin-bottom: 6px;
+    }
+
+    .price-card-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--white);
+    }
+
+    .price-card-value .period {
+      font-size: 0.75rem;
+      color: var(--gray-500);
+      font-weight: 500;
+    }
+
+    .price-card-note {
+      font-size: 0.7rem;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+      color: white;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 14px 40px;
+      border-radius: 10px;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+    }
+
+    .cta-url {
+      font-size: 0.85rem;
+      color: var(--gray-500);
+      font-weight: 500;
+    }
+
+    .cta-url strong { color: var(--orange); }
+
+    .cta-features {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 36px;
+    }
+
+    .cta-feat {
+      font-size: 0.8rem;
+      color: var(--gray-300);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cta-feat .check {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* ── Footer ── */
+    .page-footer {
+      position: absolute;
+      bottom: 0.5in;
+      left: 0.7in;
+      right: 0.7in;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.65rem;
+      color: var(--gray-600);
+      border-top: 1px solid var(--dark-border);
+      padding-top: 10px;
+    }
+
+    .footer-logo { font-family: 'Outfit', sans-serif; font-weight: 700; }
+    .footer-logo .evo { color: var(--purple-light); }
+    .footer-logo .fit { color: var(--orange); }
+
+    /* ── Grain Grid Specific ── */
+    .grain-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      text-align: center;
+    }
+
+    .grain-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+
+    .grain-stat {
+      font-size: 0.7rem;
+      color: var(--gray-400);
+      line-height: 1.5;
+    }
+
+    .grain-stat strong {
+      color: var(--orange);
+      font-weight: 600;
+    }
+
+    /* ── Label Tips ── */
+    .label-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .label-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .label-card-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--white);
+      margin-bottom: 6px;
+    }
+
+    .label-card p, .label-card li {
+      font-size: 0.78rem;
+      color: var(--gray-300);
+      line-height: 1.55;
+    }
+
+    .label-card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .label-card ul li {
+      padding-left: 14px;
+      position: relative;
+      margin-bottom: 3px;
+    }
+
+    .label-card ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 7px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--purple);
+    }
+
+    .symbol-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .symbol-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .symbol-badge-gf {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .symbol-badge-warn {
+      background: rgba(234, 179, 8, 0.15);
+      color: var(--yellow);
+      border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+
+    .symbol-text {
+      font-size: 0.78rem;
+      color: var(--gray-300);
+      line-height: 1.45;
+    }
+
+    .symbol-text strong {
+      color: var(--white);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════
+       PAGE 1 — COVER
+       ════════════════════════════════════════════════════ -->
+  <div class="page page-cover">
+    <div class="cover-badge">Free Guide</div>
+    <h1 class="cover-title">
+      <span class="highlight">Gluten-Free</span> Meal Planning<br />Made Simple
+    </h1>
+    <p class="cover-subtitle">
+      Stop Googling Substitutes &mdash; Here's the Complete Cheat Sheet
+    </p>
+    <div class="cover-divider"></div>
+    <div class="cover-features">
+      <div class="cover-feature"><span class="dot"></span> Safe Grains Guide</div>
+      <div class="cover-feature"><span class="dot"></span> Flour Substitution Chart</div>
+      <div class="cover-feature"><span class="dot"></span> 7-Day Meal Plan</div>
+      <div class="cover-feature"><span class="dot"></span> Label Reading Tips</div>
+    </div>
+    <div class="cover-logo">
+      <span class="evo">EVO</span><span class="fit">FIT</span> <span class="meals">MEALS</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       PAGE 2 — GLUTEN-FREE BASICS
+       ════════════════════════════════════════════════════ -->
+  <div class="page page-content">
+    <div class="page-header">
+      <div class="page-number">Page 01</div>
+      <h2 class="page-title">Gluten-Free <span class="accent">Basics</span></h2>
+    </div>
+
+    <p class="page-intro">
+      Gluten is a family of proteins found in wheat, barley, and rye. It gives bread its chewy texture and helps dough rise. For some people, eating gluten triggers serious health issues &mdash; for others, avoiding it is a lifestyle preference. Here's what you need to know.
+    </p>
+
+    <div class="section-title"><span class="icon icon-purple">?</span> What Exactly Is Gluten?</div>
+    <div class="card card-sm">
+      <p>Gluten is composed of two proteins &mdash; <strong>glutenin</strong> and <strong>gliadin</strong> &mdash; that form an elastic network when flour is mixed with water. It's found in <strong>wheat</strong> (including spelt, kamut, farro, durum), <strong>barley</strong>, <strong>rye</strong>, and <strong>triticale</strong>. Oats are naturally gluten-free but are often cross-contaminated during processing.</p>
+    </div>
+
+    <div class="section-title" style="margin-top:18px;"><span class="icon icon-orange">&#9878;</span> Three Reasons People Go GF</div>
+    <div class="grid-3" style="margin-bottom:18px;">
+      <div class="card card-sm">
+        <div class="card-title" style="color:var(--red);">Celiac Disease</div>
+        <p>Autoimmune disorder where gluten damages the small intestine lining. Affects ~1% of the population. Even trace amounts cause harm. <strong>Requires strict lifelong avoidance.</strong></p>
+      </div>
+      <div class="card card-sm">
+        <div class="card-title" style="color:var(--yellow);">Gluten Sensitivity</div>
+        <p>Non-celiac gluten sensitivity (NCGS) causes bloating, fatigue, and brain fog without intestinal damage. Estimated 6&ndash;7% of adults. <strong>Symptom-managed avoidance.</strong></p>
+      </div>
+      <div class="card card-sm">
+        <div class="card-title" style="color:var(--green);">Lifestyle Choice</div>
+        <p>Some people report better energy and digestion without gluten. No medical requirement, but still benefits from knowing safe foods. <strong>Flexible approach.</strong></p>
+      </div>
+    </div>
+
+    <div class="section-title"><span class="icon icon-red">!</span> Hidden Sources of Gluten</div>
+    <div class="callout callout-red">
+      <div class="callout-title">These Foods Secretly Contain Gluten</div>
+      These are the sneaky ones that catch people off guard &mdash; always check labels.
+    </div>
+    <div class="grid-2">
+      <div class="card card-sm">
+        <ul>
+          <li><strong>Soy sauce</strong> &mdash; brewed with wheat (use tamari instead)</li>
+          <li><strong>Beer &amp; malt beverages</strong> &mdash; barley-based</li>
+          <li><strong>Salad dressings</strong> &mdash; wheat-based thickeners</li>
+          <li><strong>Marinades &amp; sauces</strong> &mdash; flour as thickener</li>
+          <li><strong>Imitation crab</strong> &mdash; wheat starch binder</li>
+        </ul>
+      </div>
+      <div class="card card-sm">
+        <ul>
+          <li><strong>Seasoning blends</strong> &mdash; anti-caking agents with wheat</li>
+          <li><strong>Soup &amp; broth</strong> &mdash; flour-thickened bases</li>
+          <li><strong>Candy &amp; licorice</strong> &mdash; wheat flour coating</li>
+          <li><strong>Processed meats</strong> &mdash; fillers &amp; binders</li>
+          <li><strong>Communion wafers</strong> &mdash; wheat-based</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-logo"><span class="evo">EVO</span><span class="fit">FIT</span> MEALS</div>
+      <div>evofitmeals.com</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       PAGE 3 — SAFE GRAINS & STARCHES
+       ════════════════════════════════════════════════════ -->
+  <div class="page page-content">
+    <div class="page-header">
+      <div class="page-number">Page 02</div>
+      <h2 class="page-title">Safe Grains &amp; <span class="accent">Starches</span></h2>
+    </div>
+
+    <p class="page-intro">
+      Going gluten-free doesn't mean giving up grains entirely. These naturally gluten-free options are nutritious, versatile, and widely available. Here's what to stock in your pantry &mdash; with protein and fiber per cooked cup.
+    </p>
+
+    <div class="grid-3" style="margin-bottom:16px;">
+      <div class="grain-card">
+        <div class="grain-name">White Rice</div>
+        <div class="grain-stat"><strong>4g</strong> protein &bull; <strong>0.6g</strong> fiber</div>
+        <div class="grain-stat">Neutral flavor, pairs with everything</div>
+      </div>
+      <div class="grain-card">
+        <div class="grain-name">Brown Rice</div>
+        <div class="grain-stat"><strong>5g</strong> protein &bull; <strong>3.5g</strong> fiber</div>
+        <div class="grain-stat">Nutty flavor, more nutrients</div>
+      </div>
+      <div class="grain-card">
+        <div class="grain-name">Quinoa</div>
+        <div class="grain-stat"><strong>8g</strong> protein &bull; <strong>5g</strong> fiber</div>
+        <div class="grain-stat">Complete protein, all 9 amino acids</div>
+      </div>
+      <div class="grain-card">
+        <div class="grain-name">Oats (Certified GF)</div>
+        <div class="grain-stat"><strong>6g</strong> protein &bull; <strong>4g</strong> fiber</div>
+        <div class="grain-stat">Must be labeled gluten-free</div>
+      </div>
+      <div class="grain-card">
+        <div class="grain-name">Potato</div>
+        <div class="grain-stat"><strong>4g</strong> protein &bull; <strong>3.5g</strong> fiber</div>
+        <div class="grain-stat">High potassium, versatile prep</div>
+      </div>
+      <div class="grain-card">
+        <div class="grain-name">Corn / Polenta</div>
+        <div class="grain-stat"><strong>5g</strong> protein &bull; <strong>4g</strong> fiber</div>
+        <div class="grain-stat">Great for tortillas &amp; sides</div>
+      </div>
+      <div class="grain-card">
+        <div class="grain-name">Buckwheat</div>
+        <div class="grain-stat"><strong>6g</strong> protein &bull; <strong>4.5g</strong> fiber</div>
+        <div class="grain-stat">Not wheat &mdash; it's a seed</div>
+      </div>
+      <div class="grain-card">
+        <div class="grain-name">Millet</div>
+        <div class="grain-stat"><strong>6g</strong> protein &bull; <strong>2.3g</strong> fiber</div>
+        <div class="grain-stat">Mild, fluffy, easy to cook</div>
+      </div>
+      <div class="grain-card">
+        <div class="grain-name">Tapioca</div>
+        <div class="grain-stat"><strong>0.3g</strong> protein &bull; <strong>0g</strong> fiber</div>
+        <div class="grain-stat">Great thickener &amp; binder</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card card-sm">
+        <div class="card-title">Also Safe</div>
+        <ul>
+          <li><strong>Arrowroot</strong> &mdash; starch thickener (0.1g P, 0g F)</li>
+          <li><strong>Sorghum</strong> &mdash; ancient grain (10g P, 6g F)</li>
+          <li><strong>Amaranth</strong> &mdash; high protein seed (9g P, 5g F)</li>
+          <li><strong>Teff</strong> &mdash; Ethiopian grain (10g P, 7g F)</li>
+          <li><strong>Sweet potato</strong> &mdash; nutrient-dense (4g P, 6.5g F)</li>
+        </ul>
+      </div>
+      <div class="callout callout-orange" style="margin-bottom:0;">
+        <div class="callout-title">A Note on Oats</div>
+        Oats are naturally gluten-free, but conventional oats are almost always cross-contaminated with wheat during growing and processing. <strong>Always buy oats labeled "Certified Gluten-Free"</strong> from brands like Bob's Red Mill GF, GF Harvest, or Avena Pure Oats.
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-logo"><span class="evo">EVO</span><span class="fit">FIT</span> MEALS</div>
+      <div>evofitmeals.com</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       PAGE 4 — FLOUR SUBSTITUTION GUIDE
+       ════════════════════════════════════════════════════ -->
+  <div class="page page-content">
+    <div class="page-header">
+      <div class="page-number">Page 03</div>
+      <h2 class="page-title">Flour <span class="accent">Substitution</span> Guide</h2>
+    </div>
+
+    <p class="page-intro">
+      One of the trickiest parts of going gluten-free is replacing wheat flour. Every alternative behaves differently &mdash; some absorb more liquid, some don't bind well. This chart gives you exact ratios and best-use scenarios.
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>GF Flour</th>
+          <th>Ratio to Wheat</th>
+          <th>Best For</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Almond Flour</strong></td>
+          <td class="highlight-cell">1:1</td>
+          <td>Cookies, cakes, pancakes</td>
+          <td>Dense, moist. Add extra egg for structure.</td>
+        </tr>
+        <tr>
+          <td><strong>Coconut Flour</strong></td>
+          <td class="highlight-cell">1/4 : 1</td>
+          <td>Muffins, quick breads</td>
+          <td>Very absorbent. Triple the liquid. Use extra eggs.</td>
+        </tr>
+        <tr>
+          <td><strong>Rice Flour</strong></td>
+          <td class="highlight-cell">7/8 : 1</td>
+          <td>Breading, thickening sauces</td>
+          <td>Gritty alone. Blend with tapioca starch.</td>
+        </tr>
+        <tr>
+          <td><strong>Oat Flour (GF)</strong></td>
+          <td class="highlight-cell">1:1</td>
+          <td>Cookies, pancakes, crumbles</td>
+          <td>Make your own: blend GF oats. Mild flavor.</td>
+        </tr>
+        <tr>
+          <td><strong>Cassava Flour</strong></td>
+          <td class="highlight-cell">1:1</td>
+          <td>Tortillas, flatbreads, pizza</td>
+          <td>Closest wheat texture. AIP-friendly. Nut-free.</td>
+        </tr>
+        <tr>
+          <td><strong>Tapioca Starch</strong></td>
+          <td class="highlight-cell">2 Tbsp : 1 Tbsp</td>
+          <td>Thickening, chewy texture</td>
+          <td>Use as partial blend. Creates stretch &amp; chew.</td>
+        </tr>
+        <tr>
+          <td><strong>Buckwheat Flour</strong></td>
+          <td class="highlight-cell">1:1</td>
+          <td>Pancakes, crepes, noodles</td>
+          <td>Strong earthy flavor. Mix 50/50 with rice flour.</td>
+        </tr>
+        <tr>
+          <td><strong>Arrowroot Starch</strong></td>
+          <td class="highlight-cell">1 tsp : 1 Tbsp</td>
+          <td>Thickening sauces, gravies</td>
+          <td>Better than cornstarch for acidic sauces.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid-2">
+      <div class="callout callout-purple">
+        <div class="callout-title">Pro Tip: The GF Blend Formula</div>
+        For an all-purpose GF flour blend that works in most recipes, mix:<br />
+        <strong>2 cups rice flour + 2/3 cup potato starch + 1/3 cup tapioca starch.</strong><br />
+        Add 1 tsp xanthan gum per cup of blend for binding.
+      </div>
+      <div class="callout callout-orange">
+        <div class="callout-title">Binding Without Gluten</div>
+        Gluten provides structure. Without it, add binders:<br />
+        <strong>&bull; Xanthan gum</strong> &mdash; 1 tsp per cup of GF flour<br />
+        <strong>&bull; Psyllium husk</strong> &mdash; 1 Tbsp per cup (bread)<br />
+        <strong>&bull; Flax egg</strong> &mdash; 1 Tbsp ground flax + 3 Tbsp water<br />
+        <strong>&bull; Extra eggs</strong> &mdash; 1 extra egg per recipe
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-logo"><span class="evo">EVO</span><span class="fit">FIT</span> MEALS</div>
+      <div>evofitmeals.com</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       PAGE 5 — 7-DAY MEAL PLAN (Days 1-4)
+       ════════════════════════════════════════════════════ -->
+  <div class="page page-content">
+    <div class="page-header">
+      <div class="page-number">Page 04</div>
+      <h2 class="page-title">7-Day GF <span class="accent">Meal Plan</span></h2>
+    </div>
+
+    <p class="page-intro">
+      Real meals that don't feel restrictive. Every item is naturally gluten-free &mdash; no specialty products needed. Built for ~1,800 calories/day with balanced macros.
+    </p>
+
+    <div class="meal-day">
+      <div class="meal-day-header">Monday <span class="meal-day-macros">1,810 cal &bull; 145g P &bull; 185g C &bull; 62g F</span></div>
+      <div class="meal-row">
+        <span class="meal-label">Breakfast</span>
+        <span class="meal-desc">GF oat bowl with banana, almond butter &amp; chia seeds</span>
+        <span class="meal-macros">420 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Lunch</span>
+        <span class="meal-desc">Grilled chicken rice bowl, black beans, avocado, salsa</span>
+        <span class="meal-macros">560 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Snack</span>
+        <span class="meal-desc">Apple slices with almond butter, rice cakes</span>
+        <span class="meal-macros">250 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Dinner</span>
+        <span class="meal-desc">Baked salmon, roasted sweet potato, steamed broccoli</span>
+        <span class="meal-macros">580 cal</span>
+      </div>
+    </div>
+
+    <div class="meal-day">
+      <div class="meal-day-header">Tuesday <span class="meal-day-macros">1,790 cal &bull; 138g P &bull; 192g C &bull; 58g F</span></div>
+      <div class="meal-row">
+        <span class="meal-label">Breakfast</span>
+        <span class="meal-desc">Scrambled eggs (3) with spinach, GF toast, avocado</span>
+        <span class="meal-macros">440 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Lunch</span>
+        <span class="meal-desc">Turkey lettuce wraps with quinoa, shredded carrot, tamari</span>
+        <span class="meal-macros">480 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Snack</span>
+        <span class="meal-desc">Greek yogurt with mixed berries &amp; GF granola</span>
+        <span class="meal-macros">280 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Dinner</span>
+        <span class="meal-desc">Stir-fry beef with rice noodles, bell peppers, tamari sauce</span>
+        <span class="meal-macros">590 cal</span>
+      </div>
+    </div>
+
+    <div class="meal-day">
+      <div class="meal-day-header">Wednesday <span class="meal-day-macros">1,820 cal &bull; 142g P &bull; 198g C &bull; 56g F</span></div>
+      <div class="meal-row">
+        <span class="meal-label">Breakfast</span>
+        <span class="meal-desc">Smoothie: banana, protein powder, spinach, almond milk, PB</span>
+        <span class="meal-macros">380 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Lunch</span>
+        <span class="meal-desc">Baked potato loaded with chili, cheese &amp; sour cream</span>
+        <span class="meal-macros">540 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Snack</span>
+        <span class="meal-desc">Hummus with carrots, cucumber &amp; corn tortilla chips</span>
+        <span class="meal-macros">260 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Dinner</span>
+        <span class="meal-desc">Grilled shrimp tacos on corn tortillas, mango salsa, slaw</span>
+        <span class="meal-macros">640 cal</span>
+      </div>
+    </div>
+
+    <div class="meal-day">
+      <div class="meal-day-header">Thursday <span class="meal-day-macros">1,780 cal &bull; 148g P &bull; 178g C &bull; 60g F</span></div>
+      <div class="meal-row">
+        <span class="meal-label">Breakfast</span>
+        <span class="meal-desc">GF oat pancakes (3) with blueberries &amp; maple syrup</span>
+        <span class="meal-macros">430 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Lunch</span>
+        <span class="meal-desc">Quinoa salad with grilled chicken, feta, cucumber, olives</span>
+        <span class="meal-macros">510 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Snack</span>
+        <span class="meal-desc">Hard-boiled eggs (2) &amp; handful of mixed nuts</span>
+        <span class="meal-macros">270 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Dinner</span>
+        <span class="meal-desc">Herb-crusted pork tenderloin, mashed potatoes, green beans</span>
+        <span class="meal-macros">570 cal</span>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-logo"><span class="evo">EVO</span><span class="fit">FIT</span> MEALS</div>
+      <div>evofitmeals.com</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       PAGE 6 — 7-DAY MEAL PLAN (Days 5-7)
+       ════════════════════════════════════════════════════ -->
+  <div class="page page-content">
+    <div class="page-header">
+      <div class="page-number">Page 05</div>
+      <h2 class="page-title">7-Day GF Meal Plan <span class="accent">continued</span></h2>
+    </div>
+
+    <div class="meal-day">
+      <div class="meal-day-header">Friday <span class="meal-day-macros">1,800 cal &bull; 140g P &bull; 190g C &bull; 58g F</span></div>
+      <div class="meal-row">
+        <span class="meal-label">Breakfast</span>
+        <span class="meal-desc">Sweet potato hash with eggs (2), peppers &amp; onions</span>
+        <span class="meal-macros">410 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Lunch</span>
+        <span class="meal-desc">Rice paper rolls with shrimp, rice noodles, peanut dipping sauce</span>
+        <span class="meal-macros">490 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Snack</span>
+        <span class="meal-desc">Banana with sunflower seed butter, dark chocolate (2 squares)</span>
+        <span class="meal-macros">290 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Dinner</span>
+        <span class="meal-desc">Lemon herb chicken thighs, jasmine rice, roasted zucchini</span>
+        <span class="meal-macros">610 cal</span>
+      </div>
+    </div>
+
+    <div class="meal-day">
+      <div class="meal-day-header">Saturday <span class="meal-day-macros">1,830 cal &bull; 135g P &bull; 200g C &bull; 64g F</span></div>
+      <div class="meal-row">
+        <span class="meal-label">Breakfast</span>
+        <span class="meal-desc">Buckwheat crepes with ricotta, fresh berries &amp; honey</span>
+        <span class="meal-macros">420 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Lunch</span>
+        <span class="meal-desc">Mexican bowl: brown rice, ground turkey, corn, beans, guac</span>
+        <span class="meal-macros">580 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Snack</span>
+        <span class="meal-desc">Trail mix: GF pretzels, almonds, dried cranberries</span>
+        <span class="meal-macros">240 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Dinner</span>
+        <span class="meal-desc">Pan-seared cod, polenta cakes, sauteed asparagus &amp; cherry tomatoes</span>
+        <span class="meal-macros">590 cal</span>
+      </div>
+    </div>
+
+    <div class="meal-day">
+      <div class="meal-day-header">Sunday <span class="meal-day-macros">1,850 cal &bull; 150g P &bull; 188g C &bull; 62g F</span></div>
+      <div class="meal-row">
+        <span class="meal-label">Breakfast</span>
+        <span class="meal-desc">Veggie frittata (eggs, peppers, mushrooms, cheese) + fruit</span>
+        <span class="meal-macros">450 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Lunch</span>
+        <span class="meal-desc">Thai peanut chicken with rice noodles &amp; steamed bok choy</span>
+        <span class="meal-macros">560 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Snack</span>
+        <span class="meal-desc">Cottage cheese with pineapple &amp; toasted coconut flakes</span>
+        <span class="meal-macros">230 cal</span>
+      </div>
+      <div class="meal-row">
+        <span class="meal-label">Dinner</span>
+        <span class="meal-desc">Grilled steak, baked potato with butter, Caesar salad (GF dressing)</span>
+        <span class="meal-macros">610 cal</span>
+      </div>
+    </div>
+
+    <div class="callout callout-purple" style="margin-top:14px;">
+      <div class="callout-title">Meal Prep Sunday</div>
+      Cook rice, quinoa, and proteins in bulk on Sunday. Store in glass containers. Most meals above take under 20 minutes when grains and proteins are prepped. <strong>Batch-cooking is the secret to sustainable gluten-free eating.</strong>
+    </div>
+
+    <div class="callout callout-orange">
+      <div class="callout-title">Adjust to Your Goals</div>
+      This plan targets ~1,800 cal/day. To <strong>cut:</strong> reduce rice/potato portions by 1/3. To <strong>bulk:</strong> add an extra snack and increase protein portions by 30%. Need personalized macros? EvoFit Meals calculates them for you.
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-logo"><span class="evo">EVO</span><span class="fit">FIT</span> MEALS</div>
+      <div>evofitmeals.com</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       PAGE 7 — READING LABELS
+       ════════════════════════════════════════════════════ -->
+  <div class="page page-content">
+    <div class="page-header">
+      <div class="page-number">Page 06</div>
+      <h2 class="page-title">Reading <span class="accent">Labels</span> Like a Pro</h2>
+    </div>
+
+    <p class="page-intro">
+      Knowing safe ingredients is only half the battle. You need to decode packaging, understand certifications, and navigate restaurants safely. Here's your cheat sheet.
+    </p>
+
+    <div class="section-title"><span class="icon icon-green">&#10003;</span> Certification Symbols to Trust</div>
+    <div class="card card-sm" style="margin-bottom:16px;">
+      <div class="symbol-row">
+        <div class="symbol-badge symbol-badge-gf">GF</div>
+        <div class="symbol-text"><strong>GFCO Certified</strong> &mdash; Gluten-Free Certification Organization. Products test below 10 ppm gluten. The gold standard. Look for the circular "GF" logo.</div>
+      </div>
+      <div class="symbol-row">
+        <div class="symbol-badge symbol-badge-gf">CSA</div>
+        <div class="symbol-text"><strong>CSA Recognition Seal</strong> &mdash; Celiac Support Association. Annual testing, strict facility audits. Trusted by celiac community.</div>
+      </div>
+      <div class="symbol-row">
+        <div class="symbol-badge symbol-badge-gf">NSF</div>
+        <div class="symbol-text"><strong>NSF Gluten-Free</strong> &mdash; NSF International certification. Independent lab testing at &lt;20 ppm. Common on supplements.</div>
+      </div>
+      <div class="symbol-row" style="margin-bottom:0;">
+        <div class="symbol-badge symbol-badge-warn">FDA</div>
+        <div class="symbol-text"><strong>"Gluten-Free" Label (FDA)</strong> &mdash; Must contain &lt;20 ppm gluten. Not third-party verified &mdash; relies on manufacturer testing. Acceptable but less rigorous.</div>
+      </div>
+    </div>
+
+    <div class="section-title"><span class="icon icon-red">!</span> Red Flags on Ingredient Lists</div>
+    <div class="label-grid" style="margin-bottom:16px;">
+      <div class="label-card">
+        <div class="label-card-title" style="color:var(--red);">Avoid These Words</div>
+        <ul>
+          <li>Wheat, barley, rye, triticale</li>
+          <li>Malt, malt extract, malt syrup</li>
+          <li>Brewer's yeast</li>
+          <li>Modified food starch (if from wheat)</li>
+          <li>Hydrolyzed wheat protein</li>
+          <li>Seitan, fu (wheat gluten)</li>
+          <li>Semolina, durum, einkorn, spelt</li>
+        </ul>
+      </div>
+      <div class="label-card">
+        <div class="label-card-title" style="color:var(--yellow);">Cross-Contamination Warnings</div>
+        <ul>
+          <li>"Made in a facility that also processes wheat"</li>
+          <li>"May contain wheat/gluten"</li>
+          <li>"Processed on shared equipment"</li>
+        </ul>
+        <p style="margin-top:8px;"><strong>For celiac:</strong> avoid these products. The warnings are voluntary &mdash; companies who include them are being honest, but the risk is real.</p>
+        <p style="margin-top:6px;"><strong>For sensitivity:</strong> usually safe, but note how you feel.</p>
+      </div>
+    </div>
+
+    <div class="section-title"><span class="icon icon-orange">&#9733;</span> Restaurant Survival Tips</div>
+    <div class="grid-2">
+      <div class="card card-sm">
+        <div class="card-title">Do</div>
+        <ul>
+          <li>Call ahead and ask about GF prep areas</li>
+          <li>Request grilled proteins with no marinade</li>
+          <li>Ask for rice, potato, or corn-based sides</li>
+          <li>Use apps: Find Me GF, Nima sensor</li>
+          <li>Tip well &mdash; servers who help are gold</li>
+        </ul>
+      </div>
+      <div class="card card-sm">
+        <div class="card-title">Don't</div>
+        <ul>
+          <li>Assume "wheat-free" means GF</li>
+          <li>Trust fried foods (shared fryer oil)</li>
+          <li>Forget sauces &amp; dressings (ask for plain)</li>
+          <li>Feel embarrassed asking questions</li>
+          <li>Skip the allergy card (carry one!)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div class="footer-logo"><span class="evo">EVO</span><span class="fit">FIT</span> MEALS</div>
+      <div>evofitmeals.com</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       PAGE 8 — CTA + BACK
+       ════════════════════════════════════════════════════ -->
+  <div class="page page-cta">
+    <div class="cta-eyebrow">Ready for the Next Step?</div>
+    <h2 class="cta-title">
+      Get Custom <span style="color:var(--orange);">Gluten-Free</span> Meal Plans<br />Built for Your Body
+    </h2>
+    <p class="cta-subtitle">
+      Stop guessing portions and Googling substitutes. EvoFit Meals gives you personalized GF meal plans with exact macros, grocery lists, and prep instructions &mdash; all tailored to your goals.
+    </p>
+
+    <div class="cta-pricing">
+      <div class="cta-pricing-row">
+        <div class="price-card">
+          <div class="price-card-label">Starter</div>
+          <div class="price-card-value">$9 <span class="period">/ mo</span></div>
+          <div class="price-card-note">Basic meal plans</div>
+        </div>
+        <div class="price-card featured">
+          <div class="price-card-label">Pro</div>
+          <div class="price-card-value">$19 <span class="period">/ mo</span></div>
+          <div class="price-card-note">Custom macros + grocery lists</div>
+        </div>
+        <div class="price-card">
+          <div class="price-card-label">Premium</div>
+          <div class="price-card-value">$39 <span class="period">/ mo</span></div>
+          <div class="price-card-note">1-on-1 coaching included</div>
+        </div>
+      </div>
+    </div>
+
+    <a href="https://evofitmeals.com/get-started" class="cta-button">
+      Start Your Free Trial
+    </a>
+    <div class="cta-url">
+      <strong>evofitmeals.com/get-started</strong>
+    </div>
+
+    <div class="cta-features">
+      <div class="cta-feat"><span class="check">&#10003;</span> Gluten-free focused plans</div>
+      <div class="cta-feat"><span class="check">&#10003;</span> Personalized macros</div>
+      <div class="cta-feat"><span class="check">&#10003;</span> Weekly grocery lists</div>
+      <div class="cta-feat"><span class="check">&#10003;</span> Cancel anytime</div>
+    </div>
+
+    <div class="cover-logo" style="position:absolute; bottom:0.7in;">
+      <span class="evo">EVO</span><span class="fit">FIT</span> <span class="meals">MEALS</span>
+    </div>
+  </div>
+
+</body>
+</html>

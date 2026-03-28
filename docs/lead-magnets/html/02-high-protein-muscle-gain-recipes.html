@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>30 High-Protein Recipes for Muscle Gain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: #E4E4E7;
+    background: #0A0A0F;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 0;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+    background: #0A0A0F;
+  }
+
+  .page:last-child {
+    page-break-after: auto;
+  }
+
+  /* ── Brand Colors ── */
+  :root {
+    --purple: #9333EA;
+    --purple-light: #A855F7;
+    --purple-dark: #7C3AED;
+    --orange: #F97316;
+    --orange-light: #FB923C;
+    --dark: #0A0A0F;
+    --dark-card: #131318;
+    --dark-border: #1E1E2A;
+    --text-primary: #F4F4F5;
+    --text-secondary: #A1A1AA;
+    --text-muted: #71717A;
+  }
+
+  /* ── Utility ── */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--purple-light), var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .accent-line {
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--purple), var(--orange));
+    border-radius: 2px;
+    margin-bottom: 16px;
+  }
+
+  .page-number {
+    position: absolute;
+    bottom: 20px;
+    right: 32px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .page-footer {
+    position: absolute;
+    bottom: 20px;
+    left: 32px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  /* ════════════════════════════════════════
+     PAGE 1 — COVER
+     ════════════════════════════════════════ */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: radial-gradient(ellipse at 30% 20%, rgba(147,51,234,0.25) 0%, transparent 55%),
+                radial-gradient(ellipse at 70% 80%, rgba(249,115,22,0.15) 0%, transparent 55%),
+                linear-gradient(170deg, #0D0D14 0%, #0A0A0F 40%, #0E0A16 100%);
+    padding: 48px 40px;
+  }
+
+  .cover-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border: 1px solid rgba(147,51,234,0.4);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--purple-light);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 32px;
+  }
+
+  .cover h1 {
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    max-width: 540px;
+  }
+
+  .cover-subtitle {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--orange);
+    margin-bottom: 40px;
+  }
+
+  .cover-divider {
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--purple), var(--orange));
+    border-radius: 2px;
+    margin-bottom: 40px;
+  }
+
+  .cover-audience {
+    font-size: 15px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-bottom: 48px;
+  }
+
+  .cover-logo {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .cover-logo span {
+    color: var(--orange);
+  }
+
+  .cover-url {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .cover-protein-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    filter: drop-shadow(0 0 20px rgba(249,115,22,0.3));
+  }
+
+  /* ════════════════════════════════════════
+     PAGE 2 — INFO / SCIENCE
+     ════════════════════════════════════════ */
+  .content-page {
+    padding: 40px 36px 60px;
+    background: linear-gradient(180deg, #0D0D14 0%, #0A0A0F 100%);
+  }
+
+  .content-page h2 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+  }
+
+  .content-page .page-intro {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+    line-height: 1.6;
+    max-width: 520px;
+  }
+
+  .info-card {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+  }
+
+  .info-card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .info-card h3 .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .icon-purple { background: rgba(147,51,234,0.15); }
+  .icon-orange { background: rgba(249,115,22,0.15); }
+
+  .info-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .info-card .highlight {
+    color: var(--orange);
+    font-weight: 600;
+  }
+
+  .info-card .highlight-purple {
+    color: var(--purple-light);
+    font-weight: 600;
+  }
+
+  .info-card ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 8px;
+  }
+
+  .info-card ul li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    padding-left: 18px;
+    position: relative;
+    margin-bottom: 4px;
+  }
+
+  .info-card ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--purple);
+  }
+
+  /* ════════════════════════════════════════
+     PAGES 3-6 — RECIPE PAGES
+     ════════════════════════════════════════ */
+  .recipe-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .recipe-card {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    transition: border-color 0.2s;
+  }
+
+  .recipe-card:hover {
+    border-color: rgba(147,51,234,0.3);
+  }
+
+  .recipe-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .recipe-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+    flex: 1;
+    margin-right: 8px;
+  }
+
+  .recipe-macros {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .macro-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .macro-protein {
+    background: rgba(147,51,234,0.15);
+    color: var(--purple-light);
+  }
+
+  .macro-cal {
+    background: rgba(249,115,22,0.1);
+    color: var(--orange-light);
+  }
+
+  .recipe-desc {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  .tag-breakfast { background: rgba(249,115,22,0.12); color: var(--orange); }
+  .tag-lunch { background: rgba(147,51,234,0.12); color: var(--purple-light); }
+  .tag-dinner { background: rgba(34,197,94,0.12); color: #4ADE80; }
+  .tag-snack { background: rgba(56,189,248,0.12); color: #38BDF8; }
+
+  .recipe-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  /* ════════════════════════════════════════
+     PAGE 7 — CHEAT SHEET
+     ════════════════════════════════════════ */
+  .cheat-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--dark-border);
+  }
+
+  .cheat-table thead th {
+    background: rgba(147,51,234,0.1);
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--purple-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--dark-border);
+  }
+
+  .cheat-table thead th:last-child {
+    text-align: right;
+  }
+
+  .cheat-table tbody td {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(30,30,42,0.5);
+    background: var(--dark-card);
+  }
+
+  .cheat-table tbody td:last-child {
+    text-align: right;
+    font-weight: 700;
+    color: var(--orange);
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .cheat-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .cheat-table tbody tr:nth-child(even) td {
+    background: rgba(19,19,24,0.6);
+  }
+
+  .food-category {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--purple-light);
+    padding: 8px 16px !important;
+    background: rgba(147,51,234,0.06) !important;
+    border-bottom: 1px solid var(--dark-border) !important;
+  }
+
+  /* ════════════════════════════════════════
+     PAGE 8 — CTA + BACK COVER
+     ════════════════════════════════════════ */
+  .cta-page {
+    padding: 40px 36px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: radial-gradient(ellipse at 50% 30%, rgba(147,51,234,0.15) 0%, transparent 60%),
+                linear-gradient(180deg, #0D0D14 0%, #0A0A0F 100%);
+  }
+
+  .cta-page h2 {
+    font-size: 30px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+  }
+
+  .cta-page .page-intro {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+    max-width: 460px;
+    line-height: 1.6;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    width: 100%;
+    margin-bottom: 28px;
+  }
+
+  .pricing-card {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    border-radius: 14px;
+    padding: 22px 16px;
+    text-align: center;
+    position: relative;
+  }
+
+  .pricing-card.featured {
+    border-color: var(--purple);
+    background: linear-gradient(180deg, rgba(147,51,234,0.08) 0%, var(--dark-card) 100%);
+  }
+
+  .pricing-card.featured::before {
+    content: 'MOST POPULAR';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--purple), var(--orange));
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 4px 14px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .pricing-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .pricing-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .pricing-amount {
+    font-family: 'Outfit', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .pricing-amount span {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .pricing-period {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .pricing-features {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    margin-bottom: 16px;
+  }
+
+  .pricing-features li {
+    font-size: 11px;
+    color: var(--text-secondary);
+    padding: 4px 0;
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .pricing-features li::before {
+    content: '\2713';
+    position: absolute;
+    left: 0;
+    color: var(--purple-light);
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  .pricing-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--dark-border);
+    color: var(--text-secondary);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+    color: white;
+  }
+
+  .cta-bottom {
+    margin-top: auto;
+    padding-top: 20px;
+  }
+
+  .cta-bottom-url {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .cta-bottom-url a {
+    color: var(--orange);
+    text-decoration: none;
+  }
+
+  .cta-bottom-tagline {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .cta-bottom-logo {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--text-primary);
+  }
+
+  .cta-bottom-logo span {
+    color: var(--orange);
+  }
+
+  .cta-legal {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 12px;
+    opacity: 0.6;
+  }
+
+  @media print {
+    body { background: #0A0A0F; }
+    .page { page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 1 — COVER
+     ════════════════════════════════════════════════════════════ -->
+<div class="page cover">
+  <div class="cover-badge">Free Recipe Guide</div>
+  <div class="cover-protein-icon">&#x1F969;</div>
+  <h1 class="gradient-text">30 High-Protein Recipes for Muscle Gain</h1>
+  <p class="cover-subtitle">Every Recipe Over 40g Protein Per Serving</p>
+  <div class="cover-divider"></div>
+  <p class="cover-audience">For Fitness Professionals &amp; Their Clients</p>
+  <div style="margin-top: auto;">
+    <div class="cover-logo">EvoFit<span>Meals</span></div>
+    <p class="cover-url">evofitmeals.com</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 2 — PROTEIN & MUSCLE GROWTH
+     ════════════════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="accent-line"></div>
+  <h2>Protein &amp; Muscle Growth</h2>
+  <p class="page-intro">The science-backed fundamentals every trainer should know when programming nutrition for hypertrophy clients.</p>
+
+  <div class="info-card">
+    <h3><span class="icon icon-purple">&#x1F4CA;</span> How Much Protein Do You Actually Need?</h3>
+    <p>
+      Research consistently supports <span class="highlight-purple">1.6&ndash;2.2 g of protein per kilogram of body weight</span> per day for maximizing muscle protein synthesis. For a 180 lb (82 kg) individual, that translates to roughly <span class="highlight">130&ndash;180 g of protein daily</span>. Going above 2.2 g/kg shows diminishing returns for muscle growth, though it won't cause harm in healthy individuals.
+    </p>
+    <ul>
+      <li>Beginners &amp; moderate lifters: aim for 1.6 g/kg</li>
+      <li>Advanced lifters in a caloric surplus: 1.8&ndash;2.0 g/kg</li>
+      <li>Lifters in a caloric deficit (cutting): push to 2.2 g/kg to preserve lean mass</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <h3><span class="icon icon-orange">&#x23F1;</span> The Post-Workout Window: Myth Debunked</h3>
+    <p>
+      The "anabolic window" &mdash; the idea that you must consume protein within 30 minutes of training &mdash; has been largely <span class="highlight">debunked by modern research</span>. A 2013 meta-analysis by Schoenfeld et al. found that <span class="highlight-purple">total daily protein intake matters far more than timing</span>. The real window is roughly 4&ndash;6 hours around your workout (before and after combined).
+    </p>
+    <ul>
+      <li>Eat a protein-rich meal 2&ndash;3 hours before training</li>
+      <li>Follow up within 2&ndash;3 hours post-workout &mdash; no rush needed</li>
+      <li>Spread protein across 3&ndash;5 meals for optimal MPS signaling</li>
+      <li>Aim for at least 0.4 g/kg per meal (roughly 30&ndash;40 g per sitting)</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <h3><span class="icon icon-purple">&#x1F9EC;</span> Complete vs. Incomplete Proteins</h3>
+    <p>
+      <span class="highlight-purple">Complete proteins</span> contain all 9 essential amino acids in sufficient quantities. Animal sources (chicken, beef, fish, eggs, dairy) are inherently complete. Most plant sources are <span class="highlight">incomplete</span> on their own but can be combined for a full amino acid profile.
+    </p>
+    <ul>
+      <li><strong>Complete:</strong> Chicken, beef, fish, eggs, dairy, soy, quinoa</li>
+      <li><strong>Incomplete (combine them):</strong> Rice + beans, peanut butter + whole wheat, lentils + grains</li>
+      <li>Leucine is the key trigger for MPS &mdash; aim for 2.5&ndash;3 g per meal</li>
+      <li>Whey protein has the highest leucine content (~11%) of any source</li>
+    </ul>
+  </div>
+
+  <span class="page-footer">EVOFITMEALS.COM</span>
+  <span class="page-number">2</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 3 — BREAKFAST RECIPES
+     ════════════════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="accent-line"></div>
+  <h2>Breakfast Recipes</h2>
+  <span class="section-tag tag-breakfast">&#x2600;&#xFE0F; Morning Fuel &bull; 8 Recipes</span>
+
+  <div class="recipe-grid">
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Protein Banana Pancakes</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">48g P</span>
+          <span class="macro-badge macro-cal">420 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Blend oats, egg whites, banana, and whey protein into a thick batter. Cook on a non-stick pan until golden. Top with Greek yogurt and berries for extra protein.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Loaded Egg White Omelette</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">44g P</span>
+          <span class="macro-badge macro-cal">310 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">8 egg whites folded with turkey breast, spinach, bell peppers, and a sprinkle of feta cheese. A classic high-volume, low-calorie breakfast staple.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Greek Yogurt Power Bowl</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">42g P</span>
+          <span class="macro-badge macro-cal">380 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Thick Greek yogurt layered with whey protein granola, sliced almonds, chia seeds, and mixed berries. High in casein for sustained amino acid release.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Overnight Protein Oats</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">45g P</span>
+          <span class="macro-badge macro-cal">440 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Rolled oats soaked overnight in milk with a scoop of whey protein, peanut butter, and flaxseed. Grab-and-go meal prep that's ready in the morning.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Steak &amp; Eggs Classic</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">56g P</span>
+          <span class="macro-badge macro-cal">480 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">5 oz sirloin steak seared medium-rare alongside 3 whole eggs scrambled with chives. Pair with roasted sweet potato for complex carbs.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Cottage Cheese Waffles</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">41g P</span>
+          <span class="macro-badge macro-cal">350 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Blend cottage cheese, oats, eggs, and vanilla in a waffle maker. The cottage cheese creates a fluffy, protein-dense texture with zero protein powder needed.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Smoked Salmon Toast</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">40g P</span>
+          <span class="macro-badge macro-cal">390 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Whole grain toast layered with cream cheese, 4 oz smoked salmon, capers, red onion, and a poached egg. Rich in omega-3s and complete protein.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Breakfast Burrito Bowl</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">52g P</span>
+          <span class="macro-badge macro-cal">460 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Scrambled eggs with chicken sausage, black beans, salsa, and avocado over brown rice. A savory powerhouse that covers all your macros in one bowl.</p>
+    </div>
+  </div>
+
+  <span class="page-footer">EVOFITMEALS.COM</span>
+  <span class="page-number">3</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 4 — LUNCH RECIPES
+     ════════════════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="accent-line"></div>
+  <h2>Lunch Recipes</h2>
+  <span class="section-tag tag-lunch">&#x1F3CB;&#xFE0F; Midday Muscle &bull; 8 Recipes</span>
+
+  <div class="recipe-grid">
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Grilled Chicken Caesar Wrap</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">50g P</span>
+          <span class="macro-badge macro-cal">450 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">6 oz grilled chicken breast, romaine, shaved parmesan, and light Caesar dressing in a whole wheat tortilla. Meal-prep friendly and travels well.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Tuna Quinoa Power Bowl</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">48g P</span>
+          <span class="macro-badge macro-cal">410 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Seared ahi tuna over tri-color quinoa with edamame, cucumber, avocado, and a sesame-ginger drizzle. Two complete protein sources in one bowl.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Turkey Meatball Sub</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">46g P</span>
+          <span class="macro-badge macro-cal">470 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Lean ground turkey meatballs baked with marinara and melted mozzarella on a whole grain hoagie. Half the fat of traditional meatball subs with all the flavor.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Garlic Shrimp Stir-Fry</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">44g P</span>
+          <span class="macro-badge macro-cal">380 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">8 oz shrimp sauteed with garlic, broccoli, snap peas, and bell peppers in a light soy-ginger sauce over jasmine rice. Quick 15-minute cook time.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Black Bean Chicken Bowl</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">52g P</span>
+          <span class="macro-badge macro-cal">490 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Seasoned grilled chicken over cilantro-lime rice with black beans, corn salsa, and a dollop of Greek yogurt. A Chipotle-style bowl with cleaner macros.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Mediterranean Lentil Salad</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">41g P</span>
+          <span class="macro-badge macro-cal">400 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Green lentils with grilled halloumi, cherry tomatoes, cucumber, red onion, and lemon-herb dressing. A plant-forward option with 41g complete protein.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Thai Peanut Chicken Lettuce Wraps</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">45g P</span>
+          <span class="macro-badge macro-cal">360 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Shredded rotisserie chicken tossed in peanut sauce with shredded carrots and cilantro, served in butter lettuce cups. Low-carb and incredibly satisfying.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Salmon Avocado Poke Bowl</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">43g P</span>
+          <span class="macro-badge macro-cal">480 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Cubed fresh salmon marinated in soy and sesame over sushi rice with avocado, mango, edamame, and crispy seaweed. Omega-3 rich and refeed-day perfect.</p>
+    </div>
+  </div>
+
+  <span class="page-footer">EVOFITMEALS.COM</span>
+  <span class="page-number">4</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 5 — DINNER RECIPES
+     ════════════════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="accent-line"></div>
+  <h2>Dinner Recipes</h2>
+  <span class="section-tag tag-dinner">&#x1F319; Evening Recovery &bull; 8 Recipes</span>
+
+  <div class="recipe-grid">
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Herb-Crusted Grilled Salmon</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">46g P</span>
+          <span class="macro-badge macro-cal">440 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">8 oz Atlantic salmon fillet crusted with Dijon, garlic, and fresh dill, served with roasted asparagus and quinoa. Rich in omega-3s for recovery and inflammation control.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Lean Beef &amp; Broccoli Stir-Fry</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">50g P</span>
+          <span class="macro-badge macro-cal">460 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Thinly sliced flank steak wok-seared with broccoli florets in a low-sodium oyster sauce. Served over brown rice. Iron and zinc for testosterone support.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Healthy Chicken Parmesan</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">54g P</span>
+          <span class="macro-badge macro-cal">490 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Air-fried chicken breast with whole wheat panko, marinara, and part-skim mozzarella. Served over zucchini noodles. All the comfort, half the calories of the original.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Lemon Herb Baked Cod</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">42g P</span>
+          <span class="macro-badge macro-cal">320 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Fresh cod fillets baked with lemon, garlic, and fresh herbs. Paired with roasted sweet potatoes and green beans. Ultra-lean with virtually zero fat.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Ground Turkey Stuffed Peppers</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">44g P</span>
+          <span class="macro-badge macro-cal">410 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Bell peppers filled with seasoned lean ground turkey, brown rice, black beans, and topped with melted cheddar. Two peppers per serving for serious volume eating.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Bison Burger Lettuce Wrap</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">48g P</span>
+          <span class="macro-badge macro-cal">390 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">6 oz bison patty with caramelized onions, tomato, and avocado in crisp iceberg lettuce. Bison is leaner than beef with higher iron and B12 content.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Teriyaki Chicken Thigh Bowl</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">47g P</span>
+          <span class="macro-badge macro-cal">470 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Boneless chicken thighs glazed with homemade low-sugar teriyaki, served over sticky rice with steamed bok choy and sesame seeds. Client favorite.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Garlic Butter Shrimp Pasta</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">43g P</span>
+          <span class="macro-badge macro-cal">450 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Jumbo shrimp sauteed in garlic and light butter sauce tossed with high-protein chickpea pasta, cherry tomatoes, and fresh basil. Refeed-night worthy.</p>
+    </div>
+  </div>
+
+  <span class="page-footer">EVOFITMEALS.COM</span>
+  <span class="page-number">5</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 6 — SNACK RECIPES
+     ════════════════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="accent-line"></div>
+  <h2>Snack Recipes</h2>
+  <span class="section-tag tag-snack">&#x26A1; Quick Fuel &bull; 6 Recipes</span>
+
+  <div class="recipe-grid">
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Chocolate Peanut Butter Protein Balls</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">42g P</span>
+          <span class="macro-badge macro-cal">350 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Roll together whey protein, peanut butter, oats, dark chocolate chips, and honey into bite-sized balls. Makes 4 balls per serving. Perfect grab-and-go between clients or sessions.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Savory Cottage Cheese Bowl</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">40g P</span>
+          <span class="macro-badge macro-cal">280 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">1.5 cups of cottage cheese topped with everything bagel seasoning, cherry tomatoes, cucumber, and a drizzle of olive oil. Casein-rich for slow-digesting protein between meals.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Jerky &amp; Nut Trail Mix</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">41g P</span>
+          <span class="macro-badge macro-cal">390 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Beef jerky pieces mixed with roasted almonds, pumpkin seeds, dark chocolate chips, and dried cranberries. Pack in ziplock bags for a week of high-protein snacking.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Spicy Edamame Crunch</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">40g P</span>
+          <span class="macro-badge macro-cal">340 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Shelled edamame tossed with chili flakes, garlic powder, sesame oil, and sea salt, then air-fried until crispy. A crunchy, plant-based protein bomb with complete aminos from soy.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Tuna-Stuffed Avocado</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">44g P</span>
+          <span class="macro-badge macro-cal">370 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Halved avocado filled with seasoned tuna salad made with Greek yogurt instead of mayo, lemon zest, and diced celery. Healthy fats plus lean protein in every bite.</p>
+    </div>
+
+    <div class="recipe-card">
+      <div class="recipe-card-header">
+        <span class="recipe-name">Protein Cookie Dough Dip</span>
+        <div class="recipe-macros">
+          <span class="macro-badge macro-protein">40g P</span>
+          <span class="macro-badge macro-cal">310 cal</span>
+        </div>
+      </div>
+      <p class="recipe-desc">Blend chickpeas, vanilla whey, peanut butter, maple syrup, and mini chocolate chips. Serve with apple slices or rice cakes. Tastes like dessert, hits like a protein shake.</p>
+    </div>
+  </div>
+
+  <div style="margin-top: 20px; background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: 12px; padding: 20px 24px;">
+    <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; font-family: 'Outfit', sans-serif;">
+      &#x1F4A1; Snacking Strategy for Muscle Gain
+    </h3>
+    <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;">
+      Space snacks <strong style="color: var(--purple-light);">3&ndash;4 hours apart</strong> from main meals to maintain elevated muscle protein synthesis throughout the day. Each snack should deliver at least <strong style="color: var(--orange);">30&ndash;40g protein</strong> to hit the leucine threshold needed to trigger MPS. Prep snacks in bulk on Sundays &mdash; clients who meal-prep snacks are 3x more likely to hit their daily protein targets.
+    </p>
+  </div>
+
+  <span class="page-footer">EVOFITMEALS.COM</span>
+  <span class="page-number">6</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 7 — PROTEIN CHEAT SHEET
+     ════════════════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="accent-line"></div>
+  <h2>The Protein Cheat Sheet</h2>
+  <p class="page-intro">Quick reference: protein content per 100g for the 20 most common muscle-building foods. Print this page and pin it to your fridge.</p>
+
+  <table class="cheat-table">
+    <thead>
+      <tr>
+        <th>Food</th>
+        <th style="text-align: right;">Protein per 100g</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td colspan="2" class="food-category">Poultry &amp; Meat</td></tr>
+      <tr><td>Chicken Breast (cooked)</td><td>31g</td></tr>
+      <tr><td>Turkey Breast (cooked)</td><td>29g</td></tr>
+      <tr><td>Lean Ground Beef (95/5)</td><td>26g</td></tr>
+      <tr><td>Bison / Buffalo</td><td>28g</td></tr>
+      <tr><td>Pork Tenderloin</td><td>26g</td></tr>
+
+      <tr><td colspan="2" class="food-category">Fish &amp; Seafood</td></tr>
+      <tr><td>Tuna (canned in water)</td><td>26g</td></tr>
+      <tr><td>Salmon (Atlantic, cooked)</td><td>25g</td></tr>
+      <tr><td>Shrimp (cooked)</td><td>24g</td></tr>
+      <tr><td>Cod (cooked)</td><td>23g</td></tr>
+
+      <tr><td colspan="2" class="food-category">Dairy &amp; Eggs</td></tr>
+      <tr><td>Greek Yogurt (non-fat)</td><td>10g</td></tr>
+      <tr><td>Cottage Cheese (low-fat)</td><td>11g</td></tr>
+      <tr><td>Whole Eggs</td><td>13g</td></tr>
+      <tr><td>Egg Whites</td><td>11g</td></tr>
+      <tr><td>Whey Protein Powder</td><td>80g</td></tr>
+
+      <tr><td colspan="2" class="food-category">Plant-Based</td></tr>
+      <tr><td>Tofu (firm)</td><td>17g</td></tr>
+      <tr><td>Tempeh</td><td>19g</td></tr>
+      <tr><td>Lentils (cooked)</td><td>9g</td></tr>
+      <tr><td>Chickpeas (cooked)</td><td>9g</td></tr>
+      <tr><td>Edamame (shelled)</td><td>11g</td></tr>
+      <tr><td>Quinoa (cooked)</td><td>4g</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top: 16px; display: flex; gap: 12px;">
+    <div style="flex: 1; background: rgba(147,51,234,0.08); border: 1px solid rgba(147,51,234,0.2); border-radius: 10px; padding: 14px 16px;">
+      <h4 style="font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700; color: var(--purple-light); margin-bottom: 6px;">Pro Tip: Lean Sources</h4>
+      <p style="font-size: 11px; color: var(--text-secondary); line-height: 1.6;">Chicken breast, turkey, cod, and egg whites give you the most protein per calorie. Use these when cutting to maximize protein while staying in a deficit.</p>
+    </div>
+    <div style="flex: 1; background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2); border-radius: 10px; padding: 14px 16px;">
+      <h4 style="font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700; color: var(--orange); margin-bottom: 6px;">Pro Tip: Bulking Sources</h4>
+      <p style="font-size: 11px; color: var(--text-secondary); line-height: 1.6;">Salmon, whole eggs, and bison offer protein plus healthy fats and micronutrients. Use these when in a surplus and calories are less restricted.</p>
+    </div>
+  </div>
+
+  <span class="page-footer">EVOFITMEALS.COM</span>
+  <span class="page-number">7</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE 8 — CTA + BACK COVER
+     ════════════════════════════════════════════════════════════ -->
+<div class="page cta-page">
+  <div class="accent-line" style="margin-top: 8px;"></div>
+  <h2>Generate Unlimited High-Protein<br>Meal Plans with AI</h2>
+  <p class="page-intro">Stop spending hours building meal plans manually. EvoFitMeals creates personalized, macro-perfect plans for every client in seconds.</p>
+
+  <div class="pricing-grid">
+    <!-- Starter -->
+    <div class="pricing-card">
+      <div class="pricing-name">Starter</div>
+      <div class="pricing-desc">For solo trainers</div>
+      <div class="pricing-amount">$29<span>/mo</span></div>
+      <div class="pricing-period">billed monthly</div>
+      <ul class="pricing-features">
+        <li>Up to 15 clients</li>
+        <li>AI meal plan generation</li>
+        <li>Macro &amp; calorie targeting</li>
+        <li>Grocery list export</li>
+        <li>Client portal access</li>
+      </ul>
+      <a href="https://evofitmeals.com/get-started" class="pricing-btn btn-outline">Get Started</a>
+    </div>
+
+    <!-- Professional -->
+    <div class="pricing-card featured">
+      <div class="pricing-name">Professional</div>
+      <div class="pricing-desc">For growing businesses</div>
+      <div class="pricing-amount">$59<span>/mo</span></div>
+      <div class="pricing-period">billed monthly</div>
+      <ul class="pricing-features">
+        <li>Up to 50 clients</li>
+        <li>Everything in Starter</li>
+        <li>Custom branded plans</li>
+        <li>Recipe image generation</li>
+        <li>Priority support</li>
+        <li>Advanced dietary filters</li>
+      </ul>
+      <a href="https://evofitmeals.com/get-started" class="pricing-btn btn-primary">Start Free Trial</a>
+    </div>
+
+    <!-- Enterprise -->
+    <div class="pricing-card">
+      <div class="pricing-name">Enterprise</div>
+      <div class="pricing-desc">For gyms &amp; studios</div>
+      <div class="pricing-amount">$149<span>/mo</span></div>
+      <div class="pricing-period">billed monthly</div>
+      <ul class="pricing-features">
+        <li>Unlimited clients</li>
+        <li>Everything in Professional</li>
+        <li>Multi-trainer accounts</li>
+        <li>White-label branding</li>
+        <li>API access</li>
+        <li>Dedicated account manager</li>
+      </ul>
+      <a href="https://evofitmeals.com/get-started" class="pricing-btn btn-outline">Contact Sales</a>
+    </div>
+  </div>
+
+  <div style="background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: 12px; padding: 18px 24px; width: 100%; text-align: center; margin-bottom: 20px;">
+    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+      <strong style="color: var(--text-primary);">What trainers are saying:</strong>
+      &ldquo;I used to spend 2 hours per client on meal plans. Now it takes 30 seconds. My clients love the variety and I&rsquo;ve doubled my roster.&rdquo;
+      <br><span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: inline-block;">&mdash; Sarah K., Certified Personal Trainer</span>
+    </p>
+  </div>
+
+  <div class="cta-bottom">
+    <div class="cta-bottom-url">
+      <a href="https://evofitmeals.com/get-started">evofitmeals.com/get-started</a>
+    </div>
+    <p class="cta-bottom-tagline">AI-powered meal planning for fitness professionals</p>
+    <div class="cta-bottom-logo">EvoFit<span>Meals</span></div>
+    <p class="cta-legal">&copy; 2026 EvoFitMeals. All rights reserved. Nutritional values are estimates and may vary.</p>
+  </div>
+</div>
+
+</body>
+</html>
