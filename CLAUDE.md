@@ -2,6 +2,16 @@
 **Version:** 2.0.0 (Optimized - Jan 2026)
 **Production:** https://evofitmeals.com
 
+## 🧪 PHASE 5: VERIFY — POST-DEPLOY SIMULATION (MANDATORY)
+After every production deploy, run the FORGE User Simulation via **Zara** (QA agent):
+```bash
+cd ~/.openclaw/workspace/FitnessMealPlanner
+npx tsx scripts/seed-demo-data.ts && npx playwright test --config=playwright.simulation.config.ts --reporter=list
+```
+Skill: `~/.openclaw/workspace/skills/evofit-user-simulation/SKILL.md`
+Agent: `.claude/agents/evofit-meals-simulator.md`
+Training: `~/.openclaw/workspace/skills/evofit-user-simulation/docs/agent-training.md`
+
 ---
 
 ## Project Overview

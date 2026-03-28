@@ -31,6 +31,8 @@ import ProfessionalSalesPage from "./pages/ProfessionalSalesPage";
 import EnterpriseSalesPage from "./pages/EnterpriseSalesPage";
 import LeadMagnetPage from "./pages/LeadMagnetPage";
 import TripwirePage from "./pages/TripwirePage";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -74,6 +76,8 @@ export default function Router() {
         <Route path="/enterprise" component={EnterpriseSalesPage} />
         <Route path="/free-blueprint" component={LeadMagnetPage} />
         <Route path="/special-offer" component={TripwirePage} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:slug" component={BlogPost} />
         <Route path="/">
           <Redirect to="/get-started" />
         </Route>
@@ -99,6 +103,10 @@ export default function Router() {
               return <Trainer />;
           }
         }} />
+
+        {/* Public Routes */}
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:slug" component={BlogPost} />
 
         {/* Public/Common Routes */}
         <Route path="/pricing" component={HybridPricing} />
