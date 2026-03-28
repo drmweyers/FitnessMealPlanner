@@ -73,13 +73,13 @@ interface BatchSpec {
 
 const BATCHES: BatchSpec[] = [
   // ============================================================
-  // PHASE 1: TIER 3 — FOUNDATIONAL (1,000 Recipes)
+  // PHASE 1: TIER 3 — FOUNDATIONAL (1,500 Recipes)
   // ============================================================
 
-  // Block A: Chicken (350 Recipes)
+  // Block A: Chicken (525 Recipes)
   {
     id: 'A1', block: 'A', name: 'Chicken — Weight Loss Meals',
-    phase: 1, tierLevel: 'starter', target: 100,
+    phase: 1, tierLevel: 'starter', target: 150,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'Weight Loss',
@@ -92,7 +92,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'A2', block: 'A', name: 'Chicken — Muscle Building Meals',
-    phase: 1, tierLevel: 'starter', target: 100,
+    phase: 1, tierLevel: 'starter', target: 150,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'Muscle Building',
@@ -105,7 +105,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'A3', block: 'A', name: 'Chicken — Breakfast',
-    phase: 1, tierLevel: 'starter', target: 100,
+    phase: 1, tierLevel: 'starter', target: 150,
     mealTypes: ['Breakfast'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'General Fitness',
@@ -118,7 +118,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'A4', block: 'A', name: 'Chicken — Snacks',
-    phase: 1, tierLevel: 'starter', target: 50,
+    phase: 1, tierLevel: 'starter', target: 75,
     mealTypes: ['Snack'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'Weight Loss',
@@ -130,10 +130,10 @@ const BATCHES: BatchSpec[] = [
     enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
   },
 
-  // Block B: Fish & Seafood (300 Recipes)
+  // Block B: Fish & Seafood (450 Recipes)
   {
     id: 'B1', block: 'B', name: 'Salmon',
-    phase: 1, tierLevel: 'starter', target: 100,
+    phase: 1, tierLevel: 'starter', target: 150,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Carb'],
     fitnessGoal: 'General Fitness',
@@ -146,7 +146,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'B2', block: 'B', name: 'White Fish (Tilapia/Cod)',
-    phase: 1, tierLevel: 'starter', target: 100,
+    phase: 1, tierLevel: 'starter', target: 150,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'Weight Loss',
@@ -159,7 +159,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'B3', block: 'B', name: 'Shrimp',
-    phase: 1, tierLevel: 'starter', target: 100,
+    phase: 1, tierLevel: 'starter', target: 150,
     mealTypes: ['Lunch', 'Dinner', 'Snack'],
     dietaryRestrictions: ['High-Protein', 'Low-Carb'],
     fitnessGoal: 'Muscle Building',
@@ -171,13 +171,45 @@ const BATCHES: BatchSpec[] = [
     enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
   },
 
-  // Block C: Vegetarian (250 Recipes) — ALREADY COVERED BY EXISTING 1,654 PRODUCTION RECIPES
-  // C1, C2, C3 SKIPPED - production already has 1,654 vegetarian recipes (target was 250)
+  // Block C: Vegetarian (375 Recipes)
+  {
+    id: 'C1', block: 'C', name: 'Legumes',
+    phase: 1, tierLevel: 'starter', target: 150,
+    mealTypes: ['Lunch', 'Dinner'],
+    dietaryRestrictions: ['Vegetarian', 'High-Protein'],
+    mainIngredient: 'Lentils',
+    targetCalories: 400,
+    minProtein: 18, maxPrepTime: 30,
+    naturalLanguagePrompt: 'Vegetarian legume recipes featuring lentils, beans, and chickpeas. Include red lentil dal, black bean bowls, chickpea curry, white bean stew, lentil bolognese, falafel plates. Diverse international preparations — Indian, Mediterranean, Mexican, Middle Eastern. Each recipe must be unique.',
+    enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
+  },
+  {
+    id: 'C2', block: 'C', name: 'Eggs',
+    phase: 1, tierLevel: 'starter', target: 150,
+    mealTypes: ['Breakfast', 'Lunch'],
+    dietaryRestrictions: ['Vegetarian', 'High-Protein'],
+    mainIngredient: 'Eggs',
+    targetCalories: 350,
+    minProtein: 20, maxPrepTime: 20,
+    naturalLanguagePrompt: 'Egg-based vegetarian recipes, frittatas, shakshuka, egg fried rice, omelettes, egg muffins, quiche, egg salad, poached egg dishes, scrambles with vegetables. Quick and protein-rich. Each recipe must be unique.',
+    enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
+  },
+  {
+    id: 'C3', block: 'C', name: 'Tofu/Tempeh',
+    phase: 1, tierLevel: 'starter', target: 75,
+    mealTypes: ['Lunch', 'Dinner'],
+    dietaryRestrictions: ['Vegetarian', 'High-Protein'],
+    mainIngredient: 'Tofu',
+    targetCalories: 380,
+    minProtein: 22, maxPrepTime: 30,
+    naturalLanguagePrompt: 'Tofu and tempeh vegetarian recipes, crispy tofu stir-fry, tempeh bacon, marinated tofu bowls, tempeh curry, tofu scramble, grilled tempeh, tofu katsu. Asian and fusion preparations. Each recipe must be unique.',
+    enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
+  },
 
-  // Block D: Turkey & Lean Beef (100 Recipes)
+  // Block D: Turkey & Lean Beef (150 Recipes)
   {
     id: 'D1', block: 'D', name: 'Ground Turkey',
-    phase: 1, tierLevel: 'starter', target: 50,
+    phase: 1, tierLevel: 'starter', target: 75,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'Weight Loss',
@@ -190,7 +222,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'D2', block: 'D', name: 'Lean Beef',
-    phase: 1, tierLevel: 'starter', target: 50,
+    phase: 1, tierLevel: 'starter', target: 75,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'Muscle Building',
@@ -415,13 +447,13 @@ const BATCHES: BatchSpec[] = [
   },
 
   // ============================================================
-  // PHASE 3: TIER 1 — ENTERPRISE (+1,500 Recipes)
+  // PHASE 3: TIER 1 — ENTERPRISE (+3,000 Recipes)
   // ============================================================
 
-  // Block J: Gourmet & Restaurant-Quality (300 Recipes)
+  // Block J: Gourmet & Restaurant-Quality (600 Recipes)
   {
     id: 'J1', block: 'J', name: 'Fine Dining Inspired',
-    phase: 3, tierLevel: 'enterprise', target: 100,
+    phase: 3, tierLevel: 'enterprise', target: 200,
     mealTypes: ['Dinner'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'General Fitness',
@@ -433,7 +465,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'J2', block: 'J', name: 'International Gourmet',
-    phase: 3, tierLevel: 'enterprise', target: 100,
+    phase: 3, tierLevel: 'enterprise', target: 200,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'General Fitness',
@@ -445,7 +477,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'J3', block: 'J', name: "Chef's Specials",
-    phase: 3, tierLevel: 'enterprise', target: 100,
+    phase: 3, tierLevel: 'enterprise', target: 200,
     mealTypes: ['Dinner'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'General Fitness',
@@ -456,10 +488,10 @@ const BATCHES: BatchSpec[] = [
     enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
   },
 
-  // Block K: World Cuisines Deep Dive (400 Recipes)
+  // Block K: World Cuisines Deep Dive (800 Recipes)
   {
     id: 'K1', block: 'K', name: 'Mediterranean',
-    phase: 3, tierLevel: 'enterprise', target: 80,
+    phase: 3, tierLevel: 'enterprise', target: 160,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'General Fitness',
@@ -471,7 +503,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'K2', block: 'K', name: 'Asian (Japanese, Thai, Korean)',
-    phase: 3, tierLevel: 'enterprise', target: 80,
+    phase: 3, tierLevel: 'enterprise', target: 160,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'Weight Loss',
@@ -483,7 +515,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'K3', block: 'K', name: 'Mexican/Latin',
-    phase: 3, tierLevel: 'enterprise', target: 80,
+    phase: 3, tierLevel: 'enterprise', target: 160,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'General Fitness',
@@ -495,7 +527,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'K4', block: 'K', name: 'Indian',
-    phase: 3, tierLevel: 'enterprise', target: 80,
+    phase: 3, tierLevel: 'enterprise', target: 160,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'General Fitness',
@@ -507,7 +539,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'K5', block: 'K', name: 'Middle Eastern',
-    phase: 3, tierLevel: 'enterprise', target: 80,
+    phase: 3, tierLevel: 'enterprise', target: 160,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'General Fitness',
@@ -518,10 +550,10 @@ const BATCHES: BatchSpec[] = [
     enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
   },
 
-  // Block L: Ultra-Specialized Diets (300 Recipes)
+  // Block L: Ultra-Specialized Diets (600 Recipes)
   {
     id: 'L1', block: 'L', name: 'AIP (Autoimmune Protocol)',
-    phase: 3, tierLevel: 'enterprise', target: 75,
+    phase: 3, tierLevel: 'enterprise', target: 150,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner'],
     dietaryRestrictions: ['Paleo'],
     fitnessGoal: 'General Fitness',
@@ -533,7 +565,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'L2', block: 'L', name: 'Low-FODMAP',
-    phase: 3, tierLevel: 'enterprise', target: 75,
+    phase: 3, tierLevel: 'enterprise', target: 150,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner'],
     dietaryRestrictions: ['Gluten-Free'],
     fitnessGoal: 'General Fitness',
@@ -545,7 +577,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'L3', block: 'L', name: 'Carnivore',
-    phase: 3, tierLevel: 'enterprise', target: 75,
+    phase: 3, tierLevel: 'enterprise', target: 150,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Carb'],
     fitnessGoal: 'Muscle Building',
@@ -558,7 +590,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'L4', block: 'L', name: 'Whole30 Compliant',
-    phase: 3, tierLevel: 'enterprise', target: 75,
+    phase: 3, tierLevel: 'enterprise', target: 150,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner'],
     dietaryRestrictions: ['Paleo', 'Dairy-Free'],
     fitnessGoal: 'Weight Loss',
@@ -569,10 +601,10 @@ const BATCHES: BatchSpec[] = [
     enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
   },
 
-  // Block M: Premium Proteins (200 Recipes)
+  // Block M: Premium Proteins (400 Recipes)
   {
     id: 'M1', block: 'M', name: 'Wagyu/Premium Beef',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Dinner'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'Muscle Building',
@@ -585,7 +617,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'M2', block: 'M', name: 'Lobster/Crab',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Carb'],
     fitnessGoal: 'General Fitness',
@@ -597,7 +629,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'M3', block: 'M', name: 'Exotic Fish',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'General Fitness',
@@ -609,7 +641,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'M4', block: 'M', name: 'Heritage Poultry',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'Muscle Building',
@@ -621,10 +653,10 @@ const BATCHES: BatchSpec[] = [
     enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
   },
 
-  // Block N: Specific Needs (200 Recipes)
+  // Block N: Specific Needs (400 Recipes)
   {
     id: 'N1', block: 'N', name: 'Post-Surgery Recovery',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner', 'Snack'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'General Fitness',
@@ -636,7 +668,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'N2', block: 'N', name: 'Pregnancy/Postpartum',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner', 'Snack'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'General Fitness',
@@ -648,7 +680,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'N3', block: 'N', name: 'Senior Nutrition',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner'],
     dietaryRestrictions: ['High-Protein', 'Low-Fat'],
     fitnessGoal: 'General Fitness',
@@ -660,7 +692,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'N4', block: 'N', name: 'Teen Athletes',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Breakfast', 'Lunch', 'Dinner', 'Snack'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'Muscle Building',
@@ -671,10 +703,10 @@ const BATCHES: BatchSpec[] = [
     enableImageGeneration: true, enableS3Upload: true, enableNutritionValidation: true,
   },
 
-  // Block O: Desserts & Treats (100 Recipes)
+  // Block O: Desserts & Treats (200 Recipes)
   {
     id: 'O1', block: 'O', name: 'Protein Desserts',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Dessert', 'Snack'],
     dietaryRestrictions: ['High-Protein'],
     fitnessGoal: 'Muscle Building',
@@ -686,7 +718,7 @@ const BATCHES: BatchSpec[] = [
   },
   {
     id: 'O2', block: 'O', name: 'Low-Cal Treats',
-    phase: 3, tierLevel: 'enterprise', target: 50,
+    phase: 3, tierLevel: 'enterprise', target: 100,
     mealTypes: ['Dessert', 'Snack'],
     dietaryRestrictions: ['Low-Fat'],
     fitnessGoal: 'Weight Loss',
