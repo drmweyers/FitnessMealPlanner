@@ -12,6 +12,7 @@
  * - Toast notifications for user feedback
  */
 
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 // import { TooltipProvider } from "@/components/ui/tooltip";
 import Router from "./Router";
@@ -26,6 +27,16 @@ import { AuthProvider } from "./contexts/AuthContext";
  * - Router: Application routing logic
  */
 function App() {
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW registered'))
+          .catch(err => console.error('SW failed:', err));
+      });
+    }
+  }, []);
+
   return (
     <AuthProvider>
       {/* <TooltipProvider> */}

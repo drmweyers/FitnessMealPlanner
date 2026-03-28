@@ -1,0 +1,23 @@
+{
+  "name": "EvoFitMeals",
+  "short_name": "EvoFitMeals",
+  "description": "AI-powered meal planning platform for fitness professionals",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0F",
+  "theme_color": "#9333EA",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "url": "/trainer", "description": "Trainer Dashboard" },
+    { "name": "Meal Plans", "url": "/trainer/meal-plans", "description": "Manage Meal Plans" },
+    { "name": "Generate Plan", "url": "/meal-plan-generator", "description": "AI Meal Plan Generator" },
+    { "name": "Recipes", "url": "/recipes", "description": "Browse Recipes" }
+  ],
+  "categories": ["fitness", "health", "food"]
+}

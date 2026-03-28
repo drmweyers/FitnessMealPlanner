@@ -1288,4 +1288,222 @@ trainerRouter.get('/category-image-pool-health', requireAuth, requireRole('train
   }
 });
 
+// ============================================================
+// Meal Plan Import Endpoints (Tripwire Template Upload)
+// ============================================================
+
+/**
+ * Import Meal Plan Template JSON Schema
+ *
+ * Validates the structure of imported meal plan templates.
+ * Converts the simplified import format into the internal MealPlan format.
+ */
+const importMealSchema = z.object({
+  day: z.number().min(1).max(30),
+  mealType: z.string().min(1),
+  recipeName: z.string().min(1),
+  calories: z.number().min(0),
+  protein: z.number().min(0),
+  carbs: z.number().min(0),
+  fat: z.number().min(0),
+  ingredients: z.array(z.string()).optional().default([]),
+  instructions: z.string().optional().default(''),
+});
+
+const importMealPlanSchema = z.object({
+  planName: z.string().min(1, 'Plan name is required'),
+  description: z.string().optional().default(''),
+  durationDays: z.number().min(1).max(30),
+  mealsPerDay: z.number().min(1).max(6),
+  dailyCalorieTarget: z.number().min(800).max(5001),
+  dietaryProtocol: z.string().optional().default('balanced'),
+  meals: z.array(importMealSchema).min(1, 'At least one meal is required'),
+});
+
+type ImportMealPlan = z.infer<typeof importMealPlanSchema>;
+
+/**
+ * Convert imported JSON template to internal MealPlan format
+ */
+function convertImportToMealPlan(template: ImportMealPlan, trainerId: string): any {
+  // Group meals by day
+  const mealsByDay = new Map<number, typeof template.meals>();
+  for (const meal of template.meals) {
+    const existing = mealsByDay.get(meal.day) || [];
+    existing.push(meal);
+    mealsByDay.set(meal.day, existing);
+  }
+
+  // Build the meals array in the internal format
+  const meals: any[] = [];
+  for (let day = 1; day <= template.durationDays; day++) {
+    const dayMeals = mealsByDay.get(day) || [];
+    for (const meal of dayMeals) {
+      meals.push({
+        day,
+        mealType: meal.mealType,
+        recipe: {
+          id: 0,
+          title: meal.recipeName,
+          calories: meal.calories,
+          protein: meal.protein,
+          carbs: meal.carbs,
+          fat: meal.fat,
+          ingredients: meal.ingredients.map(ing => ({
+            ingredient: ing,
+            amount: '',
+            unit: '',
+          })),
+          instructionsText: meal.instructions,
+        },
+      });
+    }
+  }
+
+  return {
+    id: `import-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    planName: template.planName,
+    fitnessGoal: template.dietaryProtocol || 'balanced',
+    description: template.description,
+    dailyCalorieTarget: template.dailyCalorieTarget,
+    days: template.durationDays,
+    mealsPerDay: template.mealsPerDay,
+    generatedBy: trainerId,
+    createdAt: new Date(),
+    meals,
+  };
+}
+
+/**
+ * Import Single Meal Plan Template
+ *
+ * Accepts a JSON meal plan template, validates it, converts to internal format,
+ * and saves it to the trainer's meal plan library as a template.
+ *
+ * @route POST /api/trainer/meal-plans/import
+ * @access Private (Trainer or Admin)
+ * @returns {Object} Created meal plan with ID
+ */
+trainerRouter.post('/meal-plans/import', requireAuth, requireTrainerOrAdmin, async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const template = importMealPlanSchema.parse(req.body);
+
+    console.log('[Import Meal Plan] Trainer:', trainerId, 'Plan:', template.planName);
+
+    const mealPlanData = convertImportToMealPlan(template, trainerId);
+
+    const savedPlan = await storage.createTrainerMealPlan({
+      trainerId,
+      mealPlanData,
+      notes: `Imported template: ${template.dietaryProtocol || 'balanced'} | ${template.durationDays} days | ${template.dailyCalorieTarget} kcal/day`,
+      tags: [template.dietaryProtocol || 'balanced', 'imported', 'template', 'tripwire'],
+      isTemplate: true,
+    });
+
+    console.log('[Import Meal Plan] SUCCESS: Saved with ID:', savedPlan.id);
+
+    res.status(201).json({
+      status: 'success',
+      mealPlanId: savedPlan.id,
+      planName: template.planName,
+      message: 'Meal plan template imported successfully',
+    });
+  } catch (error) {
+    console.error('[Import Meal Plan] ERROR:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid meal plan template format',
+        details: error.errors,
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to import meal plan template',
+      code: 'SERVER_ERROR',
+    });
+  }
+});
+
+/**
+ * Bulk Import Meal Plan Templates
+ *
+ * Accepts an array of meal plan templates, processes each one,
+ * and returns a summary of successes and failures.
+ *
+ * @route POST /api/trainer/meal-plans/bulk-import
+ * @access Private (Trainer or Admin)
+ * @returns {Object} Summary: { imported, failed, errors, importedIds }
+ */
+trainerRouter.post('/meal-plans/bulk-import', requireAuth, requireTrainerOrAdmin, async (req, res) => {
+  try {
+    const trainerId = req.user!.id;
+    const { templates } = z.object({
+      templates: z.array(z.any()).min(1, 'At least one template is required').max(100, 'Maximum 100 templates per bulk import'),
+    }).parse(req.body);
+
+    console.log('[Bulk Import] Trainer:', trainerId, 'Templates:', templates.length);
+
+    const results = {
+      imported: 0,
+      failed: 0,
+      errors: [] as Array<{ index: number; planName?: string; error: string }>,
+      importedIds: [] as string[],
+    };
+
+    for (let i = 0; i < templates.length; i++) {
+      try {
+        const template = importMealPlanSchema.parse(templates[i]);
+        const mealPlanData = convertImportToMealPlan(template, trainerId);
+
+        const savedPlan = await storage.createTrainerMealPlan({
+          trainerId,
+          mealPlanData,
+          notes: `Imported template: ${template.dietaryProtocol || 'balanced'} | ${template.durationDays} days | ${template.dailyCalorieTarget} kcal/day`,
+          tags: [template.dietaryProtocol || 'balanced', 'imported', 'template', 'tripwire'],
+          isTemplate: true,
+        });
+
+        results.imported++;
+        results.importedIds.push(savedPlan.id);
+      } catch (err) {
+        results.failed++;
+        const planName = templates[i]?.planName || `Template ${i + 1}`;
+        const errorMsg = err instanceof z.ZodError
+          ? err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ')
+          : err instanceof Error ? err.message : 'Unknown error';
+        results.errors.push({ index: i, planName, error: errorMsg });
+      }
+    }
+
+    console.log('[Bulk Import] Complete:', results.imported, 'imported,', results.failed, 'failed');
+
+    const statusCode = results.failed === templates.length ? 400 : 200;
+    res.status(statusCode).json({
+      status: results.failed === 0 ? 'success' : results.imported > 0 ? 'partial' : 'error',
+      imported: results.imported,
+      failed: results.failed,
+      total: templates.length,
+      importedIds: results.importedIds,
+      errors: results.errors,
+      message: `Imported ${results.imported} of ${templates.length} meal plan templates`,
+    });
+  } catch (error) {
+    console.error('[Bulk Import] ERROR:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid request format',
+        details: error.errors,
+      });
+    }
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to process bulk import',
+      code: 'SERVER_ERROR',
+    });
+  }
+});
+
 export default trainerRouter;

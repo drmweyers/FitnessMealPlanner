@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The AI Meal Planning Blueprint - EvoFitMeals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== RESET & BASE ===== */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #9333EA;
+    --primary-light: #A855F7;
+    --primary-dark: #7E22CE;
+    --accent: #F97316;
+    --accent-light: #FB923C;
+    --dark: #0A0A0F;
+    --dark-card: #141420;
+    --dark-surface: #1A1A2E;
+    --text-white: #FFFFFF;
+    --text-light: #E2E8F0;
+    --text-muted: #94A3B8;
+    --text-dark: #1E293B;
+    --border-subtle: rgba(147, 51, 234, 0.2);
+    --gradient-primary: linear-gradient(135deg, #9333EA, #7C3AED, #6D28D9);
+    --gradient-accent: linear-gradient(135deg, #F97316, #EA580C);
+    --gradient-dark: linear-gradient(180deg, #0A0A0F 0%, #1A1A2E 50%, #0A0A0F 100%);
+  }
+
+  html { font-size: 11pt; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-dark);
+    background: #fff;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    line-height: 1.2;
+  }
+
+  /* ===== PAGE STRUCTURE ===== */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+
+  .page:last-child {
+    page-break-after: auto;
+  }
+
+  .page-inner {
+    padding: 20mm 18mm;
+    min-height: 297mm;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== PRINT STYLES ===== */
+  @media print {
+    html { font-size: 10pt; }
+    body { background: none; }
+    .page {
+      width: 210mm;
+      height: 297mm;
+      margin: 0;
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
+    .page:last-child { page-break-after: auto; }
+    .page-inner { min-height: 297mm; }
+    @page {
+      size: A4;
+      margin: 0;
+    }
+  }
+
+  /* ===== SCREEN STYLES ===== */
+  @media screen {
+    body { background: #E5E7EB; padding: 20px 0; }
+    .page {
+      background: #fff;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+      margin-bottom: 30px;
+      border-radius: 4px;
+    }
+  }
+
+  /* ===== COVER PAGE ===== */
+  .cover {
+    background: linear-gradient(160deg, #0A0A0F 0%, #1A1A2E 40%, #2D1B69 70%, #0A0A0F 100%);
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .cover .page-inner {
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+  }
+
+  .cover-glow {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(147, 51, 234, 0.3), transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .cover-logo {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 12mm;
+  }
+
+  .cover-logo-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 18px;
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 32px rgba(147, 51, 234, 0.4);
+  }
+
+  .cover-logo-icon svg {
+    width: 36px;
+    height: 36px;
+    fill: white;
+  }
+
+  .cover-brand {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--primary-light);
+  }
+
+  .cover-title-block {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 10mm;
+  }
+
+  .cover-eyebrow {
+    font-size: 10pt;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8mm;
+  }
+
+  .cover-title {
+    font-size: 36pt;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 6mm;
+  }
+
+  .cover-title .highlight {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cover-subtitle {
+    font-size: 18pt;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 4mm;
+  }
+
+  .cover-tagline {
+    font-size: 11pt;
+    color: var(--text-muted);
+    max-width: 380px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  .cover-divider {
+    width: 80px;
+    height: 3px;
+    background: var(--gradient-accent);
+    border-radius: 2px;
+    margin: 8mm auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  .cover-footer {
+    position: absolute;
+    bottom: 12mm;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 2;
+  }
+
+  .cover-footer span {
+    font-size: 9pt;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  /* ===== DARK PAGES ===== */
+  .page-dark {
+    background: var(--dark);
+    color: var(--text-white);
+  }
+
+  .page-dark .page-inner {
+    background: linear-gradient(180deg, #0A0A0F 0%, #111128 100%);
+  }
+
+  /* ===== LIGHT PAGES ===== */
+  .page-light {
+    background: #FFFFFF;
+    color: var(--text-dark);
+  }
+
+  /* ===== SECTION HEADERS ===== */
+  .section-header {
+    margin-bottom: 8mm;
+  }
+
+  .section-number {
+    display: inline-block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 3mm;
+  }
+
+  .section-title {
+    font-size: 24pt;
+    font-weight: 800;
+    margin-bottom: 3mm;
+    line-height: 1.1;
+  }
+
+  .page-dark .section-title {
+    color: var(--text-white);
+  }
+
+  .section-subtitle {
+    font-size: 11pt;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 520px;
+  }
+
+  .page-light .section-subtitle {
+    color: #64748B;
+  }
+
+  .purple-line {
+    width: 60px;
+    height: 3px;
+    background: var(--gradient-primary);
+    border-radius: 2px;
+    margin: 4mm 0;
+  }
+
+  /* ===== STAT CARDS ===== */
+  .stats-row {
+    display: flex;
+    gap: 4mm;
+    margin: 6mm 0;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: var(--dark-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 5mm 4mm;
+    text-align: center;
+  }
+
+  .stat-card .stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 22pt;
+    font-weight: 800;
+    color: var(--primary-light);
+    line-height: 1;
+    margin-bottom: 2mm;
+  }
+
+  .stat-card .stat-label {
+    font-size: 8.5pt;
+    color: var(--text-muted);
+    line-height: 1.3;
+  }
+
+  /* ===== BENEFIT BOXES ===== */
+  .benefits-grid {
+    display: flex;
+    gap: 4mm;
+    margin: 5mm 0;
+  }
+
+  .benefit-box {
+    flex: 1;
+    background: var(--dark-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 5mm;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .benefit-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--gradient-primary);
+  }
+
+  .benefit-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(147, 51, 234, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 3mm;
+    font-size: 16pt;
+  }
+
+  .benefit-box h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--text-white);
+    margin-bottom: 2mm;
+  }
+
+  .benefit-box p {
+    font-size: 8.5pt;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ===== INTRO TEXT ===== */
+  .intro-text {
+    font-size: 10pt;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-top: 4mm;
+    padding: 4mm 5mm;
+    background: rgba(147, 51, 234, 0.05);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 8px 8px 0;
+  }
+
+  .page-light .intro-text {
+    color: #475569;
+    background: rgba(147, 51, 234, 0.04);
+  }
+
+  /* ===== PROTOCOL CARDS ===== */
+  .protocols-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3.5mm;
+  }
+
+  .protocol-card {
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 4mm;
+    position: relative;
+    overflow: hidden;
+    background: #FAFAFE;
+  }
+
+  .protocol-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--gradient-primary);
+  }
+
+  .protocol-header {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    margin-bottom: 2mm;
+  }
+
+  .protocol-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .protocol-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .protocol-desc {
+    font-size: 8pt;
+    color: #64748B;
+    line-height: 1.4;
+    margin-bottom: 2mm;
+    padding-left: 9.5mm;
+  }
+
+  .protocol-meta {
+    display: flex;
+    gap: 2mm;
+    flex-wrap: wrap;
+    padding-left: 9.5mm;
+  }
+
+  .protocol-tag {
+    font-size: 7pt;
+    padding: 1mm 2.5mm;
+    border-radius: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .tag-calories {
+    background: rgba(147, 51, 234, 0.1);
+    color: var(--primary);
+  }
+
+  .tag-macro {
+    background: rgba(249, 115, 22, 0.1);
+    color: var(--accent);
+  }
+
+  .tag-profile {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+  }
+
+  /* ===== ROI SECTION ===== */
+  .roi-highlight {
+    background: var(--dark-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 5mm;
+    margin: 4mm 0;
+    text-align: center;
+  }
+
+  .roi-highlight .big-number {
+    font-family: 'Outfit', sans-serif;
+    font-size: 36pt;
+    font-weight: 900;
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .roi-highlight .big-label {
+    font-size: 10pt;
+    color: var(--text-muted);
+    margin-top: 1mm;
+  }
+
+  .revenue-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 4mm 0;
+    font-size: 9pt;
+  }
+
+  .revenue-table th {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    text-align: left;
+    padding: 3mm 4mm;
+    color: var(--text-white);
+    background: var(--dark-surface);
+    border-bottom: 2px solid var(--primary);
+  }
+
+  .revenue-table td {
+    padding: 2.5mm 4mm;
+    border-bottom: 1px solid rgba(147, 51, 234, 0.1);
+    color: var(--text-light);
+  }
+
+  .revenue-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .revenue-table .revenue-amount {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    color: var(--accent-light);
+    font-size: 11pt;
+  }
+
+  .comparison-grid {
+    display: flex;
+    gap: 4mm;
+    margin: 4mm 0;
+  }
+
+  .comparison-card {
+    flex: 1;
+    border-radius: 12px;
+    padding: 5mm;
+    text-align: center;
+  }
+
+  .comparison-card.manual {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+
+  .comparison-card.ai {
+    background: rgba(147, 51, 234, 0.1);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .comparison-card .comp-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 2mm;
+  }
+
+  .comparison-card.manual .comp-label { color: #EF4444; }
+  .comparison-card.ai .comp-label { color: var(--primary-light); }
+
+  .comparison-card .comp-cost {
+    font-family: 'Outfit', sans-serif;
+    font-size: 24pt;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 1mm;
+  }
+
+  .comparison-card.manual .comp-cost { color: #FCA5A5; }
+  .comparison-card.ai .comp-cost { color: var(--primary-light); }
+
+  .comparison-card .comp-detail {
+    font-size: 8pt;
+    color: var(--text-muted);
+  }
+
+  .breakeven-box {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(249, 115, 22, 0.15));
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 4mm 5mm;
+    text-align: center;
+    margin-top: 4mm;
+  }
+
+  .breakeven-box h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--text-white);
+    margin-bottom: 1mm;
+  }
+
+  .breakeven-box p {
+    font-size: 9pt;
+    color: var(--text-muted);
+  }
+
+  /* ===== MEAL PLAN ===== */
+  .meal-plan-day {
+    margin-bottom: 4mm;
+  }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    margin-bottom: 2mm;
+  }
+
+  .day-badge {
+    background: var(--gradient-primary);
+    color: white;
+    font-family: 'Outfit', sans-serif;
+    font-size: 9pt;
+    font-weight: 700;
+    padding: 1.5mm 3mm;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .day-macros {
+    font-size: 7.5pt;
+    color: #64748B;
+    margin-left: auto;
+  }
+
+  .meals-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2mm;
+  }
+
+  .meal-item {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 2.5mm;
+  }
+
+  .meal-type {
+    font-size: 6.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary);
+    margin-bottom: 1mm;
+  }
+
+  .meal-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 8pt;
+    font-weight: 600;
+    color: var(--text-dark);
+    line-height: 1.2;
+    margin-bottom: 1mm;
+  }
+
+  .meal-macros {
+    font-size: 6.5pt;
+    color: #94A3B8;
+    line-height: 1.3;
+  }
+
+  .meal-macros span {
+    font-weight: 600;
+  }
+
+  .ai-note {
+    margin-top: 4mm;
+    padding: 3mm 4mm;
+    background: rgba(147, 51, 234, 0.06);
+    border: 1px solid rgba(147, 51, 234, 0.15);
+    border-radius: 8px;
+    font-size: 8.5pt;
+    color: var(--primary);
+    font-weight: 500;
+    text-align: center;
+    font-style: italic;
+  }
+
+  .page-light .ai-note {
+    color: var(--primary-dark);
+  }
+
+  /* ===== CHEAT SHEET TABLE ===== */
+  .cheat-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 4mm 0;
+    font-size: 9pt;
+  }
+
+  .cheat-table th {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    text-align: left;
+    padding: 3mm 3mm;
+    background: var(--primary);
+    color: white;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .cheat-table th:first-child { border-radius: 8px 0 0 0; }
+  .cheat-table th:last-child { border-radius: 0 8px 0 0; }
+
+  .cheat-table td {
+    padding: 2.5mm 3mm;
+    border-bottom: 1px solid #E2E8F0;
+    color: var(--text-dark);
+  }
+
+  .cheat-table tr:nth-child(even) td {
+    background: #FAFAFE;
+  }
+
+  .cheat-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .cheat-table .goal-name {
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+
+  .tips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm;
+    margin-top: 5mm;
+  }
+
+  .tip-card {
+    padding: 4mm;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    border-left: 3px solid var(--primary);
+  }
+
+  .tip-card h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1.5mm;
+  }
+
+  .tip-card p {
+    font-size: 8pt;
+    color: #64748B;
+    line-height: 1.4;
+  }
+
+  /* ===== PRICING PAGE ===== */
+  .pricing-intro {
+    text-align: center;
+    margin-bottom: 6mm;
+  }
+
+  .pricing-intro p {
+    font-size: 11pt;
+    color: var(--text-muted);
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  .pricing-grid {
+    display: flex;
+    gap: 4mm;
+    align-items: stretch;
+    margin: 4mm 0;
+  }
+
+  .pricing-card {
+    flex: 1;
+    background: var(--dark-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 5mm;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pricing-card.featured {
+    border: 2px solid var(--primary);
+    background: linear-gradient(180deg, rgba(147, 51, 234, 0.1) 0%, var(--dark-surface) 100%);
+    transform: scale(1.03);
+  }
+
+  .pricing-badge {
+    position: absolute;
+    top: -3mm;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gradient-accent);
+    color: white;
+    font-family: 'Outfit', sans-serif;
+    font-size: 7pt;
+    font-weight: 700;
+    padding: 1mm 4mm;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .pricing-tier {
+    font-family: 'Outfit', sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 2mm;
+    margin-top: 2mm;
+  }
+
+  .pricing-price {
+    font-family: 'Outfit', sans-serif;
+    font-size: 32pt;
+    font-weight: 900;
+    color: var(--text-white);
+    line-height: 1;
+    margin-bottom: 1mm;
+  }
+
+  .pricing-card.featured .pricing-price {
+    color: var(--primary-light);
+  }
+
+  .pricing-once {
+    font-size: 8pt;
+    color: var(--text-muted);
+    margin-bottom: 3mm;
+  }
+
+  .pricing-features {
+    list-style: none;
+    text-align: left;
+    margin: 3mm 0;
+    flex-grow: 1;
+  }
+
+  .pricing-features li {
+    font-size: 8pt;
+    color: var(--text-light);
+    padding: 1.2mm 0;
+    padding-left: 4mm;
+    position: relative;
+    line-height: 1.4;
+  }
+
+  .pricing-features li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--primary-light);
+    font-weight: 700;
+    font-size: 8pt;
+  }
+
+  .qr-placeholder {
+    width: 100px;
+    height: 100px;
+    border: 2px dashed var(--border-subtle);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4mm auto;
+    flex-direction: column;
+    gap: 2mm;
+  }
+
+  .qr-placeholder span {
+    font-size: 7.5pt;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .qr-placeholder .qr-icon {
+    font-size: 24pt;
+    opacity: 0.5;
+  }
+
+  .cta-url {
+    text-align: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--primary-light);
+    margin-top: 3mm;
+  }
+
+  /* ===== BACK COVER ===== */
+  .back-cover {
+    background: linear-gradient(160deg, #0A0A0F 0%, #1A1A2E 40%, #2D1B69 70%, #0A0A0F 100%);
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .back-cover .page-inner {
+    justify-content: center;
+    align-items: center;
+  }
+
+  .back-tagline {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28pt;
+    font-weight: 800;
+    margin: 8mm 0 4mm;
+  }
+
+  .back-tagline .purple {
+    color: var(--primary-light);
+  }
+
+  .back-url {
+    font-size: 14pt;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 15mm;
+    letter-spacing: 1px;
+  }
+
+  .back-copyright {
+    font-size: 9pt;
+    color: var(--text-muted);
+  }
+
+  /* ===== HELPERS ===== */
+  .page-footer {
+    margin-top: auto;
+    padding-top: 4mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(147, 51, 234, 0.15);
+  }
+
+  .page-dark .page-footer {
+    border-top-color: rgba(147, 51, 234, 0.15);
+  }
+
+  .page-light .page-footer {
+    border-top-color: #E2E8F0;
+  }
+
+  .footer-brand {
+    font-family: 'Outfit', sans-serif;
+    font-size: 8pt;
+    font-weight: 600;
+    color: var(--primary-light);
+  }
+
+  .page-light .footer-brand {
+    color: var(--primary);
+  }
+
+  .footer-page {
+    font-size: 8pt;
+    color: var(--text-muted);
+  }
+
+  .page-light .footer-page {
+    color: #94A3B8;
+  }
+
+  /* continuation header */
+  .cont-header {
+    font-size: 8pt;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+    margin-bottom: 4mm;
+  }
+
+  .page-light .cont-header {
+    color: #94A3B8;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== PAGE 1: COVER ===== -->
+<div class="page cover">
+  <div class="cover-glow"></div>
+  <div class="page-inner">
+    <div class="cover-logo">
+      <div class="cover-logo-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
+        </svg>
+      </div>
+      <div class="cover-brand">EVOFITMEALS</div>
+    </div>
+
+    <div class="cover-title-block">
+      <div class="cover-eyebrow">The Definitive Guide</div>
+      <h1 class="cover-title">THE AI MEAL<br>PLANNING<br><span class="highlight">BLUEPRINT</span></h1>
+      <div class="cover-divider"></div>
+      <div class="cover-subtitle">For Fitness Professionals</div>
+      <p class="cover-tagline">A Complete Guide to AI-Powered Nutrition Coaching That Saves You Hours and Grows Your Revenue</p>
+    </div>
+  </div>
+  <div class="cover-footer">
+    <span>evofitmeals.com &nbsp;&bull;&nbsp; &copy; 2026 EvoFitMeals</span>
+  </div>
+</div>
+
+<!-- ===== PAGE 2: WHY AI ===== -->
+<div class="page page-dark">
+  <div class="page-inner">
+    <div class="section-header">
+      <div class="section-number">Chapter 01</div>
+      <h2 class="section-title">Why AI Meal Planning<br>Changes Everything</h2>
+      <div class="purple-line"></div>
+      <p class="section-subtitle">The fitness industry is evolving. Trainers who embrace AI-powered nutrition coaching will dominate their market. Here's why.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">4-6 hrs</div>
+        <div class="stat-label">Per week trainers spend on manual meal planning</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">&lt; 5 min</div>
+        <div class="stat-label">AI reduces planning time per client</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">73%</div>
+        <div class="stat-label">Of clients cite nutrition as their #1 struggle</div>
+      </div>
+    </div>
+
+    <div class="benefits-grid">
+      <div class="benefit-box">
+        <div class="benefit-icon">&#9889;</div>
+        <h4>Speed</h4>
+        <p>Generate complete weekly meal plans in seconds, not hours. Scale your nutrition services to 50+ clients without extra staff.</p>
+      </div>
+      <div class="benefit-box">
+        <div class="benefit-icon">&#127919;</div>
+        <h4>Personalization</h4>
+        <p>Every plan is tailored to the client's dietary protocol, calorie targets, allergies, and food preferences automatically.</p>
+      </div>
+      <div class="benefit-box">
+        <div class="benefit-icon">&#9989;</div>
+        <h4>Accuracy</h4>
+        <p>AI calculates macros with precision. No more guesswork or spreadsheet errors. Nutritionally balanced every time.</p>
+      </div>
+    </div>
+
+    <div class="intro-text">
+      <strong>Inside this guide:</strong> You'll discover the 8 dietary protocols every trainer needs, a revenue calculator that proves the ROI, a complete 7-day sample meal plan generated by AI, and a cheat sheet for matching diets to fitness goals. Everything you need to add profitable nutrition coaching to your practice.
+    </div>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">2</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 3: 8 DIETARY PROTOCOLS (1/2) ===== -->
+<div class="page page-light">
+  <div class="page-inner">
+    <div class="section-header">
+      <div class="section-number">Chapter 02</div>
+      <h2 class="section-title">The 8 Dietary Protocols<br>Every Trainer Needs</h2>
+      <div class="purple-line"></div>
+      <p class="section-subtitle">Master these protocols and you can confidently serve any client who walks through your door.</p>
+    </div>
+
+    <div class="protocols-grid">
+      <div class="protocol-card">
+        <div class="protocol-header">
+          <div class="protocol-num">1</div>
+          <div class="protocol-name">High-Protein</div>
+        </div>
+        <p class="protocol-desc">Optimized for muscle building and recovery. Emphasizes lean meats, eggs, dairy, and plant proteins with 30%+ of calories from protein.</p>
+        <div class="protocol-meta">
+          <span class="protocol-tag tag-calories">1,800 - 3,200 cal</span>
+          <span class="protocol-tag tag-macro">P 30% / C 40% / F 30%</span>
+          <span class="protocol-tag tag-profile">Muscle gain, athletes</span>
+        </div>
+      </div>
+
+      <div class="protocol-card">
+        <div class="protocol-header">
+          <div class="protocol-num">2</div>
+          <div class="protocol-name">Keto</div>
+        </div>
+        <p class="protocol-desc">Very low carbohydrate approach that shifts the body into ketosis. Under 20g net carbs daily with 70%+ calories from healthy fats.</p>
+        <div class="protocol-meta">
+          <span class="protocol-tag tag-calories">1,500 - 2,500 cal</span>
+          <span class="protocol-tag tag-macro">P 20% / C 5% / F 75%</span>
+          <span class="protocol-tag tag-profile">Fat loss, metabolic</span>
+        </div>
+      </div>
+
+      <div class="protocol-card">
+        <div class="protocol-header">
+          <div class="protocol-num">3</div>
+          <div class="protocol-name">Vegan</div>
+        </div>
+        <p class="protocol-desc">100% plant-based nutrition with complete amino acid coverage through strategic food combining. Rich in legumes, grains, and vegetables.</p>
+        <div class="protocol-meta">
+          <span class="protocol-tag tag-calories">1,600 - 2,800 cal</span>
+          <span class="protocol-tag tag-macro">P 20% / C 55% / F 25%</span>
+          <span class="protocol-tag tag-profile">Ethical, environmental</span>
+        </div>
+      </div>
+
+      <div class="protocol-card">
+        <div class="protocol-header">
+          <div class="protocol-num">4</div>
+          <div class="protocol-name">Gluten-Free</div>
+        </div>
+        <p class="protocol-desc">Celiac-safe protocol using grain alternatives like rice, quinoa, and oats (certified GF). Complete nutrition without wheat, barley, or rye.</p>
+        <div class="protocol-meta">
+          <span class="protocol-tag tag-calories">1,600 - 2,800 cal</span>
+          <span class="protocol-tag tag-macro">P 25% / C 45% / F 30%</span>
+          <span class="protocol-tag tag-profile">Celiac, sensitivity</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">3</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 4: 8 DIETARY PROTOCOLS (2/2) ===== -->
+<div class="page page-light">
+  <div class="page-inner">
+    <div class="cont-header">Chapter 02 &mdash; Continued</div>
+
+    <div class="protocols-grid">
+      <div class="protocol-card">
+        <div class="protocol-header">
+          <div class="protocol-num">5</div>
+          <div class="protocol-name">Paleo</div>
+        </div>
+        <p class="protocol-desc">Whole-food ancestral approach eliminating grains, dairy, and legumes. Built around meats, fish, vegetables, fruits, nuts, and seeds.</p>
+        <div class="protocol-meta">
+          <span class="protocol-tag tag-calories">1,800 - 3,000 cal</span>
+          <span class="protocol-tag tag-macro">P 30% / C 35% / F 35%</span>
+          <span class="protocol-tag tag-profile">Whole food, autoimmune</span>
+        </div>
+      </div>
+
+      <div class="protocol-card">
+        <div class="protocol-header">
+          <div class="protocol-num">6</div>
+          <div class="protocol-name">Mediterranean</div>
+        </div>
+        <p class="protocol-desc">Heart-healthy approach rich in olive oil, fish, whole grains, and vegetables. Clinically proven for longevity and cardiovascular health.</p>
+        <div class="protocol-meta">
+          <span class="protocol-tag tag-calories">1,800 - 2,600 cal</span>
+          <span class="protocol-tag tag-macro">P 20% / C 45% / F 35%</span>
+          <span class="protocol-tag tag-profile">Heart health, longevity</span>
+        </div>
+      </div>
+
+      <div class="protocol-card">
+        <div class="protocol-header">
+          <div class="protocol-num">7</div>
+          <div class="protocol-name">Low-Carb</div>
+        </div>
+        <p class="protocol-desc">Moderate carbohydrate restriction under 100g daily with balanced fat and protein. Less restrictive than keto but effective for fat loss.</p>
+        <div class="protocol-meta">
+          <span class="protocol-tag tag-calories">1,500 - 2,500 cal</span>
+          <span class="protocol-tag tag-macro">P 30% / C 20% / F 50%</span>
+          <span class="protocol-tag tag-profile">Fat loss, blood sugar</span>
+        </div>
+      </div>
+
+      <div class="protocol-card">
+        <div class="protocol-header">
+          <div class="protocol-num">8</div>
+          <div class="protocol-name">Dairy-Free</div>
+        </div>
+        <p class="protocol-desc">Complete nutrition without any dairy products. Uses lactose alternatives and ensures adequate calcium through leafy greens, fortified foods, and nuts.</p>
+        <div class="protocol-meta">
+          <span class="protocol-tag tag-calories">1,600 - 2,800 cal</span>
+          <span class="protocol-tag tag-macro">P 25% / C 45% / F 30%</span>
+          <span class="protocol-tag tag-profile">Lactose intolerant, allergy</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="intro-text" style="margin-top: 6mm;">
+      <strong>Pro Tip:</strong> Most clients need a combination approach. A client who is lactose intolerant and wants to build muscle would combine the <em>Dairy-Free</em> and <em>High-Protein</em> protocols. EvoFitMeals AI handles these combinations automatically, ensuring no nutritional gaps in the final plan.
+    </div>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">4</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 5: ROI CALCULATOR (1/2) ===== -->
+<div class="page page-dark">
+  <div class="page-inner">
+    <div class="section-header">
+      <div class="section-number">Chapter 03</div>
+      <h2 class="section-title">ROI Calculator for<br>Meal Planning Services</h2>
+      <div class="purple-line"></div>
+      <p class="section-subtitle">Stop leaving money on the table. Nutrition coaching is the highest-margin service you can add to your fitness business.</p>
+    </div>
+
+    <div class="roi-highlight">
+      <div class="big-number">$1,500/mo</div>
+      <div class="big-label">Potential monthly revenue with just 20 nutrition clients</div>
+    </div>
+
+    <h3 style="font-family: 'Outfit', sans-serif; font-size: 13pt; font-weight: 700; color: var(--text-white); margin: 5mm 0 3mm;">Revenue Projection</h3>
+
+    <table class="revenue-table">
+      <thead>
+        <tr>
+          <th>Clients</th>
+          <th>Monthly Add-On</th>
+          <th>Monthly Revenue</th>
+          <th>Annual Revenue</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>5 clients</td>
+          <td>$75 / month</td>
+          <td class="revenue-amount">$375</td>
+          <td class="revenue-amount">$4,500</td>
+        </tr>
+        <tr>
+          <td>10 clients</td>
+          <td>$75 / month</td>
+          <td class="revenue-amount">$750</td>
+          <td class="revenue-amount">$9,000</td>
+        </tr>
+        <tr>
+          <td>20 clients</td>
+          <td>$75 / month</td>
+          <td class="revenue-amount">$1,500</td>
+          <td class="revenue-amount">$18,000</td>
+        </tr>
+        <tr>
+          <td>50 clients</td>
+          <td>$75 / month</td>
+          <td class="revenue-amount">$3,750</td>
+          <td class="revenue-amount">$45,000</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">5</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 6: ROI CALCULATOR (2/2) ===== -->
+<div class="page page-dark">
+  <div class="page-inner">
+    <div class="cont-header">Chapter 03 &mdash; Continued</div>
+
+    <h3 style="font-family: 'Outfit', sans-serif; font-size: 14pt; font-weight: 700; color: var(--text-white); margin-bottom: 4mm;">How Meal Planning Pays for Itself</h3>
+
+    <div class="comparison-grid">
+      <div class="comparison-card manual">
+        <div class="comp-label">Manual Planning</div>
+        <div class="comp-cost">$2,000</div>
+        <div class="comp-detail">per month</div>
+        <p style="font-size: 8.5pt; color: var(--text-muted); margin-top: 3mm; line-height: 1.5;">
+          10 hours/week &times; $50/hour<br>
+          Spreadsheets, copy-paste, errors<br>
+          Limited to 10-15 clients max<br>
+          Burns out trainers fast
+        </p>
+      </div>
+      <div class="comparison-card ai">
+        <div class="comp-label">AI-Powered</div>
+        <div class="comp-cost">$299</div>
+        <div class="comp-detail">one-time investment</div>
+        <p style="font-size: 8.5pt; color: var(--text-muted); margin-top: 3mm; line-height: 1.5;">
+          30 seconds per meal plan<br>
+          Perfect macros every time<br>
+          Scale to 100+ clients easily<br>
+          Frees you to coach, not calculate
+        </p>
+      </div>
+    </div>
+
+    <div class="breakeven-box">
+      <h4>Break-Even: 2 Clients</h4>
+      <p>Just 2 clients paying $75/month for nutrition coaching covers your entire lifetime investment in the first month. Every client after that is pure profit.</p>
+    </div>
+
+    <div style="margin-top: 6mm; padding: 5mm; background: var(--dark-surface); border-radius: 12px; border: 1px solid var(--border-subtle);">
+      <h4 style="font-family: 'Outfit', sans-serif; font-size: 12pt; font-weight: 700; color: var(--accent-light); margin-bottom: 3mm;">The Math Is Simple</h4>
+      <div style="display: flex; gap: 4mm;">
+        <div style="flex: 1; text-align: center; padding: 3mm; background: rgba(147,51,234,0.08); border-radius: 8px;">
+          <div style="font-family: 'Outfit'; font-size: 18pt; font-weight: 800; color: var(--primary-light);">Month 1</div>
+          <div style="font-size: 8.5pt; color: var(--text-muted); margin-top: 1mm;">Investment: $299<br>Revenue (2 clients): $150<br>Net: -$149</div>
+        </div>
+        <div style="flex: 1; text-align: center; padding: 3mm; background: rgba(147,51,234,0.08); border-radius: 8px;">
+          <div style="font-family: 'Outfit'; font-size: 18pt; font-weight: 800; color: var(--primary-light);">Month 2</div>
+          <div style="font-size: 8.5pt; color: var(--text-muted); margin-top: 1mm;">Investment: $0<br>Revenue (5 clients): $375<br>Net: +$375</div>
+        </div>
+        <div style="flex: 1; text-align: center; padding: 3mm; background: rgba(249,115,22,0.08); border-radius: 8px;">
+          <div style="font-family: 'Outfit'; font-size: 18pt; font-weight: 800; color: var(--accent-light);">Year 1</div>
+          <div style="font-size: 8.5pt; color: var(--text-muted); margin-top: 1mm;">Investment: $299<br>Revenue (10 clients): $9,000<br>Net: +$8,701</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size: 10pt; color: var(--text-muted); text-align: center; margin-top: 5mm; font-style: italic;">"Your first month of nutrition coaching pays for lifetime access."</p>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">6</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 7: 7-DAY MEAL PLAN (Days 1-3) ===== -->
+<div class="page page-light">
+  <div class="page-inner">
+    <div class="section-header">
+      <div class="section-number">Chapter 04</div>
+      <h2 class="section-title">Sample 7-Day AI-Generated<br>Meal Plan</h2>
+      <div class="purple-line"></div>
+      <p class="section-subtitle">High-Protein Protocol &bull; 2,200 calories &bull; Target: P 165g / C 220g / F 73g</p>
+    </div>
+
+    <!-- Day 1 -->
+    <div class="meal-plan-day">
+      <div class="day-header">
+        <span class="day-badge">Day 1 &mdash; Monday</span>
+        <span class="day-macros">Total: 2,185 cal &bull; P 168g &bull; C 218g &bull; F 72g</span>
+      </div>
+      <div class="meals-row">
+        <div class="meal-item">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Greek Yogurt Protein Bowl with Berries &amp; Granola</div>
+          <div class="meal-macros"><span>520 cal</span> &bull; P 42g &bull; C 58g &bull; F 14g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-name">Grilled Chicken Quinoa Bowl with Roasted Vegetables</div>
+          <div class="meal-macros"><span>625 cal</span> &bull; P 48g &bull; C 62g &bull; F 20g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-name">Herb-Crusted Salmon with Sweet Potato &amp; Broccoli</div>
+          <div class="meal-macros"><span>680 cal</span> &bull; P 52g &bull; C 58g &bull; F 28g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Apple Slices with Almond Butter &amp; Protein Shake</div>
+          <div class="meal-macros"><span>360 cal</span> &bull; P 26g &bull; C 40g &bull; F 10g</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 2 -->
+    <div class="meal-plan-day">
+      <div class="day-header">
+        <span class="day-badge">Day 2 &mdash; Tuesday</span>
+        <span class="day-macros">Total: 2,210 cal &bull; P 170g &bull; C 215g &bull; F 74g</span>
+      </div>
+      <div class="meals-row">
+        <div class="meal-item">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Spinach &amp; Feta Egg White Omelette with Whole Wheat Toast</div>
+          <div class="meal-macros"><span>480 cal</span> &bull; P 38g &bull; C 42g &bull; F 18g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-name">Turkey &amp; Avocado Wrap with Mixed Green Salad</div>
+          <div class="meal-macros"><span>590 cal</span> &bull; P 44g &bull; C 52g &bull; F 22g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-name">Lean Beef Stir-Fry with Brown Rice &amp; Snap Peas</div>
+          <div class="meal-macros"><span>720 cal</span> &bull; P 55g &bull; C 72g &bull; F 22g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Cottage Cheese with Pineapple &amp; Walnuts</div>
+          <div class="meal-macros"><span>420 cal</span> &bull; P 33g &bull; C 49g &bull; F 12g</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 3 -->
+    <div class="meal-plan-day">
+      <div class="day-header">
+        <span class="day-badge">Day 3 &mdash; Wednesday</span>
+        <span class="day-macros">Total: 2,195 cal &bull; P 166g &bull; C 222g &bull; F 71g</span>
+      </div>
+      <div class="meals-row">
+        <div class="meal-item">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Protein Pancakes with Banana &amp; Maple Drizzle</div>
+          <div class="meal-macros"><span>510 cal</span> &bull; P 35g &bull; C 65g &bull; F 12g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-name">Tuna Nicoise Salad with Hard-Boiled Eggs</div>
+          <div class="meal-macros"><span>580 cal</span> &bull; P 46g &bull; C 42g &bull; F 24g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-name">Chicken Breast with Roasted Cauliflower &amp; Couscous</div>
+          <div class="meal-macros"><span>695 cal</span> &bull; P 54g &bull; C 68g &bull; F 22g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Protein Bar &amp; Banana</div>
+          <div class="meal-macros"><span>410 cal</span> &bull; P 31g &bull; C 47g &bull; F 13g</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">7</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 8: 7-DAY MEAL PLAN (Days 4-5) ===== -->
+<div class="page page-light">
+  <div class="page-inner">
+    <div class="cont-header">Chapter 04 &mdash; Continued</div>
+
+    <!-- Day 4 -->
+    <div class="meal-plan-day">
+      <div class="day-header">
+        <span class="day-badge">Day 4 &mdash; Thursday</span>
+        <span class="day-macros">Total: 2,205 cal &bull; P 164g &bull; C 224g &bull; F 73g</span>
+      </div>
+      <div class="meals-row">
+        <div class="meal-item">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Overnight Oats with Whey Protein, Chia &amp; Berries</div>
+          <div class="meal-macros"><span>495 cal</span> &bull; P 36g &bull; C 62g &bull; F 12g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-name">Chicken Caesar Salad with Whole Grain Croutons</div>
+          <div class="meal-macros"><span>610 cal</span> &bull; P 46g &bull; C 48g &bull; F 26g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-name">Shrimp Tacos with Mango Salsa &amp; Black Beans</div>
+          <div class="meal-macros"><span>690 cal</span> &bull; P 48g &bull; C 74g &bull; F 22g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Hard-Boiled Eggs &amp; Rice Cakes with Hummus</div>
+          <div class="meal-macros"><span>410 cal</span> &bull; P 34g &bull; C 40g &bull; F 13g</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 5 -->
+    <div class="meal-plan-day">
+      <div class="day-header">
+        <span class="day-badge">Day 5 &mdash; Friday</span>
+        <span class="day-macros">Total: 2,190 cal &bull; P 167g &bull; C 219g &bull; F 72g</span>
+      </div>
+      <div class="meals-row">
+        <div class="meal-item">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Smoked Salmon Bagel with Cream Cheese &amp; Capers</div>
+          <div class="meal-macros"><span>530 cal</span> &bull; P 34g &bull; C 52g &bull; F 20g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-name">Lean Ground Turkey Bowl with Rice &amp; Peppers</div>
+          <div class="meal-macros"><span>640 cal</span> &bull; P 50g &bull; C 64g &bull; F 18g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-name">Baked Cod with Lemon, Asparagus &amp; Mashed Potatoes</div>
+          <div class="meal-macros"><span>660 cal</span> &bull; P 52g &bull; C 62g &bull; F 22g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Greek Yogurt Parfait with Honey &amp; Mixed Nuts</div>
+          <div class="meal-macros"><span>360 cal</span> &bull; P 31g &bull; C 41g &bull; F 12g</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 6 -->
+    <div class="meal-plan-day">
+      <div class="day-header">
+        <span class="day-badge">Day 6 &mdash; Saturday</span>
+        <span class="day-macros">Total: 2,215 cal &bull; P 169g &bull; C 221g &bull; F 74g</span>
+      </div>
+      <div class="meals-row">
+        <div class="meal-item">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Veggie Scramble with Turkey Sausage &amp; Whole Wheat Toast</div>
+          <div class="meal-macros"><span>505 cal</span> &bull; P 40g &bull; C 44g &bull; F 18g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-name">Poke Bowl with Tuna, Edamame &amp; Sushi Rice</div>
+          <div class="meal-macros"><span>620 cal</span> &bull; P 44g &bull; C 68g &bull; F 18g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-name">Grilled Sirloin Steak with Baked Potato &amp; Green Beans</div>
+          <div class="meal-macros"><span>710 cal</span> &bull; P 56g &bull; C 60g &bull; F 26g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Protein Smoothie with Oats &amp; Peanut Butter</div>
+          <div class="meal-macros"><span>380 cal</span> &bull; P 29g &bull; C 49g &bull; F 12g</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">8</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 9: 7-DAY MEAL PLAN (Day 7 + Note) ===== -->
+<div class="page page-light">
+  <div class="page-inner">
+    <div class="cont-header">Chapter 04 &mdash; Continued</div>
+
+    <!-- Day 7 -->
+    <div class="meal-plan-day">
+      <div class="day-header">
+        <span class="day-badge">Day 7 &mdash; Sunday</span>
+        <span class="day-macros">Total: 2,200 cal &bull; P 165g &bull; C 223g &bull; F 73g</span>
+      </div>
+      <div class="meals-row">
+        <div class="meal-item">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-name">Protein French Toast with Strawberries &amp; Syrup</div>
+          <div class="meal-macros"><span>520 cal</span> &bull; P 36g &bull; C 64g &bull; F 14g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-name">Mediterranean Chicken Wrap with Tzatziki &amp; Feta</div>
+          <div class="meal-macros"><span>595 cal</span> &bull; P 44g &bull; C 54g &bull; F 22g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-name">Baked Chicken Thighs with Wild Rice &amp; Roasted Zucchini</div>
+          <div class="meal-macros"><span>700 cal</span> &bull; P 54g &bull; C 62g &bull; F 26g</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-type">Snack</div>
+          <div class="meal-name">Edamame &amp; Trail Mix</div>
+          <div class="meal-macros"><span>385 cal</span> &bull; P 31g &bull; C 43g &bull; F 11g</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Summary -->
+    <div style="margin-top: 6mm;">
+      <h3 style="font-family: 'Outfit', sans-serif; font-size: 14pt; font-weight: 700; color: var(--text-dark); margin-bottom: 4mm;">Weekly Summary</h3>
+
+      <div style="display: flex; gap: 3mm; margin-bottom: 4mm;">
+        <div style="flex: 1; background: rgba(147,51,234,0.06); border: 1px solid rgba(147,51,234,0.15); border-radius: 10px; padding: 4mm; text-align: center;">
+          <div style="font-family: 'Outfit'; font-size: 18pt; font-weight: 800; color: var(--primary);">2,200</div>
+          <div style="font-size: 8pt; color: #64748B;">Avg Daily Calories</div>
+        </div>
+        <div style="flex: 1; background: rgba(147,51,234,0.06); border: 1px solid rgba(147,51,234,0.15); border-radius: 10px; padding: 4mm; text-align: center;">
+          <div style="font-family: 'Outfit'; font-size: 18pt; font-weight: 800; color: var(--primary);">167g</div>
+          <div style="font-size: 8pt; color: #64748B;">Avg Daily Protein</div>
+        </div>
+        <div style="flex: 1; background: rgba(147,51,234,0.06); border: 1px solid rgba(147,51,234,0.15); border-radius: 10px; padding: 4mm; text-align: center;">
+          <div style="font-family: 'Outfit'; font-size: 18pt; font-weight: 800; color: var(--primary);">220g</div>
+          <div style="font-size: 8pt; color: #64748B;">Avg Daily Carbs</div>
+        </div>
+        <div style="flex: 1; background: rgba(147,51,234,0.06); border: 1px solid rgba(147,51,234,0.15); border-radius: 10px; padding: 4mm; text-align: center;">
+          <div style="font-family: 'Outfit'; font-size: 18pt; font-weight: 800; color: var(--primary);">73g</div>
+          <div style="font-size: 8pt; color: #64748B;">Avg Daily Fat</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-note">
+      This entire 7-day meal plan was generated in 30 seconds by EvoFitMeals AI. Every meal is macro-balanced, every day hits the calorie target, and every recipe is realistic and delicious.
+    </div>
+
+    <div class="intro-text" style="margin-top: 4mm;">
+      <strong>Customization is instant.</strong> Client goes vegan? Regenerate in 30 seconds. Client drops to 1,800 calories? One click. Allergic to shellfish? The AI swaps it out automatically. No spreadsheets, no guesswork, no wasted hours.
+    </div>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">9</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 10: CHEAT SHEET ===== -->
+<div class="page page-light">
+  <div class="page-inner">
+    <div class="section-header">
+      <div class="section-number">Chapter 05</div>
+      <h2 class="section-title">The Cheat Sheet<br>Matching Diets to Fitness Goals</h2>
+      <div class="purple-line"></div>
+      <p class="section-subtitle">Clip this page and keep it at your desk. The fastest way to prescribe the right protocol for any client.</p>
+    </div>
+
+    <table class="cheat-table">
+      <thead>
+        <tr>
+          <th>Goal</th>
+          <th>Recommended Protocol</th>
+          <th>Calories</th>
+          <th>Key Macro</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="goal-name">Fat Loss</td>
+          <td>Low-Carb or Keto</td>
+          <td>Deficit 500 cal</td>
+          <td>Protein 1.2g/lb</td>
+          <td>Preserve muscle mass with high protein</td>
+        </tr>
+        <tr>
+          <td class="goal-name">Muscle Gain</td>
+          <td>High-Protein</td>
+          <td>Surplus 300 cal</td>
+          <td>Protein 1.6g/lb</td>
+          <td>Time carbs around workouts</td>
+        </tr>
+        <tr>
+          <td class="goal-name">Endurance</td>
+          <td>Mediterranean</td>
+          <td>Maintenance</td>
+          <td>Carbs 55%+</td>
+          <td>Prioritize complex carbs for fuel</td>
+        </tr>
+        <tr>
+          <td class="goal-name">General Health</td>
+          <td>Mediterranean</td>
+          <td>Maintenance</td>
+          <td>Balanced</td>
+          <td>Focus on whole foods and variety</td>
+        </tr>
+        <tr>
+          <td class="goal-name">Body Recomp</td>
+          <td>High-Protein</td>
+          <td>Slight deficit 200</td>
+          <td>Protein 1.4g/lb</td>
+          <td>Cycle calories on training days</td>
+        </tr>
+        <tr>
+          <td class="goal-name">Athletic Perf.</td>
+          <td>High-Protein + Paleo</td>
+          <td>Surplus 200</td>
+          <td>Protein 1.4g/lb</td>
+          <td>Anti-inflammatory whole foods</td>
+        </tr>
+        <tr>
+          <td class="goal-name">Weight Maint.</td>
+          <td>Any protocol</td>
+          <td>TDEE matched</td>
+          <td>Protein 0.8g/lb</td>
+          <td>Focus on adherence and variety</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="tips-grid">
+      <div class="tip-card">
+        <h4>Fat Loss Clients</h4>
+        <p>Start with moderate deficit (500 cal). If client is over 25% body fat, low-carb works best. Under 20%, keep carbs moderate and focus on protein timing around workouts.</p>
+      </div>
+      <div class="tip-card">
+        <h4>Muscle Gain Clients</h4>
+        <p>Surplus should be modest (250-400 cal). Push protein to 1.6g/lb minimum. Distribute protein across 4+ meals for optimal muscle protein synthesis throughout the day.</p>
+      </div>
+      <div class="tip-card">
+        <h4>Endurance Athletes</h4>
+        <p>Carbs are king. 55-65% of calories from complex carbohydrates. Time high-carb meals 2-3 hours before training. Include recovery meals with 3:1 carb-to-protein ratio.</p>
+      </div>
+      <div class="tip-card">
+        <h4>Body Recomposition</h4>
+        <p>The hardest goal. Requires precise calorie cycling: maintenance on training days, slight deficit on rest days. Protein stays high at all times. Track weekly averages, not daily.</p>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">10</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 11: CTA / PRICING ===== -->
+<div class="page page-dark">
+  <div class="page-inner">
+    <div class="section-header" style="text-align: center;">
+      <div class="section-number">Get Started</div>
+      <h2 class="section-title" style="text-align: center;">Ready to Try It?<br>Get Lifetime Access</h2>
+      <div class="purple-line" style="margin: 4mm auto;"></div>
+    </div>
+
+    <div class="pricing-intro">
+      <p>You've seen what AI can do for meal planning. Now imagine offering every client a personalized nutrition plan in 30 seconds. No monthly fees. No per-client charges. Pay once and own it forever.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Starter -->
+      <div class="pricing-card">
+        <div class="pricing-tier">Starter</div>
+        <div class="pricing-price">$199</div>
+        <div class="pricing-once">One-time payment</div>
+        <ul class="pricing-features">
+          <li>Up to 15 active clients</li>
+          <li>4 dietary protocols</li>
+          <li>AI meal plan generation</li>
+          <li>Basic macro tracking</li>
+          <li>PDF export</li>
+          <li>Email support</li>
+        </ul>
+      </div>
+
+      <!-- Professional -->
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-tier">Professional</div>
+        <div class="pricing-price">$299</div>
+        <div class="pricing-once">One-time payment</div>
+        <ul class="pricing-features">
+          <li>Unlimited clients</li>
+          <li>All 8 dietary protocols</li>
+          <li>AI meal plan generation</li>
+          <li>Advanced macro &amp; micro tracking</li>
+          <li>Client portal access</li>
+          <li>Custom branding</li>
+          <li>Priority support</li>
+          <li>Recipe image generation</li>
+        </ul>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card">
+        <div class="pricing-tier">Enterprise</div>
+        <div class="pricing-price">$399</div>
+        <div class="pricing-once">One-time payment</div>
+        <ul class="pricing-features">
+          <li>Everything in Professional</li>
+          <li>Multi-trainer support</li>
+          <li>API access</li>
+          <li>Custom protocol builder</li>
+          <li>White-label option</li>
+          <li>Dedicated account manager</li>
+          <li>Onboarding session</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="text-align: center; font-family: 'Outfit', sans-serif; font-size: 14pt; font-weight: 700; color: var(--text-white); margin: 5mm 0 2mm;">Pay Once. Own Forever.</p>
+    <p style="text-align: center; font-size: 9pt; color: var(--text-muted); margin-bottom: 4mm;">No subscriptions. No hidden fees. Free updates for life.</p>
+
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8mm;">
+      <div class="qr-placeholder">
+        <div class="qr-icon">&#9633;</div>
+        <span>Scan to<br>get started</span>
+      </div>
+      <div style="text-align: left;">
+        <div class="cta-url" style="text-align: left;">evofitmeals.com/get-started</div>
+        <p style="font-size: 8.5pt; color: var(--text-muted); margin-top: 2mm; max-width: 240px;">30-day money-back guarantee. If you're not saving hours within your first week, we'll refund every penny.</p>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span class="footer-brand">EvoFitMeals</span>
+      <span class="footer-page">11</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE 12: BACK COVER ===== -->
+<div class="page back-cover">
+  <div class="cover-glow"></div>
+  <div class="page-inner">
+    <div style="position: relative; z-index: 2;">
+      <div class="cover-logo-icon" style="margin: 0 auto 4mm;">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 36px; height: 36px; fill: white;">
+          <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
+        </svg>
+      </div>
+      <div class="cover-brand" style="font-size: 20pt; letter-spacing: 3px;">EVOFITMEALS</div>
+
+      <div class="back-tagline">Pay Once.<br><span class="purple">Plan Forever.</span></div>
+
+      <div class="cover-divider" style="margin: 6mm auto;"></div>
+
+      <div class="back-url">evofitmeals.com</div>
+
+      <div class="back-copyright">&copy; 2026 EvoFitMeals. All rights reserved.</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

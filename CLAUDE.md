@@ -14,6 +14,89 @@ Training: `~/.openclaw/workspace/skills/evofit-user-simulation/docs/agent-traini
 
 ---
 
+## BCI Claude Code Standard
+This project follows BCCS v1.0.0. All tasks use: Brainstorm → Plan → TDD → Spec Review → Quality Review → Verify → Finish.
+See: `~/Claude/second-brain/resources/BCI-CLAUDE-CODE-STANDARD.md`
+
+---
+
+## Brand DNA (MANDATORY for all UI work)
+
+**Every page, component, PDF, and email MUST follow these brand rules.**
+
+### Colors
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--brand-primary` | `#9333EA` | Purple — headings, accents, borders |
+| `--brand-accent` | `#F97316` | Orange — CTAs, buttons, highlights |
+| `--brand-dark` | `#0A0A0F` | Near-black — hero backgrounds, dark sections |
+| `--brand-dark-card` | `#111118` | Card backgrounds on dark pages |
+| `--brand-surface` | `#1a1a2e` | Elevated surface on dark backgrounds |
+| `--brand-text` | `#FFFFFF` | Primary text on dark backgrounds |
+| `--brand-text-muted` | `#9CA3AF` | Secondary text |
+| `--brand-success` | `#3CDBB1` | Success green (in-app) |
+| `--brand-gradient` | `from-purple-950 via-gray-950 to-gray-950` | Hero gradients |
+
+### Typography
+| Element | Font | Weight | Size |
+|---------|------|--------|------|
+| Display | Clash Display / Outfit | 700 | 48-80px |
+| Headings | Clash Display / Outfit | 600 | 24-40px |
+| Body | Satoshi / Inter | 400 | 16-18px |
+| Small | Inter | 400 | 14px |
+| CTA Buttons | Clash Display / Outfit | 600 | 18-20px |
+
+### Design Rules
+- **Public pages** (funnel, pricing, login, register): Dark premium aesthetic
+- **In-app pages** (dashboard, trainer, customer): Light/white with purple accents
+- **PDFs**: Dark purple cover page, white content pages with purple accent borders
+- **CTAs**: Always orange (#F97316) with hover glow effect
+- **Cards on dark**: bg-gray-900/80 with backdrop-blur, purple border accent
+- **Animations**: Framer Motion scroll-reveal, stagger entrance, subtle hover lifts
+- **"Most Popular" badge**: Purple gradient, used on Professional tier
+- **Trust elements**: Shield icon + "14-day money-back guarantee" on all sales pages
+- **Never use**: Generic purple-on-white gradients, Inter-only typography, cookie-cutter layouts
+
+### Consistency Checklist (Before Shipping UI)
+- [ ] Uses brand colors from the table above
+- [ ] Headings use Clash Display / Outfit font
+- [ ] CTAs are orange with hover glow
+- [ ] Dark pages use the brand gradient
+- [ ] Mobile responsive (375px, 768px, 1024px)
+- [ ] Framer Motion animations on scroll-reveal sections
+- [ ] Matches the aesthetic of `/get-started` and `/professional` pages
+
+---
+
+## Sales Funnel (Live)
+
+| Page | Route | Purpose |
+|------|-------|---------|
+| Main Landing | `/get-started` | Stack slide overview, default for visitors |
+| Starter ($199) | `/starter` | New trainer sales page |
+| Professional ($299) | `/professional` | Established trainer sales page |
+| Enterprise ($399) | `/enterprise` | Gym owner/team sales page |
+| Lead Magnet | `/free-blueprint` | Email capture squeeze page |
+| Tripwire ($17) | `/special-offer` | One-time offer for templates |
+| Pricing (in-app) | `/pricing` | Hybrid pricing page |
+
+### Canonical Pricing (ONE-TIME, Lifetime Access)
+| Tier | Price | Clients | Plans/Month |
+|------|-------|---------|-------------|
+| Starter | $199 | 9 | 50 |
+| Professional | $299 | 20 | 200 |
+| Enterprise | $399 | Unlimited | Unlimited |
+
+---
+
+## PWA Support
+- Manifest: `client/public/manifest.json`
+- Service Worker: `client/public/sw.js`
+- Install Prompt: `client/src/components/InstallPrompt.tsx`
+- Hook: `client/src/hooks/useServiceWorker.ts`
+
+---
+
 ## Project Overview
 
 | Item | Value |

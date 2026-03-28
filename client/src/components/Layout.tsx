@@ -24,6 +24,7 @@ import {
 import { cn } from '../lib/utils';
 import MobileNavigation from './MobileNavigation';
 import OfflineBanner from './OfflineBanner';
+import InstallPrompt from './InstallPrompt';
 import { TierBadge } from './TierBadge';
 
 interface LayoutProps {
@@ -68,6 +69,8 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Offline Banner - Shows when network connection is lost */}
       <OfflineBanner />
+      {/* PWA Install Prompt */}
+      <InstallPrompt />
 
       {/* Mobile Navigation Component */}
       <MobileNavigation />
