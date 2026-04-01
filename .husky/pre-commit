@@ -1,0 +1,16 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged (configured in package.json)
+npx lint-staged
+
+# Run TypeScript check
+echo "📦 Checking TypeScript..."
+npm run typecheck || {
+    echo "❌ TypeScript check failed"
+    exit 1
+}
+
+echo "✅ Pre-commit checks passed"

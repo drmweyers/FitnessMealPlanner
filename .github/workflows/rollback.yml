@@ -1,0 +1,192 @@
+name: Emergency Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      target:
+        description: 'Rollback target'
+        required: true
+        default: 'previous'
+        type: choice
+        options:
+          - previous
+          - stable
+          - specific-commit
+      commit_sha:
+        description: 'Specific commit SHA (if target is specific-commit)'
+        required: false
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+env:
+  DO_REGISTRY: registry.digitalocean.com/bci
+  PROJECT_NAME: fitnessmealplanner
+
+jobs:
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Determine rollback target
+        id: target
+        run: |
+          TARGET="${{ github.event.inputs.target }}"
+
+          case "$TARGET" in
+            "previous")
+              # Get the previous commit on main
+              PREVIOUS_SHA=$(git rev-parse HEAD~1)
+              echo "sha=$PREVIOUS_SHA" >> $GITHUB_OUTPUT
+              echo "tag=sha-${PREVIOUS_SHA:0:7}" >> $GITHUB_OUTPUT
+              echo "📌 Rolling back to previous commit: $PREVIOUS_SHA"
+              ;;
+            "stable")
+              # Get the most recent tagged release
+              LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "main")
+              TAG_SHA=$(git rev-list -n 1 $LATEST_TAG)
+              echo "sha=$TAG_SHA" >> $GITHUB_OUTPUT
+              echo "tag=stable" >> $GITHUB_OUTPUT
+              echo "📌 Rolling back to latest stable tag: $LATEST_TAG ($TAG_SHA)"
+              ;;
+            "specific-commit")
+              SPECIFIC_SHA="${{ github.event.inputs.commit_sha }}"
+              if [ -z "$SPECIFIC_SHA" ]; then
+                echo "❌ Error: commit_sha is required when target is 'specific-commit'"
+                exit 1
+              fi
+              echo "sha=$SPECIFIC_SHA" >> $GITHUB_OUTPUT
+              echo "tag=sha-${SPECIFIC_SHA:0:7}" >> $GITHUB_OUTPUT
+              echo "📌 Rolling back to specific commit: $SPECIFIC_SHA"
+              ;;
+          esac
+
+      - name: Log rollback attempt
+        run: |
+          echo "## 🚨 Rollback Initiated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${{ github.event.inputs.target }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit SHA:** ${{ steps.target.outputs.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Initiated by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u +"%Y-%m-%d %H:%M UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy rollback image
+        run: |
+          APP_ID="${{ github.event.inputs.environment == 'production' && secrets.DO_APP_ID || secrets.DO_STAGING_APP_ID }}"
+
+          echo "🔄 Rolling back ${{ github.event.inputs.environment }}..."
+
+          # Trigger deployment with rollback tag
+          doctl apps create-deployment $APP_ID \
+            --spec <(cat <<EOF
+          name: fitnessmealplanner-${{ github.event.inputs.environment }}
+          region: nyc
+          services:
+            - name: api
+              image:
+                registry_type: DOCR
+                repository: bci/fitnessmealplanner
+                tag: ${{ steps.target.outputs.tag }}
+              http_port: 5001
+              instance_count: 1
+              instance_size_slug: basic-xs
+              routes:
+                - path: /
+          EOF
+          )
+
+          echo "✅ Rollback deployment triggered"
+
+      - name: Wait for rollback to complete
+        run: |
+          APP_ID="${{ github.event.inputs.environment == 'production' && secrets.DO_APP_ID || secrets.DO_STAGING_APP_ID }}"
+
+          sleep 30
+          DEPLOYMENT_ID=$(doctl apps list-deployments $APP_ID --format ID --no-header | head -1)
+
+          for i in {1..60}; do
+            STATUS=$(doctl apps get-deployment $APP_ID $DEPLOYMENT_ID --format Phase --no-header)
+            echo "[$i/60] Rollback status: $STATUS"
+
+            case "$STATUS" in
+              "ACTIVE")
+                echo "✅ Rollback completed successfully!"
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "## ✅ Rollback Successful" >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "${{ github.event.inputs.environment }} has been rolled back to ${{ steps.target.outputs.sha }}" >> $GITHUB_STEP_SUMMARY
+                exit 0
+                ;;
+              "ERROR"|"CANCELED")
+                echo "❌ Rollback failed"
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "## ❌ Rollback Failed" >> $GITHUB_STEP_SUMMARY
+                exit 1
+                ;;
+            esac
+
+            sleep 10
+          done
+
+          echo "⏱️ Rollback timed out"
+          exit 1
+
+      - name: Verify rollback
+        run: |
+          URL="${{ github.event.inputs.environment == 'production' && 'https://evofitmeals.com' || 'https://staging.evofitmeals.com' }}"
+
+          sleep 30
+
+          if curl -f -s "$URL/api/health" > /dev/null; then
+            echo "✅ Health check passed after rollback"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## 🩺 Post-Rollback Health Check" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Application health check: PASS" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Health check failed after rollback - manual intervention may be needed"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## ⚠️ Post-Rollback Health Check" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ Application health check: FAIL" >> $GITHUB_STEP_SUMMARY
+            echo "**Action Required:** Manual intervention may be needed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Create rollback incident
+        run: |
+          echo "Creating rollback record..."
+          # This could integrate with incident management tools like PagerDuty, OpsGenie, etc.
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📝 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ Verify application is functioning correctly" >> $GITHUB_STEP_SUMMARY
+          echo "2. 🔍 Investigate root cause of the issue" >> $GITHUB_STEP_SUMMARY
+          echo "3. 🛠️ Fix the issue in a new PR" >> $GITHUB_STEP_SUMMARY
+          echo "4. 📊 Monitor error rates and performance" >> $GITHUB_STEP_SUMMARY
+          echo "5. 📝 Document the incident in the post-mortem" >> $GITHUB_STEP_SUMMARY

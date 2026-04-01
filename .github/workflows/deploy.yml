@@ -1,7 +1,13 @@
-name: Build and Deploy to DigitalOcean (DISABLED)
-# DISABLED: DigitalOcean now deploys directly from GitHub via App Spec
-# This workflow is no longer needed as of Nov 9, 2025
-# See URGENT_PRODUCTION_DEPLOYMENT_FIX.md for details
+name: Build and Deploy to DigitalOcean (LEGACY - DO NOT USE)
+# ⚠️ DEPRECATED: This workflow is kept for reference only
+#
+# The new CI/CD pipeline uses:
+#   - ci.yml  → Runs on PRs: tests, type checking, linting
+#   - cd.yml  → Runs on main: builds and deploys to DigitalOcean
+#
+# For manual deployments, use: Actions > CD - Deploy to Production > Run workflow
+#
+# See: workflows/README.md for full documentation
 
 on:
   workflow_dispatch:  # Only allow manual trigger, disable auto-run

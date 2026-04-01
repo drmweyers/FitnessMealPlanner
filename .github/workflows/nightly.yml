@@ -1,0 +1,227 @@
+name: Nightly Tests & Maintenance
+
+on:
+  schedule:
+    # Run at 2 AM UTC every day
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fitmeal
+
+jobs:
+  # Full test suite with coverage
+  full-test-suite:
+    name: Full Test Suite
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fitmeal
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              echo "✅ PostgreSQL is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+
+      - name: Push database schema
+        run: npm run db:push
+
+      - name: Run full test suite with coverage
+        run: npm run test:coverage:full
+        continue-on-error: true
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage/
+          retention-days: 30
+
+  # Dependency audit
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: |
+          echo "## 🔒 Security Audit Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          npm audit --audit-level=moderate 2>&1 | tee audit-output.txt || true
+
+          if grep -q "found 0 vulnerabilities" audit-output.txt; then
+            echo "✅ No vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Vulnerabilities detected - check logs" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check for outdated dependencies
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Outdated Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          npm outdated 2>&1 | tee outdated-output.txt || true
+
+          if [ -s outdated-output.txt ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat outdated-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All dependencies are up to date" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Database migration check
+  migration-check:
+    name: Database Migration Check
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fitmeal
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+
+      - name: Check for ungenerated migrations
+        run: |
+          echo "## 🗄️ Database Migration Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Push current schema
+          npm run db:push
+
+          # Generate migration
+          npm run db:generate 2>&1 | tee migration-output.txt || true
+
+          if grep -q "No schema changes" migration-output.txt; then
+            echo "✅ All migrations are up to date" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Schema changes detected - migration needed" >> $GITHUB_STEP_SUMMARY
+            echo "Run 'npm run db:generate' to generate missing migrations" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Production health check
+  production-health:
+    name: Production Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check production health
+        run: |
+          echo "## 🌐 Production Health Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Health endpoint
+          if curl -f -s https://evofitmeals.com/api/health > /dev/null; then
+            echo "✅ Health endpoint: PASS" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Health endpoint: FAIL" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Response time check
+          RESPONSE_TIME=$(curl -s -w "%{time_total}" -o /dev/null https://evofitmeals.com/api/health)
+          echo "⏱️ Response time: ${RESPONSE_TIME}s" >> $GITHUB_STEP_SUMMARY
+
+          # Main page
+          if curl -f -s https://evofitmeals.com > /dev/null; then
+            echo "✅ Main page: PASS" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Main page: FAIL" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Summary
+  nightly-summary:
+    name: Nightly Summary
+    runs-on: ubuntu-latest
+    needs: [full-test-suite, dependency-audit, migration-check, production-health]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "# 🌙 Nightly Maintenance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u +"%Y-%m-%d %H:%M UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Full Test Suite | ${{ needs.full-test-suite.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Audit | ${{ needs.dependency-audit.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Migration Check | ${{ needs.migration-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Production Health | ${{ needs.production-health.result }} |" >> $GITHUB_STEP_SUMMARY
