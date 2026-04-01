@@ -1,0 +1,26 @@
+# Staging App Spec for FitnessMealPlanner
+# This creates a lightweight staging environment
+
+name: fitnessmealplanner-staging
+region: tor
+services:
+  - name: fitnessmealplanner-staging
+    dockerfile_path: /Dockerfile
+    github:
+      branch: main
+      deploy_on_push: false
+      repo: drmweyers/FitnessMealPlanner
+    http_port: 5001
+    instance_count: 1
+    instance_size_slug: basic-xs
+    source_dir: /
+    env:
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: "5001"
+      # Add your staging database URL here
+      # - key: DATABASE_URL
+      #   value: "your-staging-db-url"
+      # - key: REDIS_URL
+      #   value: "your-staging-redis-url"
