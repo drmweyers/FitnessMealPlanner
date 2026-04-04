@@ -1,0 +1,84 @@
+
+RECIPE AUDIT BASELINE — PRODUCTION
+Generated: 2026-03-28T02:47:07.957Z
+Endpoint:  https://evofitmeals.com
+
+GRAND TOTAL: 6220 recipes (target: 6,000)
+
+TIER SUMMARY
+────────────────────────────────────────────────────────────────────────────────────────────
+Tier               Target   Actual    Delta
+────────────────────────────────────────────────────────────────────────────────────────────
+starter              1500     2806    +1306
+professional         1500     2194     +694
+enterprise           3000     1220    -1780
+────────────────────────────────────────────────────────────────────────────────────────────
+
+BLOCK DETAIL
+────────────────────────────────────────────────────────────────────────────────────────────
+Block  Name                       Tier             Target   Actual    Delta  Notes
+────────────────────────────────────────────────────────────────────────────────────────────
+── STARTER (target: 1500, actual: 2806) ──
+A1     Chicken Weight Loss        starter             150      838     +688  
+A2     Chicken Muscle Building    starter             150      838     +688  
+A3     Chicken Breakfast          starter             150      838     +688  mealType=Breakfast (not filterable via API)
+A4     Chicken Snacks             starter              75      838     +763  mealType=Snack (not filterable via API)
+B1     Salmon                     starter             150      261     +111  
+B2     White Fish                 starter             150      151       +1  
+B3     Shrimp                     starter             150      256     +106  
+C1     Legumes                    starter             150      122      -28  
+C2     Eggs                       starter             150       91      -59  
+C3     Tofu/Tempeh                starter              75      143      +68  
+D1     Ground Turkey              starter              75      117      +42  
+D2     Lean Beef                  starter              75      123      +48  
+
+── PROFESSIONAL (target: 1500, actual: 2194) ──
+E1     Keto                       professional        100        —        —  dietaryRestriction filter — not available via API
+E2     Paleo                      professional        100        —        —  dietaryRestriction filter — not available via API
+E3     Gluten-Free                professional        100        —        —  dietaryRestriction filter — not available via API
+E4     Dairy-Free                 professional        100        —        —  dietaryRestriction filter — not available via API
+F1     Pork                       professional        100      157      +57  
+F2     Duck                       professional         50       85      +35  
+F3     Lamb                       professional         50       66      +16  
+F4     Mixed Seafood              professional        100        0     -100  
+F5     Bison                      professional        100       50      -50  
+G1     Vegan Tempeh               professional        100       50      -50  
+G2     Legume Variety             professional        100        —        —  Vegan + ingredient variety — not filterable via API
+G3     Whole Food Vegan           professional        100        —        —  Vegan tag — not filterable via API
+H1     Meal Prep                  professional        100        —        —  No specific API filter
+H2     Batch Cook                 professional        100        —        —  No specific API filter
+I1     Endurance                  professional        100        —        —  fitnessGoal=Endurance — not filterable via recipe-count API
+I2     Bodybuilding               professional        100        —        —  fitnessGoal=Muscle Building (pro tier) — not filterable via API
+
+── ENTERPRISE (target: 3000, actual: 1220) ──
+J1     Fine Dining                enterprise          200        —        —  No specific API filter
+J2     International Gourmet      enterprise          200        —        —  No specific API filter
+J3     Chef's Specials            enterprise          200        —        —  No specific API filter
+K1     Mediterranean              enterprise          160        —        —  Cuisine filter — not available via API
+K2     Asian                      enterprise          160        —        —  Cuisine filter — not available via API
+K3     Mexican/Latin              enterprise          160        —        —  Cuisine filter — not available via API
+K4     Indian                     enterprise          160        —        —  Cuisine filter — not available via API
+K5     Middle Eastern             enterprise          160        —        —  Cuisine filter — not available via API
+L1     AIP                        enterprise          150        —        —  Diet filter — not available via API
+L2     Low-FODMAP                 enterprise          150        —        —  Diet filter — not available via API
+L3     Carnivore                  enterprise          150        —        —  Diet filter — not available via API
+L4     Whole30                    enterprise          150        —        —  Diet filter — not available via API
+M1     Wagyu/Premium Beef         enterprise          100      153      +53  Enterprise Beef — shares ingredient with D2
+M2     Lobster/Crab               enterprise          100        —        —  No specific API filter
+M3     Exotic Fish                enterprise          100        —        —  No specific API filter
+M4     Heritage Poultry           enterprise          100        —        —  No specific API filter
+N1     Post-Surgery               enterprise          100        —        —  No specific API filter
+N2     Pregnancy/Postpartum       enterprise          100        —        —  No specific API filter
+N3     Senior Nutrition           enterprise          100        —        —  No specific API filter
+N4     Teen Athletes              enterprise          100        —        —  No specific API filter
+O1     Protein Desserts           enterprise          100        —        —  No specific API filter
+O2     Low-Cal Treats             enterprise          100        —        —  No specific API filter
+────────────────────────────────────────────────────────────────────────────────────────────
+
+COVERAGE SUMMARY
+────────────────────────────────────────────────────────────────────────────────────────────
+Queryable blocks:     19 / 50 (by mainIngredient filter)
+Non-queryable blocks: 31 / 50 (tier-level totals only)
+Queryable total:      5177 actual / 2100 target
+Non-queryable IDs:    E1, E2, E3, E4, G2, G3, H1, H2, I1, I2, J1, J2, J3, K1, K2, K3, K4, K5, L1, L2, L3, L4, M2, M3, M4, N1, N2, N3, N4, O1, O2
+────────────────────────────────────────────────────────────────────────────────────────────
