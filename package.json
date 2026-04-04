@@ -19,7 +19,7 @@
     "test:manual-meal-plan": "vitest run --config vitest.integration.config.ts test/integration/manualMealPlanGenerator.comprehensive.test.ts",
     "test:unit": "tsx test/unit/testRunner.ts",
     "test:unit:watch": "vitest test/unit/**/*.test.ts",
-    "test:unit:coverage": "vitest run test/unit/**/*.test.ts --coverage",
+    "test:unit:coverage": "vitest run --coverage",
     "test:mobile": "tsx test/mobile-test-runner.ts",
     "test:mobile:quick": "tsx test/mobile-test-runner.ts --type=quick",
     "test:mobile:visual": "tsx test/mobile-test-runner.ts --type=visual-regression",
