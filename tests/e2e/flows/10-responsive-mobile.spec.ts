@@ -6,18 +6,17 @@
 import { test, expect, devices } from '@playwright/test';
 
 const BASE_URL = process.env.BASE_URL || 'https://evofitmeals.com';
-const NUTRITIONIST_EMAIL = 'nutritionist.sarah@evofitmeals.com';
-const PASSWORD = 'Demo1234!';
+const NUTRITIONIST_EMAIL = 'trainer.test@evofitmeals.com';
+const PASSWORD = 'TestTrainer123!';
+
+// test.use must be top-level (not inside describe) to set defaultBrowserType
+test.use({ ...devices['iPhone 14'] });
 
 test.describe('10 — Responsive & Mobile', () => {
-  test.use({ ...devices['iPhone 14'] });
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/login`);
-    await page.fill('input[type="email"], input[name="email"]', NUTRITIONIST_EMAIL);
-    await page.fill('input[type="password"], input[name="password"]', PASSWORD);
-    await page.click('button[type="submit"], button:has-text("Login"), button:has-text("Sign In")');
-    await page.waitForURL(/dashboard|home/i, { timeout: 15000 });
+    // Auth provided via storageState in playwright.simulation.config.ts
+    await page.goto(`${BASE_URL}/trainer`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   });
 
   test('login page is mobile-friendly', async ({ page }) => {

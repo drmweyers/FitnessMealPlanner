@@ -1,0 +1,49 @@
+{
+  "cookies": [
+    {
+      "name": "__cf_bm",
+      "value": "wyc9wK8F2r.Nhczh18UJA7dntllwr9QCRy3z48JgHfQ-1775269973.4244914-1.0.1.1-G0h0y5q4X3.i3Ul3P1lt4qGusZod541u3CgIK2_ocj2ywfcw3hiW6LPweCnG_sfVZjvhSGuM7R8IEp8coHohk3dqydCksLNemuMjlXfiKBizWODxZZshc917MPdnyqE3",
+      "domain": ".evofitmeals.com",
+      "path": "/",
+      "expires": 1775271769.264572,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI2ZGZkZmFkLWQ5NTUtNDhiMi1hNDFiLTM0YWZlZGU4NmI1MiIsImVtYWlsIjoiYWRtaW5AZml0bWVhbC5wcm8iLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUyNjk5NzQsImV4cCI6MTc3NTI3MDg3NCwiYXVkIjoiRml0bmVzc01lYWxQbGFubmVyLUNsaWVudCIsImlzcyI6IkZpdG5lc3NNZWFsUGxhbm5lciJ9.W_QwegVmgwmAUsYDKLcFh27x4oYySaEOC29Qfg3cAVI",
+      "domain": "evofitmeals.com",
+      "path": "/",
+      "expires": 1775270870.497945,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "refreshToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI2ZGZkZmFkLWQ5NTUtNDhiMi1hNDFiLTM0YWZlZGU4NmI1MiIsImVtYWlsIjoiYWRtaW5AZml0bWVhbC5wcm8iLCJyb2xlIjoiYWRtaW4iLCJ0eXBlIjoicmVmcmVzaCIsImlhdCI6MTc3NTI2OTk3NCwiZXhwIjoxNzc3ODYxOTc0LCJhdWQiOiJGaXRuZXNzTWVhbFBsYW5uZXItUmVmcmVzaCIsImlzcyI6IkZpdG5lc3NNZWFsUGxhbm5lciJ9.uRU6uDH2ncAKS7kVaZUjY6F-KcPNrZd98jfqOLRa8D8",
+      "domain": "evofitmeals.com",
+      "path": "/",
+      "expires": 1777861970.498045,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://evofitmeals.com",
+      "localStorage": [
+        {
+          "name": "token",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI2ZGZkZmFkLWQ5NTUtNDhiMi1hNDFiLTM0YWZlZGU4NmI1MiIsImVtYWlsIjoiYWRtaW5AZml0bWVhbC5wcm8iLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUyNjk5NzQsImV4cCI6MTc3NTI3MDg3NCwiYXVkIjoiRml0bmVzc01lYWxQbGFubmVyLUNsaWVudCIsImlzcyI6IkZpdG5lc3NNZWFsUGxhbm5lciJ9.W_QwegVmgwmAUsYDKLcFh27x4oYySaEOC29Qfg3cAVI"
+        },
+        {
+          "name": "admin-recipe-view-type",
+          "value": "cards"
+        }
+      ]
+    }
+  ]
+}

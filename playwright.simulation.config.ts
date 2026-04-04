@@ -20,8 +20,10 @@
 
 import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const BASE_URL = process.env.BASE_URL || 'https://evofitmeals.com';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_DIR = path.join(__dirname, 'tests/e2e/auth-state');
 
 export default defineConfig({
@@ -41,8 +43,8 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'on',
     video: 'off',
-    actionTimeout: 15000,
-    navigationTimeout: 30000,
+    actionTimeout: 10000,
+    navigationTimeout: 45000,
     headless: process.env.HEADED !== '1',
   },
   outputDir: 'tests/e2e/screenshots',

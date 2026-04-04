@@ -30,10 +30,11 @@ const ACCOUNTS = [
   },
   {
     role: 'trainer',
+    // Production redirects trainer to /trainer after login
     email: 'trainer.test@evofitmeals.com',
     password: 'TestTrainer123!',
     file: path.join(AUTH_DIR, 'trainer.json'),
-    expectUrl: /dashboard/i,
+    expectUrl: /trainer|dashboard/i,
   },
   {
     role: 'client',
@@ -54,11 +55,11 @@ async function globalSetup(config: FullConfig) {
   const browser = await chromium.launch({ headless: !headed });
 
   for (const account of ACCOUNTS) {
-    // Skip if fresh state already exists (less than 1 hour old)
+    // Skip if fresh state exists and is less than 10 minutes old (JWT expires in 15min)
     if (fs.existsSync(account.file)) {
       const stat = fs.statSync(account.file);
       const ageMs = Date.now() - stat.mtimeMs;
-      if (ageMs < 60 * 60 * 1000) {
+      if (ageMs < 10 * 60 * 1000) {
         console.log(`[auth-setup] ✓ ${account.role} — reusing saved state (${Math.round(ageMs / 60000)}m old)`);
         continue;
       }

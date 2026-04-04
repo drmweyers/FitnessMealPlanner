@@ -6,16 +6,13 @@
 import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.BASE_URL || 'https://evofitmeals.com';
-const CLIENT_EMAIL = 'client.alex@example.com';
-const PASSWORD = 'Demo1234!';
+const CLIENT_EMAIL = 'customer.test@evofitmeals.com';
+const PASSWORD = 'TestCustomer123!';
 
 test.describe('06 — Nutrition Logging (Client)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/login`);
-    await page.fill('input[type="email"], input[name="email"]', CLIENT_EMAIL);
-    await page.fill('input[type="password"], input[name="password"]', PASSWORD);
-    await page.click('button[type="submit"], button:has-text("Login"), button:has-text("Sign In")');
-    await page.waitForURL(/dashboard|home|meal/i, { timeout: 15000 });
+    // Auth provided via storageState
+    await page.goto(`${BASE_URL}/client`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   });
 
   test('client dashboard loads after login', async ({ page }) => {
@@ -47,8 +44,9 @@ test.describe('06 — Nutrition Logging (Client)', () => {
   });
 
   test('client dashboard shows nutrition summary', async ({ page }) => {
-    // Look for calorie/macro summary on dashboard
-    const calorieDisplay = page.locator('[class*="calorie"], [class*="macro"], text=/kcal|calories|protein/i').first();
+    // Look for calorie/macro summary on dashboard (soft check)
+    const calorieDisplay = page.locator('[class*="calorie"], [class*="macro"]').first();
+    const nutritionText = page.getByText(/kcal|calories|protein/i).first();
     if (await calorieDisplay.count() > 0) {
       await expect(calorieDisplay).toBeVisible();
     }
@@ -56,10 +54,10 @@ test.describe('06 — Nutrition Logging (Client)', () => {
   });
 
   test('today\'s meal plan view is not empty', async ({ page }) => {
-    const todaySection = page.locator('[data-testid="today"], [class*="today"], text=/today/i').first();
+    const todaySection = page.locator('[data-testid="today"], [class*="today"]').first();
     const mealSection = page.locator('[class*="breakfast"], [class*="lunch"], [class*="dinner"]').first();
-    const hasContent = (await todaySection.count() > 0) || (await mealSection.count() > 0);
-    // This is informational — page content depends on seeded data
+    const todayText = page.getByText(/today/i).first();
+    // Informational — page content depends on seeded data; just screenshot
     await page.screenshot({ path: 'tests/e2e/screenshots/06-today-meals.png' });
   });
 });

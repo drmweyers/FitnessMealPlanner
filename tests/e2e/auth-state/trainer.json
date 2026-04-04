@@ -1,0 +1,45 @@
+{
+  "cookies": [
+    {
+      "name": "__cf_bm",
+      "value": "kEPkBcs7rNXRWO.zNfvuPd05JulielMZBEti3KoXvR0-1775269975.3263178-1.0.1.1-VLNzLcjPBHbiG3S9yelGrlcu6Uu8Bq5yFeJvn1ckwqwnivrI_n9Tpk7nsykDQZ8HekMd6ac.oGxjjkLNHGflnUc_I1mOnDOMrS2kpaKtyJSBSGQUj_LvdlCUanphEKXK",
+      "domain": ".evofitmeals.com",
+      "path": "/",
+      "expires": 1775271771.164955,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI2NTg5YmE5LWVlYTYtNGRiMy1hYzMwLTc3NTIwNmU0YzljYiIsImVtYWlsIjoidHJhaW5lci50ZXN0QGV2b2ZpdG1lYWxzLmNvbSIsInJvbGUiOiJ0cmFpbmVyIiwiaWF0IjoxNzc1MjY5OTc2LCJleHAiOjE3NzUyNzA4NzYsImF1ZCI6IkZpdG5lc3NNZWFsUGxhbm5lci1DbGllbnQiLCJpc3MiOiJGaXRuZXNzTWVhbFBsYW5uZXIifQ.IOPVVCQilyIxYiM_FzogyJ0TeXaBzz7Do-lccbybbIE",
+      "domain": "evofitmeals.com",
+      "path": "/",
+      "expires": 1775270872.359171,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "refreshToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI2NTg5YmE5LWVlYTYtNGRiMy1hYzMwLTc3NTIwNmU0YzljYiIsImVtYWlsIjoidHJhaW5lci50ZXN0QGV2b2ZpdG1lYWxzLmNvbSIsInJvbGUiOiJ0cmFpbmVyIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3NzUyNjk5NzYsImV4cCI6MTc3Nzg2MTk3NiwiYXVkIjoiRml0bmVzc01lYWxQbGFubmVyLVJlZnJlc2giLCJpc3MiOiJGaXRuZXNzTWVhbFBsYW5uZXIifQ.V_wVipMHexz1TuH4tG0pAwrtV-nANirwukwCHLU_4S8",
+      "domain": "evofitmeals.com",
+      "path": "/",
+      "expires": 1777861972.359616,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://evofitmeals.com",
+      "localStorage": [
+        {
+          "name": "token",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI2NTg5YmE5LWVlYTYtNGRiMy1hYzMwLTc3NTIwNmU0YzljYiIsImVtYWlsIjoidHJhaW5lci50ZXN0QGV2b2ZpdG1lYWxzLmNvbSIsInJvbGUiOiJ0cmFpbmVyIiwiaWF0IjoxNzc1MjY5OTc2LCJleHAiOjE3NzUyNzA4NzYsImF1ZCI6IkZpdG5lc3NNZWFsUGxhbm5lci1DbGllbnQiLCJpc3MiOiJGaXRuZXNzTWVhbFBsYW5uZXIifQ.IOPVVCQilyIxYiM_FzogyJ0TeXaBzz7Do-lccbybbIE"
+        }
+      ]
+    }
+  ]
+}
