@@ -89,7 +89,7 @@ const Layout = ({ children }: LayoutProps) => {
                   <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
                     EvoFitMeals
                   </h1> */}
-                  <img src="/logo.png" alt="EvoFitMeals" className="w-10 h-10" />
+                  <img src="/logo.svg" alt="EvoFitMeals" className="w-10 h-10" />
                 </div>
               </div>
               
