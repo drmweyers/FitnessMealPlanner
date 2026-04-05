@@ -15,7 +15,6 @@ import {
   Beef,
   Salad,
   MilkOff,
-  UtensilsCrossed,
   ShoppingCart,
   FileText,
   Zap,
@@ -259,7 +258,7 @@ export default function TripwirePage() {
 
                     {/* Bottom */}
                     <div className="flex items-center gap-1 text-white/40">
-                      <UtensilsCrossed className="w-3 h-3" />
+                      <img src="/logo.png" alt="EvoFitMeals" className="w-3 h-3" />
                       <span className="text-[9px] sm:text-[10px] font-medium tracking-wide">
                         EvoFitMeals
                       </span>

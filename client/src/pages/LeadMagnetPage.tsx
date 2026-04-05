@@ -9,7 +9,6 @@ import {
   Calculator,
   ClipboardList,
   Target,
-  UtensilsCrossed,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -210,7 +209,7 @@ export default function LeadMagnetPage() {
                   {/* Main content */}
                   <div className="flex-1 flex flex-col items-center justify-center gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
-                      <UtensilsCrossed className="w-7 h-7 text-purple-200" />
+                      <img src="/logo.png" alt="EvoFitMeals" className="w-7 h-7" />
                     </div>
 
                     <div>
@@ -235,7 +234,7 @@ export default function LeadMagnetPage() {
 
                   {/* Bottom logo */}
                   <div className="flex items-center gap-1.5 text-purple-300/70">
-                    <UtensilsCrossed className="w-3.5 h-3.5" />
+                    <img src="/logo.png" alt="EvoFitMeals" className="w-3.5 h-3.5" />
                     <span className="text-[10px] sm:text-xs font-semibold tracking-wide">
                       EvoFitMeals
                     </span>

@@ -1093,7 +1093,7 @@ function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-purple-500" />
+            <img src="/logo.png" alt="EvoFitMeals" className="w-6 h-6" />
             <span className="font-clash font-bold text-white text-lg">EvoFitMeals</span>
           </div>
           <div className="flex gap-6 text-sm">

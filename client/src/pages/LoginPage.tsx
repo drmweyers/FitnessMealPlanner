@@ -9,7 +9,6 @@ import { Input } from '../components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form';
 import { useToast } from '../hooks/use-toast';
 import { Link, useLocation } from 'wouter';
-import { Utensils } from 'lucide-react';
 
 // Login form schema with comprehensive validation
 const loginSchema = z.object({
@@ -132,7 +131,7 @@ const LoginPage = () => {
         {/* Logo/Brand Section */}
         <div className="text-center">
           <div className="flex items-center justify-center mb-2">
-            <Utensils className="w-8 h-8 text-purple-600 mr-2" />
+            <img src="/logo.png" alt="EvoFitMeals" className="w-8 h-8 mr-2" />
             <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
               EvoFitMeals
             </h1>
