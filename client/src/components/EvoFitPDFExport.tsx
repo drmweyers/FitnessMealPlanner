@@ -1,48 +1,52 @@
 /**
  * EvoFit PDF Export Component
- * 
+ *
  * Server-side PDF generation using Puppeteer for professional EvoFit branded meal plans
  */
 
-import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from './ui/dialog';
-import { Label } from './ui/label';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { Checkbox } from './ui/checkbox';
-import { useToast } from '../hooks/use-toast';
-import { 
-  Download, 
-  FileText, 
-  Loader2, 
+import React, { useState } from "react";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Label } from "./ui/label";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Checkbox } from "./ui/checkbox";
+import { useToast } from "../hooks/use-toast";
+import {
+  Download,
+  FileText,
+  Loader2,
   Settings,
   ChefHat,
   Printer,
-  Share
-} from 'lucide-react';
-import { saveAs } from 'file-saver';
+  Share,
+} from "lucide-react";
+import { saveAs } from "file-saver";
+import {
+  extractRecipeCardsFromMealPlan,
+  exportMealPlanRecipesToPDF,
+} from "../utils/pdfExport";
 
 interface ExportOptions {
   includeShoppingList?: boolean;
   includeMacroSummary?: boolean;
   includeRecipePhotos?: boolean;
-  orientation?: 'portrait' | 'landscape';
-  pageSize?: 'A4' | 'Letter';
+  orientation?: "portrait" | "landscape";
+  pageSize?: "A4" | "Letter";
 }
 
 interface EvoFitPDFExportProps {
   mealPlan?: any;
   mealPlans?: any[];
   customerName?: string;
-  variant?: 'default' | 'outline' | 'secondary' | 'ghost';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
+  variant?: "default" | "outline" | "secondary" | "ghost";
+  size?: "default" | "sm" | "lg" | "icon";
   className?: string;
   children?: React.ReactNode;
   planId?: string; // For server-side retrieval
@@ -52,23 +56,23 @@ export default function EvoFitPDFExport({
   mealPlan,
   mealPlans,
   customerName,
-  variant = 'outline',
-  size = 'default',
-  className = '',
+  variant = "outline",
+  size = "default",
+  className = "",
   children,
-  planId
+  planId,
 }: EvoFitPDFExportProps) {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
-  
+
   // Export options with EvoFit defaults
   const [options, setOptions] = useState<ExportOptions>({
     includeShoppingList: true,
     includeMacroSummary: true,
     includeRecipePhotos: false, // Disabled for performance
-    orientation: 'portrait',
-    pageSize: 'A4'
+    orientation: "portrait",
+    pageSize: "A4",
   });
 
   const isMultiple = mealPlans && mealPlans.length > 0;
@@ -81,9 +85,9 @@ export default function EvoFitPDFExport({
   const handleQuickExport = async () => {
     if (!isSingle && !isMultiple && !isServerSide) {
       toast({
-        title: 'No Data',
-        description: 'No meal plan data available for export.',
-        variant: 'destructive',
+        title: "No Data",
+        description: "No meal plan data available for export.",
+        variant: "destructive",
       });
       return;
     }
@@ -92,8 +96,8 @@ export default function EvoFitPDFExport({
       includeShoppingList: true,
       includeMacroSummary: true,
       includeRecipePhotos: false,
-      orientation: 'portrait',
-      pageSize: 'A4'
+      orientation: "portrait",
+      pageSize: "A4",
     });
   };
 
@@ -109,10 +113,17 @@ export default function EvoFitPDFExport({
    * Execute the PDF export with specified options
    */
   const executeExport = async (exportOptions: ExportOptions) => {
-    console.log('[PDF Export] Starting export...');
-    console.log('[PDF Export] isSingle:', isSingle, 'isMultiple:', isMultiple, 'isServerSide:', isServerSide);
-    console.log('[PDF Export] mealPlan:', mealPlan ? 'exists' : 'null');
-    console.log('[PDF Export] Export options:', exportOptions);
+    console.log("[PDF Export] Starting export...");
+    console.log(
+      "[PDF Export] isSingle:",
+      isSingle,
+      "isMultiple:",
+      isMultiple,
+      "isServerSide:",
+      isServerSide,
+    );
+    console.log("[PDF Export] mealPlan:", mealPlan ? "exists" : "null");
+    console.log("[PDF Export] Export options:", exportOptions);
 
     setIsExporting(true);
 
@@ -122,83 +133,104 @@ export default function EvoFitPDFExport({
       if (isServerSide && planId) {
         // Server-side meal plan retrieval and export
         response = await fetch(`/api/pdf/export/meal-plan/${planId}`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
-            options: exportOptions
-          })
+            options: exportOptions,
+          }),
         });
       } else if (isSingle) {
         // Single meal plan export
-        console.log('[PDF Export] Calling single meal plan export API');
-        console.log('[PDF Export] Endpoint: /api/pdf/export');
-        console.log('[PDF Export] Meal plan name:', mealPlan.planName || 'Unnamed');
-        console.log('[PDF Export] Customer name:', customerName);
+        console.log("[PDF Export] Calling single meal plan export API");
+        console.log("[PDF Export] Endpoint: /api/pdf/export");
+        console.log(
+          "[PDF Export] Meal plan name:",
+          mealPlan.planName || "Unnamed",
+        );
+        console.log("[PDF Export] Customer name:", customerName);
 
-        response = await fetch('/api/pdf/export', {
-          method: 'POST',
+        response = await fetch("/api/pdf/export", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             mealPlanData: mealPlan,
             customerName,
-            options: exportOptions
-          })
+            options: exportOptions,
+          }),
         });
 
-        console.log('[PDF Export] Response status:', response.status);
+        console.log("[PDF Export] Response status:", response.status);
       } else if (isMultiple) {
         // Multiple meal plans export
         const combinedMealPlan = {
-          planName: `${customerName || 'Customer'} Meal Plans Collection`,
-          fitnessGoal: 'comprehensive_nutrition',
+          planName: `${customerName || "Customer"} Meal Plans Collection`,
+          fitnessGoal: "comprehensive_nutrition",
           description: `Collection of ${mealPlans!.length} meal plans`,
           dailyCalorieTarget: Math.round(
-            mealPlans!.reduce((sum, plan) => 
-              sum + (plan.mealPlanData?.dailyCalorieTarget || plan.dailyCalorieTarget || 2000), 0
-            ) / mealPlans!.length
+            mealPlans!.reduce(
+              (sum, plan) =>
+                sum +
+                (plan.mealPlanData?.dailyCalorieTarget ||
+                  plan.dailyCalorieTarget ||
+                  2000),
+              0,
+            ) / mealPlans!.length,
           ),
-          days: Math.max(...mealPlans!.map(plan => plan.mealPlanData?.days || plan.days || 7)),
-          mealsPerDay: Math.max(...mealPlans!.map(plan => plan.mealPlanData?.mealsPerDay || plan.mealsPerDay || 3)),
-          meals: mealPlans!.flatMap(plan => plan.meals || [])
+          days: Math.max(
+            ...mealPlans!.map(
+              (plan) => plan.mealPlanData?.days || plan.days || 7,
+            ),
+          ),
+          mealsPerDay: Math.max(
+            ...mealPlans!.map(
+              (plan) => plan.mealPlanData?.mealsPerDay || plan.mealsPerDay || 3,
+            ),
+          ),
+          meals: mealPlans!.flatMap((plan) => plan.meals || []),
         };
 
-        response = await fetch('/api/pdf/export', {
-          method: 'POST',
+        response = await fetch("/api/pdf/export", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             mealPlanData: combinedMealPlan,
             customerName,
-            options: exportOptions
-          })
+            options: exportOptions,
+          }),
         });
       } else {
-        throw new Error('Invalid export configuration');
+        throw new Error("Invalid export configuration");
       }
 
       if (!response.ok) {
-        console.error('[PDF Export] Response not OK - status:', response.status);
+        console.error(
+          "[PDF Export] Response not OK - status:",
+          response.status,
+        );
         const errorData = await response.json().catch(() => ({}));
-        console.error('[PDF Export] Error data:', errorData);
-        throw new Error(errorData.message || `Export failed with status ${response.status}`);
+        console.error("[PDF Export] Error data:", errorData);
+        throw new Error(
+          errorData.message || `Export failed with status ${response.status}`,
+        );
       }
 
-      console.log('[PDF Export] Response OK, getting blob...');
+      console.log("[PDF Export] Response OK, getting blob...");
       // Get the PDF blob
       const blob = await response.blob();
-      console.log('[PDF Export] Blob size:', blob.size, 'bytes');
+      console.log("[PDF Export] Blob size:", blob.size, "bytes");
 
       // Extract filename from response headers or generate one
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = 'EvoFit_Meal_Plan.pdf';
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = "EvoFit_Meal_Plan.pdf";
 
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
@@ -207,27 +239,51 @@ export default function EvoFitPDFExport({
         }
       }
 
-      console.log('[PDF Export] Saving file:', filename);
+      console.log("[PDF Export] Saving file:", filename);
       // Save the file
       saveAs(blob, filename);
 
-      console.log('[PDF Export] SUCCESS - File downloaded');
+      console.log("[PDF Export] SUCCESS - File downloaded");
       toast({
-        title: 'Export Complete',
-        description: `${isSingle ? 'Meal plan' : isMultiple ? `${mealPlans!.length} meal plans` : 'Meal plan'} exported successfully.`,
+        title: "Export Complete",
+        description: `${isSingle ? "Meal plan" : isMultiple ? `${mealPlans!.length} meal plans` : "Meal plan"} exported successfully.`,
       });
-
     } catch (error) {
-      console.error('[PDF Export] ERROR:', error);
-      console.error('[PDF Export] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error(
+        "[PDF Export] Server export failed, trying client-side fallback:",
+        error,
+      );
 
-      toast({
-        title: 'Export Failed',
-        description: error instanceof Error ? error.message : 'An error occurred during export.',
-        variant: 'destructive',
-      });
+      // Fallback to client-side jsPDF generation
+      try {
+        const planData = mealPlan || (mealPlans && mealPlans[0]);
+        if (planData) {
+          console.log("[PDF Export] Using client-side jsPDF fallback...");
+          const mealPlanData = extractRecipeCardsFromMealPlan(planData);
+          await exportMealPlanRecipesToPDF(mealPlanData, {
+            includeNutrition: true,
+          });
+          toast({
+            title: "Export Complete",
+            description: "Meal plan exported successfully (client-side).",
+          });
+        } else {
+          throw new Error("No meal plan data available for export");
+        }
+      } catch (fallbackError) {
+        console.error(
+          "[PDF Export] Client-side fallback also failed:",
+          fallbackError,
+        );
+        toast({
+          title: "Export Failed",
+          description:
+            "PDF export is temporarily unavailable. Please try again later.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      console.log('[PDF Export] Export process finished');
+      console.log("[PDF Export] Export process finished");
       setIsExporting(false);
     }
   };
@@ -252,7 +308,7 @@ export default function EvoFitPDFExport({
         ) : (
           <Download className="w-4 h-4 mr-2" />
         )}
-        {children || (isMultiple ? 'Export Collection' : 'Export PDF')}
+        {children || (isMultiple ? "Export Collection" : "Export PDF")}
       </Button>
 
       {/* Options Dialog */}
@@ -268,7 +324,7 @@ export default function EvoFitPDFExport({
             <Settings className="w-4 h-4" />
           </Button>
         </DialogTrigger>
-        
+
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -279,7 +335,7 @@ export default function EvoFitPDFExport({
               Customize your professional meal plan export
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-6 py-4">
             {/* Export Info */}
             <div className="bg-red-50 p-3 rounded-lg border border-red-100">
@@ -290,14 +346,26 @@ export default function EvoFitPDFExport({
               <div className="mt-2 text-sm text-red-600">
                 {isSingle && (
                   <>
-                    <p>Plan: {mealPlan.mealPlanData?.planName || mealPlan.planName || 'Unnamed Plan'}</p>
+                    <p>
+                      Plan:{" "}
+                      {mealPlan.mealPlanData?.planName ||
+                        mealPlan.planName ||
+                        "Unnamed Plan"}
+                    </p>
                     <p>Recipes: {mealPlan.meals?.length || 0} recipe cards</p>
                   </>
                 )}
                 {isMultiple && (
                   <>
                     <p>Collection: {mealPlans!.length} meal plans</p>
-                    <p>Total Recipes: {mealPlans!.reduce((sum, plan) => sum + (plan.meals?.length || 0), 0)} recipe cards</p>
+                    <p>
+                      Total Recipes:{" "}
+                      {mealPlans!.reduce(
+                        (sum, plan) => sum + (plan.meals?.length || 0),
+                        0,
+                      )}{" "}
+                      recipe cards
+                    </p>
                     {customerName && <p>Customer: {customerName}</p>}
                   </>
                 )}
@@ -316,34 +384,46 @@ export default function EvoFitPDFExport({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-600">Size</Label>
-                  <RadioGroup 
-                    value={options.pageSize} 
-                    onValueChange={(value: 'A4' | 'Letter') => setOptions(prev => ({ ...prev, pageSize: value }))}
+                  <RadioGroup
+                    value={options.pageSize}
+                    onValueChange={(value: "A4" | "Letter") =>
+                      setOptions((prev) => ({ ...prev, pageSize: value }))
+                    }
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="A4" id="a4" />
-                      <Label htmlFor="a4" className="text-sm">A4 (Standard)</Label>
+                      <Label htmlFor="a4" className="text-sm">
+                        A4 (Standard)
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="Letter" id="letter" />
-                      <Label htmlFor="letter" className="text-sm">Letter (US)</Label>
+                      <Label htmlFor="letter" className="text-sm">
+                        Letter (US)
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label className="text-xs text-slate-600">Orientation</Label>
-                  <RadioGroup 
-                    value={options.orientation} 
-                    onValueChange={(value: 'portrait' | 'landscape') => setOptions(prev => ({ ...prev, orientation: value }))}
+                  <RadioGroup
+                    value={options.orientation}
+                    onValueChange={(value: "portrait" | "landscape") =>
+                      setOptions((prev) => ({ ...prev, orientation: value }))
+                    }
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="portrait" id="portrait" />
-                      <Label htmlFor="portrait" className="text-sm">Portrait</Label>
+                      <Label htmlFor="portrait" className="text-sm">
+                        Portrait
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="landscape" id="landscape" />
-                      <Label htmlFor="landscape" className="text-sm">Landscape</Label>
+                      <Label htmlFor="landscape" className="text-sm">
+                        Landscape
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -358,29 +438,44 @@ export default function EvoFitPDFExport({
                   <Checkbox
                     id="shopping"
                     checked={options.includeShoppingList}
-                    onCheckedChange={(checked) => setOptions(prev => ({ ...prev, includeShoppingList: checked as boolean }))}
+                    onCheckedChange={(checked) =>
+                      setOptions((prev) => ({
+                        ...prev,
+                        includeShoppingList: checked as boolean,
+                      }))
+                    }
                   />
                   <Label htmlFor="shopping" className="text-sm">
                     Include shopping list with categorized ingredients
                   </Label>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="nutrition"
                     checked={options.includeMacroSummary}
-                    onCheckedChange={(checked) => setOptions(prev => ({ ...prev, includeMacroSummary: checked as boolean }))}
+                    onCheckedChange={(checked) =>
+                      setOptions((prev) => ({
+                        ...prev,
+                        includeMacroSummary: checked as boolean,
+                      }))
+                    }
                   />
                   <Label htmlFor="nutrition" className="text-sm">
                     Include nutrition summary with macro breakdown
                   </Label>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="photos"
                     checked={options.includeRecipePhotos}
-                    onCheckedChange={(checked) => setOptions(prev => ({ ...prev, includeRecipePhotos: checked as boolean }))}
+                    onCheckedChange={(checked) =>
+                      setOptions((prev) => ({
+                        ...prev,
+                        includeRecipePhotos: checked as boolean,
+                      }))
+                    }
                     disabled={true}
                   />
                   <Label htmlFor="photos" className="text-sm text-slate-400">
@@ -430,48 +525,48 @@ export default function EvoFitPDFExport({
 export function SimpleEvoFitPDFExport({
   mealPlan,
   planId,
-  className = '',
-  size = 'sm'
+  className = "",
+  size = "sm",
 }: {
   mealPlan?: any;
   planId?: string;
   className?: string;
-  size?: 'sm' | 'default' | 'lg';
+  size?: "sm" | "default" | "lg";
 }) {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
     setIsExporting(true);
-    
+
     try {
       let response: Response;
 
       if (planId) {
         // Server-side export
         response = await fetch(`/api/pdf/export/meal-plan/${planId}`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             options: {
               includeShoppingList: true,
               includeMacroSummary: true,
               includeRecipePhotos: false,
-              orientation: 'portrait',
-              pageSize: 'A4'
-            }
-          })
+              orientation: "portrait",
+              pageSize: "A4",
+            },
+          }),
         });
       } else if (mealPlan) {
         // Client-side data export
-        response = await fetch('/api/pdf/export', {
-          method: 'POST',
+        response = await fetch("/api/pdf/export", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             mealPlanData: mealPlan,
@@ -479,35 +574,34 @@ export function SimpleEvoFitPDFExport({
               includeShoppingList: true,
               includeMacroSummary: true,
               includeRecipePhotos: false,
-              orientation: 'portrait',
-              pageSize: 'A4'
-            }
-          })
+              orientation: "portrait",
+              pageSize: "A4",
+            },
+          }),
         });
       } else {
-        throw new Error('No meal plan data or ID provided');
+        throw new Error("No meal plan data or ID provided");
       }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Export failed');
+        throw new Error(errorData.message || "Export failed");
       }
 
       const blob = await response.blob();
-      const filename = 'EvoFit_Meal_Plan.pdf';
+      const filename = "EvoFit_Meal_Plan.pdf";
       saveAs(blob, filename);
-      
+
       toast({
-        title: 'Export Complete',
-        description: 'EvoFit meal plan exported successfully.',
+        title: "Export Complete",
+        description: "EvoFit meal plan exported successfully.",
       });
-      
     } catch (error) {
-      console.error('Export error:', error);
+      console.error("Export error:", error);
       toast({
-        title: 'Export Failed',
-        description: 'Failed to export meal plan PDF.',
-        variant: 'destructive',
+        title: "Export Failed",
+        description: "Failed to export meal plan PDF.",
+        variant: "destructive",
       });
     } finally {
       setIsExporting(false);

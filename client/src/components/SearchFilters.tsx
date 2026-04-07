@@ -2,7 +2,13 @@ import React, { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { RecipeFilter } from "@shared/schema";
 
@@ -11,7 +17,10 @@ interface SearchFiltersProps {
   onFilterChange: (filters: Partial<RecipeFilter>) => void;
 }
 
-export default function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
+export default function SearchFilters({
+  filters,
+  onFilterChange,
+}: SearchFiltersProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleSearchChange = (value: string) => {
@@ -28,13 +37,13 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
             <Input
               type="text"
               placeholder="Search recipes by name or ingredients..."
-              value={filters.search || ''}
+              value={filters.search || ""}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10 sm:pl-12 h-11 sm:h-12 text-sm sm:text-base"
             />
           </div>
         </div>
-        
+
         {/* Filter Toggle */}
         <Button
           variant="outline"
@@ -63,8 +72,12 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                 Meal Type
               </label>
               <Select
-                value={filters.mealType || 'all'}
-                onValueChange={(value) => onFilterChange({ mealType: value === 'all' ? undefined : value })}
+                value={filters.mealType || "all"}
+                onValueChange={(value) =>
+                  onFilterChange({
+                    mealType: value === "all" ? undefined : value,
+                  })
+                }
               >
                 <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                   <SelectValue placeholder="All Meals" />
@@ -85,8 +98,12 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                 Dietary
               </label>
               <Select
-                value={filters.dietaryTag || 'all'}
-                onValueChange={(value) => onFilterChange({ dietaryTag: value === 'all' ? undefined : value })}
+                value={filters.dietaryTag || "all"}
+                onValueChange={(value) =>
+                  onFilterChange({
+                    dietaryTag: value === "all" ? undefined : value,
+                  })
+                }
               >
                 <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                   <SelectValue placeholder="All Diets" />
@@ -110,8 +127,12 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                 Max Prep Time
               </label>
               <Select
-                value={filters.maxPrepTime?.toString() || 'all'}
-                onValueChange={(value) => onFilterChange({ maxPrepTime: value === 'all' ? undefined : parseInt(value) })}
+                value={filters.maxPrepTime?.toString() || "all"}
+                onValueChange={(value) =>
+                  onFilterChange({
+                    maxPrepTime: value === "all" ? undefined : parseInt(value),
+                  })
+                }
               >
                 <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                   <SelectValue placeholder="Any Time" />
@@ -132,8 +153,12 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                 Calories Range
               </label>
               <Select
-                value={filters.maxCalories?.toString() || 'all'}
-                onValueChange={(value) => onFilterChange({ maxCalories: value === 'all' ? undefined : parseInt(value) })}
+                value={filters.maxCalories?.toString() || "all"}
+                onValueChange={(value) =>
+                  onFilterChange({
+                    maxCalories: value === "all" ? undefined : parseInt(value),
+                  })
+                }
               >
                 <SelectTrigger className="h-10 sm:h-11 text-sm sm:text-base">
                   <SelectValue placeholder="Any Amount" />
@@ -155,7 +180,6 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
               Macro Nutrients (per serving)
             </h4>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              
               {/* Protein Filters */}
               <div className="space-y-3">
                 <h5 className="text-xs sm:text-sm font-medium text-slate-600">
@@ -163,10 +187,17 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                 </h5>
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Min</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Min
+                    </label>
                     <Select
-                      value={filters.minProtein?.toString() || 'all'}
-                      onValueChange={(value) => onFilterChange({ minProtein: value === 'all' ? undefined : parseInt(value) })}
+                      value={filters.minProtein?.toString() || "all"}
+                      onValueChange={(value) =>
+                        onFilterChange({
+                          minProtein:
+                            value === "all" ? undefined : parseInt(value),
+                        })
+                      }
                     >
                       <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
@@ -182,10 +213,17 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Max</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Max
+                    </label>
                     <Select
-                      value={filters.maxProtein?.toString() || 'all'}
-                      onValueChange={(value) => onFilterChange({ maxProtein: value === 'all' ? undefined : parseInt(value) })}
+                      value={filters.maxProtein?.toString() || "all"}
+                      onValueChange={(value) =>
+                        onFilterChange({
+                          maxProtein:
+                            value === "all" ? undefined : parseInt(value),
+                        })
+                      }
                     >
                       <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
@@ -210,10 +248,17 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                 </h5>
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Min</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Min
+                    </label>
                     <Select
-                      value={filters.minCarbs?.toString() || 'all'}
-                      onValueChange={(value) => onFilterChange({ minCarbs: value === 'all' ? undefined : parseInt(value) })}
+                      value={filters.minCarbs?.toString() || "all"}
+                      onValueChange={(value) =>
+                        onFilterChange({
+                          minCarbs:
+                            value === "all" ? undefined : parseInt(value),
+                        })
+                      }
                     >
                       <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
@@ -229,10 +274,17 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Max</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Max
+                    </label>
                     <Select
-                      value={filters.maxCarbs?.toString() || 'all'}
-                      onValueChange={(value) => onFilterChange({ maxCarbs: value === 'all' ? undefined : parseInt(value) })}
+                      value={filters.maxCarbs?.toString() || "all"}
+                      onValueChange={(value) =>
+                        onFilterChange({
+                          maxCarbs:
+                            value === "all" ? undefined : parseInt(value),
+                        })
+                      }
                     >
                       <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
@@ -257,10 +309,16 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                 </h5>
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Min</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Min
+                    </label>
                     <Select
-                      value={filters.minFat?.toString() || 'all'}
-                      onValueChange={(value) => onFilterChange({ minFat: value === 'all' ? undefined : parseInt(value) })}
+                      value={filters.minFat?.toString() || "all"}
+                      onValueChange={(value) =>
+                        onFilterChange({
+                          minFat: value === "all" ? undefined : parseInt(value),
+                        })
+                      }
                     >
                       <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
@@ -276,10 +334,16 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Max</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Max
+                    </label>
                     <Select
-                      value={filters.maxFat?.toString() || 'all'}
-                      onValueChange={(value) => onFilterChange({ maxFat: value === 'all' ? undefined : parseInt(value) })}
+                      value={filters.maxFat?.toString() || "all"}
+                      onValueChange={(value) =>
+                        onFilterChange({
+                          maxFat: value === "all" ? undefined : parseInt(value),
+                        })
+                      }
                     >
                       <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Any" />
@@ -299,28 +363,40 @@ export default function SearchFilters({ filters, onFilterChange }: SearchFilters
             </div>
           </div>
 
-          {/* Clear Filters Button */}
-          <div className="mt-4 sm:mt-6 flex justify-center sm:justify-end">
+          {/* Filter Action Buttons */}
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-center sm:justify-end gap-3">
             <Button
               variant="outline"
-              onClick={() => onFilterChange({ 
-                search: undefined,
-                mealType: undefined,
-                dietaryTag: undefined,
-                maxPrepTime: undefined,
-                maxCalories: undefined,
-                minCalories: undefined,
-                minProtein: undefined,
-                maxProtein: undefined,
-                minCarbs: undefined,
-                maxCarbs: undefined,
-                minFat: undefined,
-                maxFat: undefined,
-              })}
+              onClick={() =>
+                onFilterChange({
+                  search: undefined,
+                  mealType: undefined,
+                  dietaryTag: undefined,
+                  maxPrepTime: undefined,
+                  maxCalories: undefined,
+                  minCalories: undefined,
+                  minProtein: undefined,
+                  maxProtein: undefined,
+                  minCarbs: undefined,
+                  maxCarbs: undefined,
+                  minFat: undefined,
+                  maxFat: undefined,
+                })
+              }
               className="text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3 w-full sm:w-auto"
             >
               <i className="fas fa-times mr-2"></i>
               Clear All Filters
+            </Button>
+            <Button
+              onClick={() => {
+                onFilterChange({ ...filters });
+                setShowAdvanced(false);
+              }}
+              className="text-sm sm:text-base px-6 sm:px-8 py-2 sm:py-3 w-full sm:w-auto bg-primary hover:bg-primary/90"
+            >
+              <i className="fas fa-check mr-2"></i>
+              Apply Filters
             </Button>
           </div>
         </div>

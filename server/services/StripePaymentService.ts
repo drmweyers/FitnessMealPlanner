@@ -5,26 +5,26 @@
  * Includes checkout session creation, webhook processing, and subscription management.
  */
 
-import Stripe from 'stripe';
-import { db } from '../db';
-import { eq, and } from 'drizzle-orm';
+import Stripe from "stripe";
+import { db } from "../db";
+import { eq, and } from "drizzle-orm";
 import {
   trainerSubscriptions,
   subscriptionItems,
   webhookEvents,
   paymentLogs,
-} from '../../shared/schema';
-import { entitlementsService } from './EntitlementsService';
+} from "../../shared/schema";
+import { entitlementsService } from "./EntitlementsService";
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is required');
+  throw new Error("STRIPE_SECRET_KEY is required");
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-10-29.clover',
+  apiVersion: "2025-10-29.clover",
 });
 
-export type TierLevel = 'starter' | 'professional' | 'enterprise';
+export type TierLevel = "starter" | "professional" | "enterprise";
 
 interface TierPricing {
   tier: TierLevel;
@@ -42,18 +42,18 @@ interface TierPricing {
 // Tier pricing configuration
 const TIER_PRICING: Record<TierLevel, TierPricing> = {
   starter: {
-    tier: 'starter',
-    stripePriceId: process.env.STRIPE_PRICE_STARTER || 'price_starter',
+    tier: "starter",
+    stripePriceId: process.env.STRIPE_PRICE_STARTER || "price_starter",
     amount: 19900, // $199.00
-    currency: 'usd',
-    name: 'Starter',
+    currency: "usd",
+    name: "Starter",
     features: [
-      '9 customers',
-      '50 meal plans',
-      '1,000 recipes',
-      '5 meal types',
-      'PDF exports',
-      'Email support',
+      "9 customers",
+      "50 meal plans",
+      "1,500 recipes",
+      "5 meal types",
+      "PDF exports",
+      "Email support",
     ],
     limits: {
       customers: 9,
@@ -61,20 +61,21 @@ const TIER_PRICING: Record<TierLevel, TierPricing> = {
     },
   },
   professional: {
-    tier: 'professional',
-    stripePriceId: process.env.STRIPE_PRICE_PROFESSIONAL || 'price_professional',
+    tier: "professional",
+    stripePriceId:
+      process.env.STRIPE_PRICE_PROFESSIONAL || "price_professional",
     amount: 29900, // $299.00
-    currency: 'usd',
-    name: 'Professional',
+    currency: "usd",
+    name: "Professional",
     features: [
-      '20 customers',
-      '200 meal plans',
-      '2,500 recipes',
-      '10 meal types',
-      'CSV & Excel exports',
-      'Custom branding',
-      'Analytics dashboard',
-      'Priority support',
+      "20 customers",
+      "200 meal plans",
+      "3,000 recipes",
+      "10 meal types",
+      "CSV & Excel exports",
+      "Custom branding",
+      "Analytics dashboard",
+      "Priority support",
     ],
     limits: {
       customers: 20,
@@ -82,21 +83,21 @@ const TIER_PRICING: Record<TierLevel, TierPricing> = {
     },
   },
   enterprise: {
-    tier: 'enterprise',
-    stripePriceId: process.env.STRIPE_PRICE_ENTERPRISE || 'price_enterprise',
+    tier: "enterprise",
+    stripePriceId: process.env.STRIPE_PRICE_ENTERPRISE || "price_enterprise",
     amount: 39900, // $399.00
-    currency: 'usd',
-    name: 'Enterprise',
+    currency: "usd",
+    name: "Enterprise",
     features: [
-      'Unlimited customers',
-      'Unlimited meal plans',
-      '4,000 recipes',
-      '17 meal types',
-      'All export formats',
-      'White-label mode',
-      'Custom domain',
-      'API access',
-      'Dedicated support',
+      "Unlimited customers",
+      "Unlimited meal plans",
+      "6,000 recipes",
+      "17 meal types",
+      "All export formats",
+      "White-label mode",
+      "Custom domain",
+      "API access",
+      "Dedicated support",
     ],
     limits: {
       customers: 50,
@@ -122,7 +123,7 @@ export class StripePaymentService {
     trainerId: string,
     tier: TierLevel,
     successUrl: string,
-    cancelUrl: string
+    cancelUrl: string,
   ): Promise<{ url: string; sessionId: string }> {
     const pricing = TIER_PRICING[tier];
 
@@ -136,7 +137,7 @@ export class StripePaymentService {
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,
-      mode: 'payment', // One-time payment
+      mode: "payment", // One-time payment
       line_items: [
         {
           price: pricing.stripePriceId,
@@ -154,10 +155,10 @@ export class StripePaymentService {
     // Log payment attempt
     await db.insert(paymentLogs).values({
       trainerId,
-      eventType: 'purchase',
+      eventType: "purchase",
       amount: (pricing.amount / 100).toFixed(2), // Convert cents to decimal string
       currency: pricing.currency,
-      status: 'pending',
+      status: "pending",
       metadata: { sessionId: session.id, tier, stripeCustomerId: customer.id },
       occurredAt: new Date(),
     });
@@ -171,7 +172,9 @@ export class StripePaymentService {
   /**
    * Get or create Stripe customer for trainer
    */
-  private async getOrCreateStripeCustomer(trainerId: string): Promise<Stripe.Customer> {
+  private async getOrCreateStripeCustomer(
+    trainerId: string,
+  ): Promise<Stripe.Customer> {
     // Get trainer email first (needed for both test and real customers)
     const trainer = await db.query.users.findFirst({
       where: (users, { eq }) => eq(users.id, trainerId),
@@ -184,13 +187,15 @@ export class StripePaymentService {
 
     if (existingSubscription?.stripeCustomerId) {
       // Check if this is a test account (seed script pattern)
-      if (existingSubscription.stripeCustomerId.startsWith('cus_test_')) {
-        throw new Error('TEST_ACCOUNT: This is a test account. Payment features are not available for test accounts. Please use a production account to process payments.');
+      if (existingSubscription.stripeCustomerId.startsWith("cus_test_")) {
+        throw new Error(
+          "TEST_ACCOUNT: This is a test account. Payment features are not available for test accounts. Please use a production account to process payments.",
+        );
       }
 
       // Fetch existing customer from Stripe
       const customer = await stripe.customers.retrieve(
-        existingSubscription.stripeCustomerId
+        existingSubscription.stripeCustomerId,
       );
       if (!customer.deleted) {
         return customer as Stripe.Customer;
@@ -198,7 +203,7 @@ export class StripePaymentService {
     }
 
     if (!trainer) {
-      throw new Error('Trainer not found');
+      throw new Error("Trainer not found");
     }
 
     // Create new Stripe customer
@@ -217,12 +222,12 @@ export class StripePaymentService {
    */
   async handleWebhook(
     payload: string,
-    signature: string
+    signature: string,
   ): Promise<{ received: boolean; event?: Stripe.Event }> {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
-      throw new Error('STRIPE_WEBHOOK_SECRET is required');
+      throw new Error("STRIPE_WEBHOOK_SECRET is required");
     }
 
     let event: Stripe.Event;
@@ -230,7 +235,9 @@ export class StripePaymentService {
     try {
       event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
     } catch (error: any) {
-      throw new Error(`Webhook signature verification failed: ${error.message}`);
+      throw new Error(
+        `Webhook signature verification failed: ${error.message}`,
+      );
     }
 
     // Check for duplicate webhook processing
@@ -238,7 +245,7 @@ export class StripePaymentService {
       where: (events, { eq }) => eq(events.eventId, event.id),
     });
 
-    if (existingEvent && existingEvent.status === 'processed') {
+    if (existingEvent && existingEvent.status === "processed") {
       console.log(`[Webhook] Duplicate event ${event.id} - already processed`);
       return { received: true, event };
     }
@@ -250,7 +257,7 @@ export class StripePaymentService {
         eventId: event.id,
         eventType: event.type,
         payloadMetadata: event.data.object as any,
-        status: 'pending',
+        status: "pending",
       })
       .onConflictDoUpdate({
         target: webhookEvents.eventId,
@@ -267,7 +274,7 @@ export class StripePaymentService {
       // Mark as processed
       await db
         .update(webhookEvents)
-        .set({ status: 'processed', processedAt: new Date() })
+        .set({ status: "processed", processedAt: new Date() })
         .where(eq(webhookEvents.eventId, event.id));
     } catch (error: any) {
       console.error(`[Webhook] Failed to process event ${event.id}:`, error);
@@ -275,7 +282,7 @@ export class StripePaymentService {
       // Log error
       await db
         .update(webhookEvents)
-        .set({ status: 'failed', errorMessage: error.message })
+        .set({ status: "failed", errorMessage: error.message })
         .where(eq(webhookEvents.eventId, event.id));
 
       throw error;
@@ -289,28 +296,40 @@ export class StripePaymentService {
    */
   private async processWebhookEvent(event: Stripe.Event): Promise<void> {
     switch (event.type) {
-      case 'checkout.session.completed':
-        await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+      case "checkout.session.completed":
+        await this.handleCheckoutCompleted(
+          event.data.object as Stripe.Checkout.Session,
+        );
         break;
 
-      case 'customer.subscription.created':
-        await this.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
+      case "customer.subscription.created":
+        await this.handleSubscriptionCreated(
+          event.data.object as Stripe.Subscription,
+        );
         break;
 
-      case 'customer.subscription.updated':
-        await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+      case "customer.subscription.updated":
+        await this.handleSubscriptionUpdated(
+          event.data.object as Stripe.Subscription,
+        );
         break;
 
-      case 'customer.subscription.deleted':
-        await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+      case "customer.subscription.deleted":
+        await this.handleSubscriptionDeleted(
+          event.data.object as Stripe.Subscription,
+        );
         break;
 
-      case 'invoice.payment_succeeded':
-        await this.handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+      case "invoice.payment_succeeded":
+        await this.handleInvoicePaymentSucceeded(
+          event.data.object as Stripe.Invoice,
+        );
         break;
 
-      case 'invoice.payment_failed':
-        await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+      case "invoice.payment_failed":
+        await this.handleInvoicePaymentFailed(
+          event.data.object as Stripe.Invoice,
+        );
         break;
 
       default:
@@ -321,12 +340,14 @@ export class StripePaymentService {
   /**
    * Handle successful checkout completion
    */
-  private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+  private async handleCheckoutCompleted(
+    session: Stripe.Checkout.Session,
+  ): Promise<void> {
     const trainerId = session.metadata?.trainerId;
     const tier = session.metadata?.tier as TierLevel;
 
     if (!trainerId || !tier) {
-      throw new Error('Missing trainerId or tier in session metadata');
+      throw new Error("Missing trainerId or tier in session metadata");
     }
 
     // Get pricing info
@@ -342,7 +363,7 @@ export class StripePaymentService {
       stripeCustomerId: session.customer as string,
       stripeSubscriptionId: `manual_${session.id}`, // One-time payment, no subscription ID
       tier,
-      status: 'active' as const,
+      status: "active" as const,
       currentPeriodStart: new Date(),
       currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
       cancelAtPeriodEnd: false,
@@ -360,11 +381,15 @@ export class StripePaymentService {
     // Log payment
     await db.insert(paymentLogs).values({
       trainerId,
-      eventType: 'purchase',
+      eventType: "purchase",
       amount: (pricing.amount / 100).toFixed(2), // Convert cents to decimal string
       currency: pricing.currency,
-      status: 'completed', // Use 'completed' instead of 'succeeded' (matches enum)
-      metadata: { sessionId: session.id, tier, stripeCustomerId: session.customer as string },
+      status: "completed", // Use 'completed' instead of 'succeeded' (matches enum)
+      metadata: {
+        sessionId: session.id,
+        tier,
+        stripeCustomerId: session.customer as string,
+      },
       occurredAt: new Date(),
     });
 
@@ -377,11 +402,13 @@ export class StripePaymentService {
   /**
    * Handle subscription created (if switching to recurring model)
    */
-  private async handleSubscriptionCreated(subscription: Stripe.Subscription): Promise<void> {
+  private async handleSubscriptionCreated(
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
     const trainerId = subscription.metadata?.trainerId;
 
     if (!trainerId) {
-      console.warn('[Webhook] Subscription created without trainerId metadata');
+      console.warn("[Webhook] Subscription created without trainerId metadata");
       return;
     }
 
@@ -391,8 +418,12 @@ export class StripePaymentService {
       .set({
         stripeSubscriptionId: subscription.id,
         status: subscription.status as any,
-        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
-        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+        currentPeriodStart: new Date(
+          (subscription as any).current_period_start * 1000,
+        ),
+        currentPeriodEnd: new Date(
+          (subscription as any).current_period_end * 1000,
+        ),
       })
       .where(eq(trainerSubscriptions.trainerId, trainerId));
 
@@ -402,7 +433,9 @@ export class StripePaymentService {
   /**
    * Handle subscription updated
    */
-  private async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
+  private async handleSubscriptionUpdated(
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
     const trainerId = subscription.metadata?.trainerId;
 
     if (!trainerId) {
@@ -412,7 +445,7 @@ export class StripePaymentService {
       });
 
       if (!existing) {
-        console.warn('[Webhook] Subscription updated for unknown trainer');
+        console.warn("[Webhook] Subscription updated for unknown trainer");
         return;
       }
     }
@@ -421,14 +454,18 @@ export class StripePaymentService {
       .update(trainerSubscriptions)
       .set({
         status: subscription.status as any,
-        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
-        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+        currentPeriodStart: new Date(
+          (subscription as any).current_period_start * 1000,
+        ),
+        currentPeriodEnd: new Date(
+          (subscription as any).current_period_end * 1000,
+        ),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
       })
       .where(
         trainerId
           ? eq(trainerSubscriptions.trainerId, trainerId)
-          : eq(trainerSubscriptions.stripeSubscriptionId, subscription.id)
+          : eq(trainerSubscriptions.stripeSubscriptionId, subscription.id),
       );
 
     await entitlementsService.invalidateCache(trainerId!);
@@ -437,20 +474,22 @@ export class StripePaymentService {
   /**
    * Handle subscription deleted (canceled)
    */
-  private async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
+  private async handleSubscriptionDeleted(
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
     const existing = await db.query.trainerSubscriptions.findFirst({
       where: eq(trainerSubscriptions.stripeSubscriptionId, subscription.id),
     });
 
     if (!existing) {
-      console.warn('[Webhook] Subscription deleted for unknown subscription');
+      console.warn("[Webhook] Subscription deleted for unknown subscription");
       return;
     }
 
     await db
       .update(trainerSubscriptions)
       .set({
-        status: 'canceled',
+        status: "canceled",
         cancelAtPeriodEnd: false,
       })
       .where(eq(trainerSubscriptions.id, existing.id));
@@ -461,7 +500,9 @@ export class StripePaymentService {
   /**
    * Handle successful invoice payment
    */
-  private async handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
+  private async handleInvoicePaymentSucceeded(
+    invoice: Stripe.Invoice,
+  ): Promise<void> {
     const customerId = invoice.customer as string;
 
     // Find trainer by customer ID
@@ -470,17 +511,17 @@ export class StripePaymentService {
     });
 
     if (!subscription) {
-      console.warn('[Webhook] Invoice payment for unknown customer');
+      console.warn("[Webhook] Invoice payment for unknown customer");
       return;
     }
 
     // Log successful payment
     await db.insert(paymentLogs).values({
       trainerId: subscription.trainerId,
-      eventType: 'purchase',
+      eventType: "purchase",
       amount: (invoice.amount_paid / 100).toFixed(2), // Convert cents to decimal string
-      currency: invoice.currency || 'usd',
-      status: 'completed', // Use 'completed' instead of 'succeeded' (matches enum)
+      currency: invoice.currency || "usd",
+      status: "completed", // Use 'completed' instead of 'succeeded' (matches enum)
       metadata: { invoiceId: invoice.id, stripeCustomerId: customerId },
       occurredAt: new Date(),
     });
@@ -489,7 +530,9 @@ export class StripePaymentService {
   /**
    * Handle failed invoice payment
    */
-  private async handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+  private async handleInvoicePaymentFailed(
+    invoice: Stripe.Invoice,
+  ): Promise<void> {
     const customerId = invoice.customer as string;
 
     const subscription = await db.query.trainerSubscriptions.findFirst({
@@ -497,17 +540,17 @@ export class StripePaymentService {
     });
 
     if (!subscription) {
-      console.warn('[Webhook] Invoice payment failed for unknown customer');
+      console.warn("[Webhook] Invoice payment failed for unknown customer");
       return;
     }
 
     // Log failed payment
     await db.insert(paymentLogs).values({
       trainerId: subscription.trainerId,
-      eventType: 'purchase',
+      eventType: "purchase",
       amount: (invoice.amount_due / 100).toFixed(2), // Convert cents to decimal string
-      currency: invoice.currency || 'usd',
-      status: 'failed',
+      currency: invoice.currency || "usd",
+      status: "failed",
       metadata: { invoiceId: invoice.id, stripeCustomerId: customerId },
       occurredAt: new Date(),
     });
@@ -515,7 +558,7 @@ export class StripePaymentService {
     // Update subscription status to past_due
     await db
       .update(trainerSubscriptions)
-      .set({ status: 'past_due' })
+      .set({ status: "past_due" })
       .where(eq(trainerSubscriptions.id, subscription.id));
 
     await entitlementsService.invalidateCache(subscription.trainerId);
@@ -526,14 +569,14 @@ export class StripePaymentService {
    */
   async createBillingPortalSession(
     trainerId: string,
-    returnUrl: string
+    returnUrl: string,
   ): Promise<{ url: string }> {
     const subscription = await db.query.trainerSubscriptions.findFirst({
       where: eq(trainerSubscriptions.trainerId, trainerId),
     });
 
     if (!subscription || !subscription.stripeCustomerId) {
-      throw new Error('No active subscription found');
+      throw new Error("No active subscription found");
     }
 
     const session = await stripe.billingPortal.sessions.create({
@@ -558,7 +601,7 @@ export class StripePaymentService {
 
     const paymentMethods = await stripe.paymentMethods.list({
       customer: subscription.stripeCustomerId,
-      type: 'card',
+      type: "card",
     });
 
     if (paymentMethods.data.length === 0) {
@@ -598,9 +641,9 @@ export class StripePaymentService {
    */
   private getPaymentDescription(eventType: string): string {
     const descriptions: Record<string, string> = {
-      'checkout.session.completed': 'Tier Purchase',
-      'invoice.payment_succeeded': 'Subscription Payment',
-      'invoice.payment_failed': 'Payment Failed',
+      "checkout.session.completed": "Tier Purchase",
+      "invoice.payment_succeeded": "Subscription Payment",
+      "invoice.payment_failed": "Payment Failed",
     };
 
     return descriptions[eventType] || eventType;

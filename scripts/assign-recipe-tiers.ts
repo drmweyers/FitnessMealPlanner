@@ -16,36 +16,39 @@
  * Usage: npm run assign-tiers
  */
 
-import { Pool } from 'pg';
-import dotenv from 'dotenv';
+import { Pool } from "pg";
+import dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
 
 if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL environment variable is required');
+  console.error("❌ DATABASE_URL environment variable is required");
   process.exit(1);
 }
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 // Tier distribution plan
 const TIER_LIMITS = {
-  starter: 1000,
-  professional: 2500,
-  enterprise: 4000,
+  starter: 1500,
+  professional: 3000,
+  enterprise: 6000,
 };
 
 async function assignRecipeTiers() {
   const client = await pool.connect();
 
   try {
-    console.log('🚀 Starting recipe tier assignment...\n');
+    console.log("🚀 Starting recipe tier assignment...\n");
 
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     // Get total recipe count
     const countResult = await client.query(`
@@ -57,16 +60,17 @@ async function assignRecipeTiers() {
     console.log(`📊 Total approved recipes: ${totalRecipes}`);
 
     if (totalRecipes === 0) {
-      console.log('⚠️  No approved recipes found. Nothing to assign.');
-      await client.query('ROLLBACK');
+      console.log("⚠️  No approved recipes found. Nothing to assign.");
+      await client.query("ROLLBACK");
       return;
     }
 
     // Assign tier levels based on creation timestamp (oldest first)
-    console.log('\n📝 Assigning tier levels...');
+    console.log("\n📝 Assigning tier levels...");
 
     // 1. Assign first 1,000 recipes to 'starter' tier
-    const starterResult = await client.query(`
+    const starterResult = await client.query(
+      `
       WITH ordered_recipes AS (
         SELECT id,
                ROW_NUMBER() OVER (ORDER BY creation_timestamp ASC) as rn
@@ -80,14 +84,20 @@ async function assignRecipeTiers() {
       WHERE recipes.id = ordered_recipes.id
         AND ordered_recipes.rn <= $1
       RETURNING recipes.id
-    `, [TIER_LIMITS.starter]);
+    `,
+      [TIER_LIMITS.starter],
+    );
 
     console.log(`  ✅ Starter tier: ${starterResult.rowCount} recipes`);
 
     // 2. Assign next 1,500 recipes (1,001-2,500) to 'professional' tier
-    const professionalCount = Math.min(TIER_LIMITS.professional - TIER_LIMITS.starter, totalRecipes - TIER_LIMITS.starter);
+    const professionalCount = Math.min(
+      TIER_LIMITS.professional - TIER_LIMITS.starter,
+      totalRecipes - TIER_LIMITS.starter,
+    );
     if (professionalCount > 0) {
-      const professionalResult = await client.query(`
+      const professionalResult = await client.query(
+        `
         WITH ordered_recipes AS (
           SELECT id,
                  ROW_NUMBER() OVER (ORDER BY creation_timestamp ASC) as rn
@@ -102,15 +112,23 @@ async function assignRecipeTiers() {
           AND ordered_recipes.rn > $1
           AND ordered_recipes.rn <= $2
         RETURNING recipes.id
-      `, [TIER_LIMITS.starter, TIER_LIMITS.professional]);
+      `,
+        [TIER_LIMITS.starter, TIER_LIMITS.professional],
+      );
 
-      console.log(`  ✅ Professional tier: ${professionalResult.rowCount} recipes`);
+      console.log(
+        `  ✅ Professional tier: ${professionalResult.rowCount} recipes`,
+      );
     }
 
     // 3. Assign remaining recipes (2,501+) to 'enterprise' tier
-    const enterpriseCount = Math.max(0, totalRecipes - TIER_LIMITS.professional);
+    const enterpriseCount = Math.max(
+      0,
+      totalRecipes - TIER_LIMITS.professional,
+    );
     if (enterpriseCount > 0) {
-      const enterpriseResult = await client.query(`
+      const enterpriseResult = await client.query(
+        `
         WITH ordered_recipes AS (
           SELECT id,
                  ROW_NUMBER() OVER (ORDER BY creation_timestamp ASC) as rn
@@ -124,13 +142,15 @@ async function assignRecipeTiers() {
         WHERE recipes.id = ordered_recipes.id
           AND ordered_recipes.rn > $1
         RETURNING recipes.id
-      `, [TIER_LIMITS.professional]);
+      `,
+        [TIER_LIMITS.professional],
+      );
 
       console.log(`  ✅ Enterprise tier: ${enterpriseResult.rowCount} recipes`);
     }
 
     // Update recipe_tier_access allocation tracking
-    console.log('\n📈 Updating allocation tracking...');
+    console.log("\n📈 Updating allocation tracking...");
 
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
@@ -144,23 +164,26 @@ async function assignRecipeTiers() {
     `);
 
     for (const row of tierCountResult.rows) {
-      await client.query(`
+      await client.query(
+        `
         INSERT INTO recipe_tier_access (tier, allocation_month, recipe_count, allocation_date)
         VALUES ($1, $2, $3, NOW())
         ON CONFLICT (tier, allocation_month)
         DO UPDATE SET
           recipe_count = $3,
           allocation_date = NOW()
-      `, [row.tier_level, currentMonth, row.count]);
+      `,
+        [row.tier_level, currentMonth, row.count],
+      );
 
       console.log(`  ✅ ${row.tier_level}: ${row.count} recipes allocated`);
     }
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
     // Display summary
-    console.log('\n✨ Tier assignment completed successfully!\n');
-    console.log('📊 Summary by tier:');
+    console.log("\n✨ Tier assignment completed successfully!\n");
+    console.log("📊 Summary by tier:");
 
     const summaryResult = await client.query(`
       SELECT tier_level, COUNT(*) as count
@@ -179,14 +202,17 @@ async function assignRecipeTiers() {
       console.log(`  ${row.tier_level.padEnd(15)}: ${row.count} recipes`);
     }
 
-    console.log('\n📌 Progressive Access Model:');
-    console.log('  Starter tier      : Can access starter recipes only');
-    console.log('  Professional tier : Can access starter + professional recipes');
-    console.log('  Enterprise tier   : Can access all recipes (starter + professional + enterprise)');
-
+    console.log("\n📌 Progressive Access Model:");
+    console.log("  Starter tier      : Can access starter recipes only");
+    console.log(
+      "  Professional tier : Can access starter + professional recipes",
+    );
+    console.log(
+      "  Enterprise tier   : Can access all recipes (starter + professional + enterprise)",
+    );
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('\n❌ Tier assignment failed:', error);
+    await client.query("ROLLBACK");
+    console.error("\n❌ Tier assignment failed:", error);
     throw error;
   } finally {
     client.release();
@@ -197,10 +223,10 @@ async function assignRecipeTiers() {
 // Run the script
 assignRecipeTiers()
   .then(() => {
-    console.log('\n✅ Script completed successfully');
+    console.log("\n✅ Script completed successfully");
     process.exit(0);
   })
   .catch((error) => {
-    console.error('\n❌ Script failed:', error);
+    console.error("\n❌ Script failed:", error);
     process.exit(1);
   });

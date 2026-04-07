@@ -52,7 +52,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest } from "../lib/queryClient";
 import { useAuth } from "../contexts/AuthContext";
-import jsPDF from 'jspdf';
+import jsPDF from "jspdf";
 import {
   mealPlanGenerationSchema,
   type MealPlanGeneration,
@@ -78,7 +78,6 @@ import EvoFitPDFExport from "./EvoFitPDFExport";
 import html2canvas from "html2canvas";
 import RecipeModal from "./RecipeModal";
 import MealPlanAssignment from "./MealPlanAssignment";
-import { MealTypeDropdown } from "./MealTypeDropdown";
 
 /**
  * Type definition for meal plan generation results
@@ -128,7 +127,10 @@ interface MealPlanGeneratorProps {
   customerContext?: CustomerContext;
 }
 
-export default function MealPlanGenerator({ onMealPlanGenerated, customerContext }: MealPlanGeneratorProps = {}) {
+export default function MealPlanGenerator({
+  onMealPlanGenerated,
+  customerContext,
+}: MealPlanGeneratorProps = {}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -210,36 +212,41 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
   // Load customer context when available
   useEffect(() => {
     // Check for customer context from props or sessionStorage
-    const contextFromStorage = sessionStorage.getItem('customerContext');
-    const context = customerContext || (contextFromStorage ? JSON.parse(contextFromStorage) : null);
-    
+    const contextFromStorage = sessionStorage.getItem("customerContext");
+    const context =
+      customerContext ||
+      (contextFromStorage ? JSON.parse(contextFromStorage) : null);
+
     if (context) {
       // Pre-populate form with customer information
-      form.setValue('clientName', context.customerEmail);
-      
+      form.setValue("clientName", context.customerEmail);
+
       // Set a default plan name based on customer
-      if (!form.getValues('planName')) {
-        form.setValue('planName', `Personalized Plan for ${context.customerEmail.split('@')[0]}`);
+      if (!form.getValues("planName")) {
+        form.setValue(
+          "planName",
+          `Personalized Plan for ${context.customerEmail.split("@")[0]}`,
+        );
       }
-      
+
       // Add customer context to description
       if (context.healthMetrics || context.goals) {
-        let description = 'Customer Profile:\n';
-        
+        let description = "Customer Profile:\n";
+
         if (context.healthMetrics) {
           description += `• Weight: ${context.healthMetrics.weight}\n`;
           description += `• Body Fat: ${context.healthMetrics.bodyFat}\n`;
           description += `• Waist: ${context.healthMetrics.waist}\n`;
         }
-        
+
         if (context.goals && context.goals.length > 0) {
-          description += '\nActive Goals:\n';
+          description += "\nActive Goals:\n";
           context.goals.forEach((goal: any) => {
             description += `• ${goal.goalName} (${goal.progressPercentage}% complete)\n`;
           });
         }
-        
-        form.setValue('description', description);
+
+        form.setValue("description", description);
       }
     }
   }, [customerContext, form]);
@@ -251,7 +258,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       const response = await apiRequest(
         "POST",
         "/api/meal-plan/parse-natural-language",
-        { naturalLanguageInput }
+        { naturalLanguageInput },
       );
 
       const result = await response.json();
@@ -329,9 +336,9 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(data),
       });
 
@@ -340,15 +347,24 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         let errorMessage = `Failed to generate meal plan (${response.status})`;
         try {
           const errorData = await response.json();
-          console.log('[Meal Plan Generator] Error response data:', errorData);
+          console.log("[Meal Plan Generator] Error response data:", errorData);
           errorMessage = errorData.message || errorData.error || errorMessage;
-          console.log('[Meal Plan Generator] Extracted error message:', errorMessage);
+          console.log(
+            "[Meal Plan Generator] Extracted error message:",
+            errorMessage,
+          );
         } catch (parseError) {
           // If response is not JSON, use status text
-          console.error('[Meal Plan Generator] Failed to parse error response:', parseError);
+          console.error(
+            "[Meal Plan Generator] Failed to parse error response:",
+            parseError,
+          );
           errorMessage = response.statusText || errorMessage;
         }
-        console.log('[Meal Plan Generator] Throwing error with message:', errorMessage);
+        console.log(
+          "[Meal Plan Generator] Throwing error with message:",
+          errorMessage,
+        );
         throw new Error(errorMessage);
       }
 
@@ -356,7 +372,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     },
     onSuccess: (data) => {
       setGeneratedPlan(data);
-      
+
       // Call the callback if provided (for CustomerDetailView integration)
       if (onMealPlanGenerated && data.mealPlan) {
         onMealPlanGenerated(data.mealPlan);
@@ -366,7 +382,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         description: "Your personalized meal plan is ready.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/meal-plans"] });
-      
+
       // Force refresh the page when meal plan generation is completed
       // if (data.completed) {
       //   setTimeout(() => {
@@ -375,42 +391,53 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       // }
     },
     onError: (error: Error) => {
-      console.error('[Meal Plan Generator] Error caught in onError:', error);
-      console.error('[Meal Plan Generator] Error message:', error.message);
-      
-      const errorMessage = error.message || "Failed to generate meal plan. Please try again.";
-      
-      console.log('[Meal Plan Generator] Showing toast with message:', errorMessage);
-      
+      console.error("[Meal Plan Generator] Error caught in onError:", error);
+      console.error("[Meal Plan Generator] Error message:", error.message);
+
+      const errorMessage =
+        error.message || "Failed to generate meal plan. Please try again.";
+
+      console.log(
+        "[Meal Plan Generator] Showing toast with message:",
+        errorMessage,
+      );
+
       toast({
-        title: "Generation Failed",
+        title: "Could not generate meal plan",
         description: errorMessage,
-        variant: "destructive",
+        variant: "default",
+        duration: 10000,
       });
     },
   });
 
   const saveMealPlan = useMutation({
-    mutationFn: async ({ notes, tags }: { notes?: string; tags?: string[] }) => {
-      console.log('[Save to Library] Starting save operation...');
-      console.log('[Save to Library] User role:', user?.role);
-      console.log('[Save to Library] Generated plan exists:', !!generatedPlan);
+    mutationFn: async ({
+      notes,
+      tags,
+    }: {
+      notes?: string;
+      tags?: string[];
+    }) => {
+      console.log("[Save to Library] Starting save operation...");
+      console.log("[Save to Library] User role:", user?.role);
+      console.log("[Save to Library] Generated plan exists:", !!generatedPlan);
 
       if (!generatedPlan) {
-        console.error('[Save to Library] ERROR: No meal plan to save');
+        console.error("[Save to Library] ERROR: No meal plan to save");
         throw new Error("No meal plan to save");
       }
 
       if (!user) {
-        console.error('[Save to Library] ERROR: No user found');
+        console.error("[Save to Library] ERROR: No user found");
         throw new Error("You must be logged in to save meal plans");
       }
 
       // FIX: Trainer endpoint now accepts both trainer and admin roles
       const endpoint = "/api/trainer/meal-plans";
 
-      console.log('[Save to Library] Using endpoint:', endpoint);
-      console.log('[Save to Library] Meal plan data:', {
+      console.log("[Save to Library] Using endpoint:", endpoint);
+      console.log("[Save to Library] Meal plan data:", {
         planName: generatedPlan.mealPlan.planName,
         daysCount: generatedPlan.mealPlan.days,
         notes,
@@ -418,45 +445,44 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       });
 
       try {
-        const response = await apiRequest(
-          "POST",
-          endpoint,
-          {
-            mealPlanData: generatedPlan.mealPlan,
-            notes,
-            tags,
-            isTemplate: false,
-          },
-        );
+        const response = await apiRequest("POST", endpoint, {
+          mealPlanData: generatedPlan.mealPlan,
+          notes,
+          tags,
+          isTemplate: false,
+        });
 
         const result = await response.json();
-        console.log('[Save to Library] SUCCESS: Meal plan saved', result);
+        console.log("[Save to Library] SUCCESS: Meal plan saved", result);
         return result;
       } catch (error) {
-        console.error('[Save to Library] NETWORK ERROR:', error);
+        console.error("[Save to Library] NETWORK ERROR:", error);
         throw error;
       }
     },
     onSuccess: (data) => {
-      console.log('[Save to Library] Mutation success handler called', data);
+      console.log("[Save to Library] Mutation success handler called", data);
       toast({
         title: "Meal Plan Saved!",
         description: "The meal plan has been saved to your library.",
       });
       // FIX: Use correct query key to match TrainerMealPlans component
-      queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans'] }); // Also invalidate without user ID for compatibility
+      queryClient.invalidateQueries({
+        queryKey: ["trainer-meal-plans", user?.id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["trainer-meal-plans"] }); // Also invalidate without user ID for compatibility
     },
     onError: (error: Error) => {
-      console.error('[Save to Library] Mutation error handler called:', error);
+      console.error("[Save to Library] Mutation error handler called:", error);
 
       // Enhanced error messages
       let errorMessage = error.message;
-      if (error.message.includes('403')) {
-        errorMessage = "You don't have permission to save meal plans. Please contact support.";
-      } else if (error.message.includes('401')) {
+      if (error.message.includes("403")) {
+        errorMessage =
+          "You don't have permission to save meal plans. Please contact support.";
+      } else if (error.message.includes("401")) {
         errorMessage = "Your session has expired. Please log in again.";
-      } else if (error.message.includes('500')) {
+      } else if (error.message.includes("500")) {
         errorMessage = "Server error. Please try again later.";
       }
 
@@ -481,7 +507,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     }
 
     const { mealPlan, nutrition } = generatedPlan;
-    
+
     // Create PDF with standard A4 size
     const pdf = new jsPDF({
       orientation: "portrait",
@@ -496,52 +522,69 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
 
     // Modern Color Palette - Professional and vibrant
     const colors = {
-      primary: [33, 150, 243],      // Modern Blue
-      secondary: [255, 152, 0],     // Vibrant Orange
-      accent: [76, 175, 80],        // Fresh Green
-      dark: [37, 47, 63],           // Deep Navy
-      light: [248, 249, 250],       // Clean White-Gray
-      white: [255, 255, 255],       // Pure White
-      text: [33, 33, 33],           // Rich Black
-      success: [46, 204, 113],      // Success Green
-      warning: [255, 193, 7],       // Warm Yellow
-      danger: [244, 67, 54],        // Modern Red
-      gradient1: [87, 96, 111],     // Gradient Start
-      gradient2: [52, 73, 94],      // Gradient End
+      primary: [33, 150, 243], // Modern Blue
+      secondary: [255, 152, 0], // Vibrant Orange
+      accent: [76, 175, 80], // Fresh Green
+      dark: [37, 47, 63], // Deep Navy
+      light: [248, 249, 250], // Clean White-Gray
+      white: [255, 255, 255], // Pure White
+      text: [33, 33, 33], // Rich Black
+      success: [46, 204, 113], // Success Green
+      warning: [255, 193, 7], // Warm Yellow
+      danger: [244, 67, 54], // Modern Red
+      gradient1: [87, 96, 111], // Gradient Start
+      gradient2: [52, 73, 94], // Gradient End
     };
 
     // Modern Design Helper Functions
-    const setColor = (color: number[], type: 'fill' | 'text' | 'draw' = 'text') => {
-      if (type === 'fill') {
+    const setColor = (
+      color: number[],
+      type: "fill" | "text" | "draw" = "text",
+    ) => {
+      if (type === "fill") {
         pdf.setFillColor(color[0], color[1], color[2]);
-      } else if (type === 'text') {
+      } else if (type === "text") {
         pdf.setTextColor(color[0], color[1], color[2]);
-      } else if (type === 'draw') {
+      } else if (type === "draw") {
         pdf.setDrawColor(color[0], color[1], color[2]);
       }
     };
 
-    const addRect = (x: number, y: number, width: number, height: number, color: number[], style: 'F' | 'S' | 'FS' = 'F') => {
-      setColor(color, 'fill');
-      if (style === 'S') setColor(color, 'draw');
+    const addRect = (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      color: number[],
+      style: "F" | "S" | "FS" = "F",
+    ) => {
+      setColor(color, "fill");
+      if (style === "S") setColor(color, "draw");
       pdf.rect(x, y, width, height, style);
     };
 
-    const addRoundedRect = (x: number, y: number, width: number, height: number, radius: number, color: number[]) => {
-      setColor(color, 'fill');
-      pdf.roundedRect(x, y, width, height, radius, radius, 'F');
+    const addRoundedRect = (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      radius: number,
+      color: number[],
+    ) => {
+      setColor(color, "fill");
+      pdf.roundedRect(x, y, width, height, radius, radius, "F");
     };
 
     const addText = (text: string, x: number, y: number, options: any = {}) => {
       const fontSize = options.fontSize || 12;
-      const font = options.font || 'helvetica';
-      const style = options.style || 'normal';
+      const font = options.font || "helvetica";
+      const style = options.style || "normal";
       const color = options.color || colors.text;
-      
+
       pdf.setFontSize(fontSize);
       pdf.setFont(font, style);
-      setColor(color, 'text');
-      
+      setColor(color, "text");
+
       if (options.align) {
         pdf.text(text, x, y, { align: options.align });
       } else {
@@ -549,9 +592,16 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       }
     };
 
-    const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 12, color: number[] = colors.text) => {
+    const addWrappedText = (
+      text: string,
+      x: number,
+      y: number,
+      maxWidth: number,
+      fontSize: number = 12,
+      color: number[] = colors.text,
+    ) => {
       pdf.setFontSize(fontSize);
-      setColor(color, 'text');
+      setColor(color, "text");
       const lines = pdf.splitTextToSize(text, maxWidth);
       pdf.text(lines, x, y);
       return lines.length * (fontSize * 0.35);
@@ -567,27 +617,27 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       // Header background with gradient effect
       addRect(0, 0, pageWidth, 40, colors.primary);
       addRect(0, 0, pageWidth, 20, colors.gradient1);
-      
+
       // Brand/Logo area
-      addText("FITMEAL PRO", margin, 15, { 
-        fontSize: 11, 
-        style: 'bold', 
-        color: colors.white 
+      addText("EVOFITMEALS", margin, 15, {
+        fontSize: 11,
+        style: "bold",
+        color: colors.white,
       });
-      
+
       // Main title
-      addText(title, pageWidth / 2, 25, { 
-        fontSize: 16, 
-        style: 'bold', 
-        color: colors.white, 
-        align: 'center' 
+      addText(title, pageWidth / 2, 25, {
+        fontSize: 16,
+        style: "bold",
+        color: colors.white,
+        align: "center",
       });
-      
+
       if (subtitle) {
-        addText(subtitle, pageWidth / 2, 35, { 
-          fontSize: 10, 
-          color: colors.white, 
-          align: 'center' 
+        addText(subtitle, pageWidth / 2, 35, {
+          fontSize: 10,
+          color: colors.white,
+          align: "center",
         });
       }
     };
@@ -595,172 +645,246 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     // Add Professional Footer
     const addFooter = (pageNum: number) => {
       const footerY = pageHeight - 15;
-      
+
       // Footer line
-      setColor(colors.light, 'draw');
+      setColor(colors.light, "draw");
       pdf.setLineWidth(0.5);
       pdf.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
-      
+
       // Footer text
-      addText(`${cleanText(mealPlan.planName)} - ${cleanText(mealPlan.clientName || 'Client')}`, margin, footerY, {
-        fontSize: 8,
-        color: colors.gradient1
-      });
-      
+      addText(
+        `${cleanText(mealPlan.planName)} - ${cleanText(mealPlan.clientName || "Client")}`,
+        margin,
+        footerY,
+        {
+          fontSize: 8,
+          color: colors.gradient1,
+        },
+      );
+
       addText(`Page ${pageNum}`, pageWidth - margin, footerY, {
         fontSize: 8,
         color: colors.gradient1,
-        align: 'right'
+        align: "right",
       });
     };
 
     // Modern Recipe Card
-    const addRecipeCard = (recipe: any, x: number, y: number, width: number, height: number, mealType: string) => {
+    const addRecipeCard = (
+      recipe: any,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      mealType: string,
+    ) => {
       const mealColors = {
         breakfast: colors.warning,
         lunch: colors.success,
-        dinner: colors.danger
+        dinner: colors.danger,
       };
-      
-      const cardColor = mealColors[mealType as keyof typeof mealColors] || colors.primary;
-      
+
+      const cardColor =
+        mealColors[mealType as keyof typeof mealColors] || colors.primary;
+
       // Card background with shadow effect
       addRect(x + 2, y + 2, width, height, [200, 200, 200]); // Shadow
       addRoundedRect(x, y, width, height, 3, colors.white);
-      
+
       // Meal type badge
       addRoundedRect(x + 5, y + 5, 40, 12, 2, cardColor);
       addText(mealType.toUpperCase(), x + 25, y + 13, {
         fontSize: 8,
-        style: 'bold',
+        style: "bold",
         color: colors.white,
-        align: 'center'
+        align: "center",
       });
-      
+
       // Recipe name
-      addText(cleanText(recipe.name || ''), x + 5, y + 25, {
+      addText(cleanText(recipe.name || ""), x + 5, y + 25, {
         fontSize: 11,
-        style: 'bold',
-        color: colors.dark
+        style: "bold",
+        color: colors.dark,
       });
-      
+
       // Nutrition info in compact format
       const nutrition = `${recipe.caloriesKcal}kcal • ${recipe.proteinGrams}g protein • ${recipe.cookTimeMinutes}min`;
       addText(nutrition, x + 5, y + 35, {
         fontSize: 8,
-        color: colors.gradient1
+        color: colors.gradient1,
       });
-      
+
       // Description (truncated)
       if (recipe.description) {
         const desc = cleanText(recipe.description);
-        const shortDesc = desc.length > 80 ? desc.substring(0, 80) + '...' : desc;
+        const shortDesc =
+          desc.length > 80 ? desc.substring(0, 80) + "..." : desc;
         addWrappedText(shortDesc, x + 5, y + 42, width - 10, 8, colors.text);
       }
-      
+
       // Ingredients count
       const ingredientCount = recipe.ingredientsJson?.length || 0;
-      addText(`${ingredientCount} ingredients`, x + width - 35, y + height - 8, {
-        fontSize: 7,
-        color: colors.gradient1,
-        align: 'right'
-      });
+      addText(
+        `${ingredientCount} ingredients`,
+        x + width - 35,
+        y + height - 8,
+        {
+          fontSize: 7,
+          color: colors.gradient1,
+          align: "right",
+        },
+      );
     };
 
     // PAGE 1: COVER & OVERVIEW
     addHeader("PREMIUM MEAL PLAN", "Your Complete Nutrition Guide");
-    
+
     yPosition = 60;
-    
+
     // Hero section
-    addRoundedRect(margin, yPosition, pageWidth - 2 * margin, 80, 8, colors.light);
-    
+    addRoundedRect(
+      margin,
+      yPosition,
+      pageWidth - 2 * margin,
+      80,
+      8,
+      colors.light,
+    );
+
     // Plan name - hero style
-    addText(cleanText(mealPlan.planName.toUpperCase()), pageWidth / 2, yPosition + 25, {
-      fontSize: 24,
-      style: 'bold',
-      color: colors.primary,
-      align: 'center'
-    });
-    
+    addText(
+      cleanText(mealPlan.planName.toUpperCase()),
+      pageWidth / 2,
+      yPosition + 25,
+      {
+        fontSize: 24,
+        style: "bold",
+        color: colors.primary,
+        align: "center",
+      },
+    );
+
     // Client info
-    addText(`Prepared for ${cleanText(mealPlan.clientName || 'Client')}`, pageWidth / 2, yPosition + 40, {
-      fontSize: 14,
-      color: colors.dark,
-      align: 'center'
-    });
-    
+    addText(
+      `Prepared for ${cleanText(mealPlan.clientName || "Client")}`,
+      pageWidth / 2,
+      yPosition + 40,
+      {
+        fontSize: 14,
+        color: colors.dark,
+        align: "center",
+      },
+    );
+
     // Goal badge
-    addRoundedRect(pageWidth / 2 - 40, yPosition + 50, 80, 20, 10, colors.accent);
-    addText(cleanText((mealPlan.fitnessGoal || 'general').replace('_', ' ').toUpperCase()), pageWidth / 2, yPosition + 63, {
-      fontSize: 10,
-      style: 'bold',
-      color: colors.white,
-      align: 'center'
-    });
-    
+    addRoundedRect(
+      pageWidth / 2 - 40,
+      yPosition + 50,
+      80,
+      20,
+      10,
+      colors.accent,
+    );
+    addText(
+      cleanText(
+        (mealPlan.fitnessGoal || "general").replace("_", " ").toUpperCase(),
+      ),
+      pageWidth / 2,
+      yPosition + 63,
+      {
+        fontSize: 10,
+        style: "bold",
+        color: colors.white,
+        align: "center",
+      },
+    );
+
     yPosition += 100;
-    
+
     // Key metrics in modern cards
     const cardWidth = (pageWidth - 4 * margin) / 3;
     const metrics = [
-      { label: 'DURATION', value: `${mealPlan.days} Days`, color: colors.primary },
-      { label: 'DAILY MEALS', value: `${mealPlan.mealsPerDay}`, color: colors.success },
-      { label: 'CALORIES/DAY', value: `${mealPlan.dailyCalorieTarget}`, color: colors.danger }
+      {
+        label: "DURATION",
+        value: `${mealPlan.days} Days`,
+        color: colors.primary,
+      },
+      {
+        label: "DAILY MEALS",
+        value: `${mealPlan.mealsPerDay}`,
+        color: colors.success,
+      },
+      {
+        label: "CALORIES/DAY",
+        value: `${mealPlan.dailyCalorieTarget}`,
+        color: colors.danger,
+      },
     ];
-    
+
     metrics.forEach((metric, index) => {
       const cardX = margin + index * (cardWidth + margin);
       addRoundedRect(cardX, yPosition, cardWidth, 50, 5, metric.color);
-      
+
       addText(metric.label, cardX + cardWidth / 2, yPosition + 20, {
         fontSize: 9,
-        style: 'bold',
+        style: "bold",
         color: colors.white,
-        align: 'center'
+        align: "center",
       });
-      
+
       addText(metric.value, cardX + cardWidth / 2, yPosition + 35, {
         fontSize: 16,
-        style: 'bold',
+        style: "bold",
         color: colors.white,
-        align: 'center'
+        align: "center",
       });
     });
-    
+
     yPosition += 70;
-    
+
     // Nutrition overview
-    addText('WEEKLY NUTRITION BREAKDOWN', margin, yPosition, {
+    addText("WEEKLY NUTRITION BREAKDOWN", margin, yPosition, {
       fontSize: 14,
-      style: 'bold',
-      color: colors.dark
+      style: "bold",
+      color: colors.dark,
     });
     yPosition += 15;
-    
+
     const nutritionCards = [
-      { label: 'Total Calories', value: `${nutrition.total.calories} kcal`, color: colors.primary },
-      { label: 'Protein', value: `${nutrition.total.protein}g`, color: colors.success },
-      { label: 'Carbs', value: `${nutrition.total.carbs}g`, color: colors.warning },
-      { label: 'Fats', value: `${nutrition.total.fat}g`, color: colors.danger }
+      {
+        label: "Total Calories",
+        value: `${nutrition.total.calories} kcal`,
+        color: colors.primary,
+      },
+      {
+        label: "Protein",
+        value: `${nutrition.total.protein}g`,
+        color: colors.success,
+      },
+      {
+        label: "Carbs",
+        value: `${nutrition.total.carbs}g`,
+        color: colors.warning,
+      },
+      { label: "Fats", value: `${nutrition.total.fat}g`, color: colors.danger },
     ];
-    
+
     const nutritionCardWidth = (pageWidth - 5 * margin) / 4;
     nutritionCards.forEach((card, index) => {
       const cardX = margin + index * (nutritionCardWidth + margin);
       addRect(cardX, yPosition, nutritionCardWidth, 35, card.color);
-      
+
       addText(card.label, cardX + nutritionCardWidth / 2, yPosition + 12, {
         fontSize: 8,
         color: colors.white,
-        align: 'center'
+        align: "center",
       });
-      
+
       addText(card.value, cardX + nutritionCardWidth / 2, yPosition + 25, {
         fontSize: 11,
-        style: 'bold',
+        style: "bold",
         color: colors.white,
-        align: 'center'
+        align: "center",
       });
     });
 
@@ -769,64 +893,74 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     // PAGE 2: WEEKLY CALENDAR & SHOPPING LIST
     pdf.addPage();
     addHeader("WEEKLY OVERVIEW", "Calendar & Shopping Guide");
-    
+
     yPosition = 60;
-    
+
     // Weekly calendar - compact grid
-    addText('7-DAY MEAL CALENDAR', margin, yPosition, {
+    addText("7-DAY MEAL CALENDAR", margin, yPosition, {
       fontSize: 14,
-      style: 'bold',
-      color: colors.dark
+      style: "bold",
+      color: colors.dark,
     });
     yPosition += 20;
-    
-    const mealsByDay = mealPlan.meals.reduce((acc, meal) => {
-      if (!acc[meal.day]) acc[meal.day] = [];
-      acc[meal.day].push(meal);
-      return acc;
-    }, {} as Record<number, typeof mealPlan.meals>);
-    
+
+    const mealsByDay = mealPlan.meals.reduce(
+      (acc, meal) => {
+        if (!acc[meal.day]) acc[meal.day] = [];
+        acc[meal.day].push(meal);
+        return acc;
+      },
+      {} as Record<number, typeof mealPlan.meals>,
+    );
+
     // Calendar grid - compact
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const cellWidth = (pageWidth - 2 * margin) / 7;
     const cellHeight = 25;
-    
+
     // Day headers
     dayNames.forEach((day, index) => {
       const cellX = margin + index * cellWidth;
       addRect(cellX, yPosition, cellWidth, cellHeight, colors.primary);
       addText(day, cellX + cellWidth / 2, yPosition + 15, {
         fontSize: 9,
-        style: 'bold',
+        style: "bold",
         color: colors.white,
-        align: 'center'
+        align: "center",
       });
     });
     yPosition += cellHeight;
-    
+
     // Meal types with colors
-    const mealTypes = ['breakfast', 'lunch', 'dinner'];
+    const mealTypes = ["breakfast", "lunch", "dinner"];
     const mealTypeColors = {
       breakfast: colors.warning,
       lunch: colors.success,
-      dinner: colors.danger
+      dinner: colors.danger,
     };
-    
+
     mealTypes.forEach((mealType, mealIndex) => {
       for (let day = 1; day <= 7; day++) {
         const cellX = margin + (day - 1) * cellWidth;
         const cellY = yPosition + mealIndex * cellHeight;
-        const meal = mealsByDay[day]?.find(m => m.mealType === mealType);
-        
+        const meal = mealsByDay[day]?.find((m) => m.mealType === mealType);
+
         if (meal) {
-          addRect(cellX, cellY, cellWidth, cellHeight, mealTypeColors[mealType as keyof typeof mealTypeColors]);
-          let recipeName = cleanText(meal.recipe?.name || '');
-          if (recipeName.length > 12) recipeName = recipeName.substring(0, 12) + '...';
-          
+          addRect(
+            cellX,
+            cellY,
+            cellWidth,
+            cellHeight,
+            mealTypeColors[mealType as keyof typeof mealTypeColors],
+          );
+          let recipeName = cleanText(meal.recipe?.name || "");
+          if (recipeName.length > 12)
+            recipeName = recipeName.substring(0, 12) + "...";
+
           addText(recipeName, cellX + cellWidth / 2, cellY + 15, {
             fontSize: 7,
             color: colors.white,
-            align: 'center'
+            align: "center",
           });
         } else {
           addRect(cellX, cellY, cellWidth, cellHeight, colors.light);
@@ -834,115 +968,170 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       }
     });
     yPosition += mealTypes.length * cellHeight + 20;
-    
+
     // Compact Shopping List
-    addText('SMART SHOPPING LIST', margin, yPosition, {
+    addText("SMART SHOPPING LIST", margin, yPosition, {
       fontSize: 14,
-      style: 'bold',
-      color: colors.dark
+      style: "bold",
+      color: colors.dark,
     });
     yPosition += 15;
-    
+
     // Aggregate ingredients
-    const ingredientMap = new Map<string, { amount: number; unit: string; name: string }>();
-    
-    mealPlan.meals.forEach(meal => {
-      meal.recipe?.ingredientsJson?.forEach(ingredient => {
+    const ingredientMap = new Map<
+      string,
+      { amount: number; unit: string; name: string }
+    >();
+
+    mealPlan.meals.forEach((meal) => {
+      meal.recipe?.ingredientsJson?.forEach((ingredient) => {
         const key = `${ingredient.name.toLowerCase()}_${ingredient.unit}`;
         if (ingredientMap.has(key)) {
           const existing = ingredientMap.get(key)!;
-          existing.amount += parseFloat(ingredient.amount || '0');
+          existing.amount += parseFloat(ingredient.amount || "0");
         } else {
           ingredientMap.set(key, {
-            amount: parseFloat(ingredient.amount || '0'),
-            unit: ingredient.unit || '',
-            name: ingredient.name || ''
+            amount: parseFloat(ingredient.amount || "0"),
+            unit: ingredient.unit || "",
+            name: ingredient.name || "",
           });
         }
       });
     });
-    
-    const sortedIngredients = Array.from(ingredientMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-    
+
+    const sortedIngredients = Array.from(ingredientMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+
     // Group by category
     const categories = {
-      'Proteins': ['chicken', 'beef', 'fish', 'eggs', 'tofu', 'beans'],
-      'Produce': ['tomato', 'onion', 'garlic', 'spinach', 'broccoli', 'pepper', 'cucumber', 'carrot', 'apple', 'banana', 'lemon', 'lime', 'avocado'],
-      'Pantry': ['rice', 'pasta', 'bread', 'quinoa', 'oats', 'oil', 'vinegar', 'sauce', 'salt', 'pepper']
+      Proteins: ["chicken", "beef", "fish", "eggs", "tofu", "beans"],
+      Produce: [
+        "tomato",
+        "onion",
+        "garlic",
+        "spinach",
+        "broccoli",
+        "pepper",
+        "cucumber",
+        "carrot",
+        "apple",
+        "banana",
+        "lemon",
+        "lime",
+        "avocado",
+      ],
+      Pantry: [
+        "rice",
+        "pasta",
+        "bread",
+        "quinoa",
+        "oats",
+        "oil",
+        "vinegar",
+        "sauce",
+        "salt",
+        "pepper",
+      ],
     };
-    
-    const categorizedIngredients: Record<string, typeof sortedIngredients> = { 'Other': [] };
-    
-    Object.keys(categories).forEach(cat => {
+
+    const categorizedIngredients: Record<string, typeof sortedIngredients> = {
+      Other: [],
+    };
+
+    Object.keys(categories).forEach((cat) => {
       categorizedIngredients[cat] = [];
     });
-    
-    sortedIngredients.forEach(ingredient => {
+
+    sortedIngredients.forEach((ingredient) => {
       let found = false;
       for (const [cat, keywords] of Object.entries(categories)) {
-        if (keywords.some(keyword => ingredient.name.toLowerCase().includes(keyword))) {
+        if (
+          keywords.some((keyword) =>
+            ingredient.name.toLowerCase().includes(keyword),
+          )
+        ) {
           categorizedIngredients[cat].push(ingredient);
           found = true;
           break;
         }
       }
-      if (!found) categorizedIngredients['Other'].push(ingredient);
+      if (!found) categorizedIngredients["Other"].push(ingredient);
     });
-    
+
     // Display in columns
     const columnWidth = (pageWidth - 3 * margin) / 2;
     let leftColumn = true;
-    
-    Object.entries(categorizedIngredients).forEach(([category, ingredients]) => {
-      if (ingredients.length === 0) return;
-      
-      const columnX = leftColumn ? margin : margin + columnWidth + margin;
-      
-      if (yPosition > pageHeight - 50) {
-        pdf.addPage();
-        addHeader("SHOPPING LIST", "Continued");
-        yPosition = 60;
-      }
-      
-      // Category header
-      addRoundedRect(columnX, yPosition, columnWidth, 15, 3, colors.accent);
-      addText(category, columnX + 5, yPosition + 10, {
-        fontSize: 10,
-        style: 'bold',
-        color: colors.white
-      });
-      yPosition += 20;
-      
-      // Items (max 8 per column)
-      const maxItems = Math.min(8, ingredients.length);
-      for (let i = 0; i < maxItems; i++) {
-        const ingredient = ingredients[i];
-        const amount = ingredient.amount % 1 === 0 ? ingredient.amount.toString() : ingredient.amount.toFixed(1);
-        const itemText = `• ${amount} ${ingredient.unit} ${cleanText(ingredient.name)}`;
-        
-        if (itemText.length > 35) {
-          addText(`• ${amount} ${ingredient.unit}`, columnX + 5, yPosition, { fontSize: 8, color: colors.text });
-          addText(cleanText(ingredient.name), columnX + 5, yPosition + 8, { fontSize: 8, color: colors.text });
-          yPosition += 16;
-        } else {
-          addText(itemText, columnX + 5, yPosition, { fontSize: 8, color: colors.text });
+
+    Object.entries(categorizedIngredients).forEach(
+      ([category, ingredients]) => {
+        if (ingredients.length === 0) return;
+
+        const columnX = leftColumn ? margin : margin + columnWidth + margin;
+
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          addHeader("SHOPPING LIST", "Continued");
+          yPosition = 60;
+        }
+
+        // Category header
+        addRoundedRect(columnX, yPosition, columnWidth, 15, 3, colors.accent);
+        addText(category, columnX + 5, yPosition + 10, {
+          fontSize: 10,
+          style: "bold",
+          color: colors.white,
+        });
+        yPosition += 20;
+
+        // Items (max 8 per column)
+        const maxItems = Math.min(8, ingredients.length);
+        for (let i = 0; i < maxItems; i++) {
+          const ingredient = ingredients[i];
+          const amount =
+            ingredient.amount % 1 === 0
+              ? ingredient.amount.toString()
+              : ingredient.amount.toFixed(1);
+          const itemText = `• ${amount} ${ingredient.unit} ${cleanText(ingredient.name)}`;
+
+          if (itemText.length > 35) {
+            addText(`• ${amount} ${ingredient.unit}`, columnX + 5, yPosition, {
+              fontSize: 8,
+              color: colors.text,
+            });
+            addText(cleanText(ingredient.name), columnX + 5, yPosition + 8, {
+              fontSize: 8,
+              color: colors.text,
+            });
+            yPosition += 16;
+          } else {
+            addText(itemText, columnX + 5, yPosition, {
+              fontSize: 8,
+              color: colors.text,
+            });
+            yPosition += 10;
+          }
+        }
+
+        if (ingredients.length > maxItems) {
+          addText(
+            `... and ${ingredients.length - maxItems} more items`,
+            columnX + 5,
+            yPosition,
+            {
+              fontSize: 7,
+              color: colors.gradient1,
+            },
+          );
           yPosition += 10;
         }
-      }
-      
-      if (ingredients.length > maxItems) {
-        addText(`... and ${ingredients.length - maxItems} more items`, columnX + 5, yPosition, {
-          fontSize: 7,
-          color: colors.gradient1
-        });
+
         yPosition += 10;
-      }
-      
-      yPosition += 10;
-      leftColumn = !leftColumn;
-      
-      if (leftColumn) yPosition -= (maxItems * 10 + 40); // Reset for right column
-    });
+        leftColumn = !leftColumn;
+
+        if (leftColumn) yPosition -= maxItems * 10 + 40; // Reset for right column
+      },
+    );
 
     // NEW FEATURE: Add Meal Prep Section if available
     if (mealPlan.startOfWeekMealPrep) {
@@ -954,10 +1143,10 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         yPosition = 60;
       } else {
         yPosition += 30;
-        addText('WEEKLY MEAL PREP GUIDE', margin, yPosition, {
+        addText("WEEKLY MEAL PREP GUIDE", margin, yPosition, {
           fontSize: 14,
-          style: 'bold',
-          color: colors.dark
+          style: "bold",
+          color: colors.dark,
         });
         yPosition += 20;
       }
@@ -965,19 +1154,31 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
       const mealPrep = mealPlan.startOfWeekMealPrep;
 
       // Prep time overview
-      addRoundedRect(margin, yPosition, pageWidth - 2 * margin, 20, 3, colors.accent);
-      addText(`Total Prep Time: ${mealPrep.totalPrepTime} minutes`, margin + 10, yPosition + 13, {
-        fontSize: 11,
-        style: 'bold',
-        color: colors.white
-      });
+      addRoundedRect(
+        margin,
+        yPosition,
+        pageWidth - 2 * margin,
+        20,
+        3,
+        colors.accent,
+      );
+      addText(
+        `Total Prep Time: ${mealPrep.totalPrepTime} minutes`,
+        margin + 10,
+        yPosition + 13,
+        {
+          fontSize: 11,
+          style: "bold",
+          color: colors.white,
+        },
+      );
       yPosition += 30;
 
       // Prep steps section
-      addText('PREPARATION STEPS', margin, yPosition, {
+      addText("PREPARATION STEPS", margin, yPosition, {
         fontSize: 12,
-        style: 'bold',
-        color: colors.dark
+        style: "bold",
+        color: colors.dark,
       });
       yPosition += 15;
 
@@ -993,21 +1194,33 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
         addRoundedRect(margin, yPosition, 15, 15, 7, colors.primary);
         addText(step.step.toString(), margin + 7.5, yPosition + 10, {
           fontSize: 9,
-          style: 'bold',
+          style: "bold",
           color: colors.white,
-          align: 'center'
+          align: "center",
         });
 
         // Step instruction
         const stepText = cleanText(step.instruction);
-        const wrappedHeight = addWrappedText(stepText, margin + 20, yPosition + 5, pageWidth - 3 * margin - 20, 9, colors.text);
-        
+        const wrappedHeight = addWrappedText(
+          stepText,
+          margin + 20,
+          yPosition + 5,
+          pageWidth - 3 * margin - 20,
+          9,
+          colors.text,
+        );
+
         // Time estimate
-        addText(`(${step.estimatedTime} min)`, pageWidth - margin - 5, yPosition + 5, {
-          fontSize: 8,
-          color: colors.gradient1,
-          align: 'right'
-        });
+        addText(
+          `(${step.estimatedTime} min)`,
+          pageWidth - margin - 5,
+          yPosition + 5,
+          {
+            fontSize: 8,
+            color: colors.gradient1,
+            align: "right",
+          },
+        );
 
         yPosition += Math.max(20, wrappedHeight + 10);
       });
@@ -1016,10 +1229,10 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
 
       // Storage tips
       if (mealPrep.storageInstructions.length > 0) {
-        addText('STORAGE TIPS', margin, yPosition, {
+        addText("STORAGE TIPS", margin, yPosition, {
           fontSize: 12,
-          style: 'bold',
-          color: colors.dark
+          style: "bold",
+          color: colors.dark,
         });
         yPosition += 15;
 
@@ -1035,7 +1248,7 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
           const tipText = `${storage.ingredient}: ${storage.method} (${storage.duration})`;
           addText(`• ${cleanText(tipText)}`, margin + 5, yPosition, {
             fontSize: 8,
-            color: colors.text
+            color: colors.text,
           });
           yPosition += 12;
         });
@@ -1051,72 +1264,108 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     // PAGES 3-4: DAILY MEAL PLANS (2 days per page)
     let currentPage = 3;
     const daysPerPage = 2;
-    
+
     for (let startDay = 1; startDay <= 7; startDay += daysPerPage) {
       pdf.addPage();
-      addHeader("DAILY MEAL PLANS", `Days ${startDay}-${Math.min(startDay + daysPerPage - 1, 7)}`);
-      
+      addHeader(
+        "DAILY MEAL PLANS",
+        `Days ${startDay}-${Math.min(startDay + daysPerPage - 1, 7)}`,
+      );
+
       yPosition = 60;
-      
-      for (let dayOffset = 0; dayOffset < daysPerPage && startDay + dayOffset <= 7; dayOffset++) {
+
+      for (
+        let dayOffset = 0;
+        dayOffset < daysPerPage && startDay + dayOffset <= 7;
+        dayOffset++
+      ) {
         const day = startDay + dayOffset;
         const dayMeals = mealsByDay[day] || [];
-        
+
         // Day header
-        addRoundedRect(margin, yPosition, pageWidth - 2 * margin, 25, 5, colors.primary);
+        addRoundedRect(
+          margin,
+          yPosition,
+          pageWidth - 2 * margin,
+          25,
+          5,
+          colors.primary,
+        );
         addText(`DAY ${day}`, margin + 10, yPosition + 16, {
           fontSize: 14,
-          style: 'bold',
-          color: colors.white
+          style: "bold",
+          color: colors.white,
         });
-        
+
         // Day nutrition
         const dayNutrition = nutrition.daily[day - 1];
         if (dayNutrition) {
-          addText(`${dayNutrition.calories} kcal • ${dayNutrition.protein}g protein • ${dayNutrition.carbs}g carbs • ${dayNutrition.fat}g fat`, 
-                  pageWidth - margin - 10, yPosition + 16, {
-            fontSize: 9,
-            color: colors.white,
-            align: 'right'
-          });
+          addText(
+            `${dayNutrition.calories} kcal • ${dayNutrition.protein}g protein • ${dayNutrition.carbs}g carbs • ${dayNutrition.fat}g fat`,
+            pageWidth - margin - 10,
+            yPosition + 16,
+            {
+              fontSize: 9,
+              color: colors.white,
+              align: "right",
+            },
+          );
         }
-        
+
         yPosition += 35;
-        
+
         // Meal cards - 3 per row
-        const sortedMeals = dayMeals.sort((a, b) => a.mealNumber - b.mealNumber);
+        const sortedMeals = dayMeals.sort(
+          (a, b) => a.mealNumber - b.mealNumber,
+        );
         const cardWidth = (pageWidth - 4 * margin) / 3;
         const cardHeight = 70;
-        
+
         sortedMeals.forEach((meal, index) => {
           const cardX = margin + index * (cardWidth + margin);
-          addRecipeCard(meal.recipe, cardX, yPosition, cardWidth, cardHeight, meal.mealType);
+          addRecipeCard(
+            meal.recipe,
+            cardX,
+            yPosition,
+            cardWidth,
+            cardHeight,
+            meal.mealType,
+          );
         });
-        
+
         yPosition += cardHeight + 20;
-        
+
         // Ingredients summary for the day
         if (dayMeals.length > 0) {
           addText(`Key Ingredients for Day ${day}:`, margin, yPosition, {
             fontSize: 10,
-            style: 'bold',
-            color: colors.dark
+            style: "bold",
+            color: colors.dark,
           });
           yPosition += 12;
-          
+
           const dayIngredients = new Set<string>();
-          dayMeals.forEach(meal => {
-            meal.recipe?.ingredientsJson?.slice(0, 5).forEach(ingredient => {
-              dayIngredients.add(cleanText(ingredient.name || ''));
+          dayMeals.forEach((meal) => {
+            meal.recipe?.ingredientsJson?.slice(0, 5).forEach((ingredient) => {
+              dayIngredients.add(cleanText(ingredient.name || ""));
             });
           });
-          
-          const ingredientText = Array.from(dayIngredients).slice(0, 8).join(' • ');
-          addWrappedText(ingredientText, margin + 5, yPosition, pageWidth - 2 * margin, 8, colors.gradient1);
+
+          const ingredientText = Array.from(dayIngredients)
+            .slice(0, 8)
+            .join(" • ");
+          addWrappedText(
+            ingredientText,
+            margin + 5,
+            yPosition,
+            pageWidth - 2 * margin,
+            8,
+            colors.gradient1,
+          );
           yPosition += 20;
         }
       }
-      
+
       addFooter(currentPage);
       currentPage++;
     }
@@ -1124,57 +1373,76 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
     // FINAL PAGE: INSTRUCTIONS & TIPS
     pdf.addPage();
     addHeader("MEAL PREP GUIDE", "Instructions & Pro Tips");
-    
+
     yPosition = 60;
-    
+
     // Quick prep tips
-    addText('MEAL PREP SUCCESS TIPS', margin, yPosition, {
+    addText("MEAL PREP SUCCESS TIPS", margin, yPosition, {
       fontSize: 14,
-      style: 'bold',
-      color: colors.dark
+      style: "bold",
+      color: colors.dark,
     });
     yPosition += 20;
-    
+
     const tips = [
-      'Prep ingredients on Sunday for the week ahead',
-      'Cook grains and proteins in batches',
-      'Pre-cut vegetables and store properly',
-      'Use glass containers for better food storage',
-      'Label everything with dates',
-      'Keep healthy snacks readily available'
+      "Prep ingredients on Sunday for the week ahead",
+      "Cook grains and proteins in batches",
+      "Pre-cut vegetables and store properly",
+      "Use glass containers for better food storage",
+      "Label everything with dates",
+      "Keep healthy snacks readily available",
     ];
-    
+
     tips.forEach((tip, index) => {
-      addRoundedRect(margin, yPosition, pageWidth - 2 * margin, 15, 3, index % 2 === 0 ? colors.light : colors.white);
+      addRoundedRect(
+        margin,
+        yPosition,
+        pageWidth - 2 * margin,
+        15,
+        3,
+        index % 2 === 0 ? colors.light : colors.white,
+      );
       addText(`${index + 1}. ${tip}`, margin + 10, yPosition + 10, {
         fontSize: 10,
-        color: colors.text
+        color: colors.text,
       });
       yPosition += 20;
     });
-    
+
     yPosition += 10;
-    
+
     // Contact/support info
-    addRoundedRect(margin, yPosition, pageWidth - 2 * margin, 40, 5, colors.primary);
-    addText('NEED SUPPORT?', pageWidth / 2, yPosition + 15, {
+    addRoundedRect(
+      margin,
+      yPosition,
+      pageWidth - 2 * margin,
+      40,
+      5,
+      colors.primary,
+    );
+    addText("NEED SUPPORT?", pageWidth / 2, yPosition + 15, {
       fontSize: 12,
-      style: 'bold',
+      style: "bold",
       color: colors.white,
-      align: 'center'
+      align: "center",
     });
-    addText('Contact your nutrition coach for meal modifications', pageWidth / 2, yPosition + 28, {
-      fontSize: 9,
-      color: colors.white,
-      align: 'center'
-    });
+    addText(
+      "Contact your nutrition coach for meal modifications",
+      pageWidth / 2,
+      yPosition + 28,
+      {
+        fontSize: 9,
+        color: colors.white,
+        align: "center",
+      },
+    );
 
     addFooter(currentPage);
 
     // Save the PDF
-    const fileName = `${cleanText((mealPlan.planName || 'meal_plan').replace(/\s/g, "_"))}_${cleanText(mealPlan.clientName || 'client')}_professional.pdf`;
+    const fileName = `${cleanText((mealPlan.planName || "meal_plan").replace(/\s/g, "_"))}_${cleanText(mealPlan.clientName || "client")}_professional.pdf`;
     pdf.save(fileName);
-    
+
     toast({
       title: "🎉 Professional PDF Created!",
       description: "Your concise meal plan brochure is ready!",
@@ -1265,7 +1533,9 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
             <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-6">
               <CardTitle className="flex items-center gap-2 text-blue-800 text-base sm:text-lg">
                 <Wand2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">AI-Powered Natural Language Generator</span>
+                <span className="hidden sm:inline">
+                  AI-Powered Natural Language Generator
+                </span>
                 <span className="sm:hidden">AI Meal Plan Generator</span>
               </CardTitle>
               <CardDescription className="text-blue-600 text-sm sm:text-base">
@@ -1302,7 +1572,9 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                   {parseNaturalLanguage.isPending ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                      <span className="hidden sm:inline">Parsing with AI...</span>
+                      <span className="hidden sm:inline">
+                        Parsing with AI...
+                      </span>
                       <span className="sm:hidden">Parsing...</span>
                     </>
                   ) : (
@@ -1330,7 +1602,9 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                   ) : (
                     <>
                       <ChefHat className="h-4 w-4 mr-2" />
-                      <span className="hidden lg:inline">Generate Plan Directly</span>
+                      <span className="hidden lg:inline">
+                        Generate Plan Directly
+                      </span>
                       <span className="lg:hidden">Generate</span>
                     </>
                   )}
@@ -1445,18 +1719,33 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 text-sm sm:text-base">
                           <Utensils className="h-4 w-4" />
-                          Meal Type (Tier Filtered)
+                          Meal Type
                         </FormLabel>
                         <FormControl>
-                          <MealTypeDropdown
-                            value={field.value}
-                            onChange={field.onChange}
-                            placeholder="Select meal type"
-                            className="text-sm sm:text-base"
-                          />
+                          <Select
+                            value={field.value || "any"}
+                            onValueChange={(value) =>
+                              field.onChange(
+                                value === "any" ? undefined : value,
+                              )
+                            }
+                          >
+                            <SelectTrigger className="text-sm sm:text-base">
+                              <SelectValue placeholder="Any meal type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="any">Any Meal Type</SelectItem>
+                              <SelectItem value="breakfast">
+                                Breakfast
+                              </SelectItem>
+                              <SelectItem value="lunch">Lunch</SelectItem>
+                              <SelectItem value="dinner">Dinner</SelectItem>
+                              <SelectItem value="snack">Snack</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </FormControl>
                         <FormDescription className="text-xs">
-                          Filter recipes by meal type - locked types require tier upgrade
+                          Optionally filter recipes by meal type
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -1476,23 +1765,37 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                           <Select
                             value={field.value || "none"}
                             onValueChange={(value) =>
-                              field.onChange(value === "none" ? undefined : value)
+                              field.onChange(
+                                value === "none" ? undefined : value,
+                              )
                             }
                           >
                             <SelectTrigger className="text-sm sm:text-base">
                               <SelectValue placeholder="Select diet type" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">No Restriction</SelectItem>
-                              <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                              <SelectItem value="none">
+                                No Restriction
+                              </SelectItem>
+                              <SelectItem value="vegetarian">
+                                Vegetarian
+                              </SelectItem>
                               <SelectItem value="vegan">Vegan</SelectItem>
                               <SelectItem value="keto">Keto</SelectItem>
                               <SelectItem value="paleo">Paleo</SelectItem>
-                              <SelectItem value="gluten-free">Gluten Free</SelectItem>
+                              <SelectItem value="gluten-free">
+                                Gluten Free
+                              </SelectItem>
                               <SelectItem value="low-carb">Low Carb</SelectItem>
-                              <SelectItem value="high-protein">High Protein</SelectItem>
-                              <SelectItem value="mediterranean">Mediterranean</SelectItem>
-                              <SelectItem value="pescatarian">Pescatarian</SelectItem>
+                              <SelectItem value="high-protein">
+                                High Protein
+                              </SelectItem>
+                              <SelectItem value="mediterranean">
+                                Mediterranean
+                              </SelectItem>
+                              <SelectItem value="pescatarian">
+                                Pescatarian
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -1543,10 +1846,10 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                           Client Name (Optional)
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="John Doe" 
+                          <Input
+                            placeholder="John Doe"
                             className="text-sm sm:text-base"
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
@@ -1656,12 +1959,17 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                             className="text-sm sm:text-base"
                             {...field}
                             onChange={(e) =>
-                              field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                              field.onChange(
+                                e.target.value
+                                  ? parseInt(e.target.value)
+                                  : undefined,
+                              )
                             }
                           />
                         </FormControl>
                         <FormDescription className="text-xs">
-                          Limit ingredient variety across the entire plan to reduce shopping complexity
+                          Limit ingredient variety across the entire plan to
+                          reduce shopping complexity
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -1685,7 +1993,9 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                             Generate Start-of-Week Meal Prep Instructions
                           </FormLabel>
                           <FormDescription>
-                            Include shopping list, prep steps, and storage instructions to help customers prepare ingredients at the start of the week
+                            Include shopping list, prep steps, and storage
+                            instructions to help customers prepare ingredients
+                            at the start of the week
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -1713,13 +2023,17 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                     {generateMealPlan.isPending ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                        <span className="hidden sm:inline">Generating Meal Plan...</span>
+                        <span className="hidden sm:inline">
+                          Generating Meal Plan...
+                        </span>
                         <span className="sm:hidden">Generating...</span>
                       </>
                     ) : (
                       <>
                         <ChefHat className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Generate Meal Plan</span>
+                        <span className="hidden sm:inline">
+                          Generate Meal Plan
+                        </span>
                         <span className="sm:hidden">Generate</span>
                       </>
                     )}
@@ -1729,10 +2043,16 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                     <Button
                       type="button"
                       onClick={() => {
-                        console.log("[Refresh List] Button clicked - refreshing recipe data");
+                        console.log(
+                          "[Refresh List] Button clicked - refreshing recipe data",
+                        );
                         // FIX: Actually refresh recipe data from server
-                        queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
-                        queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans'] });
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/recipes"],
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: ["trainer-meal-plans"],
+                        });
                         setRefreshKey((prev) => prev + 1);
                         setForceRender((prev) => prev + 1);
                         if (mealPlanRef.current) {
@@ -1743,9 +2063,12 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                         }
                         toast({
                           title: "Refreshed",
-                          description: "Recipe list has been updated with latest data.",
+                          description:
+                            "Recipe list has been updated with latest data.",
                         });
-                        console.log("[Refresh List] Recipe queries invalidated, UI re-rendered");
+                        console.log(
+                          "[Refresh List] Recipe queries invalidated, UI re-rendered",
+                        );
                       }}
                       variant="outline"
                       size="lg"
@@ -1775,10 +2098,15 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                 </span>
               </div>
               <div className="flex flex-col xs:flex-row gap-2">
-                {(user?.role === 'trainer' || user?.role === 'admin') && (
+                {(user?.role === "trainer" || user?.role === "admin") && (
                   <>
                     <Button
-                      onClick={() => saveMealPlan.mutate({ notes: "Saved from meal plan generator", tags: [] })}
+                      onClick={() =>
+                        saveMealPlan.mutate({
+                          notes: "Saved from meal plan generator",
+                          tags: [],
+                        })
+                      }
                       variant="outline"
                       size="sm"
                       disabled={saveMealPlan.isPending}
@@ -1795,17 +2123,25 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                       className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                     >
                       <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:inline">Assign to Customers</span>
+                      <span className="hidden sm:inline">
+                        Assign to Customers
+                      </span>
                       <span className="sm:hidden">Assign</span>
                     </Button>
                   </>
                 )}
                 <Button
                   onClick={() => {
-                    console.log("[Refresh List] Header button clicked - refreshing recipe data");
+                    console.log(
+                      "[Refresh List] Header button clicked - refreshing recipe data",
+                    );
                     // FIX: Actually refresh recipe data from server
-                    queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
-                    queryClient.invalidateQueries({ queryKey: ['trainer-meal-plans'] });
+                    queryClient.invalidateQueries({
+                      queryKey: ["/api/recipes"],
+                    });
+                    queryClient.invalidateQueries({
+                      queryKey: ["trainer-meal-plans"],
+                    });
                     setRefreshKey((prev) => prev + 1);
                     setForceRender((prev) => prev + 1);
                     if (mealPlanRef.current) {
@@ -1816,9 +2152,12 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                     }
                     toast({
                       title: "Refreshed",
-                      description: "Recipe list has been updated with latest data.",
+                      description:
+                        "Recipe list has been updated with latest data.",
                     });
-                    console.log("[Refresh List] Recipe queries invalidated, UI re-rendered");
+                    console.log(
+                      "[Refresh List] Recipe queries invalidated, UI re-rendered",
+                    );
                   }}
                   variant="outline"
                   size="sm"
@@ -1830,7 +2169,9 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                 </Button>
                 <EvoFitPDFExport
                   mealPlan={generatedPlan?.mealPlan}
-                  customerName={generatedPlan?.mealPlan?.clientName || 'Customer'}
+                  customerName={
+                    generatedPlan?.mealPlan?.clientName || "Customer"
+                  }
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
@@ -1845,7 +2186,9 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                 <span className="flex items-center gap-1">
                   <Activity className="h-3 w-3" />
-                  <span className="capitalize">{generatedPlan.mealPlan.fitnessGoal.replace('_', ' ')}</span>
+                  <span className="capitalize">
+                    {generatedPlan.mealPlan.fitnessGoal.replace("_", " ")}
+                  </span>
                 </span>
                 <span className="flex items-center gap-1">
                   <Zap className="h-3 w-3" />
@@ -1853,7 +2196,8 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  {generatedPlan.mealPlan.days} days, {generatedPlan.mealPlan.mealsPerDay} meals/day
+                  {generatedPlan.mealPlan.days} days,{" "}
+                  {generatedPlan.mealPlan.mealsPerDay} meals/day
                 </span>
               </div>
               {generatedPlan.mealPlan.clientName && (
@@ -1883,13 +2227,17 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">
                     {generatedPlan.nutrition.averageDaily.calories}
                   </div>
-                  <div className="text-xs sm:text-sm text-slate-600">Calories</div>
+                  <div className="text-xs sm:text-sm text-slate-600">
+                    Calories
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">
                     {generatedPlan.nutrition.averageDaily.protein}g
                   </div>
-                  <div className="text-xs sm:text-sm text-slate-600">Protein</div>
+                  <div className="text-xs sm:text-sm text-slate-600">
+                    Protein
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">
@@ -1918,77 +2266,100 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                   <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-100 px-3 py-2 rounded-md">
                     <Clock className="h-4 w-4" />
                     <span className="font-medium">
-                      Total Estimated Prep Time: {generatedPlan.mealPlan.startOfWeekMealPrep.totalPrepTime} minutes
+                      Total Estimated Prep Time:{" "}
+                      {generatedPlan.mealPlan.startOfWeekMealPrep.totalPrepTime}{" "}
+                      minutes
                     </span>
                   </div>
 
                   {/* Shopping List */}
                   <div>
-                    <h5 className="font-medium mb-3 text-blue-800">🛒 Shopping List</h5>
+                    <h5 className="font-medium mb-3 text-blue-800">
+                      🛒 Shopping List
+                    </h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {generatedPlan.mealPlan.startOfWeekMealPrep.shoppingList.map((item, index) => (
-                        <div key={index} className="bg-white p-3 rounded border text-sm">
-                          <div className="font-medium">
-                            {item.ingredient}
+                      {generatedPlan.mealPlan.startOfWeekMealPrep.shoppingList.map(
+                        (item, index) => (
+                          <div
+                            key={index}
+                            className="bg-white p-3 rounded border text-sm"
+                          >
+                            <div className="font-medium">{item.ingredient}</div>
+                            <div className="text-blue-600">
+                              {item.totalAmount} {item.unit}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Used in: {item.usedInRecipes.join(", ")}
+                            </div>
                           </div>
-                          <div className="text-blue-600">
-                            {item.totalAmount} {item.unit}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Used in: {item.usedInRecipes.join(', ')}
-                          </div>
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </div>
                   </div>
 
                   {/* Prep Instructions */}
                   <div>
-                    <h5 className="font-medium mb-3 text-blue-800">👨‍🍳 Prep Steps</h5>
+                    <h5 className="font-medium mb-3 text-blue-800">
+                      👨‍🍳 Prep Steps
+                    </h5>
                     <div className="space-y-3">
-                      {generatedPlan.mealPlan.startOfWeekMealPrep.prepInstructions.map((step, index) => (
-                        <div key={index} className="bg-white p-4 rounded border">
-                          <div className="flex items-start gap-3">
-                            <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                              {step.step}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm mb-2">{step.instruction}</p>
-                              <div className="flex items-center gap-4 text-xs text-gray-500">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {step.estimatedTime} min
-                                </span>
-                                {step.ingredients.length > 0 && (
-                                  <span>
-                                    Ingredients: {step.ingredients.join(', ')}
+                      {generatedPlan.mealPlan.startOfWeekMealPrep.prepInstructions.map(
+                        (step, index) => (
+                          <div
+                            key={index}
+                            className="bg-white p-4 rounded border"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                                {step.step}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm mb-2">
+                                  {step.instruction}
+                                </p>
+                                <div className="flex items-center gap-4 text-xs text-gray-500">
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {step.estimatedTime} min
                                   </span>
-                                )}
+                                  {step.ingredients.length > 0 && (
+                                    <span>
+                                      Ingredients: {step.ingredients.join(", ")}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </div>
                   </div>
 
                   {/* Storage Instructions */}
                   <div>
-                    <h5 className="font-medium mb-3 text-blue-800">🥶 Storage Guidelines</h5>
+                    <h5 className="font-medium mb-3 text-blue-800">
+                      🥶 Storage Guidelines
+                    </h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {generatedPlan.mealPlan.startOfWeekMealPrep.storageInstructions.map((storage, index) => (
-                        <div key={index} className="bg-white p-3 rounded border text-sm">
-                          <div className="font-medium text-gray-800">
-                            {storage.ingredient}
+                      {generatedPlan.mealPlan.startOfWeekMealPrep.storageInstructions.map(
+                        (storage, index) => (
+                          <div
+                            key={index}
+                            className="bg-white p-3 rounded border text-sm"
+                          >
+                            <div className="font-medium text-gray-800">
+                              {storage.ingredient}
+                            </div>
+                            <div className="text-blue-600 text-xs mt-1">
+                              {storage.method}
+                            </div>
+                            <div className="text-gray-500 text-xs">
+                              Duration: {storage.duration}
+                            </div>
                           </div>
-                          <div className="text-blue-600 text-xs mt-1">
-                            {storage.method}
-                          </div>
-                          <div className="text-gray-500 text-xs">
-                            Duration: {storage.duration}
-                          </div>
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2156,7 +2527,12 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                                       </p>
                                       <div className="flex items-center justify-between text-xs text-gray-600">
                                         <span>{recipe.caloriesKcal} cal</span>
-                                        <span>{Number(recipe.proteinGrams).toFixed(0)}g protein</span>
+                                        <span>
+                                          {Number(recipe.proteinGrams).toFixed(
+                                            0,
+                                          )}
+                                          g protein
+                                        </span>
                                         <span>
                                           {recipe.prepTimeMinutes +
                                             (recipe.cookTimeMinutes || 0)}{" "}
@@ -2187,7 +2563,10 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
 
       {/* Meal Plan Assignment Modal */}
       {generatedPlan && (
-        <Dialog open={isAssignmentModalOpen} onOpenChange={setIsAssignmentModalOpen}>
+        <Dialog
+          open={isAssignmentModalOpen}
+          onOpenChange={setIsAssignmentModalOpen}
+        >
           <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-2">
@@ -2211,9 +2590,16 @@ export default function MealPlanGenerator({ onMealPlanGenerated, customerContext
                 </Badge>
               </div>
               <div className="text-sm text-slate-600">
-                <span className="mr-4">🔥 {generatedPlan.nutrition.averageDaily.calories} avg cal/day</span>
-                <span className="mr-4">💪 {generatedPlan.nutrition.averageDaily.protein}g avg protein/day</span>
-                <span>🍽️ {generatedPlan.mealPlan.meals.length} total meals</span>
+                <span className="mr-4">
+                  🔥 {generatedPlan.nutrition.averageDaily.calories} avg cal/day
+                </span>
+                <span className="mr-4">
+                  💪 {generatedPlan.nutrition.averageDaily.protein}g avg
+                  protein/day
+                </span>
+                <span>
+                  🍽️ {generatedPlan.mealPlan.meals.length} total meals
+                </span>
               </div>
               {generatedPlan.mealPlan.clientName && (
                 <p className="text-sm text-slate-600 mt-2">

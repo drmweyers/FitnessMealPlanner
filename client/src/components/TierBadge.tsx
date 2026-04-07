@@ -5,50 +5,56 @@
  * Shows in navbar/dashboard to make tier status always visible
  */
 
-import React from 'react';
-import { useTier, TierLevel } from '@/hooks/useTier';
-import { Badge } from '@/components/ui/badge';
-import { Crown, Zap, Star } from 'lucide-react';
+import React from "react";
+import { useTier, TierLevel } from "@/hooks/useTier";
+import { Badge } from "@/components/ui/badge";
+import { Crown, Zap, Star } from "lucide-react";
 
-const TIER_CONFIG: Record<TierLevel, {
-  label: string;
-  icon: React.ReactNode;
-  className: string;
-  description: string;
-}> = {
+const TIER_CONFIG: Record<
+  TierLevel,
+  {
+    label: string;
+    icon: React.ReactNode;
+    className: string;
+    description: string;
+  }
+> = {
   starter: {
-    label: 'Starter',
+    label: "Starter",
     icon: <Star className="h-3 w-3" />,
-    className: 'bg-slate-100 text-slate-800 border-slate-300',
-    description: '1,000 recipes • 5 meal types',
+    className: "bg-slate-100 text-slate-800 border-slate-300",
+    description: "1,500 recipes • 5 meal types",
   },
   professional: {
-    label: 'Professional',
+    label: "Professional",
     icon: <Zap className="h-3 w-3" />,
-    className: 'bg-blue-100 text-blue-800 border-blue-300',
-    description: '2,500 recipes • 10 meal types • Branding',
+    className: "bg-blue-100 text-blue-800 border-blue-300",
+    description: "3,000 recipes • 10 meal types • Branding",
   },
   enterprise: {
-    label: 'Enterprise',
+    label: "Enterprise",
     icon: <Crown className="h-3 w-3" />,
-    className: 'bg-purple-100 text-purple-800 border-purple-300',
-    description: '4,000 recipes • 17 meal types • White-label',
+    className: "bg-purple-100 text-purple-800 border-purple-300",
+    description: "6,000 recipes • 17 meal types • White-label",
   },
 };
 
 interface TierBadgeProps {
   showDescription?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
-export function TierBadge({ showDescription = false, size = 'md' }: TierBadgeProps) {
+export function TierBadge({
+  showDescription = false,
+  size = "md",
+}: TierBadgeProps) {
   const { tier, features } = useTier();
   const config = TIER_CONFIG[tier];
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-sm px-2.5 py-1',
-    lg: 'text-base px-3 py-1.5',
+    sm: "text-xs px-2 py-0.5",
+    md: "text-sm px-2.5 py-1",
+    lg: "text-base px-3 py-1.5",
   };
 
   return (

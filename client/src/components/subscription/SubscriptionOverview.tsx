@@ -5,13 +5,20 @@
  * for trainers. Shows upgrade/downgrade options and usage metrics.
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
-import { Alert, AlertDescription } from '../ui/alert';
-import { useTier } from '@/hooks/useTier';
+import { useQuery } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
+import { Alert, AlertDescription } from "../ui/alert";
+import { useTier } from "@/hooks/useTier";
 import {
   CreditCard,
   TrendingUp,
@@ -22,13 +29,13 @@ import {
   Check,
   Crown,
   Loader2,
-} from 'lucide-react';
-import { useState } from 'react';
-import { TierSelectionModal } from '../tiers/TierSelectionModal';
+} from "lucide-react";
+import { useState } from "react";
+import { TierSelectionModal } from "../tiers/TierSelectionModal";
 
 interface SubscriptionData {
-  tier: 'starter' | 'professional' | 'enterprise';
-  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
+  tier: "starter" | "professional" | "enterprise";
+  status: "active" | "trialing" | "past_due" | "canceled" | "unpaid";
   currentPeriodEnd: string;
   cancelAtPeriodEnd: boolean;
   limits: {
@@ -42,13 +49,17 @@ export function SubscriptionOverview() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Fetch subscription details
-  const { data: subscription, isLoading, error } = useQuery<SubscriptionData>({
-    queryKey: ['subscription-details'],
+  const {
+    data: subscription,
+    isLoading,
+    error,
+  } = useQuery<SubscriptionData>({
+    queryKey: ["subscription-details"],
     queryFn: async () => {
-      const response = await fetch('/api/entitlements', {
-        credentials: 'include',
+      const response = await fetch("/api/entitlements", {
+        credentials: "include",
       });
-      if (!response.ok) throw new Error('Failed to fetch subscription details');
+      if (!response.ok) throw new Error("Failed to fetch subscription details");
       const data = await response.json();
       return data;
     },
@@ -77,25 +88,25 @@ export function SubscriptionOverview() {
 
   const tierInfo = {
     starter: {
-      name: 'Starter',
+      name: "Starter",
       icon: Check,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200",
     },
     professional: {
-      name: 'Professional',
+      name: "Professional",
       icon: Zap,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200',
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-200",
     },
     enterprise: {
-      name: 'Enterprise',
+      name: "Enterprise",
       icon: Crown,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
-      borderColor: 'border-amber-200',
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-200",
     },
   };
 
@@ -111,7 +122,7 @@ export function SubscriptionOverview() {
   };
 
   const canUpgrade =
-    subscription.tier === 'starter' || subscription.tier === 'professional';
+    subscription.tier === "starter" || subscription.tier === "professional";
 
   return (
     <>
@@ -129,7 +140,7 @@ export function SubscriptionOverview() {
                     {currentTierInfo.name} Tier
                   </CardTitle>
                   <CardDescription>
-                    {subscription.status === 'active'
+                    {subscription.status === "active"
                       ? `Active until ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
                       : `Status: ${subscription.status}`}
                   </CardDescription>
@@ -143,13 +154,13 @@ export function SubscriptionOverview() {
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Your subscription will be canceled on{' '}
+                  Your subscription will be canceled on{" "}
                   {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                 </AlertDescription>
               </Alert>
             )}
 
-            {subscription.status === 'past_due' && (
+            {subscription.status === "past_due" && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
@@ -181,10 +192,18 @@ export function SubscriptionOverview() {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0 flex-shrink">
                   <Users className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  <CardTitle className="text-base sm:text-lg truncate">Customers</CardTitle>
+                  <CardTitle className="text-base sm:text-lg truncate">
+                    Customers
+                  </CardTitle>
                 </div>
-                <Badge variant="outline" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm">
-                  {subscription.limits.customers.used}/{subscription.limits.customers.max === -1 ? '∞' : subscription.limits.customers.max}
+                <Badge
+                  variant="outline"
+                  className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm"
+                >
+                  {subscription.limits.customers.used}/
+                  {subscription.limits.customers.max === -1
+                    ? "∞"
+                    : subscription.limits.customers.max}
                 </Badge>
               </div>
             </CardHeader>
@@ -195,7 +214,7 @@ export function SubscriptionOverview() {
               />
               <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                 {subscription.limits.customers.max === -1
-                  ? 'Unlimited customers'
+                  ? "Unlimited customers"
                   : `${Math.round(subscription.limits.customers.percentage)}% used`}
               </p>
             </CardContent>
@@ -207,10 +226,18 @@ export function SubscriptionOverview() {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0 flex-shrink">
                   <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  <CardTitle className="text-base sm:text-lg truncate">Meal Plans</CardTitle>
+                  <CardTitle className="text-base sm:text-lg truncate">
+                    Meal Plans
+                  </CardTitle>
                 </div>
-                <Badge variant="outline" className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm">
-                  {subscription.limits.mealPlans.used}/{subscription.limits.mealPlans.max === -1 ? '∞' : subscription.limits.mealPlans.max}
+                <Badge
+                  variant="outline"
+                  className="flex-shrink-0 whitespace-nowrap text-xs sm:text-sm"
+                >
+                  {subscription.limits.mealPlans.used}/
+                  {subscription.limits.mealPlans.max === -1
+                    ? "∞"
+                    : subscription.limits.mealPlans.max}
                 </Badge>
               </div>
             </CardHeader>
@@ -221,7 +248,7 @@ export function SubscriptionOverview() {
               />
               <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                 {subscription.limits.mealPlans.max === -1
-                  ? 'Unlimited meal plans'
+                  ? "Unlimited meal plans"
                   : `${Math.round(subscription.limits.mealPlans.percentage)}% used`}
               </p>
             </CardContent>
@@ -234,7 +261,8 @@ export function SubscriptionOverview() {
             <CardHeader>
               <CardTitle>Unlock More Features</CardTitle>
               <CardDescription>
-                Upgrade your tier to access more customers, meal plans, and exclusive features
+                Upgrade your tier to access more customers, meal plans, and
+                exclusive features
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -245,17 +273,19 @@ export function SubscriptionOverview() {
                     <li>✓ 9 customers</li>
                     <li>✓ 50 meal plans</li>
                     <li>✓ PDF exports</li>
-                    <li>✓ 1,000 recipes</li>
+                    <li>✓ 1,500 recipes</li>
                     <li>✓ 5 meal types</li>
                   </ul>
                 </div>
                 <div className="border-l-2 border-primary pl-4">
-                  <h4 className="font-semibold mb-2 text-primary">Professional</h4>
+                  <h4 className="font-semibold mb-2 text-primary">
+                    Professional
+                  </h4>
                   <ul className="space-y-1">
                     <li>✓ 20 customers</li>
                     <li>✓ 200 meal plans</li>
                     <li>✓ CSV & Excel exports</li>
-                    <li>✓ 2,500 recipes</li>
+                    <li>✓ 3,000 recipes</li>
                     <li>✓ 10 meal types</li>
                     <li>✓ Custom branding</li>
                     <li>✓ Analytics dashboard</li>
@@ -267,7 +297,7 @@ export function SubscriptionOverview() {
                     <li>✓ Unlimited customers</li>
                     <li>✓ Unlimited meal plans</li>
                     <li>✓ All export formats</li>
-                    <li>✓ 4,000 recipes</li>
+                    <li>✓ 6,000 recipes</li>
                     <li>✓ 17 meal types</li>
                     <li>✓ White-label mode</li>
                     <li>✓ Custom domain</li>
@@ -277,7 +307,10 @@ export function SubscriptionOverview() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={() => setShowUpgradeModal(true)} className="w-full">
+              <Button
+                onClick={() => setShowUpgradeModal(true)}
+                className="w-full"
+              >
                 <TrendingUp className="mr-2 h-4 w-4" />
                 View Upgrade Options
               </Button>

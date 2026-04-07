@@ -12,8 +12,8 @@
  * - Subscription status validation
  */
 
-import { db } from '../db';
-import { and, eq } from 'drizzle-orm';
+import { db } from "../db";
+import { and, eq } from "drizzle-orm";
 import {
   trainerSubscriptions,
   subscriptionItems,
@@ -22,8 +22,8 @@ import {
   TrainerSubscription,
   SubscriptionItem,
   TierUsageTracking,
-} from '../../shared/schema';
-import { RedisService } from './RedisService';
+} from "../../shared/schema";
+import { RedisService } from "./RedisService";
 
 export interface TierLimits {
   customers: number;
@@ -37,7 +37,7 @@ export interface TierFeatures {
   apiAccess: boolean;
   bulkOperations: boolean;
   customBranding: boolean;
-  exportFormats: ('pdf' | 'csv' | 'excel')[];
+  exportFormats: ("pdf" | "csv" | "excel")[];
 }
 
 export interface CheckAccessResult {
@@ -50,7 +50,7 @@ export interface CheckAccessResult {
 export class EntitlementsService {
   private redisService: RedisService;
   private readonly CACHE_TTL = 300; // 5 minutes
-  private readonly CACHE_PREFIX = 'entitlements:';
+  private readonly CACHE_PREFIX = "entitlements:";
 
   constructor() {
     this.redisService = new RedisService({ defaultTTL: this.CACHE_TTL });
@@ -63,25 +63,27 @@ export class EntitlementsService {
   /**
    * Get tier limits based on tier level
    */
-  private getTierLimits(tier: 'starter' | 'professional' | 'enterprise'): TierLimits {
+  private getTierLimits(
+    tier: "starter" | "professional" | "enterprise",
+  ): TierLimits {
     const limits: Record<string, TierLimits> = {
       starter: {
         customers: 9,
         mealPlans: 50,
         aiGenerations: 100,
-        recipes: 1000, // Story 2.14: 1,000 recipes for Starter
+        recipes: 1500, // 1,500 recipes for Starter
       },
       professional: {
         customers: 20,
         mealPlans: 200,
         aiGenerations: 500,
-        recipes: 2500, // Story 2.14: 2,500 recipes for Professional
+        recipes: 3000, // 3,000 recipes for Professional
       },
       enterprise: {
         customers: 50,
         mealPlans: 500,
         aiGenerations: -1, // unlimited
-        recipes: 4000, // Story 2.14: 4,000 recipes for Enterprise
+        recipes: 6000, // 6,000 recipes for Enterprise (all recipes)
       },
     };
 
@@ -91,28 +93,30 @@ export class EntitlementsService {
   /**
    * Get tier features based on tier level
    */
-  private getTierFeatures(tier: 'starter' | 'professional' | 'enterprise'): TierFeatures {
+  private getTierFeatures(
+    tier: "starter" | "professional" | "enterprise",
+  ): TierFeatures {
     const features: Record<string, TierFeatures> = {
       starter: {
         analytics: false,
         apiAccess: false,
         bulkOperations: false,
         customBranding: false,
-        exportFormats: ['pdf'],
+        exportFormats: ["pdf"],
       },
       professional: {
         analytics: true,
         apiAccess: false,
         bulkOperations: true,
         customBranding: true,
-        exportFormats: ['pdf', 'csv'],
+        exportFormats: ["pdf", "csv"],
       },
       enterprise: {
         analytics: true,
         apiAccess: true,
         bulkOperations: true,
         customBranding: true,
-        exportFormats: ['pdf', 'csv', 'excel'],
+        exportFormats: ["pdf", "csv", "excel"],
       },
     };
 
@@ -148,7 +152,7 @@ export class EntitlementsService {
     const usage = await db.query.tierUsageTracking.findFirst({
       where: and(
         eq(tierUsageTracking.trainerId, trainerId),
-        eq(tierUsageTracking.periodEnd, subscription.currentPeriodEnd)
+        eq(tierUsageTracking.periodEnd, subscription.currentPeriodEnd),
       ),
     });
 
@@ -165,12 +169,18 @@ export class EntitlementsService {
         customers: {
           max: limits.customers,
           used: usage?.customersCount || 0,
-          percentage: limits.customers === -1 ? 0 : ((usage?.customersCount || 0) / limits.customers) * 100,
+          percentage:
+            limits.customers === -1
+              ? 0
+              : ((usage?.customersCount || 0) / limits.customers) * 100,
         },
         mealPlans: {
           max: limits.mealPlans,
           used: usage?.mealPlansCount || 0,
-          percentage: limits.mealPlans === -1 ? 0 : ((usage?.mealPlansCount || 0) / limits.mealPlans) * 100,
+          percentage:
+            limits.mealPlans === -1
+              ? 0
+              : ((usage?.mealPlansCount || 0) / limits.mealPlans) * 100,
         },
       },
       billing: {
@@ -180,11 +190,12 @@ export class EntitlementsService {
     };
 
     // Add AI subscription info if exists
-    const aiItem = items.find((item) => item.kind === 'ai');
+    const aiItem = items.find((item) => item.kind === "ai");
     if (aiItem) {
       entitlements.ai = {
         plan: tier, // AI plan mirrors tier
-        generationsRemaining: limits.aiGenerations - (usage?.aiGenerationsCount || 0),
+        generationsRemaining:
+          limits.aiGenerations - (usage?.aiGenerationsCount || 0),
         resetDate: subscription.currentPeriodEnd.toISOString(),
       };
     }
@@ -200,20 +211,23 @@ export class EntitlementsService {
    */
   async checkFeatureAccess(
     trainerId: string,
-    feature: keyof TierFeatures
+    feature: keyof TierFeatures,
   ): Promise<CheckAccessResult> {
     const entitlements = await this.getEntitlements(trainerId);
 
     if (!entitlements) {
       return {
         allowed: false,
-        reason: 'No active subscription',
+        reason: "No active subscription",
         upgradeRequired: true,
       };
     }
 
     // Check subscription status
-    if (entitlements.status === 'canceled' || entitlements.status === 'unpaid') {
+    if (
+      entitlements.status === "canceled" ||
+      entitlements.status === "unpaid"
+    ) {
       return {
         allowed: false,
         reason: `Subscription ${entitlements.status}`,
@@ -222,7 +236,7 @@ export class EntitlementsService {
     }
 
     // Check feature access
-    if (feature === 'exportFormats') {
+    if (feature === "exportFormats") {
       // This needs special handling as it's an array
       return {
         allowed: true,
@@ -234,7 +248,9 @@ export class EntitlementsService {
 
     return {
       allowed: hasAccess,
-      reason: hasAccess ? undefined : `Feature not available in ${entitlements.tier} tier`,
+      reason: hasAccess
+        ? undefined
+        : `Feature not available in ${entitlements.tier} tier`,
       upgradeRequired: !hasAccess,
       currentTier: entitlements.tier,
     };
@@ -245,14 +261,14 @@ export class EntitlementsService {
    */
   async checkUsageLimit(
     trainerId: string,
-    resourceType: 'customers' | 'mealPlans' | 'aiGenerations'
+    resourceType: "customers" | "mealPlans" | "aiGenerations",
   ): Promise<CheckAccessResult> {
     const entitlements = await this.getEntitlements(trainerId);
 
     if (!entitlements) {
       return {
         allowed: false,
-        reason: 'No active subscription',
+        reason: "No active subscription",
         upgradeRequired: true,
       };
     }
@@ -260,11 +276,11 @@ export class EntitlementsService {
     const limit = entitlements.limits[resourceType];
     if (!limit) {
       // For AI generations, check AI subscription
-      if (resourceType === 'aiGenerations') {
+      if (resourceType === "aiGenerations") {
         if (!entitlements.ai) {
           return {
             allowed: false,
-            reason: 'No AI subscription',
+            reason: "No AI subscription",
             upgradeRequired: true,
           };
         }
@@ -273,7 +289,7 @@ export class EntitlementsService {
           reason:
             entitlements.ai.generationsRemaining > 0
               ? undefined
-              : 'AI generation limit reached',
+              : "AI generation limit reached",
           upgradeRequired: entitlements.ai.generationsRemaining <= 0,
           currentTier: entitlements.tier,
         };
@@ -296,7 +312,9 @@ export class EntitlementsService {
 
     return {
       allowed,
-      reason: allowed ? undefined : `${resourceType} limit reached (${limit.used}/${limit.max})`,
+      reason: allowed
+        ? undefined
+        : `${resourceType} limit reached (${limit.used}/${limit.max})`,
       upgradeRequired: !allowed,
       currentTier: entitlements.tier,
     };
@@ -307,14 +325,14 @@ export class EntitlementsService {
    */
   async checkExportFormat(
     trainerId: string,
-    format: 'pdf' | 'csv' | 'excel'
+    format: "pdf" | "csv" | "excel",
   ): Promise<CheckAccessResult> {
     const entitlements = await this.getEntitlements(trainerId);
 
     if (!entitlements) {
       return {
         allowed: false,
-        reason: 'No active subscription',
+        reason: "No active subscription",
         upgradeRequired: true,
       };
     }
@@ -323,7 +341,9 @@ export class EntitlementsService {
 
     return {
       allowed,
-      reason: allowed ? undefined : `${format.toUpperCase()} export not available in ${entitlements.tier} tier`,
+      reason: allowed
+        ? undefined
+        : `${format.toUpperCase()} export not available in ${entitlements.tier} tier`,
       upgradeRequired: !allowed,
       currentTier: entitlements.tier,
     };
@@ -343,32 +363,38 @@ export class EntitlementsService {
    */
   async incrementUsage(
     trainerId: string,
-    resourceType: 'customers' | 'mealPlans' | 'aiGenerations' | 'exportsCsv' | 'exportsExcel' | 'exportsPdf',
-    amount: number = 1
+    resourceType:
+      | "customers"
+      | "mealPlans"
+      | "aiGenerations"
+      | "exportsCsv"
+      | "exportsExcel"
+      | "exportsPdf",
+    amount: number = 1,
   ): Promise<void> {
     const subscription = await db.query.trainerSubscriptions.findFirst({
       where: eq(trainerSubscriptions.trainerId, trainerId),
     });
 
     if (!subscription) {
-      throw new Error('No active subscription found');
+      throw new Error("No active subscription found");
     }
 
     // Find or create usage tracking record for current period
     const existingUsage = await db.query.tierUsageTracking.findFirst({
       where: and(
         eq(tierUsageTracking.trainerId, trainerId),
-        eq(tierUsageTracking.periodEnd, subscription.currentPeriodEnd)
+        eq(tierUsageTracking.periodEnd, subscription.currentPeriodEnd),
       ),
     });
 
     const columnMap: Record<string, string> = {
-      customers: 'customersCount',
-      mealPlans: 'mealPlansCount',
-      aiGenerations: 'aiGenerationsCount',
-      exportsCsv: 'exportsCsvCount',
-      exportsExcel: 'exportsExcelCount',
-      exportsPdf: 'exportsPdfCount',
+      customers: "customersCount",
+      mealPlans: "mealPlansCount",
+      aiGenerations: "aiGenerationsCount",
+      exportsCsv: "exportsCsvCount",
+      exportsExcel: "exportsExcelCount",
+      exportsPdf: "exportsPdfCount",
     };
 
     const column = columnMap[resourceType];
@@ -378,7 +404,9 @@ export class EntitlementsService {
       await db
         .update(tierUsageTracking)
         .set({
-          [column]: (existingUsage[column as keyof TierUsageTracking] as number) + amount,
+          [column]:
+            (existingUsage[column as keyof TierUsageTracking] as number) +
+            amount,
           updatedAt: new Date(),
         })
         .where(eq(tierUsageTracking.id, existingUsage.id));

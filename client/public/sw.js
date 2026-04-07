@@ -1,13 +1,13 @@
-const CACHE_VERSION = 'evofitmeals-v1';
+const CACHE_VERSION = "evofitmeals-v1";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
 const APP_SHELL = [
-  '/',
-  '/trainer',
-  '/meal-plan-generator',
-  '/recipes',
-  '/logo.svg',
+  "/",
+  "/trainer",
+  "/meal-plan-generator",
+  "/recipes",
+  "/logo.png",
 ];
 
 const OFFLINE_PAGE = `
@@ -68,47 +68,52 @@ const OFFLINE_PAGE = `
 `;
 
 // Install event - cache app shell
-self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
+self.addEventListener("install", (event) => {
+  console.log("[SW] Installing service worker...");
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
-      console.log('[SW] Precaching app shell');
+      console.log("[SW] Precaching app shell");
       return cache.addAll(APP_SHELL);
-    })
+    }),
   );
   self.skipWaiting();
 });
 
 // Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
+self.addEventListener("activate", (event) => {
+  console.log("[SW] Activating service worker...");
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name.startsWith('evofitmeals-') && name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
+          .filter(
+            (name) =>
+              name.startsWith("evofitmeals-") &&
+              name !== STATIC_CACHE &&
+              name !== DYNAMIC_CACHE,
+          )
           .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
+            console.log("[SW] Deleting old cache:", name);
             return caches.delete(name);
-          })
+          }),
       );
-    })
+    }),
   );
   self.clients.claim();
 });
 
 // Fetch event - network-first for API, cache-first for static assets
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
   // Skip non-GET requests
-  if (request.method !== 'GET') {
+  if (request.method !== "GET") {
     return;
   }
 
   // API requests - network-first
-  if (url.pathname.startsWith('/api/')) {
+  if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -120,7 +125,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           return caches.match(request);
-        })
+        }),
     );
     return;
   }
@@ -141,13 +146,13 @@ self.addEventListener('fetch', (event) => {
           });
           return response;
         });
-      })
+      }),
     );
     return;
   }
 
   // Navigation requests - network-first with offline fallback
-  if (request.mode === 'navigate') {
+  if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -163,10 +168,10 @@ self.addEventListener('fetch', (event) => {
               return cached;
             }
             return new Response(OFFLINE_PAGE, {
-              headers: { 'Content-Type': 'text/html' },
+              headers: { "Content-Type": "text/html" },
             });
           });
-        })
+        }),
     );
     return;
   }
@@ -179,13 +184,13 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => {
         return caches.match(request);
-      })
+      }),
   );
 });
 
 // Handle skip waiting message
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
