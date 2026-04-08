@@ -1,7 +1,7 @@
-import React, { ReactNode } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/button';
-import { useLocation } from 'wouter';
+import React, { ReactNode } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "./ui/button";
+import { useLocation } from "wouter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
+} from "./ui/dropdown-menu";
 // ProfileAvatar removed - using initials only
 import {
   Home,
@@ -19,13 +19,14 @@ import {
   ChevronDown,
   Bell,
   Utensils,
-  X
-} from 'lucide-react';
-import { cn } from '../lib/utils';
-import MobileNavigation from './MobileNavigation';
-import OfflineBanner from './OfflineBanner';
-import InstallPrompt from './InstallPrompt';
-import { TierBadge } from './TierBadge';
+  X,
+} from "lucide-react";
+import { cn } from "../lib/utils";
+import MobileNavigation from "./MobileNavigation";
+import OfflineBanner from "./OfflineBanner";
+import InstallPrompt from "./InstallPrompt";
+import { TierBadge } from "./TierBadge";
+import { ReportBugButton } from "./ReportBugButton";
 
 interface LayoutProps {
   children: ReactNode;
@@ -38,32 +39,35 @@ const Layout = ({ children }: LayoutProps) => {
 
   const handleLogout = () => {
     logout();
-    setLocation('/login');
+    setLocation("/login");
   };
-
 
   const navigation = [
     // Customer navigation
-    ...(user?.role === 'customer'
-      ? [{ name: 'My Dashboard', href: '/customer', icon: User }]
+    ...(user?.role === "customer"
+      ? [{ name: "My Dashboard", href: "/customer", icon: User }]
       : []),
-    
+
     // Trainer navigation
-    ...(user?.role === 'trainer'
+    ...(user?.role === "trainer"
       ? [
-          { name: 'Trainer Dashboard', href: '/trainer', icon: Home },
-          { name: 'Meal Plan Generator', href: '/meal-plan-generator', icon: Utensils }
+          { name: "Trainer Dashboard", href: "/trainer", icon: Home },
+          {
+            name: "Meal Plan Generator",
+            href: "/meal-plan-generator",
+            icon: Utensils,
+          },
         ]
       : []),
-    
+
     // Admin navigation
-    ...(user?.role === 'admin' 
-      ? [{ name: 'Admin', href: '/admin', icon: User }] 
+    ...(user?.role === "admin"
+      ? [{ name: "Admin", href: "/admin", icon: User }]
       : []),
   ];
 
   // Check if mobile viewport
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -74,11 +78,13 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Mobile Navigation Component */}
       <MobileNavigation />
-      
+
       {/* Desktop Navigation Bar - Visible on Desktop Only */}
-      <header className="hidden lg:block bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm"
-              data-testid="desktop-header"
-              data-desktop-nav="true">
+      <header
+        className="hidden lg:block bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm"
+        data-testid="desktop-header"
+        data-desktop-nav="true"
+      >
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Navigation */}
@@ -89,10 +95,14 @@ const Layout = ({ children }: LayoutProps) => {
                   <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
                     EvoFitMeals
                   </h1> */}
-                  <img src="/logo.png" alt="EvoFitMeals" className="w-10 h-10" />
+                  <img
+                    src="/logo.png"
+                    alt="EvoFitMeals"
+                    className="w-10 h-10"
+                  />
                 </div>
               </div>
-              
+
               {/* Desktop Navigation */}
               <nav className="hidden lg:ml-6 xl:ml-8 lg:flex lg:space-x-4 xl:space-x-8">
                 {navigation.map((item) => {
@@ -109,13 +119,15 @@ const Layout = ({ children }: LayoutProps) => {
                         "inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
                         isActive
                           ? "border-primary text-gray-900"
-                          : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                          : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
                       )}
-                      data-testid={`desktop-nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      data-testid={`desktop-nav-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
                     >
                       <item.icon className="w-4 h-4 mr-2" />
                       <span className="hidden xl:inline">{item.name}</span>
-                      <span className="xl:hidden">{item.name.split(' ')[0]}</span>
+                      <span className="xl:hidden">
+                        {item.name.split(" ")[0]}
+                      </span>
                     </a>
                   );
                 })}
@@ -125,7 +137,7 @@ const Layout = ({ children }: LayoutProps) => {
             {/* Right side items */}
             <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
               {/* Tier Badge - Only for trainers */}
-              {user?.role === 'trainer' && (
+              {user?.role === "trainer" && (
                 <div className="hidden md:block">
                   <TierBadge size="sm" />
                 </div>
@@ -139,10 +151,13 @@ const Layout = ({ children }: LayoutProps) => {
               {/* User Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2">
+                  <Button
+                    variant="ghost"
+                    className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2"
+                  >
                     <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <span className="text-xs sm:text-sm font-medium text-primary">
-                        {user?.email?.substring(0, 2).toUpperCase() || 'U'}
+                        {user?.email?.substring(0, 2).toUpperCase() || "U"}
                       </span>
                     </div>
                     <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 hidden sm:block" />
@@ -151,27 +166,32 @@ const Layout = ({ children }: LayoutProps) => {
                 <DropdownMenuContent align="end" className="w-48 sm:w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium truncate">{user?.email}</span>
-                      <span className="text-xs text-gray-500 capitalize">{user?.role}</span>
+                      <span className="text-sm font-medium truncate">
+                        {user?.email}
+                      </span>
+                      <span className="text-xs text-gray-500 capitalize">
+                        {user?.role}
+                      </span>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setLocation('/profile')}>
+                  <DropdownMenuItem onClick={() => setLocation("/profile")}>
                     <User className="w-4 h-4 mr-2" />
                     Profile
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-red-600 focus:text-red-600"
+                  >
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
             </div>
           </div>
         </div>
-
       </header>
 
       {/* Main Content */}
@@ -184,26 +204,36 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 lg:py-6">
-            <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
             <p className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
               © {new Date().getFullYear()} EvoFitMeals. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center sm:justify-end space-x-4 sm:space-x-6">
-              <a href="/privacy" className="text-xs sm:text-sm text-gray-500 hover:text-gray-900 transition-colors">
+              <a
+                href="/privacy"
+                className="text-xs sm:text-sm text-gray-500 hover:text-gray-900 transition-colors"
+              >
                 Privacy Policy
               </a>
-              <a href="/terms" className="text-xs sm:text-sm text-gray-500 hover:text-gray-900 transition-colors">
+              <a
+                href="/terms"
+                className="text-xs sm:text-sm text-gray-500 hover:text-gray-900 transition-colors"
+              >
                 Terms of Service
               </a>
-              <a href="/contact" className="text-xs sm:text-sm text-gray-500 hover:text-gray-900 transition-colors">
+              <a
+                href="/contact"
+                className="text-xs sm:text-sm text-gray-500 hover:text-gray-900 transition-colors"
+              >
                 Contact
               </a>
             </div>
-            </div>
+          </div>
         </div>
       </footer>
+      {user && <ReportBugButton />}
     </div>
   );
 };
 
-export default Layout; 
+export default Layout;
