@@ -47,7 +47,7 @@ async function check() {
   const login = await fetch(BASE + '/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'nutritionist.sarah@evofitmeals.com', password: 'Demo1234!' })
+    body: JSON.stringify({ email: 'trainer.test@evofitmeals.com', password: 'TestTrainer123!' })
   });
   const auth = await login.json();
   const token = auth.accessToken || auth.token || (auth.data && (auth.data.accessToken || auth.data.token));
@@ -75,6 +75,7 @@ check().catch(e => console.error(e));
 ```
 
 **Expected counts:**
+
 - Clients: 3+
 - Meal Plans: 3+
 - Recipes: 50+
@@ -88,6 +89,7 @@ npx tsx scripts/seed-demo-data.ts
 ```
 
 The script creates:
+
 - 3 meal plans (Weight Loss 4-Week, Muscle Gain 6-Week, Balanced Maintenance)
 - 3 client meal plan assignments
 - 63 daily nutrition logs (3 weeks × 3 clients)
@@ -96,6 +98,7 @@ The script creates:
 - 3 shopping lists
 
 **Error handling:**
+
 - 409 Conflict = data already exists, skip gracefully
 - 401 Unauthorized = re-authenticate, token may have expired
 - 500 Server Error = log and continue
@@ -108,6 +111,7 @@ npx playwright test --config=playwright.simulation.config.ts --reporter=list
 ```
 
 Tests cover 10 critical flows:
+
 1. Login & Authentication
 2. Nutritionist Dashboard
 3. Client Management
@@ -122,6 +126,7 @@ Tests cover 10 critical flows:
 ### Step 5: Analyze Failures
 
 For each failing test:
+
 1. Read the test output to identify the failing assertion
 2. Check screenshot in `tests/e2e/screenshots/` for visual context
 3. Classify the failure:
@@ -145,6 +150,7 @@ npx playwright test tests/e2e/flows/failing-spec.spec.ts --config=playwright.sim
 **Run by:** Zara
 
 ### Data Seeding
+
 - Meal Plans created: X
 - Client assignments: X
 - Nutrition logs created: X
@@ -152,54 +158,63 @@ npx playwright test tests/e2e/flows/failing-spec.spec.ts --config=playwright.sim
 - Shopping lists: X
 
 ### E2E Test Results
+
 - Total tests: X
 - Passed: X ✅
 - Failed: X ❌
 - Skipped: X ⚠️
 
 ### Page Coverage
+
 - Pages tested: X / 10
 - Pages with content: X / 10
 - Empty state pages: [list any]
 
 ### Screenshots Captured
+
 [list screenshot files]
 
 ### Issues Found
+
 [list failures with details]
 ```
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `scripts/seed-demo-data.ts` | API seed script |
-| `tests/e2e/flows/*.spec.ts` | E2E test specs (10 flows) |
+| File                              | Purpose                          |
+| --------------------------------- | -------------------------------- |
+| `scripts/seed-demo-data.ts`       | API seed script                  |
+| `tests/e2e/flows/*.spec.ts`       | E2E test specs (10 flows)        |
 | `playwright.simulation.config.ts` | Playwright config for simulation |
-| `tests/e2e/screenshots/` | Test screenshots |
-| `tests/e2e/reports/` | HTML reports |
+| `tests/e2e/screenshots/`          | Test screenshots                 |
+| `tests/e2e/reports/`              | HTML reports                     |
 
-## Demo Accounts
+## Canonical Test Accounts
 
-| Role | Email | Password |
-|------|-------|----------|
-| Nutritionist | nutritionist.sarah@evofitmeals.com | Demo1234! |
-| Nutritionist | nutritionist.mike@evofitmeals.com | Demo1234! |
-| Admin | admin@evofitmeals.com | Demo1234! |
-| Client | client.alex@example.com | Demo1234! |
-| Client | client.emma@example.com | Demo1234! |
-| Client | client.olivia@example.com | Demo1234! |
+These are the official test accounts (see `OFFICIAL_TEST_CREDENTIALS.md`).
+They exist in both localhost and production. Never change these credentials.
+
+| Role                        | Email                         | Password         |
+| --------------------------- | ----------------------------- | ---------------- |
+| Admin                       | admin@fitmeal.pro             | AdminPass123     |
+| Trainer (default)           | trainer.test@evofitmeals.com  | TestTrainer123!  |
+| Trainer (Starter tier)      | trainer.starter@test.com      | TestPass123!     |
+| Trainer (Professional tier) | trainer.professional@test.com | TestPass123!     |
+| Trainer (Enterprise tier)   | trainer.enterprise@test.com   | TestPass123!     |
+| Customer                    | customer.test@evofitmeals.com | TestCustomer123! |
+
+If credentials fail, run `npm run reset:test-accounts` (localhost only).
 
 ## Error Reference
 
-| Error | Action |
-|-------|--------|
-| Production is down | Check DO App Platform dashboard |
-| API returns 401 | Re-authenticate, tokens may have expired |
-| API returns 409 | Data already exists, skip gracefully |
-| API returns 500 | Log error, continue with remaining |
-| Playwright tests fail | Capture screenshot, analyze DOM, suggest fix |
-| Missing Playwright browsers | Run `npx playwright install chromium` |
+| Error                       | Action                                       |
+| --------------------------- | -------------------------------------------- |
+| Production is down          | Check DO App Platform dashboard              |
+| API returns 401             | Re-authenticate, tokens may have expired     |
+| API returns 409             | Data already exists, skip gracefully         |
+| API returns 500             | Log error, continue with remaining           |
+| Playwright tests fail       | Capture screenshot, analyze DOM, suggest fix |
+| Missing Playwright browsers | Run `npx playwright install chromium`        |
 
 ## Important Rules
 
