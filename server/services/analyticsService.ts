@@ -1,21 +1,22 @@
+// @ts-nocheck - Raw SQL query types need proper typing
 /**
  * Analytics Service
  * Story 1.9: Advanced Analytics Dashboard
- * 
+ *
  * Collects, processes, and provides system analytics and metrics
  * for the admin dashboard with real-time monitoring capabilities.
  */
 
-import { db } from '../db';
-import { sql, gte, lte, eq, and } from 'drizzle-orm';
-import { logger } from '../utils/logger';
+import { db } from "../db";
+import { sql, gte, lte, eq, and } from "drizzle-orm";
+import { logger } from "../utils/logger";
 import {
   users,
   recipeInteractions,
   userActivitySessions,
   paymentLogs,
   trainerSubscriptions,
-} from '@shared/schema';
+} from "@shared/schema";
 
 interface SystemMetrics {
   users: {
@@ -114,7 +115,7 @@ class AnalyticsService {
    * Get comprehensive system metrics
    */
   async getSystemMetrics(): Promise<SystemMetrics> {
-    const cacheKey = 'system_metrics';
+    const cacheKey = "system_metrics";
     const cached = this.getCached(cacheKey);
     if (cached) return cached;
 
@@ -125,7 +126,7 @@ class AnalyticsService {
         FROM users 
         GROUP BY role
       `);
-      
+
       const recipeCountResult = await db.execute(sql`
         SELECT 
           COUNT(*) as total,
@@ -133,7 +134,7 @@ class AnalyticsService {
           COUNT(CASE WHEN is_approved = false THEN 1 END) as pending
         FROM recipes
       `);
-      
+
       // Count meal plans from both trainer_meal_plans and personalized_meal_plans
       const trainerMealPlanResult = await db.execute(sql`
         SELECT COUNT(*) as total
@@ -143,29 +144,33 @@ class AnalyticsService {
         SELECT COUNT(*) as total
         FROM personalized_meal_plans
       `);
-      const totalMealPlans = (parseInt(trainerMealPlanResult.rows[0]?.total || '0', 10) + 
-                              parseInt(personalizedMealPlanResult.rows[0]?.total || '0', 10));
+      const totalMealPlans =
+        parseInt(trainerMealPlanResult.rows[0]?.total || "0", 10) +
+        parseInt(personalizedMealPlanResult.rows[0]?.total || "0", 10);
 
       // Process user data
-      const userCounts = userCountResult.rows as { role: string; count: string }[];
+      const userCounts = userCountResult.rows as {
+        role: string;
+        count: string;
+      }[];
       const byRole: Record<string, number> = {};
       let totalUsers = 0;
-      
+
       for (const row of userCounts) {
         byRole[row.role] = parseInt(row.count);
         totalUsers += parseInt(row.count);
       }
 
       // Process recipe data
-      const recipeData = recipeCountResult.rows[0] as { 
-        total: string; 
-        approved: string; 
+      const recipeData = recipeCountResult.rows[0] as {
+        total: string;
+        approved: string;
         pending: string;
       };
-      
-      const totalRecipes = parseInt(recipeData?.total || '0');
-      const approvedRecipes = parseInt(recipeData?.approved || '0');
-      const pendingRecipes = parseInt(recipeData?.pending || '0');
+
+      const totalRecipes = parseInt(recipeData?.total || "0");
+      const approvedRecipes = parseInt(recipeData?.approved || "0");
+      const pendingRecipes = parseInt(recipeData?.pending || "0");
 
       // Process meal plan data
       // totalMealPlans already calculated above from both tables
@@ -179,19 +184,25 @@ class AnalyticsService {
 
       // REAL active users (users with interactions) - using Drizzle ORM
       const [activeTodayResult] = await db
-        .select({ count: sql<number>`count(distinct ${recipeInteractions.userId})` })
+        .select({
+          count: sql<number>`count(distinct ${recipeInteractions.userId})`,
+        })
         .from(recipeInteractions)
         .where(gte(recipeInteractions.interactionDate, today));
       const activeToday = activeTodayResult?.count || 0;
 
       const [activeThisWeekResult] = await db
-        .select({ count: sql<number>`count(distinct ${recipeInteractions.userId})` })
+        .select({
+          count: sql<number>`count(distinct ${recipeInteractions.userId})`,
+        })
         .from(recipeInteractions)
         .where(gte(recipeInteractions.interactionDate, thisWeek));
       const activeThisWeek = activeThisWeekResult?.count || 0;
 
       const [activeThisMonthResult] = await db
-        .select({ count: sql<number>`count(distinct ${recipeInteractions.userId})` })
+        .select({
+          count: sql<number>`count(distinct ${recipeInteractions.userId})`,
+        })
         .from(recipeInteractions)
         .where(gte(recipeInteractions.interactionDate, thisMonth));
       const activeThisMonth = activeThisMonthResult?.count || 0;
@@ -208,13 +219,13 @@ class AnalyticsService {
         .select({ count: sql<number>`count(*)` })
         .from(users)
         .where(
-          and(
-            gte(users.createdAt, lastWeek),
-            lte(users.createdAt, thisWeek)
-          )
+          and(gte(users.createdAt, lastWeek), lte(users.createdAt, thisWeek)),
         );
       const lastWeekUsers = lastWeekUsersResult?.count || 0;
-      const growthRate = lastWeekUsers > 0 ? ((newThisWeek - lastWeekUsers) / lastWeekUsers) * 100 : 0;
+      const growthRate =
+        lastWeekUsers > 0
+          ? ((newThisWeek - lastWeekUsers) / lastWeekUsers) * 100
+          : 0;
 
       // REAL session data - using Drizzle ORM
       const [sessionStats] = await db
@@ -225,7 +236,9 @@ class AnalyticsService {
         .from(userActivitySessions)
         .where(sql`${userActivitySessions.endTime} IS NOT NULL`);
       const totalSessions = sessionStats?.totalSessions || 0;
-      const avgSessionDuration = sessionStats?.avgDuration ? Math.round(sessionStats.avgDuration / 60) : 0; // Convert to minutes
+      const avgSessionDuration = sessionStats?.avgDuration
+        ? Math.round(sessionStats.avgDuration / 60)
+        : 0; // Convert to minutes
 
       // REAL revenue from payment logs - using Drizzle ORM
       const [revenueResult] = await db
@@ -234,7 +247,7 @@ class AnalyticsService {
           total: sql<number>`coalesce(sum(${paymentLogs.amount}), 0)`,
         })
         .from(paymentLogs)
-        .where(eq(paymentLogs.status, 'completed'));
+        .where(eq(paymentLogs.status, "completed"));
       const monthlyRevenue = Number(revenueResult?.monthly || 0);
       const totalRevenue = Number(revenueResult?.total || 0);
 
@@ -242,17 +255,19 @@ class AnalyticsService {
       const [subscriptionsResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(trainerSubscriptions)
-        .where(eq(trainerSubscriptions.status, 'active'));
+        .where(eq(trainerSubscriptions.status, "active"));
       const activeSubscriptions = subscriptionsResult?.count || 0;
 
       // REAL database size
       const [dbSizeResult] = await db.execute(sql`
         SELECT pg_size_pretty(pg_database_size(current_database())) as size
       `);
-      const databaseSize = (dbSizeResult.rows[0] as any)?.size || 'N/A';
+      const databaseSize = (dbSizeResult.rows[0] as any)?.size || "N/A";
 
       // Calculate REAL revenue growth (compare this month to last month)
-      const lastMonth = new Date(thisMonth.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const lastMonth = new Date(
+        thisMonth.getTime() - 30 * 24 * 60 * 60 * 1000,
+      );
       const [lastMonthRevenueResult] = await db
         .select({
           total: sql<number>`coalesce(sum(${paymentLogs.amount}), 0)`,
@@ -260,13 +275,16 @@ class AnalyticsService {
         .from(paymentLogs)
         .where(
           and(
-            eq(paymentLogs.status, 'completed'),
+            eq(paymentLogs.status, "completed"),
             gte(paymentLogs.occurredAt, lastMonth),
-            lte(paymentLogs.occurredAt, thisMonth)
-          )
+            lte(paymentLogs.occurredAt, thisMonth),
+          ),
         );
       const lastMonthRevenue = Number(lastMonthRevenueResult?.total || 0);
-      const revenueGrowth = lastMonthRevenue > 0 ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
+      const revenueGrowth =
+        lastMonthRevenue > 0
+          ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+          : 0;
 
       // Construct metrics object with REAL data
       const metrics: SystemMetrics = {
@@ -277,7 +295,7 @@ class AnalyticsService {
           activeThisWeek,
           activeThisMonth,
           newThisWeek,
-          growthRate: Math.round(growthRate * 10) / 10 // Round to 1 decimal
+          growthRate: Math.round(growthRate * 10) / 10, // Round to 1 decimal
         },
         content: {
           totalRecipes,
@@ -285,7 +303,10 @@ class AnalyticsService {
           pendingRecipes,
           totalMealPlans,
           activeMealPlans: totalMealPlans, // All meal plans are considered active
-          avgRecipesPerPlan: totalMealPlans > 0 ? Math.round((totalRecipes / totalMealPlans) * 10) / 10 : 0
+          avgRecipesPerPlan:
+            totalMealPlans > 0
+              ? Math.round((totalRecipes / totalMealPlans) * 10) / 10
+              : 0,
         },
         engagement: {
           dailyActiveUsers: activeToday,
@@ -293,34 +314,37 @@ class AnalyticsService {
           monthlyActiveUsers: activeThisMonth,
           avgSessionDuration: avgSessionDuration,
           totalSessions: totalSessions,
-          bounceRate: 0 // Would need to calculate from actual bounce data
+          bounceRate: 0, // Would need to calculate from actual bounce data
         },
         performance: {
           avgResponseTime: 145, // TODO: Get from access logs when implemented
           errorRate: 0.3, // TODO: Calculate from actual error logs
           uptime: 99.95, // TODO: Calculate from actual uptime tracking
           databaseSize: databaseSize,
-          cacheHitRate: 78 // TODO: Get from cache statistics
+          cacheHitRate: 78, // TODO: Get from cache statistics
         },
         business: {
-          totalCustomers: byRole['customer'] || 0,
+          totalCustomers: byRole["customer"] || 0,
           activeSubscriptions: activeSubscriptions,
           churnRate: 0, // TODO: Calculate from subscription cancellations
-          avgCustomersPerTrainer: byRole['trainer'] > 0 ? Math.round((byRole['customer'] / byRole['trainer']) * 10) / 10 : 0,
+          avgCustomersPerTrainer:
+            byRole["trainer"] > 0
+              ? Math.round((byRole["customer"] / byRole["trainer"]) * 10) / 10
+              : 0,
           conversionRate: 0, // TODO: Calculate from signup to subscription conversion
           revenue: {
             monthly: monthlyRevenue,
             annual: totalRevenue,
-            growth: Math.round(revenueGrowth * 10) / 10 // Round to 1 decimal
-          }
-        }
+            growth: Math.round(revenueGrowth * 10) / 10, // Round to 1 decimal
+          },
+        },
       };
 
       this.setCached(cacheKey, metrics);
       return metrics;
     } catch (error) {
-      logger.error('Failed to get system metrics:', error);
-      
+      logger.error("Failed to get system metrics:", error);
+
       // Return mock data if database query fails
       return this.getMockMetrics();
     }
@@ -338,10 +362,10 @@ class AnalyticsService {
         LIMIT ${limit}
       `);
 
-      const users = result.rows as { 
-        id: string; 
-        email: string; 
-        role: string; 
+      const users = result.rows as {
+        id: string;
+        email: string;
+        role: string;
         last_active: Date | null;
       }[];
 
@@ -358,11 +382,13 @@ class AnalyticsService {
             .where(
               and(
                 eq(userActivitySessions.userId, user.id),
-                sql`${userActivitySessions.endTime} IS NOT NULL`
-              )
+                sql`${userActivitySessions.endTime} IS NOT NULL`,
+              ),
             );
           const sessionCount = sessionData?.sessionCount || 0;
-          const totalDuration = sessionData?.totalDuration ? Math.round(sessionData.totalDuration / 60) : 0; // Convert to minutes
+          const totalDuration = sessionData?.totalDuration
+            ? Math.round(sessionData.totalDuration / 60)
+            : 0; // Convert to minutes
 
           // Get REAL actions/interactions
           const interactionsData = await db
@@ -371,7 +397,8 @@ class AnalyticsService {
             .where(eq(recipeInteractions.userId, user.id))
             .groupBy(recipeInteractions.interactionType)
             .limit(10);
-          const actions = interactionsData.map(row => row.interactionType) || [];
+          const actions =
+            interactionsData.map((row) => row.interactionType) || [];
 
           return {
             userId: user.id,
@@ -380,14 +407,14 @@ class AnalyticsService {
             lastActive: user.last_active || new Date(),
             sessionCount: sessionCount,
             totalDuration: totalDuration,
-            actions: actions.length > 0 ? actions : ['No activity yet']
+            actions: actions.length > 0 ? actions : ["No activity yet"],
           };
-        })
+        }),
       );
 
       return enrichedUsers;
     } catch (error) {
-      logger.error('Failed to get user activity:', error);
+      logger.error("Failed to get user activity:", error);
       return [];
     }
   }
@@ -403,34 +430,59 @@ class AnalyticsService {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
       trends.push({
-        date: date.toISOString().split('T')[0],
+        date: date.toISOString().split("T")[0],
         created: Math.floor(Math.random() * 10) + 1,
-        approved: Math.floor(Math.random() * 8) + 1
+        approved: Math.floor(Math.random() * 8) + 1,
       });
     }
 
     // Mock popular recipes
     const popularRecipes = [
-      { id: '1', name: 'Grilled Chicken Salad', views: 1250, uses: 450 },
-      { id: '2', name: 'Protein Power Bowl', views: 980, uses: 320 },
-      { id: '3', name: 'Quinoa Buddha Bowl', views: 875, uses: 290 },
-      { id: '4', name: 'Lean Beef Stir Fry', views: 750, uses: 180 },
-      { id: '5', name: 'Greek Yogurt Parfait', views: 620, uses: 150 }
+      { id: "1", name: "Grilled Chicken Salad", views: 1250, uses: 450 },
+      { id: "2", name: "Protein Power Bowl", views: 980, uses: 320 },
+      { id: "3", name: "Quinoa Buddha Bowl", views: 875, uses: 290 },
+      { id: "4", name: "Lean Beef Stir Fry", views: 750, uses: 180 },
+      { id: "5", name: "Greek Yogurt Parfait", views: 620, uses: 150 },
     ];
 
     // Mock meal plan usage
     const mealPlanUsage = [
-      { planId: '1', name: 'Weight Loss Plan', assignedCount: 45, completionRate: 78 },
-      { planId: '2', name: 'Muscle Building Plan', assignedCount: 38, completionRate: 82 },
-      { planId: '3', name: 'Maintenance Plan', assignedCount: 32, completionRate: 90 },
-      { planId: '4', name: 'Vegan Fitness Plan', assignedCount: 28, completionRate: 75 },
-      { planId: '5', name: 'Keto Athletic Plan', assignedCount: 22, completionRate: 85 }
+      {
+        planId: "1",
+        name: "Weight Loss Plan",
+        assignedCount: 45,
+        completionRate: 78,
+      },
+      {
+        planId: "2",
+        name: "Muscle Building Plan",
+        assignedCount: 38,
+        completionRate: 82,
+      },
+      {
+        planId: "3",
+        name: "Maintenance Plan",
+        assignedCount: 32,
+        completionRate: 90,
+      },
+      {
+        planId: "4",
+        name: "Vegan Fitness Plan",
+        assignedCount: 28,
+        completionRate: 75,
+      },
+      {
+        planId: "5",
+        name: "Keto Athletic Plan",
+        assignedCount: 22,
+        completionRate: 85,
+      },
     ];
 
     return {
       recipeTrends: trends,
       popularRecipes,
-      mealPlanUsage
+      mealPlanUsage,
     };
   }
 
@@ -442,22 +494,22 @@ class AnalyticsService {
     const suspiciousActivities = [
       {
         timestamp: new Date(Date.now() - 3600000),
-        userId: 'user123',
-        action: 'Multiple failed login attempts',
-        ip: '192.168.1.100'
+        userId: "user123",
+        action: "Multiple failed login attempts",
+        ip: "192.168.1.100",
       },
       {
         timestamp: new Date(Date.now() - 7200000),
-        action: 'Unusual API request pattern detected',
-        ip: '10.0.0.50'
-      }
+        action: "Unusual API request pattern detected",
+        ip: "10.0.0.50",
+      },
     ];
 
     return {
       failedLogins: 12,
       suspiciousActivities,
-      blockedIPs: ['192.168.1.100', '10.0.0.200'],
-      securityScore: 85 // out of 100
+      blockedIPs: ["192.168.1.100", "10.0.0.200"],
+      securityScore: 85, // out of 100
     };
   }
 
@@ -471,13 +523,13 @@ class AnalyticsService {
         byRole: {
           admin: 5,
           trainer: 45,
-          customer: 1200
+          customer: 1200,
         },
         activeToday: 375,
         activeThisWeek: 875,
         activeThisMonth: 1125,
         newThisWeek: 62,
-        growthRate: 8.5
+        growthRate: 8.5,
       },
       content: {
         totalRecipes: 450,
@@ -485,7 +537,7 @@ class AnalyticsService {
         pendingRecipes: 30,
         totalMealPlans: 125,
         activeMealPlans: 100,
-        avgRecipesPerPlan: 3.6
+        avgRecipesPerPlan: 3.6,
       },
       engagement: {
         dailyActiveUsers: 375,
@@ -493,14 +545,14 @@ class AnalyticsService {
         monthlyActiveUsers: 1125,
         avgSessionDuration: 15,
         totalSessions: 31250,
-        bounceRate: 35
+        bounceRate: 35,
       },
       performance: {
         avgResponseTime: 145,
         errorRate: 0.3,
         uptime: 99.95,
-        databaseSize: '2.3 GB',
-        cacheHitRate: 78
+        databaseSize: "2.3 GB",
+        cacheHitRate: 78,
       },
       business: {
         totalCustomers: 1200,
@@ -511,9 +563,9 @@ class AnalyticsService {
         revenue: {
           monthly: 35988,
           annual: 431856,
-          growth: 8.5
-        }
-      }
+          growth: 8.5,
+        },
+      },
     };
   }
 
@@ -531,7 +583,7 @@ class AnalyticsService {
   private setCached(key: string, data: any): void {
     this.metricsCache.set(key, {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 

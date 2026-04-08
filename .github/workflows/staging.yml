@@ -57,9 +57,8 @@ jobs:
         run: |
           echo "🚀 Deploying to staging environment..."
 
-          # Update staging app with new image
-          doctl apps update ${{ secrets.DO_STAGING_APP_ID }} \
-            --spec <(cat <<EOF
+          # Write app spec to temp file (process substitution not reliable in GHA)
+          cat > /tmp/staging-spec.yaml <<EOF
           name: fitnessmealplanner-staging
           region: nyc
           services:
@@ -74,7 +73,10 @@ jobs:
               routes:
                 - path: /
           EOF
-          )
+
+          # Update staging app with new image
+          doctl apps update ${{ secrets.DO_STAGING_APP_ID }} \
+            --spec /tmp/staging-spec.yaml
 
           echo "✅ Staging deployment triggered"
 

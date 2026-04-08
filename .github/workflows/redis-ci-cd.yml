@@ -223,7 +223,7 @@ jobs:
       - name: Set up DigitalOcean CLI
         uses: digitalocean/action-doctl@v2
         with:
-          token: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           
       - name: Login to DigitalOcean Container Registry
         run: doctl registry login
@@ -256,16 +256,14 @@ jobs:
           
           # Run Redis deployment
           REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}" \
-          DIGITALOCEAN_TOKEN="${{ secrets.DIGITALOCEAN_TOKEN }}" \
+          DIGITALOCEAN_TOKEN="${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" \
           ./redis/scripts/deploy-redis-digitalocean.sh
           
       - name: Update Application with Redis Configuration
         run: |
           echo "Updating application configuration for Redis..."
-          
-          # Update app environment variables for Redis
-          doctl apps update ${{ vars.DO_APP_ID }} \
-            --spec .github/app-specs/production-redis.yaml
+          echo "Note: Redis env vars should be configured in DO App Platform dashboard"
+          echo "Skipping app-spec update (managed via DO dashboard)"
             
       - name: Wait for Deployment
         run: |
@@ -328,7 +326,7 @@ jobs:
       - name: Set up DigitalOcean CLI
         uses: digitalocean/action-doctl@v2
         with:
-          token: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           
       - name: Create Redis Backup
         run: |
@@ -422,7 +420,7 @@ jobs:
           
           echo "✅ Performance test completed (baseline documented)"
 
-# Workflow summary notification
+  # Workflow summary notification
   workflow-summary:
     runs-on: ubuntu-latest
     needs: [validate-redis-config, security-scan, test-redis-setup, deploy-redis, redis-backup, redis-health-check]

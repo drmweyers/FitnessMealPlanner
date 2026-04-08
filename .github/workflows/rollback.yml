@@ -101,9 +101,8 @@ jobs:
 
           echo "🔄 Rolling back ${{ github.event.inputs.environment }}..."
 
-          # Trigger deployment with rollback tag
-          doctl apps create-deployment $APP_ID \
-            --spec <(cat <<EOF
+          # Write app spec to temp file (process substitution not reliable in GHA)
+          cat > /tmp/rollback-spec.yaml <<EOF
           name: fitnessmealplanner-${{ github.event.inputs.environment }}
           region: nyc
           services:
@@ -118,7 +117,10 @@ jobs:
               routes:
                 - path: /
           EOF
-          )
+
+          # Trigger deployment with rollback tag
+          doctl apps create-deployment $APP_ID \
+            --spec /tmp/rollback-spec.yaml
 
           echo "✅ Rollback deployment triggered"
 
