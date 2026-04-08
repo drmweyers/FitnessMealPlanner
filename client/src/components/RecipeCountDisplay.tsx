@@ -6,20 +6,17 @@
  */
 
 import { useState } from "react";
-import { useTier, useRecipeCount } from "@/hooks/useTier";
+import { useTier } from "@/hooks/useTier";
 import { ChefHat, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TierSelectionModal } from "./tiers/TierSelectionModal";
 
 export function RecipeCountDisplay() {
-  const { tier, features } = useTier();
-  const { data: actualCount, isLoading } = useRecipeCount();
+  const { tier, features, isLoading } = useTier();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const maxRecipes = features.recipeCount;
-  const currentCount = actualCount || 0;
-  const percentage = Math.min((currentCount / maxRecipes) * 100, 100);
 
   if (isLoading) {
     return (
@@ -46,20 +43,12 @@ export function RecipeCountDisplay() {
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold">
-              {currentCount.toLocaleString()}
+              {maxRecipes.toLocaleString()}
             </div>
             <div className="text-xs text-muted-foreground">
-              of {maxRecipes.toLocaleString()}
+              recipes available
             </div>
           </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="w-full bg-muted rounded-full h-2 mb-3">
-          <div
-            className="bg-primary h-2 rounded-full transition-all duration-500"
-            style={{ width: `${percentage}%` }}
-          />
         </div>
 
         {/* Upgrade prompt if not at max tier */}
@@ -96,17 +85,14 @@ export function RecipeCountDisplay() {
  */
 export function RecipeCountBadge() {
   const { features } = useTier();
-  const { data: actualCount } = useRecipeCount();
 
   return (
     <div className="flex items-center gap-2 text-sm">
       <ChefHat className="h-4 w-4 text-muted-foreground" />
       <span className="font-medium">
-        {actualCount?.toLocaleString() || "—"}
+        {features.recipeCount.toLocaleString()}
       </span>
-      <span className="text-muted-foreground">
-        / {features.recipeCount.toLocaleString()} recipes
-      </span>
+      <span className="text-muted-foreground">recipes</span>
     </div>
   );
 }

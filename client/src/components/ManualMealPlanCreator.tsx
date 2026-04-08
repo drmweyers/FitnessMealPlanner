@@ -303,37 +303,6 @@ export default function ManualMealPlanCreator() {
           </AlertDescription>
         </Alert>
 
-        {/* ChatGPT Instructions */}
-        <Alert className="border-purple-200 bg-purple-50">
-          <Sparkles className="h-4 w-4 text-purple-600" />
-          <AlertDescription>
-            <strong className="text-purple-700">
-              Pro Tip: Use ChatGPT to generate your custom meal plans!
-            </strong>
-            <p className="text-sm mt-1 text-purple-600">
-              Copy this prompt into ChatGPT:{" "}
-              <em>
-                "Create a [X]-day meal plan for a [goal] client with [calories]
-                calories per day. Format each meal as: Meal [number], then list
-                ingredients with dashes, including gram amounts. Include
-                breakfast, lunch, dinner, and snacks."
-              </em>
-            </p>
-            <p className="text-sm mt-1 text-purple-600">
-              Then paste ChatGPT's output into the text box below and click
-              "Parse Meals" — all fields will auto-fill.
-            </p>
-            <a
-              href="https://chat.openai.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-purple-700 hover:text-purple-900 underline"
-            >
-              Open ChatGPT <ArrowRight className="h-3 w-3" />
-            </a>
-          </AlertDescription>
-        </Alert>
-
         {!isPreview ? (
           /* ========== ENTRY MODE ========== */
           <>
@@ -352,6 +321,39 @@ export default function ManualMealPlanCreator() {
                 Paste your meal plan text below. Format: "Meal 1", "Meal 2",
                 etc. with ingredients listed with dashes.
               </p>
+
+              {/* ChatGPT Instructions — belongs to Option 1 (Paste & Parse) */}
+              <Alert className="border-purple-200 bg-purple-50">
+                <Sparkles className="h-4 w-4 text-purple-600" />
+                <AlertDescription>
+                  <strong className="text-purple-700">
+                    Pro Tip: Use ChatGPT to generate your custom meal plans!
+                  </strong>
+                  <p className="text-sm mt-1 text-purple-600">
+                    Copy this prompt into ChatGPT:{" "}
+                    <em>
+                      "Create a [X]-day meal plan for a [goal] client with
+                      [calories] calories per day. Format each meal as: Meal
+                      [number], then list ingredients with dashes, including
+                      gram amounts. Include breakfast, lunch, dinner, and
+                      snacks."
+                    </em>
+                  </p>
+                  <p className="text-sm mt-1 text-purple-600">
+                    Then paste ChatGPT's output into the text box below and
+                    click "Parse Meals" — all fields will auto-fill.
+                  </p>
+                  <a
+                    href="https://chat.openai.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-purple-700 hover:text-purple-900 underline"
+                  >
+                    Open ChatGPT <ArrowRight className="h-3 w-3" />
+                  </a>
+                </AlertDescription>
+              </Alert>
+
               <Textarea
                 id="meal-text"
                 placeholder={`Example format:

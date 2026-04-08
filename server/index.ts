@@ -367,6 +367,12 @@ if (process.env.NODE_ENV === "production") {
   app.use("/css", express.static(path.join(__dirname, "public/css")));
   app.use("/js", express.static(path.join(__dirname, "public/js")));
 
+  // Serve all static files from the React build output (logo.png, manifest.json,
+  // favicon, sw.js, icon-*.png, etc.). MUST come before the project-root public
+  // fallback so Vite-built assets win, and before the SPA catch-all so they
+  // don't get rewritten to index.html.
+  app.use(express.static(path.join(__dirname, "public")));
+
   // Serve landing page assets (from project root public/, NOT dist/public/)
   app.use(express.static(resolveProjectPath("public")));
 

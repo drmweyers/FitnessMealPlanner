@@ -3,7 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
 import { useAuth } from "../contexts/AuthContext";
 import { useTierInfo } from "../hooks/useTierInfo";
@@ -26,67 +31,71 @@ export default function Trainer() {
   const { user } = useAuth();
   const { accessibleRecipeCount, tierName } = useTierInfo();
   const [location, navigate] = useLocation();
-  const [filters, setFilters] = useState<RecipeFilter>({ 
-    page: 1, 
-    limit: 10,
-    approved: true 
+  const [filters, setFilters] = useState<RecipeFilter>({
+    page: 1,
+    limit: 25,
+    approved: true,
   });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Determine active tab based on URL
   const getActiveTab = () => {
-    if (location === '/meal-plan-generator') return 'meal-plan';
-    if (location === '/trainer/manual-meal-plan') return 'manual-plan';
-    if (location === '/trainer/customers') return 'customers';
-    if (location === '/trainer/meal-plans') return 'saved-plans';
+    if (location === "/meal-plan-generator") return "meal-plan";
+    if (location === "/trainer/manual-meal-plan") return "manual-plan";
+    if (location === "/trainer/customers") return "customers";
+    if (location === "/trainer/meal-plans") return "saved-plans";
     // Settings tab removed for trainers
-    return 'recipes';
+    return "recipes";
   };
 
   const handleTabChange = (value: string) => {
     switch (value) {
-      case 'meal-plan':
-        navigate('/meal-plan-generator');
+      case "meal-plan":
+        navigate("/meal-plan-generator");
         break;
-      case 'manual-plan':
-        navigate('/trainer/manual-meal-plan');
+      case "manual-plan":
+        navigate("/trainer/manual-meal-plan");
         break;
-      case 'customers':
-        navigate('/trainer/customers');
+      case "customers":
+        navigate("/trainer/customers");
         break;
-      case 'saved-plans':
-        navigate('/trainer/meal-plans');
+      case "saved-plans":
+        navigate("/trainer/meal-plans");
         break;
       // Settings tab removed for trainers
       default:
-        navigate('/trainer');
+        navigate("/trainer");
     }
   };
 
   const { data: recipesData, isLoading } = useQuery({
-    queryKey: ['/api/recipes', filters],
+    queryKey: ["/api/recipes", filters],
     queryFn: async () => {
-      const response = await fetch('/api/recipes', {
-        credentials: 'include',
+      const params = new URLSearchParams();
+      if (filters.page) params.set("page", String(filters.page));
+      if (filters.limit) params.set("limit", String(filters.limit));
+      if (filters.search) params.set("search", filters.search);
+      const response = await fetch(`/api/recipes?${params.toString()}`, {
+        credentials: "include",
       });
-      if (!response.ok) throw new Error('Failed to fetch recipes');
+      if (!response.ok) throw new Error("Failed to fetch recipes");
       return response.json();
     },
-    enabled: getActiveTab() === 'recipes',
+    enabled: getActiveTab() === "recipes",
   });
 
   const recipes: Recipe[] = (recipesData as any)?.recipes || [];
   const total: number = (recipesData as any)?.total || 0;
 
   const handleFilterChange = (newFilters: Partial<RecipeFilter>) => {
-    setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
+    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
   };
 
   const handlePageChange = (page: number) => {
     const totalPages = Math.max(1, Math.ceil(total / filters.limit));
     const validPage = Math.max(1, Math.min(page, totalPages));
-    setFilters(prev => ({ ...prev, page: validPage }));
+    setFilters((prev) => ({ ...prev, page: validPage }));
   };
 
   return (
@@ -95,8 +104,13 @@ export default function Trainer() {
       <div className="mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2">
           {(() => {
-            const displayName = user?.name || 
-              (user?.email?.split('@')[0]?.replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Trainer');
+            const displayName =
+              user?.name ||
+              user?.email
+                ?.split("@")[0]
+                ?.replace(/\./g, " ")
+                .replace(/\b\w/g, (l) => l.toUpperCase()) ||
+              "Trainer";
             return `Welcome, ${displayName}`;
           })()}
         </h1>
@@ -110,7 +124,11 @@ export default function Trainer() {
         <RecipeCountDisplay />
       </div>
 
-      <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
+      <Tabs
+        value={getActiveTab()}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 mb-6 sm:mb-8 h-auto p-1 gap-1">
           <TabsTrigger
             value="recipes"
@@ -135,9 +153,13 @@ export default function Trainer() {
             className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm bg-blue-50 hover:bg-blue-100"
           >
             <i className="fas fa-wand-magic-sparkles text-sm sm:text-base text-blue-600"></i>
-            <span className="hidden lg:inline text-blue-700">Create Custom</span>
+            <span className="hidden lg:inline text-blue-700">
+              Create Custom
+            </span>
             <span className="lg:hidden text-blue-700">Custom</span>
-            <span className="text-[10px] text-blue-600 font-semibold hidden xl:inline">(No AI)</span>
+            <span className="text-[10px] text-blue-600 font-semibold hidden xl:inline">
+              (No AI)
+            </span>
           </TabsTrigger>
           <TabsTrigger
             value="saved-plans"
@@ -160,7 +182,10 @@ export default function Trainer() {
 
         <TabsContent value="recipes" className="space-y-4 sm:space-y-6">
           {/* Search and Filters */}
-          <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+          <SearchFilters
+            filters={filters}
+            onFilterChange={handleFilterChange}
+          />
 
           {/* Recipe Count Display - Story 2.14 */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 shadow-sm">
@@ -169,13 +194,21 @@ export default function Trainer() {
                 <i className="fas fa-book-open text-blue-600 text-lg sm:text-xl"></i>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-slate-600 mb-1">Available Recipes in {tierName} Tier</p>
-                <p className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight" data-testid="recipe-count">
+                <p className="text-xs sm:text-sm text-slate-600 mb-1">
+                  Available Recipes in {tierName} Tier
+                </p>
+                <p
+                  className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight"
+                  data-testid="recipe-count"
+                >
                   {accessibleRecipeCount.toLocaleString()}
                 </p>
               </div>
             </div>
-            <Badge variant="outline" className="bg-white text-xs sm:text-sm px-3 py-1.5 self-start sm:self-auto w-fit">
+            <Badge
+              variant="outline"
+              className="bg-white text-xs sm:text-sm px-3 py-1.5 self-start sm:self-auto w-fit"
+            >
               {tierName.charAt(0).toUpperCase() + tierName.slice(1)} Access
             </Badge>
           </div>
@@ -186,9 +219,9 @@ export default function Trainer() {
               <span className="text-sm text-slate-600 font-medium">View:</span>
               <div className="flex border border-slate-300 rounded-lg overflow-hidden">
                 <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  variant={viewMode === "grid" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => setViewMode("grid")}
                   className="rounded-none px-3 py-2 text-xs sm:text-sm"
                 >
                   <i className="fas fa-th mr-1 sm:mr-2 text-xs sm:text-sm"></i>
@@ -196,9 +229,9 @@ export default function Trainer() {
                   <span className="sm:hidden">⬜</span>
                 </Button>
                 <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  variant={viewMode === "list" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setViewMode('list')}
+                  onClick={() => setViewMode("list")}
                   className="rounded-none px-3 py-2 text-xs sm:text-sm"
                 >
                   <i className="fas fa-list mr-1 sm:mr-2 text-xs sm:text-sm"></i>
@@ -211,7 +244,7 @@ export default function Trainer() {
 
           {/* Recipe Display */}
           {isLoading ? (
-            viewMode === 'grid' ? (
+            viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
@@ -243,15 +276,17 @@ export default function Trainer() {
             )
           ) : (
             <>
-              {viewMode === 'grid' ? (
+              {viewMode === "grid" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  {recipes.map((recipe) => (
-                    user?.role === 'trainer' || user?.role === 'admin' ? (
+                  {recipes.map((recipe) =>
+                    user?.role === "trainer" || user?.role === "admin" ? (
                       <RecipeCardWithAssignment
                         key={recipe.id}
                         recipe={recipe}
                         onClick={() => setSelectedRecipe(recipe)}
-                        showAssignment={user?.role === 'trainer' || user?.role === 'admin'}
+                        showAssignment={
+                          user?.role === "trainer" || user?.role === "admin"
+                        }
                       />
                     ) : (
                       <RecipeCard
@@ -260,18 +295,20 @@ export default function Trainer() {
                         onClick={() => setSelectedRecipe(recipe)}
                         showFavoriteButton={true}
                       />
-                    )
-                  ))}
+                    ),
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3 sm:space-y-4">
-                  {recipes.map((recipe) => (
-                    user?.role === 'trainer' || user?.role === 'admin' ? (
+                  {recipes.map((recipe) =>
+                    user?.role === "trainer" || user?.role === "admin" ? (
                       <RecipeListItemWithAssignment
                         key={recipe.id}
                         recipe={recipe}
                         onClick={() => setSelectedRecipe(recipe)}
-                        showAssignment={user?.role === 'trainer' || user?.role === 'admin'}
+                        showAssignment={
+                          user?.role === "trainer" || user?.role === "admin"
+                        }
                       />
                     ) : (
                       <RecipeListItem
@@ -279,29 +316,106 @@ export default function Trainer() {
                         recipe={recipe}
                         onClick={() => setSelectedRecipe(recipe)}
                       />
-                    )
-                  ))}
+                    ),
+                  )}
                 </div>
               )}
 
               {/* Pagination */}
-              {total > filters.limit && (
-                <div className="mt-6 sm:mt-8 flex justify-center">
-                  <div className="flex flex-wrap gap-1 sm:gap-2 max-w-full">
-                    {Array.from({ length: Math.ceil(total / filters.limit) }).map((_, i) => (
-                      <Button
-                        key={i}
-                        variant={filters.page === i + 1 ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handlePageChange(i + 1)}
-                        className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 min-w-[32px] sm:min-w-[40px]"
-                      >
-                        {i + 1}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {total > 0 &&
+                (() => {
+                  const currentPage = filters.page || 1;
+                  const perPage = filters.limit || 25;
+                  const totalPages = Math.max(1, Math.ceil(total / perPage));
+                  const startIdx = (currentPage - 1) * perPage + 1;
+                  const endIdx = Math.min(currentPage * perPage, total);
+                  return (
+                    <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="text-sm text-slate-600">
+                        Showing{" "}
+                        <span className="font-semibold">
+                          {startIdx.toLocaleString()}
+                        </span>
+                        –
+                        <span className="font-semibold">
+                          {endIdx.toLocaleString()}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-semibold">
+                          {total.toLocaleString()}
+                        </span>{" "}
+                        recipes
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-600 hidden sm:inline">
+                          Per page:
+                        </span>
+                        <select
+                          value={perPage}
+                          onChange={(e) =>
+                            setFilters((prev) => ({
+                              ...prev,
+                              limit: Number(e.target.value),
+                              page: 1,
+                            }))
+                          }
+                          className="text-xs sm:text-sm border border-slate-300 rounded px-2 py-1 bg-white"
+                        >
+                          {[25, 50, 100].map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage <= 1}
+                          onClick={() => handlePageChange(1)}
+                          className="text-xs px-2"
+                        >
+                          «
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage <= 1}
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          className="text-xs px-2"
+                        >
+                          ‹ Prev
+                        </Button>
+                        <span className="text-xs sm:text-sm px-3">
+                          Page{" "}
+                          <span className="font-semibold">{currentPage}</span>{" "}
+                          of <span className="font-semibold">{totalPages}</span>
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage >= totalPages}
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          className="text-xs px-2"
+                        >
+                          Next ›
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage >= totalPages}
+                          onClick={() => handlePageChange(totalPages)}
+                          className="text-xs px-2"
+                        >
+                          »
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
             </>
           )}
         </TabsContent>
@@ -323,7 +437,6 @@ export default function Trainer() {
         </TabsContent>
 
         {/* Settings tab content hidden for trainers - was causing 404 errors */}
-
       </Tabs>
 
       {/* Recipe Modal */}
@@ -335,4 +448,4 @@ export default function Trainer() {
       )}
     </div>
   );
-} 
+}
