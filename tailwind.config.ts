@@ -5,23 +5,40 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     screens: {
-      'xs': '480px',
-      'sm': '640px',
-      'md': '768px',
-      'lg': '1024px',
-      'xl': '1280px',
-      '2xl': '1536px',
+      xs: "480px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
     },
     extend: {
       maxWidth: {
-        '8xl': '1408px',
-        '9xl': '1536px',
-        '10xl': '1920px',
+        "8xl": "1408px",
+        "9xl": "1536px",
+        "10xl": "1920px",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      // EvoFit Canonical Fonts — Outfit (display) + Inter (body)
+      // See: brand-audit/CANONICAL-BRAND.md
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Outfit", "ui-sans-serif", "system-ui", "sans-serif"],
+        heading: ["Outfit", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
+      // EvoFit Canonical Brand Dark (for funnel/public pages)
+      backgroundColor: {
+        "brand-dark": "#0A0A0F",
+        "brand-dark-card": "#141420",
+        "brand-surface": "#1A1A2E",
+      },
+      textColor: {
+        "brand-orange": "#F97316",
+        "brand-purple": "#9333EA",
       },
       colors: {
         background: "var(--background)",

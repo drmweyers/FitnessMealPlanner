@@ -134,6 +134,8 @@
   animation: shimmer 2s infinite;
 }
 
+/* EvoFit Canonical Brand — Meals sub-brand: Purple + Orange on Dark */
+/* Matches meals lead magnets + brand spec at brand-audit/CANONICAL-BRAND.md */
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);
@@ -145,33 +147,43 @@
   --card-foreground: hsl(20, 14.3%, 4.1%);
   --border: hsl(20, 5.9%, 90%);
   --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(158, 64.4%, 51.6%);
-  --primary-foreground: hsl(355, 7%, 97%);
-  --secondary: hsl(43, 89.8%, 48.6%);
-  --secondary-foreground: hsl(24, 9.8%, 10%);
+  /* Canonical meals primary: #9333EA purple (was hsl(158, 64.4%, 51.6%) green/teal) */
+  --primary: hsl(271, 81%, 56%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  /* Canonical shared orange: #F97316 (was hsl(43, 89.8%, 48.6%) amber) */
+  --secondary: hsl(25, 95%, 53%);
+  --secondary-foreground: hsl(0, 0%, 100%);
   --accent: hsl(60, 4.8%, 95.9%);
   --accent-foreground: hsl(24, 9.8%, 10%);
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
+  --ring: hsl(271, 81%, 56%);
   --radius: 0.5rem;
+  /* Brand dark tokens for funnel/public pages (match lead magnets) */
+  --brand-dark: #0A0A0F;
+  --brand-dark-card: #141420;
+  --brand-surface: #1A1A2E;
+  --brand-primary-hex: #9333EA;
+  --brand-accent-hex: #F97316;
 }
 
 .dark {
-  --background: hsl(240, 10%, 3.9%);
+  /* Canonical meals brand-dark: #0A0A0F (was hsl(240, 10%, 3.9%) near-black) */
+  --background: hsl(240, 20%, 5%);
   --foreground: hsl(0, 0%, 98%);
   --muted: hsl(240, 3.7%, 15.9%);
   --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 10%, 3.9%);
+  --popover: hsl(240, 20%, 5%);
   --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
+  --card: hsl(240, 20%, 8%);
   --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
+  --border: hsl(271, 40%, 20%);
   --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(158, 64.4%, 51.6%);
-  --primary-foreground: hsl(355, 7%, 97%);
-  --secondary: hsl(43, 89.8%, 48.6%);
-  --secondary-foreground: hsl(0, 0%, 98%);
+  /* Same purple primary in dark mode */
+  --primary: hsl(271, 81%, 56%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(25, 95%, 53%);
+  --secondary-foreground: hsl(0, 0%, 100%);
   --accent: hsl(240, 3.7%, 15.9%);
   --accent-foreground: hsl(0, 0%, 98%);
   --destructive: hsl(0, 62.8%, 30.6%);

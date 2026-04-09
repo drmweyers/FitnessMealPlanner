@@ -25,6 +25,7 @@ playwright-report/
 test-results.json
 *.png
 !public/landing/images/screenshots/*.png
+!client/public/images/meals-feature-*.png
 *.log
 
 # Temporary data scripts

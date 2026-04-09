@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "wouter";
 import { motion, useInView, useAnimation } from "framer-motion";
 import {
@@ -61,7 +61,11 @@ const staggerContainer = {
 
 const scaleIn = {
   hidden: { opacity: 0, scale: 0.9 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
 };
 
 /* ──────────────────────────────────────────────
@@ -201,9 +205,11 @@ function HeroSection() {
           </h1>
 
           <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed">
-            AI-powered meal plans, shareable client links, grocery lists, and progress
-            tracking — all for a single payment.{" "}
-            <span className="text-white font-semibold">No monthly fees. Ever.</span>
+            AI-powered meal plans, shareable client links, grocery lists, and
+            progress tracking — all for a single payment.{" "}
+            <span className="text-white font-semibold">
+              No monthly fees. Ever.
+            </span>
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -333,7 +339,10 @@ function ProblemSection() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium text-gray-700">Trainerize</span>
-                  <span ref={trainerize.ref} className="font-clash font-bold text-gray-900">
+                  <span
+                    ref={trainerize.ref}
+                    className="font-clash font-bold text-gray-900"
+                  >
                     ${trainerize.count.toLocaleString()}
                   </span>
                 </div>
@@ -351,8 +360,13 @@ function ProblemSection() {
               {/* Eat This Much */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-gray-700">Eat This Much Pro</span>
-                  <span ref={eatThisMuch.ref} className="font-clash font-bold text-gray-900">
+                  <span className="font-medium text-gray-700">
+                    Eat This Much Pro
+                  </span>
+                  <span
+                    ref={eatThisMuch.ref}
+                    className="font-clash font-bold text-gray-900"
+                  >
                     ${eatThisMuch.count.toLocaleString()}
                   </span>
                 </div>
@@ -370,12 +384,17 @@ function ProblemSection() {
               {/* EvoFitMeals */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold text-purple-700">EvoFitMeals</span>
+                  <span className="font-semibold text-purple-700">
+                    EvoFitMeals
+                  </span>
                   <span
                     ref={evofit.ref}
                     className="font-clash font-bold text-purple-700 text-lg"
                   >
-                    ${evofit.count} <span className="text-sm font-normal text-purple-500">(one-time)</span>
+                    ${evofit.count}{" "}
+                    <span className="text-sm font-normal text-purple-500">
+                      (one-time)
+                    </span>
                   </span>
                 </div>
                 <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
@@ -391,7 +410,8 @@ function ProblemSection() {
             </div>
 
             <p className="text-center text-sm text-gray-500 mt-6">
-              Based on Trainerize Studio at $200/mo and Eat This Much Pro at $18/mo over 10 years.
+              Based on Trainerize Studio at $200/mo and Eat This Much Pro at
+              $18/mo over 10 years.
             </p>
           </div>
         </Reveal>
@@ -408,7 +428,7 @@ function SolutionSection() {
     {
       num: "01",
       title: "Describe what your client needs",
-      desc: "Type in plain English: \"High-protein, gluten-free plan for a 180lb male, 2200 calories.\" Our AI understands context like a nutritionist would.",
+      desc: 'Type in plain English: "High-protein, gluten-free plan for a 180lb male, 2200 calories." Our AI understands context like a nutritionist would.',
       icon: <MessageSquare className="w-6 h-6" />,
     },
     {
@@ -465,7 +485,14 @@ function SolutionSection() {
                   {/* App screenshot */}
                   <div className="mt-4 h-40 rounded-xl border border-gray-200 overflow-hidden">
                     <img
-                      src={["/marketing/hero-dashboard.png", "/marketing/hero-dashboard.png", "/marketing/hero-trainer.png", "/marketing/hero-dashboard.png"][i]}
+                      src={
+                        [
+                          "/marketing/hero-dashboard.png",
+                          "/marketing/hero-dashboard.png",
+                          "/marketing/hero-trainer.png",
+                          "/marketing/hero-dashboard.png",
+                        ][i]
+                      }
                       alt={`App preview — Step ${i + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -483,106 +510,180 @@ function SolutionSection() {
 /* ──────────────────────────────────────────────
    4. FEATURE GRID
    ────────────────────────────────────────────── */
-function FeatureGrid() {
-  const features = [
-    {
-      icon: <Sparkles className="w-6 h-6" />,
-      title: "AI Meal Plans",
-      desc: "Generate complete, macro-balanced plans in seconds with natural language input.",
-      color: "text-purple-600",
-      bg: "bg-purple-50",
-    },
-    {
-      icon: <Palette className="w-6 h-6" />,
-      title: "Custom Branding",
-      desc: "Your logo, your colors, your domain. Clients see your brand — not ours.",
-      color: "text-pink-600",
-      bg: "bg-pink-50",
-    },
-    {
-      icon: <ShoppingCart className="w-6 h-6" />,
-      title: "Grocery Lists",
-      desc: "Auto-generated, organized by aisle. Your clients walk in, grab, and go.",
-      color: "text-green-600",
-      bg: "bg-green-50",
-    },
-    {
-      icon: <TrendingUp className="w-6 h-6" />,
-      title: "Progress Tracking",
-      desc: "Monitor client adherence, measurements, and plan compliance over time.",
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
-    {
-      icon: <LinkIcon className="w-6 h-6" />,
-      title: "Shareable Links",
-      desc: "One link. No login required. Clients view their plan on any device instantly.",
-      color: "text-orange-600",
-      bg: "bg-orange-50",
-    },
-    {
-      icon: <BookOpen className="w-6 h-6" />,
-      title: "Recipe Library",
-      desc: "Thousands of chef-tested, macro-optimized recipes across every cuisine.",
-      color: "text-teal-600",
-      bg: "bg-teal-50",
-    },
-    {
-      icon: <FileText className="w-6 h-6" />,
-      title: "PDF Exports",
-      desc: "Beautiful, branded PDFs your clients can print and pin to the fridge.",
-      color: "text-indigo-600",
-      bg: "bg-indigo-50",
-    },
-    {
-      icon: <Leaf className="w-6 h-6" />,
-      title: "8+ Dietary Protocols",
-      desc: "Keto, vegan, paleo, halal, gluten-free, and more — all fully supported.",
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-    },
-  ];
+/* Editorial feature block — full-width image w/ overlay + text on one side */
+type FeatureBlockProps = {
+  image: string;
+  alt: string;
+  side: "left" | "right";
+  title: ReactNode;
+  bullets: string[];
+  badge?: string;
+};
+
+function FeatureBlock({
+  image,
+  alt,
+  side,
+  title,
+  bullets,
+  badge,
+}: FeatureBlockProps) {
+  const gradientDir = side === "left" ? "bg-gradient-to-r" : "bg-gradient-to-l";
+  const justify = side === "left" ? "justify-start" : "justify-end";
 
   return (
-    <section className="py-20 sm:py-28 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal>
-          <div className="text-center mb-16">
-            <span className="inline-block text-sm font-semibold text-purple-600 uppercase tracking-widest mb-3">
-              Everything You Need
-            </span>
-            <h2 className="font-clash font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900">
-              Built for Trainers Who Mean Business
-            </h2>
-          </div>
-        </Reveal>
-
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-          variants={staggerContainer}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          {features.map((f) => (
-            <motion.div key={f.title} variants={scaleIn}>
-              <Card className="border-0 shadow-sm hover:shadow-lg transition-all duration-300 h-full bg-white group hover:-translate-y-1">
-                <CardContent className="p-6">
-                  <div
-                    className={`w-12 h-12 ${f.bg} rounded-xl flex items-center justify-center mb-4 ${f.color} group-hover:scale-110 transition-transform`}
-                  >
-                    {f.icon}
-                  </div>
-                  <h3 className="font-clash font-semibold text-lg text-gray-900 mb-2">
-                    {f.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
-                </CardContent>
-              </Card>
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.01, margin: "0px 0px -120px 0px" }}
+      variants={staggerContainer}
+      className="relative w-full min-h-[560px] md:min-h-[620px] overflow-hidden"
+    >
+      <img
+        src={image}
+        alt={alt}
+        loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover object-center"
+      />
+      <div
+        className={`absolute inset-0 ${gradientDir} from-[#0A0A0F] via-[#0A0A0F]/90 md:via-[#0A0A0F]/75 to-[#0A0A0F]/30 md:to-transparent`}
+      />
+      <div
+        className={`relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 min-h-[560px] md:min-h-[620px] flex items-center ${justify} py-20`}
+      >
+        <motion.div variants={staggerContainer} className="w-full max-w-xl">
+          {badge && (
+            <motion.div
+              variants={fadeUp}
+              className="inline-block px-3 py-1 mb-5 text-[11px] uppercase tracking-widest bg-[#9333EA] text-white rounded-full font-semibold"
+            >
+              {badge}
             </motion.div>
-          ))}
+          )}
+          <motion.h3
+            variants={fadeUp}
+            className="font-clash font-black uppercase tracking-tight leading-[0.95] text-white text-[clamp(2rem,5vw,3.25rem)] mb-7"
+          >
+            {title}
+          </motion.h3>
+          <motion.ul variants={staggerContainer} className="space-y-4">
+            {bullets.map((b) => (
+              <motion.li
+                key={b}
+                variants={fadeUp}
+                className="flex items-start gap-3 text-base sm:text-lg text-gray-200"
+              >
+                <Check className="h-6 w-6 text-[#F97316] mt-0.5 flex-shrink-0" />
+                <span>{b}</span>
+              </motion.li>
+            ))}
+          </motion.ul>
         </motion.div>
       </div>
+    </motion.div>
+  );
+}
+
+function FeatureGrid() {
+  return (
+    <section id="features" className="bg-[#0A0A0F] text-white">
+      {/* Section heading */}
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pt-20 md:pt-28 pb-14 md:pb-16 text-center">
+        <Reveal>
+          <span className="inline-block text-xs sm:text-sm font-semibold text-[#F97316] uppercase tracking-[0.2em] mb-4">
+            Everything You Need
+          </span>
+          <h2 className="font-clash font-black uppercase tracking-tight leading-none text-white text-[clamp(2.25rem,6vw,4.5rem)]">
+            Built for Trainers
+            <br />
+            <span className="text-[#9333EA]">Who Mean Business</span>
+          </h2>
+        </Reveal>
+      </div>
+
+      {/* 5 editorial feature blocks */}
+      <FeatureBlock
+        image="/images/meals-feature-ai-plans.png"
+        alt="AI-generated macro-balanced meal plan on a tablet"
+        side="left"
+        title={
+          <>
+            AI Meal Plans in <span className="text-[#F97316]">Seconds</span>
+          </>
+        }
+        bullets={[
+          "Generate complete, macro-balanced plans from one natural-language prompt",
+          "Built-in support for keto, vegan, paleo, halal, gluten-free and 8+ protocols",
+          "Your clients get custom nutrition — you get the credit",
+        ]}
+      />
+
+      <FeatureBlock
+        image="/images/meals-feature-recipe-library.png"
+        alt="Editorial overhead flatlay of fresh ingredients and herbs"
+        side="right"
+        title={
+          <>
+            A <span className="text-[#F97316]">Chef-Tested</span> Recipe Library
+          </>
+        }
+        bullets={[
+          "Thousands of chef-tested, macro-optimized recipes across every cuisine",
+          "Filter by calories, prep time, cuisine, and dietary protocol",
+          "Fresh recipes added weekly — never run out of ideas",
+        ]}
+      />
+
+      <FeatureBlock
+        image="/images/meals-feature-client-tracking.png"
+        alt="Trainer coaching a client through their nutrition plan"
+        side="left"
+        title={
+          <>
+            Track Every Client's{" "}
+            <span className="text-[#F97316]">Progress</span>
+          </>
+        }
+        bullets={[
+          "Monitor adherence, measurements, and plan compliance over time",
+          "Progress photos and body composition in one dashboard",
+          "Automated check-ins keep clients engaged between sessions",
+        ]}
+      />
+
+      <FeatureBlock
+        image="/images/meals-feature-grocery-lists.png"
+        alt="Fresh groceries arranged on a dark editorial surface"
+        side="right"
+        title={
+          <>
+            <span className="text-[#F97316]">Grocery Lists</span> on Autopilot
+          </>
+        }
+        bullets={[
+          "Auto-generated and organized by aisle — walk in, grab, go",
+          "One-click shareable links your clients can pull up in the store",
+          "Swap ingredients instantly without rebuilding the plan",
+        ]}
+      />
+
+      <FeatureBlock
+        image="/images/meals-feature-macro-tracking.png"
+        alt="Macro tracking dashboard glowing in a modern dark kitchen"
+        side="left"
+        badge="Pro Feature"
+        title={
+          <>
+            <span className="text-[#F97316]">White-Label</span> Your Entire
+            Platform
+          </>
+        }
+        bullets={[
+          "Your logo, your colors, your domain — clients see your brand, not ours",
+          "Beautiful branded PDFs your clients print and pin to the fridge",
+          "Custom onboarding emails sent from your email address",
+        ]}
+      />
     </section>
   );
 }
@@ -611,8 +712,7 @@ function TierComparison() {
       ],
       cta: "Get Starter",
       accent: "border-gray-200",
-      btnClass:
-        "bg-gray-900 hover:bg-gray-800 text-white",
+      btnClass: "bg-gray-900 hover:bg-gray-800 text-white",
     },
     {
       name: "Professional",
@@ -653,8 +753,7 @@ function TierComparison() {
       ],
       cta: "Get Enterprise",
       accent: "border-gray-200",
-      btnClass:
-        "bg-gray-900 hover:bg-gray-800 text-white",
+      btnClass: "bg-gray-900 hover:bg-gray-800 text-white",
     },
   ];
 
@@ -671,7 +770,8 @@ function TierComparison() {
               <span className="text-purple-600">Pay Once.</span> Own It Forever.
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              No subscriptions. No hidden fees. One payment and the platform is yours for life.
+              No subscriptions. No hidden fees. One payment and the platform is
+              yours for life.
             </p>
           </div>
         </Reveal>
@@ -748,7 +848,8 @@ function TierComparison() {
 
         <Reveal>
           <p className="text-center text-sm text-gray-500 mt-10">
-            All plans include a 14-day money-back guarantee. Upgrade anytime — just pay the difference.
+            All plans include a 14-day money-back guarantee. Upgrade anytime —
+            just pay the difference.
           </p>
         </Reveal>
       </div>
@@ -851,22 +952,95 @@ function SocialProof() {
    ────────────────────────────────────────────── */
 function CompetitorTable() {
   const rows = [
-    { feature: "One-Time Payment", evo: true, train: false, eat: false, plate: false },
-    { feature: "AI Meal Plan Generation", evo: true, train: false, eat: true, plate: true },
-    { feature: "Custom Branding", evo: true, train: true, eat: false, plate: false },
-    { feature: "Shareable Client Links", evo: true, train: false, eat: false, plate: false },
-    { feature: "No Client Login Required", evo: true, train: false, eat: false, plate: false },
-    { feature: "Grocery List Generation", evo: true, train: false, eat: true, plate: true },
-    { feature: "Progress Tracking", evo: true, train: true, eat: false, plate: false },
-    { feature: "PDF Exports", evo: true, train: true, eat: false, plate: false },
-    { feature: "8+ Dietary Protocols", evo: true, train: false, eat: true, plate: true },
-    { feature: "Recipe Library (6,000+)", evo: true, train: false, eat: true, plate: true },
-    { feature: "White-Label Option", evo: true, train: true, eat: false, plate: false },
-    { feature: "Starting Price", evo: "$199", train: "$200/mo", eat: "$18/mo", plate: "$13/mo" },
+    {
+      feature: "One-Time Payment",
+      evo: true,
+      train: false,
+      eat: false,
+      plate: false,
+    },
+    {
+      feature: "AI Meal Plan Generation",
+      evo: true,
+      train: false,
+      eat: true,
+      plate: true,
+    },
+    {
+      feature: "Custom Branding",
+      evo: true,
+      train: true,
+      eat: false,
+      plate: false,
+    },
+    {
+      feature: "Shareable Client Links",
+      evo: true,
+      train: false,
+      eat: false,
+      plate: false,
+    },
+    {
+      feature: "No Client Login Required",
+      evo: true,
+      train: false,
+      eat: false,
+      plate: false,
+    },
+    {
+      feature: "Grocery List Generation",
+      evo: true,
+      train: false,
+      eat: true,
+      plate: true,
+    },
+    {
+      feature: "Progress Tracking",
+      evo: true,
+      train: true,
+      eat: false,
+      plate: false,
+    },
+    {
+      feature: "PDF Exports",
+      evo: true,
+      train: true,
+      eat: false,
+      plate: false,
+    },
+    {
+      feature: "8+ Dietary Protocols",
+      evo: true,
+      train: false,
+      eat: true,
+      plate: true,
+    },
+    {
+      feature: "Recipe Library (6,000+)",
+      evo: true,
+      train: false,
+      eat: true,
+      plate: true,
+    },
+    {
+      feature: "White-Label Option",
+      evo: true,
+      train: true,
+      eat: false,
+      plate: false,
+    },
+    {
+      feature: "Starting Price",
+      evo: "$199",
+      train: "$200/mo",
+      eat: "$18/mo",
+      plate: "$13/mo",
+    },
   ];
 
   const CellIcon = ({ val }: { val: boolean | string }) => {
-    if (typeof val === "string") return <span className="text-sm font-medium">{val}</span>;
+    if (typeof val === "string")
+      return <span className="text-sm font-medium">{val}</span>;
     return val ? (
       <Check className="w-5 h-5 text-green-500 mx-auto" />
     ) : (
@@ -1055,8 +1229,9 @@ function FinalCTA() {
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-10">
             <Shield className="w-4 h-4 text-green-400" />
             <span className="text-sm text-gray-300">
-              Join <span className="text-white font-semibold">500+ trainers</span> who
-              already own their tools
+              Join{" "}
+              <span className="text-white font-semibold">500+ trainers</span>{" "}
+              who already own their tools
             </span>
           </div>
 
@@ -1094,7 +1269,9 @@ function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="EvoFitMeals" className="w-6 h-6" />
-            <span className="font-clash font-bold text-white text-lg">EvoFitMeals</span>
+            <span className="font-clash font-bold text-white text-lg">
+              EvoFitMeals
+            </span>
           </div>
           <div className="flex gap-6 text-sm">
             <a href="/privacy" className="hover:text-white transition-colors">
