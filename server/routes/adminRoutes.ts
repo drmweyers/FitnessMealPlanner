@@ -1,30 +1,43 @@
 // @ts-nocheck - Type errors suppressed
-import { Router } from 'express';
-import { requireAdmin, requireTrainerOrAdmin, requireAuth } from '../middleware/auth';
-import { storage } from '../storage';
-import { z } from 'zod';
-import { recipeGenerator } from '../services/recipeGenerator';
-import { enhancedRecipeGenerator } from '../services/recipeGeneratorEnhanced';
-import { recipeQualityScorer } from '../services/recipeQualityScorer';
-import { apiCostTracker } from '../services/apiCostTracker';
-import { progressTracker } from '../services/progressTracker';
-import { bmadRecipeService } from '../services/BMADRecipeService';
-import { sseManager } from '../services/utils/SSEManager';
-import { bmadImageMonitor } from '../services/monitoring/BMADImageGenerationMonitor';
-import { parseNaturalLanguageRecipeRequirements } from '../services/openai';
-import { intelligentMealPlanGenerator } from '../services/intelligentMealPlanGenerator';
-import { nanoid } from 'nanoid';
-import { eq, sql, inArray, desc, and } from 'drizzle-orm';
-import { personalizedRecipes, personalizedMealPlans, users, trainerMealPlans, type MealPlan } from '@shared/schema';
-import { db } from '../db';
+import { Router } from "express";
+import {
+  requireAdmin,
+  requireTrainerOrAdmin,
+  requireAuth,
+} from "../middleware/auth";
+import { storage } from "../storage";
+import { z } from "zod";
+import { recipeGenerator } from "../services/recipeGenerator";
+import { enhancedRecipeGenerator } from "../services/recipeGeneratorEnhanced";
+import { recipeQualityScorer } from "../services/recipeQualityScorer";
+import { apiCostTracker } from "../services/apiCostTracker";
+import { progressTracker } from "../services/progressTracker";
+import { bmadRecipeService } from "../services/BMADRecipeService";
+import { sseManager } from "../services/utils/SSEManager";
+import { bmadImageMonitor } from "../services/monitoring/BMADImageGenerationMonitor";
+import { parseNaturalLanguageRecipeRequirements } from "../services/openai";
+import { intelligentMealPlanGenerator } from "../services/intelligentMealPlanGenerator";
+import { nanoid } from "nanoid";
+import { eq, sql, inArray, desc, and } from "drizzle-orm";
+import {
+  personalizedRecipes,
+  personalizedMealPlans,
+  recipes,
+  users,
+  trainerMealPlans,
+  trainerSubscriptions,
+  subscriptionItems,
+  type MealPlan,
+} from "@shared/schema";
+import { db } from "../db";
 
 const adminRouter = Router();
 
 // Admin-only routes
-adminRouter.post('/generate', requireAdmin, async (req, res) => {
+adminRouter.post("/generate", requireAdmin, async (req, res) => {
   try {
-    const { 
-      count, 
+    const {
+      count,
       mealTypes,
       dietaryRestrictions,
       targetCalories,
@@ -39,27 +52,27 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
       maxCarbs,
       minFat,
       maxFat,
-      requireUniqueImages // 🎨 NEW: Force unique image generation
+      requireUniqueImages, // 🎨 NEW: Force unique image generation
     } = req.body;
-    
+
     // Validate required count parameter
     if (!count || count < 1 || count > 500) {
-      return res.status(400).json({ 
-        message: "Count is required and must be between 1 and 500" 
+      return res.status(400).json({
+        message: "Count is required and must be between 1 and 500",
       });
     }
-    
+
     // Create a progress tracking job
-    const jobId = progressTracker.createJob({ 
+    const jobId = progressTracker.createJob({
       totalRecipes: count,
-      metadata: { 
+      metadata: {
         naturalLanguagePrompt,
         fitnessGoal,
         mealTypes,
-        dietaryRestrictions 
-      }
+        dietaryRestrictions,
+      },
     });
-    
+
     // Prepare generation options with context
     const generationOptions = {
       count,
@@ -78,21 +91,25 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
       minFat,
       maxFat,
       requireUniqueImages, // 🎨 Force unique image generation
-      jobId // Pass jobId to track progress
+      jobId, // Pass jobId to track progress
     };
-    
-    console.log('Recipe generation started with context:', generationOptions);
-    
+
+    console.log("Recipe generation started with context:", generationOptions);
+
     // Do not await this, let it run in the background
     recipeGenerator.generateAndStoreRecipes(generationOptions);
-    
-    const contextMessage = naturalLanguagePrompt || fitnessGoal || mealTypes?.length || dietaryRestrictions?.length
-      ? ` with context-based targeting`
-      : '';
-    
-    res.status(202).json({ 
+
+    const contextMessage =
+      naturalLanguagePrompt ||
+      fitnessGoal ||
+      mealTypes?.length ||
+      dietaryRestrictions?.length
+        ? ` with context-based targeting`
+        : "";
+
+    res.status(202).json({
       message: `Recipe generation started for ${count} recipes${contextMessage}.`,
-      jobId
+      jobId,
     });
   } catch (error) {
     console.error("Error starting recipe generation:", error);
@@ -101,7 +118,7 @@ adminRouter.post('/generate', requireAdmin, async (req, res) => {
 });
 
 // Admin recipe generation with custom parameters (matches frontend expectations)
-adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
+adminRouter.post("/generate-recipes", requireAdmin, async (req, res) => {
   try {
     const {
       count,
@@ -118,16 +135,16 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
       minFat,
       maxFat,
       focusIngredient,
-      difficulty
+      difficulty,
     } = req.body;
-    
+
     // Validate required count parameter
     if (!count || count < 1 || count > 50) {
-      return res.status(400).json({ 
-        message: "Count is required and must be between 1 and 50" 
+      return res.status(400).json({
+        message: "Count is required and must be between 1 and 50",
       });
     }
-    
+
     // Create a progress tracking job
     const jobId = progressTracker.createJob({
       totalRecipes: count,
@@ -136,17 +153,20 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
         mealType,
         dietaryTag,
         focusIngredient,
-        difficulty
-      }
+        difficulty,
+      },
     });
 
     // Map frontend parameters to backend format
     const generationOptions = {
       count,
-      tierLevel: tierLevel || 'starter', // Story 2.14: Default to starter tier if not specified
+      tierLevel: tierLevel || "starter", // Story 2.14: Default to starter tier if not specified
       mealTypes: mealType ? [mealType] : undefined,
       dietaryRestrictions: dietaryTag ? [dietaryTag] : undefined,
-      targetCalories: maxCalories || minCalories ? (maxCalories + minCalories) / 2 : undefined,
+      targetCalories:
+        maxCalories || minCalories
+          ? (maxCalories + minCalories) / 2
+          : undefined,
       mainIngredient: focusIngredient,
       maxPrepTime,
       maxCalories,
@@ -157,16 +177,19 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
       minFat,
       maxFat,
       difficulty,
-      jobId // Pass jobId to track progress
+      jobId, // Pass jobId to track progress
     };
-    
-    console.log('Custom recipe generation started with options:', generationOptions);
-    
+
+    console.log(
+      "Custom recipe generation started with options:",
+      generationOptions,
+    );
+
     // Start background generation
     recipeGenerator.generateAndStoreRecipes(generationOptions);
-    
+
     // Return immediate response with generation status
-    res.status(202).json({ 
+    res.status(202).json({
       message: `Recipe generation started`,
       count: count,
       started: true,
@@ -175,9 +198,9 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
       errors: [],
       metrics: {
         totalDuration: 0,
-        averageTimePerRecipe: 0
+        averageTimePerRecipe: 0,
       },
-      jobId
+      jobId,
     });
   } catch (error) {
     console.error("Error starting recipe generation:", error);
@@ -186,135 +209,158 @@ adminRouter.post('/generate-recipes', requireAdmin, async (req, res) => {
 });
 
 // Parse natural language prompt (Fix #6 - Parse button)
-adminRouter.post('/parse-recipe-prompt', requireAdmin, async (req, res) => {
+adminRouter.post("/parse-recipe-prompt", requireAdmin, async (req, res) => {
   try {
     const { prompt } = req.body;
 
-    console.log('[Natural Language Parse] Received prompt:', prompt);
+    console.log("[Natural Language Parse] Received prompt:", prompt);
 
     // Validate prompt
-    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+    if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
       return res.status(400).json({
-        message: "Natural language prompt is required"
+        message: "Natural language prompt is required",
       });
     }
 
     // Parse natural language into structured recipe parameters
     const parsedParams = await parseNaturalLanguageRecipeRequirements(prompt);
-    console.log('[Natural Language Parse] Parsed parameters:', parsedParams);
+    console.log("[Natural Language Parse] Parsed parameters:", parsedParams);
 
     res.status(200).json({
       message: "Successfully parsed recipe requirements",
-      parsedParameters: parsedParams
+      parsedParameters: parsedParams,
     });
   } catch (error) {
     console.error("[Natural Language Parse] Error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
     res.status(500).json({
       message: "Failed to parse natural language prompt",
-      error: errorMessage
+      error: errorMessage,
     });
   }
 });
 
 // Natural language RECIPE generation endpoint (Fix #6)
-adminRouter.post('/generate-recipes-from-prompt', requireAdmin, async (req, res) => {
-  try {
-    const { prompt } = req.body;
+adminRouter.post(
+  "/generate-recipes-from-prompt",
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const { prompt } = req.body;
 
-    console.log('[Natural Language Recipe Generation] Received prompt:', prompt);
+      console.log(
+        "[Natural Language Recipe Generation] Received prompt:",
+        prompt,
+      );
 
-    // Validate prompt
-    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
-      return res.status(400).json({
-        message: "Natural language prompt is required"
+      // Validate prompt
+      if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+        return res.status(400).json({
+          message: "Natural language prompt is required",
+        });
+      }
+
+      // Parse natural language into structured recipe parameters
+      const parsedParams = await parseNaturalLanguageRecipeRequirements(prompt);
+      console.log(
+        "[Natural Language Recipe Generation] Parsed parameters:",
+        parsedParams,
+      );
+
+      // Determine recipe count from parsed params or default to 10
+      const count = parsedParams.count || 10;
+
+      // Create progress tracking job
+      const jobId = progressTracker.createJob({
+        totalRecipes: count,
+        metadata: {
+          naturalLanguagePrompt: prompt,
+          parsedParams,
+        },
+      });
+
+      // Map parsed parameters to RECIPE generation options
+      const generationOptions = {
+        count,
+        mealTypes: parsedParams.mealTypes,
+        dietaryRestrictions: parsedParams.dietaryTags,
+        targetCalories:
+          parsedParams.dailyCalorieTarget || parsedParams.maxCalories,
+        fitnessGoal: parsedParams.fitnessGoal,
+        naturalLanguagePrompt: prompt,
+        maxPrepTime: parsedParams.maxPrepTime,
+        maxCalories: parsedParams.maxCalories,
+        minProtein: parsedParams.minProtein,
+        maxProtein: parsedParams.maxProtein,
+        minCarbs: parsedParams.minCarbs,
+        maxCarbs: parsedParams.maxCarbs,
+        minFat: parsedParams.minFat,
+        maxFat: parsedParams.maxFat,
+        jobId, // For SSE progress tracking
+      };
+
+      console.log(
+        "[Natural Language Recipe Generation] Starting generation:",
+        generationOptions,
+      );
+
+      // Start background recipe generation
+      recipeGenerator.generateAndStoreRecipes(generationOptions);
+
+      // Return immediate response with jobId for SSE tracking
+      res.status(202).json({
+        message: `Recipe generation started from natural language prompt`,
+        count,
+        jobId,
+        parsedParameters: parsedParams,
+        generationOptions,
+      });
+    } catch (error) {
+      console.error("[Natural Language Recipe Generation] Error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      res.status(500).json({
+        message: "Failed to generate recipes from natural language prompt",
+        error: errorMessage,
       });
     }
-
-    // Parse natural language into structured recipe parameters
-    const parsedParams = await parseNaturalLanguageRecipeRequirements(prompt);
-    console.log('[Natural Language Recipe Generation] Parsed parameters:', parsedParams);
-
-    // Determine recipe count from parsed params or default to 10
-    const count = parsedParams.count || 10;
-
-    // Create progress tracking job
-    const jobId = progressTracker.createJob({
-      totalRecipes: count,
-      metadata: {
-        naturalLanguagePrompt: prompt,
-        parsedParams
-      }
-    });
-
-    // Map parsed parameters to RECIPE generation options
-    const generationOptions = {
-      count,
-      mealTypes: parsedParams.mealTypes,
-      dietaryRestrictions: parsedParams.dietaryTags,
-      targetCalories: parsedParams.dailyCalorieTarget || parsedParams.maxCalories,
-      fitnessGoal: parsedParams.fitnessGoal,
-      naturalLanguagePrompt: prompt,
-      maxPrepTime: parsedParams.maxPrepTime,
-      maxCalories: parsedParams.maxCalories,
-      minProtein: parsedParams.minProtein,
-      maxProtein: parsedParams.maxProtein,
-      minCarbs: parsedParams.minCarbs,
-      maxCarbs: parsedParams.maxCarbs,
-      minFat: parsedParams.minFat,
-      maxFat: parsedParams.maxFat,
-      jobId // For SSE progress tracking
-    };
-
-    console.log('[Natural Language Recipe Generation] Starting generation:', generationOptions);
-
-    // Start background recipe generation
-    recipeGenerator.generateAndStoreRecipes(generationOptions);
-
-    // Return immediate response with jobId for SSE tracking
-    res.status(202).json({
-      message: `Recipe generation started from natural language prompt`,
-      count,
-      jobId,
-      parsedParameters: parsedParams,
-      generationOptions
-    });
-  } catch (error) {
-    console.error("[Natural Language Recipe Generation] Error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    res.status(500).json({
-      message: "Failed to generate recipes from natural language prompt",
-      error: errorMessage
-    });
-  }
-});
+  },
+);
 
 // Natural language MEAL PLAN generation endpoint
-adminRouter.post('/generate-from-prompt', requireAdmin, async (req, res) => {
+adminRouter.post("/generate-from-prompt", requireAdmin, async (req, res) => {
   try {
     const { prompt } = req.body;
 
-    console.log('[Natural Language Meal Plan Generation] Received prompt:', prompt);
+    console.log(
+      "[Natural Language Meal Plan Generation] Received prompt:",
+      prompt,
+    );
 
     // Validate prompt
-    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+    if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
       return res.status(400).json({
-        message: "Natural language prompt is required"
+        message: "Natural language prompt is required",
       });
     }
 
     // Parse natural language into structured meal plan parameters
     const parsedParams = await parseNaturalLanguageRecipeRequirements(prompt);
-    console.log('[Natural Language Meal Plan Generation] Parsed parameters:', parsedParams);
+    console.log(
+      "[Natural Language Meal Plan Generation] Parsed parameters:",
+      parsedParams,
+    );
 
     // Map parsed parameters to MEAL PLAN generation options
     const mealPlanOptions: any = {
       planName: parsedParams.planName || `AI-Generated Meal Plan`,
-      fitnessGoal: parsedParams.fitnessGoal || 'general_health',
-      dailyCalorieTarget: parsedParams.dailyCalorieTarget || parsedParams.maxCalories || 2000,
+      fitnessGoal: parsedParams.fitnessGoal || "general_health",
+      dailyCalorieTarget:
+        parsedParams.dailyCalorieTarget || parsedParams.maxCalories || 2000,
       days: parsedParams.days || 7,
       mealsPerDay: parsedParams.mealsPerDay || 3,
-      clientName: parsedParams.clientName || 'Admin Generated',
+      clientName: parsedParams.clientName || "Admin Generated",
       description: `Generated from natural language: "${prompt.substring(0, 100)}"`,
 
       // Filter parameters
@@ -331,27 +377,36 @@ adminRouter.post('/generate-from-prompt', requireAdmin, async (req, res) => {
     };
 
     // Remove undefined values
-    Object.keys(mealPlanOptions).forEach(key => {
+    Object.keys(mealPlanOptions).forEach((key) => {
       if (mealPlanOptions[key] === undefined) {
         delete mealPlanOptions[key];
       }
     });
 
-    console.log('[Natural Language Meal Plan Generation] Meal plan options:', mealPlanOptions);
+    console.log(
+      "[Natural Language Meal Plan Generation] Meal plan options:",
+      mealPlanOptions,
+    );
 
     // Defensive check for authenticated user
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required' });
+      return res
+        .status(401)
+        .json({ error: "Unauthorized", message: "Authentication required" });
     }
 
     // Generate intelligent meal plan using intelligentMealPlanGenerator
-    const mealPlan = await intelligentMealPlanGenerator.generateIntelligentMealPlan(
-      mealPlanOptions,
-      userId
-    );
+    const mealPlan =
+      await intelligentMealPlanGenerator.generateIntelligentMealPlan(
+        mealPlanOptions,
+        userId,
+      );
 
-    console.log('[Natural Language Meal Plan Generation] Successfully generated meal plan:', mealPlan.id);
+    console.log(
+      "[Natural Language Meal Plan Generation] Successfully generated meal plan:",
+      mealPlan.id,
+    );
 
     // Return the complete meal plan immediately
     res.status(200).json({
@@ -362,21 +417,31 @@ adminRouter.post('/generate-from-prompt', requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error("[Natural Language Meal Plan Generation] Error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
     res.status(500).json({
       message: "Failed to generate meal plan from natural language prompt",
-      error: errorMessage
+      error: errorMessage,
     });
   }
 });
 
 // Enhanced recipe generation with retry logic and quality scoring
-adminRouter.post('/generate-enhanced', requireAdmin, async (req, res) => {
+adminRouter.post("/generate-enhanced", requireAdmin, async (req, res) => {
   try {
-    const { prompt, calories, protein, carbs, fat, mealType, dietaryRestrictions, model } = req.body;
-    
-    console.log('[Enhanced Generation] Starting with params:', req.body);
-    
+    const {
+      prompt,
+      calories,
+      protein,
+      carbs,
+      fat,
+      mealType,
+      dietaryRestrictions,
+      model,
+    } = req.body;
+
+    console.log("[Enhanced Generation] Starting with params:", req.body);
+
     // Generate recipe with retry logic and fallback
     const recipe = await enhancedRecipeGenerator.generateWithFallback({
       prompt,
@@ -386,57 +451,61 @@ adminRouter.post('/generate-enhanced', requireAdmin, async (req, res) => {
       fat,
       mealType,
       dietaryRestrictions,
-      model
+      model,
     });
-    
+
     // Score the recipe quality
     const qualityScore = recipeQualityScorer.scoreRecipe(recipe);
-    
+
     // Track API cost (mock usage for now - will be replaced with actual usage from OpenAI response)
     const estimatedTokens = 1300; // Average tokens for recipe generation
-    const modelUsed = model || 'gpt-3.5-turbo-1106';
+    const modelUsed = model || "gpt-3.5-turbo-1106";
     const cost = await apiCostTracker.trackUsage(
       modelUsed,
-      { promptTokens: 500, completionTokens: 800, totalTokens: estimatedTokens },
+      {
+        promptTokens: 500,
+        completionTokens: 800,
+        totalTokens: estimatedTokens,
+      },
       req.user?.id,
-      recipe.id
+      recipe.id,
     );
-    
+
     // Add metadata to recipe before storing
     const enhancedRecipe = {
       ...recipe,
       quality_score: qualityScore,
       api_cost: cost,
       model_used: modelUsed,
-      generation_attempts: 1 // Will be updated by retry logic
+      generation_attempts: 1, // Will be updated by retry logic
     };
-    
+
     // Store the enhanced recipe
     await storage.createRecipe(enhancedRecipe);
-    
+
     res.json({
-      status: 'success',
+      status: "success",
       data: enhancedRecipe,
       metadata: {
         qualityScore: qualityScore.overall,
         cost: `$${cost.toFixed(4)}`,
         suggestions: qualityScore.metadata.suggestions,
         warnings: qualityScore.metadata.warnings,
-        strengths: qualityScore.metadata.strengths
-      }
+        strengths: qualityScore.metadata.strengths,
+      },
     });
   } catch (error) {
-    console.error('[Enhanced Generation] Failed:', error);
+    console.error("[Enhanced Generation] Failed:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to generate enhanced recipe',
-      error: error.message
+      status: "error",
+      message: "Failed to generate enhanced recipe",
+      error: error.message,
     });
   }
 });
 
 // BMAD multi-agent bulk recipe generation endpoint
-adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
+adminRouter.post("/generate-bmad", requireAdmin, async (req, res) => {
   try {
     const {
       count,
@@ -460,19 +529,20 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
       maxFat,
       enableImageGeneration = true,
       enableS3Upload = true,
-      enableNutritionValidation = true
+      enableNutritionValidation = true,
     } = req.body;
 
     // Validate required count parameter
     if (!count || count < 1 || count > 100) {
       return res.status(400).json({
         error: "Invalid recipe count",
-        message: "Count is required and must be between 1 and 100 for BMAD generation",
+        message:
+          "Count is required and must be between 1 and 100 for BMAD generation",
         completed: false,
         timestamp: new Date().toISOString(),
       });
     }
-    
+
     // Validate other parameters if provided
     if (targetCalories && (targetCalories < 0 || targetCalories > 5000)) {
       return res.status(400).json({
@@ -482,7 +552,7 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
         timestamp: new Date().toISOString(),
       });
     }
-    
+
     if (maxCalories && (maxCalories < 0 || maxCalories > 5000)) {
       return res.status(400).json({
         error: "Invalid max calories",
@@ -491,7 +561,7 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
         timestamp: new Date().toISOString(),
       });
     }
-    
+
     if (maxPrepTime && (maxPrepTime < 0 || maxPrepTime > 600)) {
       return res.status(400).json({
         error: "Invalid max prep time",
@@ -504,7 +574,7 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
     // Generate batch ID upfront so we can return it to the client
     const batchId = `bmad_${nanoid(10)}`;
 
-    console.log('[BMAD] Starting multi-agent recipe generation:', {
+    console.log("[BMAD] Starting multi-agent recipe generation:", {
       batchId,
       count,
       enableImageGeneration,
@@ -529,46 +599,49 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
         minCarbs,
         maxCarbs,
         minFat,
-        maxFat
-      }
+        maxFat,
+      },
     });
 
     // Start BMAD generation in background (pass batchId via options)
-    bmadRecipeService.generateRecipes({
-      batchId,
-      count,
-      mealTypes,
-      dietaryRestrictions,
-      targetCalories,
-      mainIngredient,
-      focusIngredient, // Pass focusIngredient (preferred over mainIngredient if both provided)
-      difficultyLevel,
-      recipePreferences,
-      maxIngredients,
-      fitnessGoal,
-      naturalLanguagePrompt,
-      maxPrepTime,
-      maxCalories,
-      minProtein,
-      maxProtein,
-      minCarbs,
-      maxCarbs,
-      minFat,
-      maxFat,
-      enableImageGeneration,
-      enableS3Upload,
-      enableNutritionValidation
-    }).then((result) => {
-      console.log('[BMAD] Generation complete:', {
-        batchId: result.batchId,
-        totalRecipes: result.savedRecipes.length,
-        imagesGenerated: result.imagesGenerated,
-        imagesUploaded: result.imagesUploaded,
-        duration: result.totalTime
+    bmadRecipeService
+      .generateRecipes({
+        batchId,
+        count,
+        mealTypes,
+        dietaryRestrictions,
+        targetCalories,
+        mainIngredient,
+        focusIngredient, // Pass focusIngredient (preferred over mainIngredient if both provided)
+        difficultyLevel,
+        recipePreferences,
+        maxIngredients,
+        fitnessGoal,
+        naturalLanguagePrompt,
+        maxPrepTime,
+        maxCalories,
+        minProtein,
+        maxProtein,
+        minCarbs,
+        maxCarbs,
+        minFat,
+        maxFat,
+        enableImageGeneration,
+        enableS3Upload,
+        enableNutritionValidation,
+      })
+      .then((result) => {
+        console.log("[BMAD] Generation complete:", {
+          batchId: result.batchId,
+          totalRecipes: result.savedRecipes.length,
+          imagesGenerated: result.imagesGenerated,
+          imagesUploaded: result.imagesUploaded,
+          duration: result.totalTime,
+        });
+      })
+      .catch((error) => {
+        console.error("[BMAD] Generation failed:", error);
       });
-    }).catch((error) => {
-      console.error('[BMAD] Generation failed:', error);
-    });
 
     res.status(202).json({
       message: `BMAD multi-agent recipe generation started for ${count} recipes`,
@@ -578,22 +651,26 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
       features: {
         nutritionValidation: enableNutritionValidation,
         imageGeneration: enableImageGeneration,
-        s3Upload: enableS3Upload
-      }
+        s3Upload: enableS3Upload,
+      },
     });
   } catch (error) {
-    console.error('[BMAD] Error starting generation:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    
+    console.error("[BMAD] Error starting generation:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred";
+
     // Check if this is a validation error (user-facing, not a server error)
-    const isValidationError = errorMessage.includes('required') || 
-                              errorMessage.includes('must be') || 
-                              errorMessage.includes('Invalid') ||
-                              errorMessage.includes('between');
+    const isValidationError =
+      errorMessage.includes("required") ||
+      errorMessage.includes("must be") ||
+      errorMessage.includes("Invalid") ||
+      errorMessage.includes("between");
     const statusCode = isValidationError ? 400 : 500;
-    
-    res.status(statusCode).json({ 
-      error: isValidationError ? errorMessage : "Failed to start BMAD recipe generation",
+
+    res.status(statusCode).json({
+      error: isValidationError
+        ? errorMessage
+        : "Failed to start BMAD recipe generation",
       message: errorMessage,
       completed: false,
       timestamp: new Date().toISOString(),
@@ -602,133 +679,142 @@ adminRouter.post('/generate-bmad', requireAdmin, async (req, res) => {
 });
 
 // Get BMAD generation progress
-adminRouter.get('/bmad-progress/:batchId', requireAdmin, async (req, res) => {
+adminRouter.get("/bmad-progress/:batchId", requireAdmin, async (req, res) => {
   try {
     const { batchId } = req.params;
 
     if (!batchId) {
-      return res.status(400).json({ error: 'Batch ID is required' });
+      return res.status(400).json({ error: "Batch ID is required" });
     }
 
     const progress = await bmadRecipeService.getProgress(batchId);
 
     if (!progress) {
-      return res.status(404).json({ error: 'Batch not found or has expired' });
+      return res.status(404).json({ error: "Batch not found or has expired" });
     }
 
     res.json(progress);
   } catch (error) {
-    console.error('[BMAD] Failed to fetch progress:', error);
-    res.status(500).json({ error: 'Failed to fetch BMAD progress' });
+    console.error("[BMAD] Failed to fetch progress:", error);
+    res.status(500).json({ error: "Failed to fetch BMAD progress" });
   }
 });
 
 // Get BMAD agent metrics
-adminRouter.get('/bmad-metrics', requireAdmin, async (req, res) => {
+adminRouter.get("/bmad-metrics", requireAdmin, async (req, res) => {
   try {
     const metrics = bmadRecipeService.getMetrics();
     res.json(metrics);
   } catch (error) {
-    console.error('[BMAD] Failed to fetch metrics:', error);
-    res.status(500).json({ error: 'Failed to fetch BMAD metrics' });
+    console.error("[BMAD] Failed to fetch metrics:", error);
+    res.status(500).json({ error: "Failed to fetch BMAD metrics" });
   }
 });
 
 // SSE endpoint for real-time BMAD progress updates
-adminRouter.get('/bmad-progress-stream/:batchId', requireAdmin, async (req, res) => {
-  try {
-    const { batchId } = req.params;
+adminRouter.get(
+  "/bmad-progress-stream/:batchId",
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const { batchId } = req.params;
 
-    if (!batchId) {
-      return res.status(400).json({ error: 'Batch ID is required' });
+      if (!batchId) {
+        return res.status(400).json({ error: "Batch ID is required" });
+      }
+
+      // Generate unique client ID
+      const clientId = nanoid(10);
+
+      console.log(`[SSE] Client ${clientId} connecting for batch ${batchId}`);
+
+      // Register SSE client
+      sseManager.addClient(batchId, clientId, res);
+
+      // Send initial progress state if available
+      const currentProgress = await bmadRecipeService.getProgress(batchId);
+      if (currentProgress) {
+        sseManager.broadcastProgress(batchId, currentProgress);
+      }
+    } catch (error) {
+      console.error("[SSE] Failed to establish stream:", error);
+      res.status(500).json({ error: "Failed to establish progress stream" });
     }
-
-    // Generate unique client ID
-    const clientId = nanoid(10);
-
-    console.log(`[SSE] Client ${clientId} connecting for batch ${batchId}`);
-
-    // Register SSE client
-    sseManager.addClient(batchId, clientId, res);
-
-    // Send initial progress state if available
-    const currentProgress = await bmadRecipeService.getProgress(batchId);
-    if (currentProgress) {
-      sseManager.broadcastProgress(batchId, currentProgress);
-    }
-
-  } catch (error) {
-    console.error('[SSE] Failed to establish stream:', error);
-    res.status(500).json({ error: 'Failed to establish progress stream' });
-  }
-});
+  },
+);
 
 // Get SSE connection statistics
-adminRouter.get('/bmad-sse-stats', requireAdmin, async (req, res) => {
+adminRouter.get("/bmad-sse-stats", requireAdmin, async (req, res) => {
   try {
     const stats = sseManager.getStats();
     res.json(stats);
   } catch (error) {
-    console.error('[SSE] Failed to fetch SSE stats:', error);
-    res.status(500).json({ error: 'Failed to fetch SSE statistics' });
+    console.error("[SSE] Failed to fetch SSE stats:", error);
+    res.status(500).json({ error: "Failed to fetch SSE statistics" });
   }
 });
 
 // Get image generation monitoring alerts
-adminRouter.get('/bmad-image-alerts', requireAdmin, async (req, res) => {
+adminRouter.get("/bmad-image-alerts", requireAdmin, async (req, res) => {
   try {
     const { limit, severity } = req.query;
 
-    const alerts = severity === 'critical'
-      ? bmadImageMonitor.getCriticalAlerts()
-      : bmadImageMonitor.getRecentAlerts(limit ? parseInt(limit as string) : 10);
+    const alerts =
+      severity === "critical"
+        ? bmadImageMonitor.getCriticalAlerts()
+        : bmadImageMonitor.getRecentAlerts(
+            limit ? parseInt(limit as string) : 10,
+          );
 
     res.json({ alerts });
   } catch (error) {
-    console.error('[Monitor] Failed to fetch image generation alerts:', error);
-    res.status(500).json({ error: 'Failed to fetch monitoring alerts' });
+    console.error("[Monitor] Failed to fetch image generation alerts:", error);
+    res.status(500).json({ error: "Failed to fetch monitoring alerts" });
   }
 });
 
 // API usage statistics endpoint
-adminRouter.get('/api-usage', requireAdmin, async (req, res) => {
+adminRouter.get("/api-usage", requireAdmin, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const start = startDate
+      ? new Date(startDate as string)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = endDate ? new Date(endDate as string) : new Date();
 
-    const [usageStats, budgetStatus, topConsumers, costByModel] = await Promise.all([
-      apiCostTracker.getUsageStats(start, end),
-      apiCostTracker.getMonthlyBudgetStatus(),
-      apiCostTracker.getTopConsumers(),
-      apiCostTracker.getCostByModel(start)
-    ]);
+    const [usageStats, budgetStatus, topConsumers, costByModel] =
+      await Promise.all([
+        apiCostTracker.getUsageStats(start, end),
+        apiCostTracker.getMonthlyBudgetStatus(),
+        apiCostTracker.getTopConsumers(),
+        apiCostTracker.getCostByModel(start),
+      ]);
 
     res.json({
       usageStats,
       budgetStatus,
       topConsumers,
-      costByModel
+      costByModel,
     });
   } catch (error) {
-    console.error('[API Usage] Failed to get stats:', error);
-    res.status(500).json({ error: 'Failed to fetch API usage statistics' });
+    console.error("[API Usage] Failed to get stats:", error);
+    res.status(500).json({ error: "Failed to fetch API usage statistics" });
   }
 });
 
 // Routes accessible by both trainers and admins
-adminRouter.get('/customers', requireTrainerOrAdmin, async (req, res) => {
+adminRouter.get("/customers", requireTrainerOrAdmin, async (req, res) => {
   try {
     const { recipeId, mealPlanId } = req.query;
     const customers = await storage.getCustomers(
       recipeId as string | undefined,
-      mealPlanId as string | undefined
+      mealPlanId as string | undefined,
     );
     res.json(customers);
   } catch (error) {
-    console.error('Failed to fetch customers:', error);
-    res.status(500).json({ error: 'Failed to fetch customers' });
+    console.error("Failed to fetch customers:", error);
+    res.status(500).json({ error: "Failed to fetch customers" });
   }
 });
 
@@ -738,28 +824,34 @@ const assignRecipeSchema = z.object({
   customerIds: z.array(z.string().uuid()),
 });
 
-adminRouter.post('/assign-recipe', requireTrainerOrAdmin, async (req, res) => {
+adminRouter.post("/assign-recipe", requireTrainerOrAdmin, async (req, res) => {
   try {
     const { recipeId, customerIds } = assignRecipeSchema.parse(req.body);
-    
+
     // Defensive check for authenticated user
     const trainerId = req.user?.id;
     if (!trainerId) {
-      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required' });
+      return res
+        .status(401)
+        .json({ error: "Unauthorized", message: "Authentication required" });
     }
-    
+
     // Get current assignments to determine what changed
     const currentAssignments = await db
       .select()
       .from(personalizedRecipes)
       .where(eq(personalizedRecipes.recipeId, recipeId));
-    
-    const currentlyAssignedIds = new Set(currentAssignments.map(a => a.customerId));
-    const toAdd = customerIds.filter(id => !currentlyAssignedIds.has(id));
-    const toRemove = Array.from(currentlyAssignedIds).filter(id => !customerIds.includes(id));
-    
+
+    const currentlyAssignedIds = new Set(
+      currentAssignments.map((a) => a.customerId),
+    );
+    const toAdd = customerIds.filter((id) => !currentlyAssignedIds.has(id));
+    const toRemove = Array.from(currentlyAssignedIds).filter(
+      (id) => !customerIds.includes(id),
+    );
+
     await storage.assignRecipeToCustomers(trainerId, recipeId, customerIds);
-    
+
     // Create a descriptive message about what changed
     const changes = [];
     if (toAdd.length > 0) {
@@ -768,20 +860,23 @@ adminRouter.post('/assign-recipe', requireTrainerOrAdmin, async (req, res) => {
     if (toRemove.length > 0) {
       changes.push(`unassigned from ${toRemove.length} customer(s)`);
     }
-    
-    res.json({ 
-      message: changes.length > 0 
-        ? `Recipe ${changes.join(' and ')} successfully`
-        : 'No changes were made to recipe assignments',
+
+    res.json({
+      message:
+        changes.length > 0
+          ? `Recipe ${changes.join(" and ")} successfully`
+          : "No changes were made to recipe assignments",
       added: toAdd.length,
       removed: toRemove.length,
     });
   } catch (error) {
-    console.error('Failed to assign recipe:', error);
+    console.error("Failed to assign recipe:", error);
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Invalid request data', details: error.errors });
+      res
+        .status(400)
+        .json({ error: "Invalid request data", details: error.errors });
     } else {
-      res.status(500).json({ error: 'Failed to assign recipe' });
+      res.status(500).json({ error: "Failed to assign recipe" });
     }
   }
 });
@@ -799,78 +894,99 @@ const assignMealPlanSchema = z.object({
     mealsPerDay: z.number(),
     generatedBy: z.string(),
     createdAt: z.coerce.date(), // Convert string to date automatically
-    meals: z.array(z.object({
-      day: z.number(),
-      mealNumber: z.number(),
-      mealType: z.string(),
-      recipe: z.object({
-        id: z.string(),
-        name: z.string(),
-        description: z.string(),
-        caloriesKcal: z.number(),
-        proteinGrams: z.string(),
-        carbsGrams: z.string(),
-        fatGrams: z.string(),
-        prepTimeMinutes: z.number(),
-        cookTimeMinutes: z.number().optional(),
-        servings: z.number(),
-        mealTypes: z.array(z.string()),
-        dietaryTags: z.array(z.string()).optional(),
-        mainIngredientTags: z.array(z.string()).optional(),
-        ingredientsJson: z.array(z.object({
+    meals: z.array(
+      z.object({
+        day: z.number(),
+        mealNumber: z.number(),
+        mealType: z.string(),
+        recipe: z.object({
+          id: z.string(),
           name: z.string(),
-          amount: z.string(),
-          unit: z.string().optional(),
-        })).optional(),
-        instructionsText: z.string().optional(),
-        imageUrl: z.string().optional(),
+          description: z.string(),
+          caloriesKcal: z.number(),
+          proteinGrams: z.string(),
+          carbsGrams: z.string(),
+          fatGrams: z.string(),
+          prepTimeMinutes: z.number(),
+          cookTimeMinutes: z.number().optional(),
+          servings: z.number(),
+          mealTypes: z.array(z.string()),
+          dietaryTags: z.array(z.string()).optional(),
+          mainIngredientTags: z.array(z.string()).optional(),
+          ingredientsJson: z
+            .array(
+              z.object({
+                name: z.string(),
+                amount: z.string(),
+                unit: z.string().optional(),
+              }),
+            )
+            .optional(),
+          instructionsText: z.string().optional(),
+          imageUrl: z.string().optional(),
+        }),
       }),
-    })),
+    ),
   }),
   customerIds: z.array(z.string().uuid()),
 });
 
-adminRouter.post('/assign-meal-plan', requireTrainerOrAdmin, async (req, res) => {
-  try {
-    const { mealPlanData, customerIds } = assignMealPlanSchema.parse(req.body);
-    
-    // Defensive check for authenticated user
-    const trainerId = req.user?.id;
-    if (!trainerId) {
-      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required' });
+adminRouter.post(
+  "/assign-meal-plan",
+  requireTrainerOrAdmin,
+  async (req, res) => {
+    try {
+      const { mealPlanData, customerIds } = assignMealPlanSchema.parse(
+        req.body,
+      );
+
+      // Defensive check for authenticated user
+      const trainerId = req.user?.id;
+      if (!trainerId) {
+        return res
+          .status(401)
+          .json({ error: "Unauthorized", message: "Authentication required" });
+      }
+
+      await storage.assignMealPlanToCustomers(
+        trainerId,
+        mealPlanData,
+        customerIds,
+      );
+
+      res.json({
+        message:
+          customerIds.length > 0
+            ? `Meal plan assigned to ${customerIds.length} customer(s) successfully`
+            : "Meal plan unassigned from all customers",
+        added: customerIds.length,
+        removed: 0, // Simplified for now
+      });
+    } catch (error) {
+      console.error("Failed to assign meal plan:", error);
+      if (error instanceof z.ZodError) {
+        res
+          .status(400)
+          .json({ error: "Invalid request data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to assign meal plan" });
+      }
     }
-    
-    await storage.assignMealPlanToCustomers(trainerId, mealPlanData, customerIds);
-    
-    res.json({ 
-      message: customerIds.length > 0 
-        ? `Meal plan assigned to ${customerIds.length} customer(s) successfully`
-        : 'Meal plan unassigned from all customers',
-      added: customerIds.length,
-      removed: 0, // Simplified for now
-    });
-  } catch (error) {
-    console.error('Failed to assign meal plan:', error);
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Invalid request data', details: error.errors });
-    } else {
-      res.status(500).json({ error: 'Failed to assign meal plan' });
-    }
-  }
-});
+  },
+);
 
 const recipeFilterSchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
   approved: z.preprocess((val) => {
-    if (val === 'true') return true;
-    if (val === 'false') return false;
+    if (val === "true") return true;
+    if (val === "false") return false;
     return undefined;
   }, z.boolean().optional()),
   search: z.string().optional(),
 });
 
-adminRouter.get('/recipes', requireAdmin, async (req, res) => {
+adminRouter.get("/recipes", requireAdmin, async (req, res) => {
   try {
     const query = recipeFilterSchema.parse(req.query);
 
@@ -880,23 +996,108 @@ adminRouter.get('/recipes', requireAdmin, async (req, res) => {
       approved: query.approved,
       search: query.search,
     });
-    
-    res.json({ recipes, total });
 
+    res.json({ recipes, total });
   } catch (error) {
-    console.error('Failed to fetch recipes for admin:', error);
-    res.status(400).json({ error: 'Invalid filter parameters' });
+    console.error("Failed to fetch recipes for admin:", error);
+    res.status(400).json({ error: "Invalid filter parameters" });
   }
 });
 
-adminRouter.get('/stats', requireAdmin, async (req, res) => {
+adminRouter.get("/stats", requireAdmin, async (req, res) => {
   try {
     const stats = await storage.getRecipeStats();
-    const [userCount] = await db.select({ count: sql<number>`count(*)` }).from(users);
+    const [userCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users);
     res.json({ ...stats, users: userCount?.count ?? 0 });
   } catch (error) {
-    console.error('Failed to fetch admin stats:', error);
-    res.status(500).json({ error: 'Could not fetch stats' });
+    console.error("Failed to fetch admin stats:", error);
+    res.status(500).json({ error: "Could not fetch stats" });
+  }
+});
+
+/**
+ * POST /api/admin/grant-tier
+ * Admin-only: upsert an active subscription for a trainer at a given tier.
+ * Used by QA/demo provisioning to ensure canonical test accounts have the
+ * expected entitlements. Idempotent — deletes any existing subscription
+ * for the target trainer and inserts a fresh one.
+ *
+ * Body: { email: string, tier: 'starter' | 'professional' | 'enterprise' }
+ */
+const grantTierSchema = z.object({
+  email: z.string().email(),
+  tier: z.enum(["starter", "professional", "enterprise"]),
+});
+
+adminRouter.post("/grant-tier", requireAdmin, async (req, res) => {
+  try {
+    const { email, tier } = grantTierSchema.parse(req.body);
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    if (!user) {
+      return res.status(404).json({ error: `User not found: ${email}` });
+    }
+    if (user.role !== "trainer") {
+      return res.status(400).json({
+        error: `User role is '${user.role}', expected 'trainer'`,
+      });
+    }
+
+    await db
+      .delete(trainerSubscriptions)
+      .where(eq(trainerSubscriptions.trainerId, user.id));
+
+    const now = new Date();
+    const periodEnd = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+    const [sub] = await db
+      .insert(trainerSubscriptions)
+      .values({
+        trainerId: user.id,
+        stripeCustomerId: `cus_canonical_${tier}_${user.id.slice(0, 8)}`,
+        stripeSubscriptionId: `sub_canonical_${tier}_${user.id.slice(0, 8)}`,
+        tier,
+        status: "active",
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd,
+        cancelAtPeriodEnd: false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    await db.insert(subscriptionItems).values({
+      subscriptionId: sub.id,
+      kind: "tier",
+      stripePriceId: `price_${tier}_canonical`,
+      stripeSubscriptionItemId: `si_canonical_${tier}_${sub.id.slice(0, 8)}`,
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    res.json({
+      success: true,
+      email,
+      tier,
+      subscriptionId: sub.id,
+      trainerId: user.id,
+    });
+  } catch (error: any) {
+    if (error?.issues) {
+      return res
+        .status(400)
+        .json({ error: "Invalid body", details: error.issues });
+    }
+    console.error("Failed to grant tier:", error);
+    res.status(500).json({ error: "Failed to grant tier" });
   }
 });
 
@@ -905,10 +1106,10 @@ const adminUsersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
   search: z.string().optional(),
-  role: z.enum(['admin', 'trainer', 'customer']).optional(),
+  role: z.enum(["admin", "trainer", "customer"]).optional(),
 });
 
-adminRouter.get('/users', requireAdmin, async (req, res) => {
+adminRouter.get("/users", requireAdmin, async (req, res) => {
   try {
     const query = adminUsersQuerySchema.parse(req.query);
     const offset = (query.page - 1) * query.limit;
@@ -920,7 +1121,7 @@ adminRouter.get('/users', requireAdmin, async (req, res) => {
     if (query.search && query.search.trim()) {
       const term = `%${query.search.trim()}%`;
       conditions.push(
-        sql`(${users.email}::text ILIKE ${term} OR COALESCE(${users.name}, '')::text ILIKE ${term})`
+        sql`(${users.email}::text ILIKE ${term} OR COALESCE(${users.name}, '')::text ILIKE ${term})`,
       );
     }
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -966,14 +1167,22 @@ adminRouter.get('/users', requireAdmin, async (req, res) => {
       .where(inArray(personalizedMealPlans.customerId, userIds))
       .groupBy(personalizedMealPlans.customerId);
 
-    const trainerCountMap = new Map(trainerPlanCounts.map((r) => [r.trainerId, Number(r.count)]));
-    const customerCountMap = new Map(customerPlanCounts.map((r) => [r.customerId, Number(r.count)]));
+    const trainerCountMap = new Map(
+      trainerPlanCounts.map((r) => [r.trainerId, Number(r.count)]),
+    );
+    const customerCountMap = new Map(
+      customerPlanCounts.map((r) => [r.customerId, Number(r.count)]),
+    );
 
     const usersWithUsage = userList.map((u) => ({
       ...u,
-      status: 'active',
-      mealPlansGenerated: u.role === 'trainer' || u.role === 'admin' ? (trainerCountMap.get(u.id) ?? 0) : 0,
-      mealPlansAssigned: u.role === 'customer' ? (customerCountMap.get(u.id) ?? 0) : 0,
+      status: "active",
+      mealPlansGenerated:
+        u.role === "trainer" || u.role === "admin"
+          ? (trainerCountMap.get(u.id) ?? 0)
+          : 0,
+      mealPlansAssigned:
+        u.role === "customer" ? (customerCountMap.get(u.id) ?? 0) : 0,
     }));
 
     res.json({
@@ -984,15 +1193,17 @@ adminRouter.get('/users', requireAdmin, async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid query', details: error.errors });
+      return res
+        .status(400)
+        .json({ error: "Invalid query", details: error.errors });
     }
-    console.error('Failed to fetch admin users:', error);
-    res.status(500).json({ error: 'Could not fetch users' });
+    console.error("Failed to fetch admin users:", error);
+    res.status(500).json({ error: "Could not fetch users" });
   }
 });
 
 // Get single user detail with meal plans list
-adminRouter.get('/users/:id', requireAdmin, async (req, res) => {
+adminRouter.get("/users/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const [user] = await db
@@ -1009,13 +1220,13 @@ adminRouter.get('/users/:id', requireAdmin, async (req, res) => {
       .where(eq(users.id, id));
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     let mealPlansGenerated: any[] = [];
     let mealPlansAssigned: any[] = [];
 
-    if (user.role === 'trainer' || user.role === 'admin') {
+    if (user.role === "trainer" || user.role === "admin") {
       mealPlansGenerated = await db
         .select({
           id: trainerMealPlans.id,
@@ -1042,7 +1253,7 @@ adminRouter.get('/users/:id', requireAdmin, async (req, res) => {
     res.json({
       user: {
         ...user,
-        status: 'active',
+        status: "active",
         mealPlansGeneratedCount: mealPlansGenerated.length,
         mealPlansAssignedCount: mealPlansAssigned.length,
       },
@@ -1050,372 +1261,435 @@ adminRouter.get('/users/:id', requireAdmin, async (req, res) => {
       mealPlansAssigned,
     });
   } catch (error) {
-    console.error('Failed to fetch admin user detail:', error);
-    res.status(500).json({ error: 'Could not fetch user' });
+    console.error("Failed to fetch admin user detail:", error);
+    res.status(500).json({ error: "Could not fetch user" });
   }
 });
 
 // Progress tracking endpoint (polling - for backward compatibility)
-adminRouter.get('/generation-progress/:jobId', requireAdmin, async (req, res) => {
-  try {
-    const { jobId } = req.params;
+adminRouter.get(
+  "/generation-progress/:jobId",
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const { jobId } = req.params;
 
-    if (!jobId) {
-      return res.status(400).json({ error: 'Job ID is required' });
+      if (!jobId) {
+        return res.status(400).json({ error: "Job ID is required" });
+      }
+
+      const progress = progressTracker.getProgress(jobId);
+
+      if (!progress) {
+        return res.status(404).json({ error: "Job not found or has expired" });
+      }
+
+      res.json(progress);
+    } catch (error) {
+      console.error("Failed to fetch generation progress:", error);
+      res.status(500).json({ error: "Failed to fetch generation progress" });
     }
-
-    const progress = progressTracker.getProgress(jobId);
-
-    if (!progress) {
-      return res.status(404).json({ error: 'Job not found or has expired' });
-    }
-
-    res.json(progress);
-  } catch (error) {
-    console.error('Failed to fetch generation progress:', error);
-    res.status(500).json({ error: 'Failed to fetch generation progress' });
-  }
-});
+  },
+);
 
 // SSE endpoint for real-time progress updates (Fix #2: Background Generation)
-adminRouter.get('/recipe-progress-stream/:jobId', requireAdmin, async (req, res) => {
-  try {
-    const { jobId } = req.params;
+adminRouter.get(
+  "/recipe-progress-stream/:jobId",
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const { jobId } = req.params;
 
-    if (!jobId) {
-      return res.status(400).json({ error: 'Job ID is required' });
-    }
-
-    // Set SSE headers
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
-
-    console.log(`[SSE] Client connecting for job ${jobId}`);
-
-    // Send initial progress state if available
-    const currentProgress = progressTracker.getProgress(jobId);
-    if (currentProgress) {
-      res.write(`data: ${JSON.stringify(currentProgress)}\n\n`);
-    } else {
-      res.write(`data: ${JSON.stringify({ error: 'Job not found', jobId })}\n\n`);
-      res.end();
-      return;
-    }
-
-    // Listen for progress updates for this specific job
-    const progressHandler = (progress: any) => {
-      if (progress.jobId === jobId) {
-        res.write(`data: ${JSON.stringify(progress)}\n\n`);
-
-        // Close connection when complete or failed
-        if (progress.currentStep === 'complete' || progress.currentStep === 'failed') {
-          console.log(`[SSE] Job ${jobId} ${progress.currentStep}, closing connection`);
-          setTimeout(() => {
-            progressTracker.removeListener('progress', progressHandler);
-            res.end();
-          }, 1000); // Give 1 second for final message to send
-        }
+      if (!jobId) {
+        return res.status(400).json({ error: "Job ID is required" });
       }
-    };
 
-    progressTracker.on('progress', progressHandler);
+      // Set SSE headers
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering
 
-    // Handle client disconnect
-    req.on('close', () => {
-      console.log(`[SSE] Client disconnected from job ${jobId}`);
-      progressTracker.removeListener('progress', progressHandler);
-    });
+      console.log(`[SSE] Client connecting for job ${jobId}`);
 
-  } catch (error) {
-    console.error('[SSE] Failed to establish stream:', error);
-    res.status(500).json({ error: 'Failed to establish progress stream' });
-  }
-});
+      // Send initial progress state if available
+      const currentProgress = progressTracker.getProgress(jobId);
+      if (currentProgress) {
+        res.write(`data: ${JSON.stringify(currentProgress)}\n\n`);
+      } else {
+        res.write(
+          `data: ${JSON.stringify({ error: "Job not found", jobId })}\n\n`,
+        );
+        res.end();
+        return;
+      }
+
+      // Listen for progress updates for this specific job
+      const progressHandler = (progress: any) => {
+        if (progress.jobId === jobId) {
+          res.write(`data: ${JSON.stringify(progress)}\n\n`);
+
+          // Close connection when complete or failed
+          if (
+            progress.currentStep === "complete" ||
+            progress.currentStep === "failed"
+          ) {
+            console.log(
+              `[SSE] Job ${jobId} ${progress.currentStep}, closing connection`,
+            );
+            setTimeout(() => {
+              progressTracker.removeListener("progress", progressHandler);
+              res.end();
+            }, 1000); // Give 1 second for final message to send
+          }
+        }
+      };
+
+      progressTracker.on("progress", progressHandler);
+
+      // Handle client disconnect
+      req.on("close", () => {
+        console.log(`[SSE] Client disconnected from job ${jobId}`);
+        progressTracker.removeListener("progress", progressHandler);
+      });
+    } catch (error) {
+      console.error("[SSE] Failed to establish stream:", error);
+      res.status(500).json({ error: "Failed to establish progress stream" });
+    }
+  },
+);
 
 // Get all active jobs
-adminRouter.get('/generation-jobs', requireAdmin, async (req, res) => {
+adminRouter.get("/generation-jobs", requireAdmin, async (req, res) => {
   try {
     const jobs = progressTracker.getAllJobs();
     res.json(jobs);
   } catch (error) {
-    console.error('Failed to fetch active generation jobs:', error);
-    res.status(500).json({ error: 'Failed to fetch active jobs' });
+    console.error("Failed to fetch active generation jobs:", error);
+    res.status(500).json({ error: "Failed to fetch active jobs" });
   }
 });
 
-adminRouter.patch('/recipes/:id/approve', requireAdmin, async (req, res) => {
+adminRouter.patch("/recipes/:id/approve", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const recipe = await storage.updateRecipe(id, { isApproved: true });
     res.json(recipe);
   } catch (error) {
     console.error(`Failed to approve recipe ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to approve recipe' });
+    res.status(500).json({ error: "Failed to approve recipe" });
   }
 });
 
 // Add unapprove endpoint
-adminRouter.patch('/recipes/:id/unapprove', requireAdmin, async (req, res) => {
+adminRouter.patch("/recipes/:id/unapprove", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const recipe = await storage.updateRecipe(id, { isApproved: false });
     res.json(recipe);
   } catch (error) {
     console.error(`Failed to unapprove recipe ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to unapprove recipe' });
+    res.status(500).json({ error: "Failed to unapprove recipe" });
   }
 });
 
 // Add bulk unapprove endpoint
-adminRouter.post('/recipes/bulk-unapprove', requireAdmin, async (req, res) => {
+adminRouter.post("/recipes/bulk-unapprove", requireAdmin, async (req, res) => {
   try {
     const { ids } = req.body;
     if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ error: 'Invalid request: "ids" must be a non-empty array.' });
+      return res
+        .status(400)
+        .json({ error: 'Invalid request: "ids" must be a non-empty array.' });
     }
-    
+
     // Update all recipes to unapproved state
-    await Promise.all(ids.map(id => storage.updateRecipe(id, { isApproved: false })));
-    
+    await Promise.all(
+      ids.map((id) => storage.updateRecipe(id, { isApproved: false })),
+    );
+
     res.json({ message: `Successfully unapproved ${ids.length} recipes.` });
   } catch (error) {
-    console.error('Failed to bulk unapprove recipes:', error);
-    res.status(500).json({ error: 'Failed to bulk unapprove recipes' });
+    console.error("Failed to bulk unapprove recipes:", error);
+    res.status(500).json({ error: "Failed to bulk unapprove recipes" });
   }
 });
 
 // Cleanup endpoint: Approve ALL pending recipes
-adminRouter.post('/recipes/approve-all-pending', requireAdmin, async (req, res) => {
-  try {
-    console.log('[Cleanup] Approving all pending recipes...');
+adminRouter.post(
+  "/recipes/approve-all-pending",
+  requireAdmin,
+  async (req, res) => {
+    try {
+      console.log("[Cleanup] Approving all pending recipes...");
 
-    // Get all unapproved recipe IDs
-    const unapprovedRecipes = await db
-      .select({ id: recipes.id })
-      .from(recipes)
-      .where(sql`is_approved = false`);
+      // Get all unapproved recipe IDs
+      const unapprovedRecipes = await db
+        .select({ id: recipes.id })
+        .from(recipes)
+        .where(sql`is_approved = false`);
 
-    const count = unapprovedRecipes.length;
-    console.log(`[Cleanup] Found ${count} unapproved recipes`);
+      const count = unapprovedRecipes.length;
+      console.log(`[Cleanup] Found ${count} unapproved recipes`);
 
-    if (count === 0) {
-      return res.json({
-        message: 'No pending recipes to approve',
-        approved: 0
+      if (count === 0) {
+        return res.json({
+          message: "No pending recipes to approve",
+          approved: 0,
+        });
+      }
+
+      // Approve all in batch
+      await db
+        .update(recipes)
+        .set({ isApproved: true })
+        .where(sql`is_approved = false`);
+
+      console.log(`[Cleanup] Successfully approved ${count} recipes`);
+
+      res.json({
+        message: `Successfully approved all ${count} pending recipes`,
+        approved: count,
       });
+    } catch (error) {
+      console.error("[Cleanup] Failed to approve all pending recipes:", error);
+      res.status(500).json({ error: "Failed to approve all pending recipes" });
     }
-
-    // Approve all in batch
-    await db
-      .update(recipes)
-      .set({ isApproved: true })
-      .where(sql`is_approved = false`);
-
-    console.log(`[Cleanup] Successfully approved ${count} recipes`);
-
-    res.json({
-      message: `Successfully approved all ${count} pending recipes`,
-      approved: count
-    });
-  } catch (error) {
-    console.error('[Cleanup] Failed to approve all pending recipes:', error);
-    res.status(500).json({ error: 'Failed to approve all pending recipes' });
-  }
-});
+  },
+);
 
 // Add bulk approve endpoint
 const bulkApproveSchema = z.object({
   recipeIds: z.array(z.string().uuid()),
 });
 
-adminRouter.post('/recipes/bulk-approve', requireAdmin, async (req, res) => {
+adminRouter.post("/recipes/bulk-approve", requireAdmin, async (req, res) => {
   try {
     const { recipeIds } = bulkApproveSchema.parse(req.body);
-    
+
     if (!recipeIds.length) {
-      return res.status(400).json({ error: 'No recipe IDs provided' });
+      return res.status(400).json({ error: "No recipe IDs provided" });
     }
 
     // Update all recipes in parallel
-    const updatePromises = recipeIds.map(id => 
-      storage.updateRecipe(id, { isApproved: true })
+    const updatePromises = recipeIds.map((id) =>
+      storage.updateRecipe(id, { isApproved: true }),
     );
 
     const results = await Promise.allSettled(updatePromises);
 
     // Count successes and failures
-    const succeeded = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
+    const succeeded = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.filter((r) => r.status === "rejected").length;
 
     // If all failed, return 500
     if (failed === recipeIds.length) {
-      return res.status(500).json({ 
-        error: 'Failed to approve any recipes',
+      return res.status(500).json({
+        error: "Failed to approve any recipes",
         details: {
           total: recipeIds.length,
           succeeded: 0,
-          failed
-        }
+          failed,
+        },
       });
     }
 
     // Return partial success if some succeeded
     res.status(succeeded === recipeIds.length ? 200 : 207).json({
-      message: succeeded === recipeIds.length 
-        ? 'All recipes approved successfully'
-        : `Approved ${succeeded} recipes, ${failed} failed`,
+      message:
+        succeeded === recipeIds.length
+          ? "All recipes approved successfully"
+          : `Approved ${succeeded} recipes, ${failed} failed`,
       details: {
         total: recipeIds.length,
         succeeded,
-        failed
-      }
+        failed,
+      },
     });
-
   } catch (error) {
-    console.error('Failed to bulk approve recipes:', error);
+    console.error("Failed to bulk approve recipes:", error);
     if (error instanceof z.ZodError) {
-      res.status(400).json({ 
-        error: 'Invalid request data', 
-        details: error.errors 
+      res.status(400).json({
+        error: "Invalid request data",
+        details: error.errors,
       });
     } else {
-      res.status(500).json({ error: 'Failed to approve recipes' });
+      res.status(500).json({ error: "Failed to approve recipes" });
     }
   }
 });
 
-adminRouter.delete('/recipes/:id', requireAdmin, async (req, res) => {
+adminRouter.delete("/recipes/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     await storage.deleteRecipe(id);
     res.status(204).send();
   } catch (error) {
     console.error(`Failed to delete recipe ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to delete recipe' });
+    res.status(500).json({ error: "Failed to delete recipe" });
   }
 });
 
-adminRouter.delete('/recipes', requireAdmin, async (req, res) => {
+adminRouter.delete("/recipes", requireAdmin, async (req, res) => {
   try {
     const { ids } = req.body;
     if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ error: 'Invalid request: "ids" must be a non-empty array.' });
+      return res
+        .status(400)
+        .json({ error: 'Invalid request: "ids" must be a non-empty array.' });
     }
     await storage.bulkDeleteRecipes(ids);
     res.json({ message: `Successfully deleted ${ids.length} recipes.` });
   } catch (error) {
-    console.error('Failed to bulk delete recipes:', error);
-    res.status(500).json({ error: 'Failed to bulk delete recipes' });
+    console.error("Failed to bulk delete recipes:", error);
+    res.status(500).json({ error: "Failed to bulk delete recipes" });
   }
 });
 
 // GET /api/admin/recipes/:id - Fetch a single recipe by ID (authenticated access)
-adminRouter.get('/recipes/:id', requireAuth, async (req, res) => {
+adminRouter.get("/recipes/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const recipe = await storage.getRecipe(id);
-    
+
     if (!recipe) {
-      return res.status(404).json({ error: 'Recipe not found' });
+      return res.status(404).json({ error: "Recipe not found" });
     }
-    
+
     // Defensive check for authenticated user
     const userRole = req.user?.role;
     if (!userRole) {
-      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required' });
+      return res
+        .status(401)
+        .json({ error: "Unauthorized", message: "Authentication required" });
     }
-    
+
     // Admins can see all recipes, regular users can only see approved recipes
-    if (userRole !== 'admin' && !recipe.isApproved) {
-      return res.status(404).json({ error: 'Recipe not found or not approved' });
+    if (userRole !== "admin" && !recipe.isApproved) {
+      return res
+        .status(404)
+        .json({ error: "Recipe not found or not approved" });
     }
-    
+
     res.json(recipe);
   } catch (error) {
     console.error(`Failed to fetch recipe ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to fetch recipe' });
+    res.status(500).json({ error: "Failed to fetch recipe" });
   }
 });
 
 // Admin profile statistics endpoint
-adminRouter.get('/profile/stats', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    // Import admin dashboard service for comprehensive stats
-    const { adminDashboardService } = await import('../services/adminDashboardService');
-    
-    // Get comprehensive system overview
-    const overview = await adminDashboardService.getSystemOverview();
-    
-    // Get usage stats
-    const usageStats = await adminDashboardService.getUsageStats();
+adminRouter.get(
+  "/profile/stats",
+  requireAuth,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      // Import admin dashboard service for comprehensive stats
+      const { adminDashboardService } =
+        await import("../services/adminDashboardService");
 
-    const stats = {
-      totalUsers: overview.users.total,
-      usersByRole: overview.users.byRole,
-      totalRecipes: overview.content.totalRecipes,
-      pendingRecipes: overview.content.pendingRecipes,
-      totalMealPlans: overview.content.totalMealPlans,
-      activeUsers: usageStats.activeUsers,
-      subscriptions: {
-        total: overview.subscriptions.total,
-        active: overview.subscriptions.active,
-        byTier: overview.subscriptions.byTier,
-      },
-      revenue: overview.subscriptions.revenue,
-      engagement: {
-        totalInteractions: overview.engagement.totalInteractions,
-        activeUsersToday: overview.engagement.activeUsersToday,
-      },
-    };
+      // Get comprehensive system overview
+      const overview = await adminDashboardService.getSystemOverview();
 
-    res.json(stats);
-  } catch (error) {
-    console.error('Admin stats error:', error);
-    res.status(500).json({ 
-      status: 'error',
-      message: 'Failed to fetch admin statistics',
-      code: 'SERVER_ERROR'
-    });
-  }
-});
+      // Get usage stats
+      const usageStats = await adminDashboardService.getUsageStats();
+
+      const stats = {
+        totalUsers: overview.users.total,
+        usersByRole: overview.users.byRole,
+        totalRecipes: overview.content.totalRecipes,
+        pendingRecipes: overview.content.pendingRecipes,
+        totalMealPlans: overview.content.totalMealPlans,
+        activeUsers: usageStats.activeUsers,
+        subscriptions: {
+          total: overview.subscriptions.total,
+          active: overview.subscriptions.active,
+          byTier: overview.subscriptions.byTier,
+        },
+        revenue: overview.subscriptions.revenue,
+        engagement: {
+          totalInteractions: overview.engagement.totalInteractions,
+          activeUsersToday: overview.engagement.activeUsersToday,
+        },
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Admin stats error:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Failed to fetch admin statistics",
+        code: "SERVER_ERROR",
+      });
+    }
+  },
+);
 
 // Export data as JSON
-adminRouter.get('/export', requireAdmin, async (req, res) => {
+adminRouter.get("/export", requireAdmin, async (req, res) => {
   try {
     const { type, recipeIds } = req.query;
-    
-    console.log('[Export] Received request - type:', type, ', recipeIds:', recipeIds);
-    
-    if (!type || !['recipes', 'users', 'mealPlans', 'all'].includes(type as string)) {
-      return res.status(400).json({ error: 'Invalid export type. Must be: recipes, users, mealPlans, or all' });
+
+    console.log(
+      "[Export] Received request - type:",
+      type,
+      ", recipeIds:",
+      recipeIds,
+    );
+
+    if (
+      !type ||
+      !["recipes", "users", "mealPlans", "all"].includes(type as string)
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Invalid export type. Must be: recipes, users, mealPlans, or all",
+        });
     }
-    
+
     const exportData: any = {};
-    
+
     // Export recipes
-    if (type === 'recipes' || type === 'all') {
+    if (type === "recipes" || type === "all") {
       // Only filter by recipeIds when type is 'recipes' (not 'all')
       // When type is 'all', always export all recipes regardless of recipeIds
       // Handle recipeIds as string or array (Express can return either)
       const recipeIdsStr = Array.isArray(recipeIds) ? recipeIds[0] : recipeIds;
-      
-      if (type === 'recipes' && recipeIdsStr && typeof recipeIdsStr === 'string' && recipeIdsStr.trim().length > 0) {
-        const idsArray = recipeIdsStr.split(',').map(id => id.trim()).filter(id => id.length > 0);
-        
-        console.log('[Export] Filtering recipes by IDs:', idsArray);
-        
+
+      if (
+        type === "recipes" &&
+        recipeIdsStr &&
+        typeof recipeIdsStr === "string" &&
+        recipeIdsStr.trim().length > 0
+      ) {
+        const idsArray = recipeIdsStr
+          .split(",")
+          .map((id) => id.trim())
+          .filter((id) => id.length > 0);
+
+        console.log("[Export] Filtering recipes by IDs:", idsArray);
+
         // Fetch recipes by IDs
         const selectedRecipes = await Promise.all(
-          idsArray.map(id => storage.getRecipe(id))
+          idsArray.map((id) => storage.getRecipe(id)),
         );
-        
+
         // Filter out undefined results (recipes that don't exist)
-        const validRecipes = selectedRecipes.filter((recipe: any) => recipe !== undefined);
-        
-        console.log('[Export] Found', validRecipes.length, 'recipes out of', idsArray.length, 'requested');
-        
+        const validRecipes = selectedRecipes.filter(
+          (recipe: any) => recipe !== undefined,
+        );
+
+        console.log(
+          "[Export] Found",
+          validRecipes.length,
+          "recipes out of",
+          idsArray.length,
+          "requested",
+        );
+
         exportData.recipes = validRecipes;
         exportData.recipesCount = validRecipes.length;
         exportData.requestedCount = idsArray.length;
@@ -1424,7 +1698,13 @@ adminRouter.get('/export', requireAdmin, async (req, res) => {
         }
       } else {
         // Export all recipes (either type is 'all' or no recipeIds provided)
-        console.log('[Export] Exporting all recipes (type:', type, ', recipeIds provided:', !!recipeIdsStr, ')');
+        console.log(
+          "[Export] Exporting all recipes (type:",
+          type,
+          ", recipeIds provided:",
+          !!recipeIdsStr,
+          ")",
+        );
         const { recipes } = await storage.searchRecipes({
           page: 1,
           limit: 100000, // Get all recipes
@@ -1433,43 +1713,45 @@ adminRouter.get('/export', requireAdmin, async (req, res) => {
         exportData.recipesCount = recipes.length;
       }
     }
-    
+
     // Export users
-    if (type === 'users' || type === 'all') {
-      const allUsers = await db.select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        role: users.role,
-        profilePicture: users.profilePicture,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-      }).from(users);
-      
+    if (type === "users" || type === "all") {
+      const allUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+          role: users.role,
+          profilePicture: users.profilePicture,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        })
+        .from(users);
+
       exportData.users = allUsers;
       exportData.usersCount = allUsers.length;
     }
-    
+
     // Export meal plans
-    if (type === 'mealPlans' || type === 'all') {
+    if (type === "mealPlans" || type === "all") {
       const allMealPlans = await db.select().from(personalizedMealPlans);
       exportData.mealPlans = allMealPlans;
       exportData.mealPlansCount = allMealPlans.length;
     }
-    
+
     // Add metadata
     exportData.exportDate = new Date().toISOString();
     exportData.exportType = type;
-    exportData.version = '1.0';
-    
+    exportData.version = "1.0";
+
     res.json(exportData);
   } catch (error) {
-    console.error('Export error:', error);
-    res.status(500).json({ 
-      error: 'Failed to export data',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    console.error("Export error:", error);
+    res.status(500).json({
+      error: "Failed to export data",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
 
-export default adminRouter; 
+export default adminRouter;
