@@ -1,13 +1,10 @@
-import { useState } from 'react';
-import { Check, Zap, Shield, TrendingUp, Info } from 'lucide-react';
+import { Check, Shield, TrendingUp, Zap } from "lucide-react";
 
-type PricingMode = 'subscription' | 'onetime';
-type Tier = 'STARTER' | 'PROFESSIONAL' | 'ENTERPRISE';
+type Tier = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
 
 interface TierFeature {
   name: string;
   included: boolean;
-  info?: string;
 }
 
 interface PricingTier {
@@ -15,111 +12,79 @@ interface PricingTier {
   id: Tier;
   tagline: string;
   popular?: boolean;
-  subscription: {
-    price: number;
-    period: string;
-    savings?: string;
-  };
-  onetime: {
-    price: number;
-    savings: string;
-    limit: string;
-  };
+  price: number;
+  clientLimit: string;
   features: TierFeature[];
   cta: string;
 }
 
 const PRICING_TIERS: PricingTier[] = [
   {
-    name: 'Starter',
-    id: 'STARTER',
-    tagline: 'Perfect for new trainers',
-    subscription: {
-      price: 14.99,
-      period: 'month',
-    },
-    onetime: {
-      price: 399,
-      savings: 'vs $2,158 over 10 years',
-      limit: '20 plans/month',
-    },
+    name: "Starter",
+    id: "STARTER",
+    tagline: "Perfect for new trainers",
+    price: 199,
+    clientLimit: "Up to 9 clients",
     features: [
-      { name: 'Up to 9 clients', included: true },
-      { name: 'Essential recipe library', included: true },
-      { name: 'AI meal plan generation', included: true },
-      { name: 'PDF exports', included: true },
-      { name: 'Email support', included: true },
-      { name: 'Custom branding', included: false },
-      { name: 'Priority support', included: false },
-      { name: 'API access', included: false },
+      { name: "Up to 9 clients", included: true },
+      { name: "Essential recipe library", included: true },
+      { name: "AI meal plan generation", included: true },
+      { name: "PDF exports", included: true },
+      { name: "Email support", included: true },
+      { name: "Custom branding", included: false },
+      { name: "Priority support", included: false },
+      { name: "API access", included: false },
     ],
-    cta: 'Get Started',
+    cta: "Get Started",
   },
   {
-    name: 'Professional',
-    id: 'PROFESSIONAL',
-    tagline: 'For growing practices',
+    name: "Professional",
+    id: "PROFESSIONAL",
+    tagline: "For growing practices",
     popular: true,
-    subscription: {
-      price: 29.99,
-      period: 'month',
-      savings: '70% cheaper than Trainerize',
-    },
-    onetime: {
-      price: 599,
-      savings: 'vs $4,318 over 10 years',
-      limit: '50 plans/month',
-    },
+    price: 299,
+    clientLimit: "Up to 20 clients",
     features: [
-      { name: 'Up to 20 clients', included: true },
-      { name: 'Complete recipe library', included: true },
-      { name: 'Advanced AI plans', included: true },
-      { name: 'Progress tracking', included: true },
-      { name: 'Priority support', included: true },
-      { name: 'Custom branding', included: true },
-      { name: 'Team accounts', included: false },
-      { name: 'API access', included: false },
+      { name: "Up to 20 clients", included: true },
+      { name: "Complete recipe library", included: true },
+      { name: "Advanced AI plans", included: true },
+      { name: "Progress tracking", included: true },
+      { name: "Priority support", included: true },
+      { name: "Custom branding", included: true },
+      { name: "Team accounts", included: false },
+      { name: "API access", included: false },
     ],
-    cta: 'Start Growing',
+    cta: "Start Growing",
   },
   {
-    name: 'Enterprise',
-    id: 'ENTERPRISE',
-    tagline: 'For teams and gyms',
-    subscription: {
-      price: 59.99,
-      period: 'month',
-    },
-    onetime: {
-      price: 999,
-      savings: 'vs $8,638 over 10 years',
-      limit: '150 plans/month',
-    },
+    name: "Enterprise",
+    id: "ENTERPRISE",
+    tagline: "For teams and gyms",
+    price: 399,
+    clientLimit: "Unlimited clients",
     features: [
-      { name: 'Up to 50 clients', included: true },
-      { name: 'Unlimited recipes', included: true },
-      { name: 'Team accounts', included: true },
-      { name: 'API access', included: true },
-      { name: 'White label options', included: true },
-      { name: 'Dedicated support', included: true },
-      { name: 'Custom integrations', included: true },
-      { name: 'SLA guarantee', included: true },
+      { name: "Unlimited clients", included: true },
+      { name: "Unlimited recipes", included: true },
+      { name: "Team accounts", included: true },
+      { name: "API access", included: true },
+      { name: "White label options", included: true },
+      { name: "Dedicated support", included: true },
+      { name: "Custom integrations", included: true },
+      { name: "SLA guarantee", included: true },
     ],
-    cta: 'Contact Sales',
+    cta: "Get Enterprise",
   },
 ];
 
 export default function HybridPricing() {
-  const [mode, setMode] = useState<PricingMode>('subscription');
-
   const handleCheckout = async (tier: Tier) => {
     try {
-      const response = await fetch('/api/subscription/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/subscription/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tier,
-          paymentType: mode,
+          paymentType: "onetime",
         }),
       });
 
@@ -129,8 +94,8 @@ export default function HybridPricing() {
         window.location.href = data.url;
       }
     } catch (error) {
-      console.error('Error creating checkout:', error);
-      alert('Failed to start checkout process. Please try again.');
+      console.error("Error creating checkout:", error);
+      alert("Failed to start checkout process. Please try again.");
     }
   };
 
@@ -140,48 +105,16 @@ export default function HybridPricing() {
       <div className="max-w-7xl mx-auto text-center mb-12">
         <div className="inline-block mb-4 px-4 py-2 bg-green-100 rounded-full">
           <span className="text-green-700 font-semibold text-sm">
-            💰 Choose Your Payment Model
+            One-Time Payment — Lifetime Access
           </span>
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-          Flexible Pricing That Works For You
+          Simple, One-Time Pricing
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-          Only platform offering both one-time payment and subscription options.
-          Pick what fits your business best.
+          Pay once and own your plan forever. No monthly fees. No subscriptions.
+          No recurring charges. Ever.
         </p>
-
-        {/* Pricing Mode Toggle */}
-        <div className="inline-flex items-center bg-gray-100 rounded-lg p-1 mb-8">
-          <button
-            onClick={() => setMode('subscription')}
-            className={`px-6 py-3 rounded-lg font-medium transition-all ${
-              mode === 'subscription'
-                ? 'bg-white text-purple-600 shadow-md'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              <span>Monthly Subscription</span>
-            </div>
-            <div className="text-xs text-gray-500 mt-1">Unlimited usage</div>
-          </button>
-          <button
-            onClick={() => setMode('onetime')}
-            className={`px-6 py-3 rounded-lg font-medium transition-all ${
-              mode === 'onetime'
-                ? 'bg-white text-purple-600 shadow-md'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              <span>One-Time Payment</span>
-            </div>
-            <div className="text-xs text-gray-500 mt-1">Lifetime access</div>
-          </button>
-        </div>
 
         {/* Value Props */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
@@ -189,13 +122,9 @@ export default function HybridPricing() {
             <div className="text-purple-600 mb-2">
               <TrendingUp className="w-8 h-8 mx-auto" />
             </div>
-            <h3 className="font-semibold mb-2">
-              {mode === 'subscription' ? 'Unlimited Usage' : 'No Monthly Fees'}
-            </h3>
+            <h3 className="font-semibold mb-2">No Monthly Fees</h3>
             <p className="text-sm text-gray-600">
-              {mode === 'subscription'
-                ? 'Generate unlimited meal plans and recipes'
-                : 'Pay once, use forever - no recurring charges'}
+              Pay once, use forever — no recurring charges
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -204,18 +133,16 @@ export default function HybridPricing() {
             </div>
             <h3 className="font-semibold mb-2">14-Day Guarantee</h3>
             <p className="text-sm text-gray-600">
-              {mode === 'subscription'
-                ? 'Cancel anytime, full refund within 14 days'
-                : 'Money-back guarantee, no questions asked'}
+              Money-back guarantee, no questions asked
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <div className="text-purple-600 mb-2">
               <Zap className="w-8 h-8 mx-auto" />
             </div>
-            <h3 className="font-semibold mb-2">Switch Anytime</h3>
+            <h3 className="font-semibold mb-2">Lifetime Access</h3>
             <p className="text-sm text-gray-600">
-              Change between subscription and one-time payment models
+              One payment unlocks the platform for life
             </p>
           </div>
         </div>
@@ -228,7 +155,9 @@ export default function HybridPricing() {
             <div
               key={tier.id}
               className={`bg-white rounded-2xl shadow-xl overflow-hidden relative ${
-                tier.popular ? 'ring-2 ring-purple-600 transform md:scale-105' : ''
+                tier.popular
+                  ? "ring-2 ring-purple-600 transform md:scale-105"
+                  : ""
               }`}
             >
               {tier.popular && (
@@ -241,43 +170,34 @@ export default function HybridPricing() {
 
               <div className="p-8">
                 {/* Tier Name */}
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  {tier.name}
+                </h3>
                 <p className="text-gray-600 mb-6">{tier.tagline}</p>
 
                 {/* Pricing */}
-                {mode === 'subscription' ? (
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-gray-900">
-                        ${tier.subscription.price}
-                      </span>
-                      <span className="text-gray-600">/{tier.subscription.period}</span>
-                    </div>
-                    {tier.subscription.savings && (
-                      <p className="text-sm text-green-600 mt-2">{tier.subscription.savings}</p>
-                    )}
-                    <p className="text-sm text-gray-500 mt-2">Unlimited meal plans</p>
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold text-gray-900">
+                      ${tier.price}
+                    </span>
+                    <span className="text-gray-600">one-time</span>
                   </div>
-                ) : (
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-gray-900">
-                        ${tier.onetime.price}
-                      </span>
-                      <span className="text-gray-600">one-time</span>
-                    </div>
-                    <p className="text-sm text-green-600 mt-2">Save {tier.onetime.savings}</p>
-                    <p className="text-sm text-gray-500 mt-2">{tier.onetime.limit}</p>
-                  </div>
-                )}
+                  <p className="text-sm text-green-600 mt-2">
+                    {tier.clientLimit}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Lifetime access. No monthly fees.
+                  </p>
+                </div>
 
                 {/* CTA Button */}
                 <button
                   onClick={() => handleCheckout(tier.id)}
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
                     tier.popular
-                      ? 'bg-purple-600 text-white hover:bg-purple-700'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      ? "bg-purple-600 text-white hover:bg-purple-700"
+                      : "bg-gray-100 text-gray-900 hover:bg-gray-200"
                   }`}
                 >
                   {tier.cta}
@@ -289,7 +209,7 @@ export default function HybridPricing() {
                     <div key={idx} className="flex items-start gap-3">
                       <div
                         className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
-                          feature.included ? 'bg-green-100' : 'bg-gray-100'
+                          feature.included ? "bg-green-100" : "bg-gray-100"
                         }`}
                       >
                         {feature.included ? (
@@ -301,17 +221,13 @@ export default function HybridPricing() {
                       <div className="flex-1">
                         <span
                           className={
-                            feature.included ? 'text-gray-900' : 'text-gray-400 line-through'
+                            feature.included
+                              ? "text-gray-900"
+                              : "text-gray-400 line-through"
                           }
                         >
                           {feature.name}
                         </span>
-                        {feature.info && (
-                          <div className="flex items-center gap-1 mt-1">
-                            <Info className="w-3 h-3 text-gray-400" />
-                            <span className="text-xs text-gray-500">{feature.info}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   ))}
@@ -330,39 +246,44 @@ export default function HybridPricing() {
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h3 className="font-semibold text-lg mb-2">
-              Can I switch between subscription and one-time payment?
+              Is this really a one-time payment?
             </h3>
             <p className="text-gray-600">
-              Yes! You can switch at any time. If you're on a subscription and want to switch to
-              one-time, we'll credit your unused subscription time toward the one-time purchase.
+              Yes — completely. You pay once and own lifetime access to your
+              chosen tier. No monthly charges, no annual renewals, no usage
+              fees. The price you see is the only price you'll ever pay.
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h3 className="font-semibold text-lg mb-2">
-              What happens if I exceed my monthly limit on one-time plan?
+              What if I need more clients later?
             </h3>
             <p className="text-gray-600">
-              You'll receive a notification when approaching your limit. You can either wait for the
-              next month, upgrade to a higher tier, or switch to unlimited subscription.
+              You can upgrade to a higher tier at any time and only pay the
+              difference. Going from Starter ($199) to Professional ($299) costs
+              just $100 more — also a one-time payment. All your data transfers
+              seamlessly.
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h3 className="font-semibold text-lg mb-2">
-              Why is EvoFitMeals better than competitors?
+              Why is EvoFitMeals better than subscription-based competitors?
             </h3>
             <p className="text-gray-600">
-              We're the ONLY platform offering both payment models. Plus, we use GPT-4 and DALL-E 3
-              for superior AI meal planning. Our subscription is 70% cheaper than Trainerize
-              ($29.99 vs $100/mo).
+              Our competitors charge $29–$200/month. That's $348–$2,400 per
+              year, forever. EvoFitMeals is a one-time purchase. In year two,
+              you pay nothing while competitors keep billing you. Over 10 years,
+              you save thousands.
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h3 className="font-semibold text-lg mb-2">
-              Do I get a refund if I cancel my subscription?
+              What is your refund policy?
             </h3>
             <p className="text-gray-600">
-              Yes, we offer a 14-day money-back guarantee. After that, you can cancel anytime and
-              keep access until the end of your billing period.
+              We offer a 14-day money-back guarantee. Try EvoFitMeals with real
+              clients, and if you're not satisfied, email us within 14 days for
+              a full refund — no questions asked.
             </p>
           </div>
         </div>
@@ -374,26 +295,19 @@ export default function HybridPricing() {
           Ready to Transform Your Nutrition Business?
         </h2>
         <p className="text-xl mb-8 opacity-90">
-          Join 10,000+ fitness professionals already using EvoFitMeals
+          Join fitness professionals already using EvoFitMeals — one payment,
+          lifetime access.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href="/signup"
+            href="/get-started"
             className="bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition"
           >
-            Start Free Trial
-          </a>
-          <a
-            href="/landing/roi-calculator.html"
-            className="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-purple-600 transition"
-          >
-            Calculate Your Savings
+            Get Started
           </a>
         </div>
         <p className="mt-6 text-sm opacity-75">
-          {mode === 'subscription'
-            ? '14-day free trial • Cancel anytime • No credit card required'
-            : '14-day money-back guarantee • Lifetime access • No monthly fees'}
+          14-day money-back guarantee · Lifetime access · No monthly fees
         </p>
       </div>
     </div>
