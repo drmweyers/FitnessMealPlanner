@@ -30,12 +30,19 @@ export async function createGitHubIssue(
     return null;
   }
 
-  const prefix =
-    report.category === "bug"
-      ? "BUG"
-      : report.category === "feature"
-        ? "FEATURE"
-        : "FEEDBACK";
+  const CATEGORY_LABELS: Record<string, string> = {
+    ui_issue: "BUG",
+    data_accuracy: "BUG",
+    performance: "BUG",
+    sync_issue: "BUG",
+    auth_access: "BUG",
+    notification: "BUG",
+    integration: "BUG",
+    crash: "BUG",
+    feature_request: "FEATURE",
+    other: "FEEDBACK",
+  };
+  const prefix = CATEGORY_LABELS[report.category] ?? "BUG";
   const context = report.context as Record<string, string> | null;
 
   const body = [

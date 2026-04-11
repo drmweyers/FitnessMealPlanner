@@ -11,6 +11,20 @@ import { logger } from "../utils/logger";
 
 const bugReportsRouter = Router();
 
+// Default priority by category — auto-triage for Hal
+const CATEGORY_DEFAULT_PRIORITY: Record<string, string> = {
+  crash: "critical",
+  auth_access: "critical",
+  sync_issue: "high",
+  data_accuracy: "high",
+  performance: "high",
+  ui_issue: "medium",
+  notification: "medium",
+  integration: "medium",
+  feature_request: "low",
+  other: "low",
+};
+
 // API key middleware for Hal integration
 function requireApiKey(req: Request, res: Response, next: Function) {
   const key = req.headers["x-api-key"];
@@ -37,12 +51,14 @@ bugReportsRouter.post(
 
       const { category, description, screenshotBase64, context } = parsed.data;
       const title = description.slice(0, 80).replace(/\n/g, " ");
+      const priority = CATEGORY_DEFAULT_PRIORITY[category] || "medium";
 
       const [report] = await db
         .insert(bugReports)
         .values({
           reporterId: (req as any).user?.id ?? null,
           category,
+          priority: priority as any,
           title,
           description,
           screenshotBase64: screenshotBase64 ?? null,

@@ -2006,9 +2006,16 @@ export type SubscribeAi = z.infer<typeof subscribeAiSchema>;
 
 // Bug Report Pipeline
 export const bugReportCategoryEnum = pgEnum("bug_report_category", [
-  "bug",
-  "feature",
-  "feedback",
+  "ui_issue",
+  "data_accuracy",
+  "feature_request",
+  "performance",
+  "sync_issue",
+  "auth_access",
+  "notification",
+  "integration",
+  "crash",
+  "other",
 ]);
 
 export const bugReportStatusEnum = pgEnum("bug_report_status", [
@@ -2033,7 +2040,7 @@ export const bugReports = pgTable(
     reporterId: uuid("reporter_id").references(() => users.id, {
       onDelete: "set null",
     }),
-    category: bugReportCategoryEnum("category").notNull().default("bug"),
+    category: bugReportCategoryEnum("category").notNull().default("other"),
     priority: bugReportPriorityEnum("priority").notNull().default("medium"),
     status: bugReportStatusEnum("status").notNull().default("open"),
     title: varchar("title", { length: 255 }).notNull(),
@@ -2067,7 +2074,18 @@ export type BugReport = typeof bugReports.$inferSelect;
 export type InsertBugReport = typeof bugReports.$inferInsert;
 
 export const createBugReportSchema = z.object({
-  category: z.enum(["bug", "feature", "feedback"]),
+  category: z.enum([
+    "ui_issue",
+    "data_accuracy",
+    "feature_request",
+    "performance",
+    "sync_issue",
+    "auth_access",
+    "notification",
+    "integration",
+    "crash",
+    "other",
+  ]),
   description: z
     .string()
     .min(10, "Please provide at least 10 characters")

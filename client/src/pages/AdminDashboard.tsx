@@ -2564,9 +2564,16 @@ function BugReportsTab() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="bug">Bugs</SelectItem>
-              <SelectItem value="feature">Features</SelectItem>
-              <SelectItem value="feedback">Feedback</SelectItem>
+              <SelectItem value="ui_issue">UI Issue</SelectItem>
+              <SelectItem value="data_accuracy">Data Accuracy</SelectItem>
+              <SelectItem value="feature_request">Feature Request</SelectItem>
+              <SelectItem value="performance">Performance</SelectItem>
+              <SelectItem value="sync_issue">Sync Issue</SelectItem>
+              <SelectItem value="auth_access">Login / Access</SelectItem>
+              <SelectItem value="notification">Notification</SelectItem>
+              <SelectItem value="integration">Integration</SelectItem>
+              <SelectItem value="crash">Crash</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>
