@@ -82,6 +82,19 @@ export interface IStorage {
   linkGoogleAccount(userId: string, googleId: string): Promise<void>;
   updateUserPassword(userId: string, password: string): Promise<void>;
   updateUserEmail(userId: string, email: string): Promise<void>;
+  updateUserProfile(userId: string, fields: Partial<{
+    bio: string | null;
+    specializations: string[] | null;
+    certifications: string[] | null;
+    yearsExperience: number | null;
+    fitnessGoals: string[] | null;
+    dietaryRestrictions: string[] | null;
+    preferredCuisines: string[] | null;
+    activityLevel: string | null;
+    age: number | null;
+    weight: string | null;
+    height: string | null;
+  }>): Promise<User>;
   getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]>;
   
   // Password Reset
@@ -263,6 +276,32 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserEmail(userId: string, email: string): Promise<void> {
     await db.update(users).set({ email }).where(eq(users.id, userId));
+  }
+
+  async updateUserProfile(userId: string, fields: Record<string, any>): Promise<User> {
+    const allowed = [
+      'bio',
+      'specializations',
+      'certifications',
+      'yearsExperience',
+      'fitnessGoals',
+      'dietaryRestrictions',
+      'preferredCuisines',
+      'activityLevel',
+      'age',
+      'weight',
+      'height',
+    ];
+    const update: Record<string, any> = { updatedAt: new Date() };
+    for (const key of allowed) {
+      if (key in fields) update[key] = fields[key];
+    }
+    const [updated] = await db
+      .update(users)
+      .set(update)
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
   }
 
   async getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]> {

@@ -158,37 +158,86 @@ export class ManualMealPlanService {
   /**
    * Parse structured format with "Meal 1" headers and ingredient lists
    *
-   * Example:
-   * Meal 1
-   * -175g of Jasmine Rice
-   * -150g of Lean ground beef
-   * -100g of cooked broccoli
+   * Supports two formats:
+   * Format A (bullet-prefixed):
+   *   Meal 1
+   *   -175g of Jasmine Rice
+   *   -150g of Lean ground beef
+   *
+   * Format B (ChatGPT em-dash):
+   *   Meal 1 — Breakfast
+   *   ~117 cal
+   *   Greek yogurt & berries
+   *   Nonfat plain Greek yogurt — 150 g
+   *   Mixed berries — 75 g
    */
   private parseStructuredFormat(text: string): ManualMealEntry[] {
     const meals: ManualMealEntry[] = [];
 
-    // Split by "Meal X" headers
-    const mealBlocks = text.split(/Meal\s+\d+/i).filter(block => block.trim().length > 0);
+    // Split by "Meal X" headers, capturing the header text for category detection
+    const mealHeaderRegex = /Meal\s+\d+\s*(?:[—\-:]\s*(.+))?/gi;
+    const headers: { category: MealCategory; index: number }[] = [];
+    let match: RegExpExecArray | null;
 
-    for (const block of mealBlocks) {
+    while ((match = mealHeaderRegex.exec(text)) !== null) {
+      const rawCategory = match[1]?.trim().toLowerCase() || '';
+      let category: MealCategory = 'lunch'; // default
+      if (/breakfast/i.test(rawCategory)) category = 'breakfast';
+      else if (/lunch/i.test(rawCategory)) category = 'lunch';
+      else if (/dinner/i.test(rawCategory)) category = 'dinner';
+      else if (/snack/i.test(rawCategory)) category = 'snack';
+      headers.push({ category, index: match.index + match[0].length });
+    }
+
+    if (headers.length === 0) {
+      // Fallback to original split logic
+      const mealBlocks = text.split(/Meal\s+\d+/i).filter(block => block.trim().length > 0);
+      for (const block of mealBlocks) {
+        const lines = block.split('\n')
+          .map(line => line.trim())
+          .filter(line => line.startsWith('-') || line.startsWith('•'));
+        if (lines.length === 0) continue;
+        const ingredients = lines.map(line => this.parseIngredientLine(line));
+        const mealName = this.generateMealName(ingredients);
+        const category = this.detectCategoryFromIngredients(ingredients);
+        meals.push({ mealName, category, ingredients });
+      }
+      return meals;
+    }
+
+    // Extract blocks between headers
+    for (let i = 0; i < headers.length; i++) {
+      const start = headers[i].index;
+      const end = i + 1 < headers.length
+        ? text.lastIndexOf('Meal', headers[i + 1].index)
+        : text.length;
+      const block = text.substring(start, end);
+
       const lines = block.split('\n')
         .map(line => line.trim())
-        .filter(line => line.startsWith('-') || line.startsWith('•'));
+        .filter(line => {
+          if (!line || line.length < 3) return false;
+          // Skip noise: calorie annotations, day headers, "to taste" lines
+          if (/^~?\d+\s*cal/i.test(line)) return false;
+          if (/^Day\s+\d+/i.test(line)) return false;
+          if (/^Meal\s+\d+/i.test(line)) return false;
+          // Keep lines with dashes/bullets (original format)
+          if (line.startsWith('-') || line.startsWith('•')) return true;
+          // Keep lines with em-dash measurement pattern: "Name — Amount Unit"
+          if (/\s[—\-]{1,2}\s/.test(line) && /\d+\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)\b/i.test(line)) return true;
+          // Keep lines with "to taste" pattern
+          if (/\s[—\-]{1,2}\s.*to taste/i.test(line)) return true;
+          return false;
+        });
 
       if (lines.length === 0) continue;
 
-      // Parse each ingredient line
       const ingredients = lines.map(line => this.parseIngredientLine(line));
-
-      // Generate meal name from ingredients
       const mealName = this.generateMealName(ingredients);
-
-      // Detect category from ingredients
-      const category = this.detectCategoryFromIngredients(ingredients);
 
       meals.push({
         mealName,
-        category,
+        category: headers[i].category,
         ingredients
       });
     }
@@ -206,6 +255,27 @@ export class ManualMealPlanService {
   private parseIngredientLine(line: string): {ingredient: string; amount: string; unit: string} {
     // Remove bullet point
     line = line.replace(/^[\-•]\s*/, '');
+
+    // ChatGPT format: "Ingredient Name — Amount Unit" (em-dash or double-dash separator)
+    // e.g., "Nonfat plain Greek yogurt — 150 g" or "Lemon juice — 10 ml"
+    const emDashMatch = line.match(/^(.+?)\s+[—\-]{1,2}\s+(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|lbs|cup|cups|tbsp|tsp)\b/i);
+    if (emDashMatch) {
+      return {
+        ingredient: emDashMatch[1].trim(),
+        amount: emDashMatch[2],
+        unit: emDashMatch[3].toLowerCase()
+      };
+    }
+
+    // ChatGPT "to taste" format: "Sea salt & pepper — to taste"
+    const toTasteMatch = line.match(/^(.+?)\s+[—\-]{1,2}\s+to taste/i);
+    if (toTasteMatch) {
+      return {
+        ingredient: toTasteMatch[1].trim(),
+        amount: '1',
+        unit: 'pinch'
+      };
+    }
 
     // Try to match measurement patterns
     // Pattern 1: "175g of Jasmine Rice" or "175g Jasmine Rice"

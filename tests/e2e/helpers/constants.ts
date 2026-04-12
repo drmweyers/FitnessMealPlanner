@@ -111,6 +111,9 @@ export const API = {
     me: "/api/auth/me",
   },
 
+  // Profile (current user)
+  profile: "/api/profile",
+
   // Invitations
   invitations: {
     send: "/api/invitations/send",

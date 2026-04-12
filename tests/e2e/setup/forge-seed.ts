@@ -177,6 +177,52 @@ async function seed() {
   }
 
   // -------------------------------------------------------------------------
+  // Phase 3.5: Seed profile fields for all three actors
+  // -------------------------------------------------------------------------
+  console.log("\n[forge-seed] Phase 3.5: Seeding profile fields...");
+
+  const trainerProfilePayload = {
+    bio: "FORGE QA trainer profile — 8+ years coaching busy professionals on sustainable fat loss and lean-mass nutrition.",
+    specializations: ["Weight Loss", "Muscle Gain", "Sports Nutrition", "Habit Coaching"],
+    certifications: ["NASM-CPT", "Precision Nutrition L1", "ACE-CPT"],
+    yearsExperience: 8,
+  };
+
+  const customerProfilePayload = {
+    bio: "FORGE QA customer profile — focused on sustainable weight loss while juggling a desk job and family.",
+    fitnessGoals: ["Weight Loss", "General Health", "Endurance"],
+    dietaryRestrictions: ["Gluten-Free", "Low-Carb"],
+    preferredCuisines: ["Mediterranean", "Asian", "Mexican"],
+    activityLevel: "moderately_active" as const,
+    age: 34,
+    weight: 81.2,
+    height: 178,
+  };
+
+  try {
+    await trainerClient.put(API.profile, trainerProfilePayload);
+    console.log("  ✓ Trainer profile seeded");
+  } catch (e: any) {
+    console.warn(`  ⚠ Trainer profile seed failed: ${e.message}`);
+  }
+
+  try {
+    await customerClient.put(API.profile, customerProfilePayload);
+    console.log("  ✓ Customer profile seeded");
+  } catch (e: any) {
+    console.warn(`  ⚠ Customer profile seed failed: ${e.message}`);
+  }
+
+  try {
+    await adminClient.put(API.profile, {
+      bio: "FORGE QA admin profile — platform operator account.",
+    });
+    console.log("  ✓ Admin profile seeded");
+  } catch (e: any) {
+    console.warn(`  ⚠ Admin profile seed failed: ${e.message}`);
+  }
+
+  // -------------------------------------------------------------------------
   // Phase 4: Create trainer meal plans (idempotent)
   // -------------------------------------------------------------------------
   console.log("\n[forge-seed] Phase 4: Creating trainer meal plans...");
