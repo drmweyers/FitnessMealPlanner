@@ -12,7 +12,11 @@
  * - Instant meal plan creation
  */
 
-import { getRandomImageForCategory, getCategoryImagePoolHealth, type MealCategory } from '../config/categoryImages';
+import {
+  getRandomImageForCategory,
+  getCategoryImagePoolHealth,
+  type MealCategory,
+} from "../config/categoryImages";
 
 /**
  * Manual meal entry interface
@@ -45,24 +49,26 @@ export interface ManualMealPlan {
   mealsPerDay: number;
   dailyCalorieTarget: number;
   fitnessGoal: string;
-  meals: Array<ManualMealEntry & {
-    id: string;
-    imageUrl: string;
-    servings: number;
-    prepTime: number;
-    cookTime: number;
-    difficulty: 'easy' | 'medium' | 'hard';
-    instructions: string;
-    nutrition: {
-      calories: number;
-      protein: number;
-      carbs: number;
-      fat: number;
-      fiber: number;
-    };
-  }>;
+  meals: Array<
+    ManualMealEntry & {
+      id: string;
+      imageUrl: string;
+      servings: number;
+      prepTime: number;
+      cookTime: number;
+      difficulty: "easy" | "medium" | "hard";
+      instructions: string;
+      nutrition: {
+        calories: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+        fiber: number;
+      };
+    }
+  >;
   createdBy: string;
-  creationMethod: 'manual';
+  creationMethod: "manual";
   isManual: true;
   createdAt: string;
   assignedAt?: string;
@@ -101,7 +107,7 @@ export class ManualMealPlanService {
     // Detect format type
     const format = this.detectFormat(text);
 
-    if (format === 'structured') {
+    if (format === "structured") {
       return this.parseStructuredFormat(text);
     }
 
@@ -112,17 +118,18 @@ export class ManualMealPlanService {
   /**
    * Detect format type from text
    */
-  private detectFormat(text: string): 'simple' | 'structured' {
+  private detectFormat(text: string): "simple" | "structured" {
     const hasMealHeaders = /Meal\s+\d+/i.test(text);
-    const hasBulletPoints = /^[\-•]/m.test(text);
-    const hasMeasurements = /\d+\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp|piece|pieces)/i.test(text);
+    const hasBulletPoints = /^[-•]/m.test(text);
+    const hasMeasurements =
+      /\d+\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp|piece|pieces)/i.test(text);
 
     // If we have meal headers AND (bullet points OR measurements), it's structured
     if (hasMealHeaders && (hasBulletPoints || hasMeasurements)) {
-      return 'structured';
+      return "structured";
     }
 
-    return 'simple';
+    return "simple";
   }
 
   /**
@@ -131,18 +138,20 @@ export class ManualMealPlanService {
   private parseSimpleFormat(text: string): ManualMealEntry[] {
     // Split by newlines and filter empty lines
     const lines = text
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
 
-    return lines.map(line => {
+    return lines.map((line) => {
       // Try to match "Category: Meal Name" pattern
-      const explicitCategoryMatch = line.match(/^(breakfast|lunch|dinner|snack):\s*(.+)$/i);
+      const explicitCategoryMatch = line.match(
+        /^(breakfast|lunch|dinner|snack):\s*(.+)$/i,
+      );
 
       if (explicitCategoryMatch) {
         return {
           category: explicitCategoryMatch[1].toLowerCase() as MealCategory,
-          mealName: explicitCategoryMatch[2].trim()
+          mealName: explicitCategoryMatch[2].trim(),
         };
       }
 
@@ -150,7 +159,7 @@ export class ManualMealPlanService {
       const category = this.detectCategory(line);
       return {
         mealName: line,
-        category
+        category,
       };
     });
   }
@@ -180,24 +189,27 @@ export class ManualMealPlanService {
     let match: RegExpExecArray | null;
 
     while ((match = mealHeaderRegex.exec(text)) !== null) {
-      const rawCategory = match[1]?.trim().toLowerCase() || '';
-      let category: MealCategory = 'lunch'; // default
-      if (/breakfast/i.test(rawCategory)) category = 'breakfast';
-      else if (/lunch/i.test(rawCategory)) category = 'lunch';
-      else if (/dinner/i.test(rawCategory)) category = 'dinner';
-      else if (/snack/i.test(rawCategory)) category = 'snack';
+      const rawCategory = match[1]?.trim().toLowerCase() || "";
+      let category: MealCategory = "lunch"; // default
+      if (/breakfast/i.test(rawCategory)) category = "breakfast";
+      else if (/lunch/i.test(rawCategory)) category = "lunch";
+      else if (/dinner/i.test(rawCategory)) category = "dinner";
+      else if (/snack/i.test(rawCategory)) category = "snack";
       headers.push({ category, index: match.index + match[0].length });
     }
 
     if (headers.length === 0) {
       // Fallback to original split logic
-      const mealBlocks = text.split(/Meal\s+\d+/i).filter(block => block.trim().length > 0);
+      const mealBlocks = text
+        .split(/Meal\s+\d+/i)
+        .filter((block) => block.trim().length > 0);
       for (const block of mealBlocks) {
-        const lines = block.split('\n')
-          .map(line => line.trim())
-          .filter(line => line.startsWith('-') || line.startsWith('•'));
+        const lines = block
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.startsWith("-") || line.startsWith("•"));
         if (lines.length === 0) continue;
-        const ingredients = lines.map(line => this.parseIngredientLine(line));
+        const ingredients = lines.map((line) => this.parseIngredientLine(line));
         const mealName = this.generateMealName(ingredients);
         const category = this.detectCategoryFromIngredients(ingredients);
         meals.push({ mealName, category, ingredients });
@@ -208,37 +220,43 @@ export class ManualMealPlanService {
     // Extract blocks between headers
     for (let i = 0; i < headers.length; i++) {
       const start = headers[i].index;
-      const end = i + 1 < headers.length
-        ? text.lastIndexOf('Meal', headers[i + 1].index)
-        : text.length;
+      const end =
+        i + 1 < headers.length
+          ? text.lastIndexOf("Meal", headers[i + 1].index)
+          : text.length;
       const block = text.substring(start, end);
 
-      const lines = block.split('\n')
-        .map(line => line.trim())
-        .filter(line => {
+      const lines = block
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => {
           if (!line || line.length < 3) return false;
           // Skip noise: calorie annotations, day headers, "to taste" lines
           if (/^~?\d+\s*cal/i.test(line)) return false;
           if (/^Day\s+\d+/i.test(line)) return false;
           if (/^Meal\s+\d+/i.test(line)) return false;
           // Keep lines with dashes/bullets (original format)
-          if (line.startsWith('-') || line.startsWith('•')) return true;
+          if (line.startsWith("-") || line.startsWith("•")) return true;
           // Keep lines with em-dash measurement pattern: "Name — Amount Unit"
-          if (/\s[—\-]{1,2}\s/.test(line) && /\d+\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)\b/i.test(line)) return true;
+          if (
+            /\s[—-]{1,2}\s/.test(line) &&
+            /\d+\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)\b/i.test(line)
+          )
+            return true;
           // Keep lines with "to taste" pattern
-          if (/\s[—\-]{1,2}\s.*to taste/i.test(line)) return true;
+          if (/\s[—-]{1,2}\s.*to taste/i.test(line)) return true;
           return false;
         });
 
       if (lines.length === 0) continue;
 
-      const ingredients = lines.map(line => this.parseIngredientLine(line));
+      const ingredients = lines.map((line) => this.parseIngredientLine(line));
       const mealName = this.generateMealName(ingredients);
 
       meals.push({
         mealName,
         category: headers[i].category,
-        ingredients
+        ingredients,
       });
     }
 
@@ -252,49 +270,59 @@ export class ManualMealPlanService {
    * "-4 eggs" → {amount: "4", unit: "unit", ingredient: "eggs"}
    * "-2 pieces of sourdough bread" → {amount: "2", unit: "pieces", ingredient: "sourdough bread"}
    */
-  private parseIngredientLine(line: string): {ingredient: string; amount: string; unit: string} {
+  private parseIngredientLine(line: string): {
+    ingredient: string;
+    amount: string;
+    unit: string;
+  } {
     // Remove bullet point
-    line = line.replace(/^[\-•]\s*/, '');
+    line = line.replace(/^[-•]\s*/, "");
 
     // ChatGPT format: "Ingredient Name — Amount Unit" (em-dash or double-dash separator)
     // e.g., "Nonfat plain Greek yogurt — 150 g" or "Lemon juice — 10 ml"
-    const emDashMatch = line.match(/^(.+?)\s+[—\-]{1,2}\s+(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|lbs|cup|cups|tbsp|tsp)\b/i);
+    const emDashMatch = line.match(
+      /^(.+?)\s+[—-]{1,2}\s+(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|lbs|cup|cups|tbsp|tsp)\b/i,
+    );
     if (emDashMatch) {
       return {
         ingredient: emDashMatch[1].trim(),
         amount: emDashMatch[2],
-        unit: emDashMatch[3].toLowerCase()
+        unit: emDashMatch[3].toLowerCase(),
       };
     }
 
     // ChatGPT "to taste" format: "Sea salt & pepper — to taste"
-    const toTasteMatch = line.match(/^(.+?)\s+[—\-]{1,2}\s+to taste/i);
+    const toTasteMatch = line.match(/^(.+?)\s+[—-]{1,2}\s+to taste/i);
     if (toTasteMatch) {
       return {
         ingredient: toTasteMatch[1].trim(),
-        amount: '1',
-        unit: 'pinch'
+        amount: "1",
+        unit: "pinch",
       };
     }
 
     // Try to match measurement patterns
     // Pattern 1: "175g of Jasmine Rice" or "175g Jasmine Rice"
-    const measurementMatch = line.match(/^(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)\s*(?:of\s+)?(.+)$/i);
+    const measurementMatch = line.match(
+      /^(\d+(?:\.\d+)?)\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp)\s*(?:of\s+)?(.+)$/i,
+    );
     if (measurementMatch) {
       return {
         amount: measurementMatch[1],
         unit: measurementMatch[2].toLowerCase(),
-        ingredient: measurementMatch[3].trim()
+        ingredient: measurementMatch[3].trim(),
       };
     }
 
     // Pattern 2: "4 eggs" or "2 pieces of bread"
-    const countMatch = line.match(/^(\d+(?:\.\d+)?)\s+(pieces?|slices?|cups?|tbsp|tsp)\s+(?:of\s+)?(.+)$/i);
+    const countMatch = line.match(
+      /^(\d+(?:\.\d+)?)\s+(pieces?|slices?|cups?|tbsp|tsp)\s+(?:of\s+)?(.+)$/i,
+    );
     if (countMatch) {
       return {
         amount: countMatch[1],
         unit: countMatch[2].toLowerCase(),
-        ingredient: countMatch[3].trim()
+        ingredient: countMatch[3].trim(),
       };
     }
 
@@ -303,27 +331,27 @@ export class ManualMealPlanService {
     if (simpleCountMatch) {
       return {
         amount: simpleCountMatch[1],
-        unit: 'unit',
-        ingredient: simpleCountMatch[2].trim()
+        unit: "unit",
+        ingredient: simpleCountMatch[2].trim(),
       };
     }
 
     // Fallback: plain ingredient without measurement
     return {
-      amount: '1',
-      unit: 'serving',
-      ingredient: line
+      amount: "1",
+      unit: "serving",
+      ingredient: line,
     };
   }
 
   /**
    * Generate descriptive meal name from ingredients
    */
-  private generateMealName(ingredients: Array<{ingredient: string}>): string {
-    if (ingredients.length === 0) return 'Custom Meal';
+  private generateMealName(ingredients: Array<{ ingredient: string }>): string {
+    if (ingredients.length === 0) return "Custom Meal";
 
     // Take first 2-3 main ingredients
-    const mainIngredients = ingredients.slice(0, 3).map(i => {
+    const mainIngredients = ingredients.slice(0, 3).map((i) => {
       // Capitalize first letter
       return i.ingredient.charAt(0).toUpperCase() + i.ingredient.slice(1);
     });
@@ -344,10 +372,12 @@ export class ManualMealPlanService {
    * Detect category from ingredient types
    */
   private detectCategoryFromIngredients(
-    ingredients: Array<{ingredient: string}>
+    ingredients: Array<{ ingredient: string }>,
   ): MealCategory {
     // Combine all ingredient names
-    const allIngredients = ingredients.map(i => i.ingredient.toLowerCase()).join(' ');
+    const allIngredients = ingredients
+      .map((i) => i.ingredient.toLowerCase())
+      .join(" ");
 
     // Use existing detectCategory logic
     return this.detectCategory(allIngredients);
@@ -367,77 +397,154 @@ export class ManualMealPlanService {
 
     // Breakfast indicators
     const breakfastKeywords = [
-      'breakfast', 'morning', 'am',
-      'scrambled', 'fried egg', 'boiled egg', 'omelette', 'omelet',
-      'oatmeal', 'cereal', 'granola',
-      'pancake', 'waffle', 'french toast',
-      'bagel', 'muffin', 'croissant',
-      'bacon', 'sausage',
-      'coffee', 'latte', 'cappuccino',
-      'smoothie bowl', 'acai bowl',
-      'avocado toast', 'toast'
+      "breakfast",
+      "morning",
+      "am",
+      "scrambled",
+      "fried egg",
+      "boiled egg",
+      "omelette",
+      "omelet",
+      "oatmeal",
+      "cereal",
+      "granola",
+      "pancake",
+      "waffle",
+      "french toast",
+      "bagel",
+      "muffin",
+      "croissant",
+      "bacon",
+      "sausage",
+      "coffee",
+      "latte",
+      "cappuccino",
+      "smoothie bowl",
+      "acai bowl",
+      "avocado toast",
+      "toast",
     ];
 
-    if (breakfastKeywords.some(keyword => lowerName.includes(keyword))) {
-      return 'breakfast';
+    if (breakfastKeywords.some((keyword) => lowerName.includes(keyword))) {
+      return "breakfast";
     }
 
     // Lunch indicators
     const lunchKeywords = [
-      'lunch', 'noon', 'midday',
-      'sandwich', 'wrap', 'sub', 'hoagie',
-      'salad', 'caesar', 'cobb',
-      'soup', 'bisque', 'chowder',
-      'burger', 'cheeseburger',
-      'taco', 'burrito', 'quesadilla',
-      'pizza', 'slice',
-      'bowl', 'poke', 'buddha',
-      'pasta salad'
+      "lunch",
+      "noon",
+      "midday",
+      "sandwich",
+      "wrap",
+      "sub",
+      "hoagie",
+      "salad",
+      "caesar",
+      "cobb",
+      "soup",
+      "bisque",
+      "chowder",
+      "burger",
+      "cheeseburger",
+      "taco",
+      "burrito",
+      "quesadilla",
+      "pizza",
+      "slice",
+      "bowl",
+      "poke",
+      "buddha",
+      "pasta salad",
     ];
 
-    if (lunchKeywords.some(keyword => lowerName.includes(keyword))) {
-      return 'lunch';
+    if (lunchKeywords.some((keyword) => lowerName.includes(keyword))) {
+      return "lunch";
     }
 
     // Dinner indicators
     const dinnerKeywords = [
-      'dinner', 'supper', 'evening', 'pm',
-      'steak', 'ribeye', 'sirloin', 'filet',
-      'chicken breast', 'grilled chicken', 'roast chicken', 'fried chicken',
-      'salmon', 'tuna', 'cod', 'halibut', 'trout',
-      'pasta', 'spaghetti', 'fettuccine', 'penne', 'linguine',
-      'rice', 'risotto', 'pilaf',
-      'roast', 'baked', 'grilled',
-      'casserole', 'lasagna',
-      'curry', 'stir fry', 'stir-fry',
-      'pot roast', 'meatloaf'
+      "dinner",
+      "supper",
+      "evening",
+      "pm",
+      "steak",
+      "ribeye",
+      "sirloin",
+      "filet",
+      "chicken breast",
+      "grilled chicken",
+      "roast chicken",
+      "fried chicken",
+      "salmon",
+      "tuna",
+      "cod",
+      "halibut",
+      "trout",
+      "pasta",
+      "spaghetti",
+      "fettuccine",
+      "penne",
+      "linguine",
+      "rice",
+      "risotto",
+      "pilaf",
+      "roast",
+      "baked",
+      "grilled",
+      "casserole",
+      "lasagna",
+      "curry",
+      "stir fry",
+      "stir-fry",
+      "pot roast",
+      "meatloaf",
     ];
 
-    if (dinnerKeywords.some(keyword => lowerName.includes(keyword))) {
-      return 'dinner';
+    if (dinnerKeywords.some((keyword) => lowerName.includes(keyword))) {
+      return "dinner";
     }
 
     // Snack indicators
     const snackKeywords = [
-      'snack', 'treat',
-      'protein bar', 'energy bar', 'granola bar',
-      'nuts', 'almonds', 'cashews', 'peanuts',
-      'fruit', 'apple', 'banana', 'orange', 'berries',
-      'yogurt', 'greek yogurt',
-      'shake', 'protein shake', 'smoothie',
-      'hummus', 'guacamole',
-      'veggies', 'vegetables', 'celery', 'carrot',
-      'trail mix', 'dried fruit',
-      'rice cake', 'cracker', 'cheese',
-      'chips'
+      "snack",
+      "treat",
+      "protein bar",
+      "energy bar",
+      "granola bar",
+      "nuts",
+      "almonds",
+      "cashews",
+      "peanuts",
+      "fruit",
+      "apple",
+      "banana",
+      "orange",
+      "berries",
+      "yogurt",
+      "greek yogurt",
+      "shake",
+      "protein shake",
+      "smoothie",
+      "hummus",
+      "guacamole",
+      "veggies",
+      "vegetables",
+      "celery",
+      "carrot",
+      "trail mix",
+      "dried fruit",
+      "rice cake",
+      "cracker",
+      "cheese",
+      "chips",
     ];
 
-    if (snackKeywords.some(keyword => lowerName.includes(keyword))) {
-      return 'snack';
+    if (snackKeywords.some((keyword) => lowerName.includes(keyword))) {
+      return "snack";
     }
 
     // Default to snack if unable to determine
-    return 'snack';
+    return "snack";
   }
 
   /**
@@ -451,18 +558,18 @@ export class ManualMealPlanService {
   async createManualMealPlan(
     meals: ManualMealEntry[],
     trainerId: string,
-    planName: string
+    planName: string,
   ): Promise<ManualMealPlan> {
     if (!meals || meals.length === 0) {
-      throw new Error('Cannot create meal plan with zero meals');
+      throw new Error("Cannot create meal plan with zero meals");
     }
 
     if (!planName || !planName.trim()) {
-      throw new Error('Meal plan name is required');
+      throw new Error("Meal plan name is required");
     }
 
     if (!trainerId || !trainerId.trim()) {
-      throw new Error('Trainer ID is required');
+      throw new Error("Trainer ID is required");
     }
 
     // Assign random category images to each meal and structure for frontend
@@ -494,8 +601,8 @@ export class ManualMealPlanService {
       servings: 1,
       prepTime: 15,
       cookTime: 30,
-      difficulty: 'medium' as const,
-      instructions: meal.instructions || 'Prepare ingredients as listed.',
+      difficulty: "medium" as const,
+      instructions: meal.instructions || "Prepare ingredients as listed.",
     }));
 
     const now = new Date().toISOString();
@@ -505,13 +612,13 @@ export class ManualMealPlanService {
       days: 1,
       mealsPerDay: meals.length,
       dailyCalorieTarget: 0,
-      fitnessGoal: 'general',
+      fitnessGoal: "general",
       meals: mealsWithImages,
       createdBy: trainerId,
-      creationMethod: 'manual',
+      creationMethod: "manual",
       isManual: true,
       createdAt: now,
-      assignedAt: now  // ✅ FIX: Add assignedAt for meal card display
+      assignedAt: now, // ✅ FIX: Add assignedAt for meal card display
     };
   }
 
@@ -532,8 +639,8 @@ export class ManualMealPlanService {
         breakfast: health.breakfast,
         lunch: health.lunch,
         dinner: health.dinner,
-        snack: health.snack
-      }
+        snack: health.snack,
+      },
     };
   }
 
@@ -544,12 +651,14 @@ export class ManualMealPlanService {
    * @param testMeals - Array of {mealName, expectedCategory} for testing
    * @returns Accuracy percentage (0-1)
    */
-  getParserAccuracy(testMeals: Array<{ mealName: string; expectedCategory: MealCategory }>): number {
+  getParserAccuracy(
+    testMeals: Array<{ mealName: string; expectedCategory: MealCategory }>,
+  ): number {
     if (!testMeals || testMeals.length === 0) {
       return 0;
     }
 
-    const correctCount = testMeals.filter(test => {
+    const correctCount = testMeals.filter((test) => {
       const detected = this.detectCategory(test.mealName);
       return detected === test.expectedCategory;
     }).length;
