@@ -1,20 +1,45 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Check, X, BarChart3, Eye, Download, Utensils, Calendar, Bot, ChefHat } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Check,
+  X,
+  BarChart3,
+  Eye,
+  Download,
+  Utensils,
+  Calendar,
+  ChefHat,
+} from "lucide-react";
 import { Link } from "wouter";
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
   PaginationPrevious,
-  PaginationEllipsis 
+  PaginationEllipsis,
 } from "../components/ui/pagination";
 import { useToast } from "../hooks/use-toast";
 import { useAuth } from "../contexts/AuthContext";
@@ -27,32 +52,35 @@ import PendingRecipesTable from "../components/PendingRecipesTable";
 import MealPlanGenerator from "../components/MealPlanGenerator";
 import BulkDeleteToolbar from "../components/BulkDeleteToolbar";
 import ExportJSONModal from "../components/ExportJSONModal";
-import BMADRecipeGenerator from "../components/BMADRecipeGenerator";
 import type { Recipe, RecipeFilter } from "@shared/schema";
 
 export default function Admin() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('recipes');
-  
+  const [activeTab, setActiveTab] = useState("recipes");
+
   // Initialize view type from localStorage
   const [viewType, setViewType] = useState<ViewType>(() => {
-    const savedViewType = localStorage.getItem('admin-recipe-view-type') as ViewType;
-    return savedViewType === 'table' ? 'table' : 'cards';
+    const savedViewType = localStorage.getItem(
+      "admin-recipe-view-type",
+    ) as ViewType;
+    return savedViewType === "table" ? "table" : "cards";
   });
-  
+
   const [filters, setFilters] = useState<RecipeFilter>({
     page: 1,
-    limit: viewType === 'table' ? 20 : 12, // More items for table view
-    approved: true
+    limit: viewType === "table" ? 20 : 12, // More items for table view
+    approved: true,
   });
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  
+
   // Bulk selection state
-  const [selectedRecipeIds, setSelectedRecipeIds] = useState<Set<string>>(new Set());
+  const [selectedRecipeIds, setSelectedRecipeIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   // Check if user is authenticated
@@ -63,22 +91,25 @@ export default function Admin() {
     queryKey: ["admin-recipes", filters],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      
-      if (filters.search) searchParams.append('search', filters.search);
-      if (filters.mealType) searchParams.append('mealType', filters.mealType);
-      if (filters.dietaryTag) searchParams.append('dietaryTag', filters.dietaryTag);
-      if (filters.maxPrepTime) searchParams.append('maxPrepTime', filters.maxPrepTime.toString());
-      if (filters.approved !== undefined) searchParams.append('approved', filters.approved.toString());
-      
-      searchParams.append('page', filters.page.toString());
-      searchParams.append('limit', filters.limit.toString());
+
+      if (filters.search) searchParams.append("search", filters.search);
+      if (filters.mealType) searchParams.append("mealType", filters.mealType);
+      if (filters.dietaryTag)
+        searchParams.append("dietaryTag", filters.dietaryTag);
+      if (filters.maxPrepTime)
+        searchParams.append("maxPrepTime", filters.maxPrepTime.toString());
+      if (filters.approved !== undefined)
+        searchParams.append("approved", filters.approved.toString());
+
+      searchParams.append("page", filters.page.toString());
+      searchParams.append("limit", filters.limit.toString());
 
       const response = await fetch(`/api/admin/recipes?${searchParams}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      if (!response.ok) throw new Error('Failed to fetch admin recipes');
+      if (!response.ok) throw new Error("Failed to fetch admin recipes");
       return response.json();
     },
     enabled: isAuthenticated,
@@ -89,7 +120,7 @@ export default function Admin() {
     queryKey: ["admin-stats"],
     queryFn: async () => {
       const response = await fetch("/api/admin/stats");
-      if (!response.ok) throw new Error('Failed to fetch stats');
+      if (!response.ok) throw new Error("Failed to fetch stats");
       return response.json();
     },
     enabled: isAuthenticated,
@@ -98,47 +129,56 @@ export default function Admin() {
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
     mutationFn: async (recipeIds: string[]) => {
-      const response = await fetch('/api/admin/recipes', {
-        method: 'DELETE',
+      const response = await fetch("/api/admin/recipes", {
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({ ids: recipeIds }),
       });
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to delete recipes' }));
-        throw new Error(errorData.error || errorData.message || 'Failed to delete recipes');
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Failed to delete recipes" }));
+        throw new Error(
+          errorData.error || errorData.message || "Failed to delete recipes",
+        );
       }
       // Handle 204 No Content response (no body to parse)
       if (response.status === 204) {
-        return { message: `Successfully deleted ${recipeIds.length} recipe${recipeIds.length === 1 ? '' : 's'}.` };
+        return {
+          message: `Successfully deleted ${recipeIds.length} recipe${recipeIds.length === 1 ? "" : "s"}.`,
+        };
       }
       // For other success statuses, try to parse JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
         return response.json();
       }
-      return { message: `Successfully deleted ${recipeIds.length} recipe${recipeIds.length === 1 ? '' : 's'}.` };
+      return {
+        message: `Successfully deleted ${recipeIds.length} recipe${recipeIds.length === 1 ? "" : "s"}.`,
+      };
     },
     onSuccess: (data, recipeIds) => {
       // Invalidate and refetch admin recipes and stats
       queryClient.invalidateQueries({ queryKey: ["admin-recipes"] });
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
-      
+
       // Clear selections and exit selection mode
       setSelectedRecipeIds(new Set<string>());
       setIsSelectionMode(false);
-      
+
       toast({
         title: "Recipes deleted",
-        description: `Successfully deleted ${recipeIds.length} recipe${recipeIds.length === 1 ? '' : 's'}.`,
+        description: `Successfully deleted ${recipeIds.length} recipe${recipeIds.length === 1 ? "" : "s"}.`,
       });
     },
     onError: (error) => {
       toast({
         title: "Error deleting recipes",
-        description: error instanceof Error ? error.message : "Failed to delete recipes",
+        description:
+          error instanceof Error ? error.message : "Failed to delete recipes",
         variant: "destructive",
       });
     },
@@ -146,7 +186,7 @@ export default function Admin() {
 
   const displayRecipes = (recipesData as any)?.recipes || [];
   const total = (recipesData as any)?.total || 0;
-  
+
   // Calculate pagination values
   const currentPage = filters.page;
   const totalPages = Math.ceil(total / filters.limit);
@@ -154,7 +194,7 @@ export default function Admin() {
   const hasPrevPage = currentPage > 1;
 
   // Debug pagination values
-  console.log('Admin Pagination Debug:', {
+  console.log("Admin Pagination Debug:", {
     displayRecipes: displayRecipes.length,
     total,
     currentPage,
@@ -162,7 +202,7 @@ export default function Admin() {
     totalPages,
     hasNextPage,
     hasPrevPage,
-    shouldShowPagination: totalPages > 1
+    shouldShowPagination: totalPages > 1,
   });
 
   const handleFilterChange = (newFilters: Partial<RecipeFilter>) => {
@@ -176,7 +216,7 @@ export default function Admin() {
   const handleViewTypeChange = (newViewType: ViewType) => {
     setViewType(newViewType);
     // Adjust limit based on view type and reset to first page
-    const newLimit = newViewType === 'table' ? 20 : 12;
+    const newLimit = newViewType === "table" ? 20 : 12;
     setFilters({ ...filters, limit: newLimit, page: 1 });
   };
 
@@ -201,7 +241,9 @@ export default function Admin() {
       setSelectedRecipeIds(new Set<string>());
     } else {
       // Select all current page recipes
-      const allIds = new Set<string>(displayRecipes.map((recipe: Recipe) => recipe.id));
+      const allIds = new Set<string>(
+        displayRecipes.map((recipe: Recipe) => recipe.id),
+      );
       setSelectedRecipeIds(allIds);
     }
   };
@@ -229,8 +271,12 @@ export default function Admin() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-          <p className="text-gray-600">You must be logged in as an admin to access this page.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Access Denied
+          </h2>
+          <p className="text-gray-600">
+            You must be logged in as an admin to access this page.
+          </p>
         </div>
       </div>
     );
@@ -241,14 +287,19 @@ export default function Admin() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Admin Dashboard</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
+            Admin Dashboard
+          </h1>
           <p className="text-base sm:text-lg text-slate-600 mt-2">
             Manage recipes, users, and meal plan generation
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <Link href="/admin/bulk-generation">
-            <Button variant="default" className="gap-2 bg-purple-600 hover:bg-purple-700">
+            <Button
+              variant="default"
+              className="gap-2 bg-purple-600 hover:bg-purple-700"
+            >
               <ChefHat className="h-4 w-4" />
               Bulk Generation
             </Button>
@@ -269,22 +320,29 @@ export default function Admin() {
       </div>
 
       {/* Main Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 sm:space-y-8">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3">
-          <TabsTrigger value="recipes" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-recipes">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6 sm:space-y-8"
+      >
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2">
+          <TabsTrigger
+            value="recipes"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+            data-testid="admin-tab-recipes"
+          >
             <Utensils className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="hidden sm:inline">Recipe Library</span>
             <span className="sm:hidden">Recipes</span>
           </TabsTrigger>
-          <TabsTrigger value="meal-plans" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-meal-plans">
+          <TabsTrigger
+            value="meal-plans"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm"
+            data-testid="admin-tab-meal-plans"
+          >
             <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="hidden sm:inline">Meal Plan Builder</span>
             <span className="sm:hidden">Plans</span>
-          </TabsTrigger>
-          <TabsTrigger value="bmad" className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm" data-testid="admin-tab-bmad">
-            <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="hidden sm:inline">Bulk Generator</span>
-            <span className="sm:hidden">Bulk</span>
           </TabsTrigger>
         </TabsList>
 
@@ -292,7 +350,9 @@ export default function Admin() {
           <div className="space-y-6">
             {/* Recipe Library Header with Action Buttons */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b">
-              <h2 className="text-2xl font-bold text-slate-900">Recipe Library</h2>
+              <h2 className="text-2xl font-bold text-slate-900">
+                Recipe Library
+              </h2>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   onClick={() => setShowPendingModal(true)}
@@ -320,7 +380,10 @@ export default function Admin() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex-1">
-                    <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+                    <SearchFilters
+                      filters={filters}
+                      onFilterChange={handleFilterChange}
+                    />
                   </div>
                   <div className="flex items-center gap-2">
                     <ViewToggle
@@ -347,21 +410,26 @@ export default function Admin() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Bulk Delete Toolbar */}
               {isSelectionMode && (
                 <BulkDeleteToolbar
                   selectedCount={selectedRecipeIds.size}
                   totalCount={displayRecipes.length}
-                  isAllSelected={selectedRecipeIds.size === displayRecipes.length && displayRecipes.length > 0}
+                  isAllSelected={
+                    selectedRecipeIds.size === displayRecipes.length &&
+                    displayRecipes.length > 0
+                  }
                   onSelectAll={handleSelectAll}
-                  onClearSelection={() => setSelectedRecipeIds(new Set<string>())}
+                  onClearSelection={() =>
+                    setSelectedRecipeIds(new Set<string>())
+                  }
                   onBulkDelete={handleBulkDelete}
                   isDeleting={bulkDeleteMutation.isPending}
                 />
               )}
             </div>
-            
+
             {/* Stats Cards */}
             {stats && (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mt-6 sm:mt-8">
@@ -369,8 +437,12 @@ export default function Admin() {
                   <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">Total Recipes</p>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900">{stats.total.toLocaleString()}</p>
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">
+                          Total Recipes
+                        </p>
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900">
+                          {stats.total.toLocaleString()}
+                        </p>
                       </div>
                       <div className="p-2 sm:p-3 bg-blue-100 rounded-full flex-shrink-0 ml-2">
                         <i className="fas fa-utensils text-blue-600 text-sm sm:text-lg lg:text-xl"></i>
@@ -383,8 +455,12 @@ export default function Admin() {
                   <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">Approved</p>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">{stats.approved.toLocaleString()}</p>
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">
+                          Approved
+                        </p>
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
+                          {stats.approved.toLocaleString()}
+                        </p>
                       </div>
                       <div className="p-2 sm:p-3 bg-green-100 rounded-full flex-shrink-0 ml-2">
                         <i className="fas fa-check-circle text-green-600 text-sm sm:text-lg lg:text-xl"></i>
@@ -397,8 +473,12 @@ export default function Admin() {
                   <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">Pending Review</p>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-600">{stats.pending.toLocaleString()}</p>
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">
+                          Pending Review
+                        </p>
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-600">
+                          {stats.pending.toLocaleString()}
+                        </p>
                       </div>
                       <div className="p-2 sm:p-3 bg-yellow-100 rounded-full flex-shrink-0 ml-2">
                         <i className="fas fa-clock text-yellow-600 text-sm sm:text-lg lg:text-xl"></i>
@@ -411,8 +491,12 @@ export default function Admin() {
                   <CardContent className="p-3 sm:p-4 lg:p-6">
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">Users</p>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600">{stats.users?.toLocaleString() || 0}</p>
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">
+                          Users
+                        </p>
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600">
+                          {stats.users?.toLocaleString() || 0}
+                        </p>
                       </div>
                       <div className="p-2 sm:p-3 bg-purple-100 rounded-full flex-shrink-0 ml-2">
                         <i className="fas fa-users text-purple-600 text-sm sm:text-lg lg:text-xl"></i>
@@ -425,21 +509,29 @@ export default function Admin() {
 
             {/* Recipes Display - Cards or Table */}
             <div className="space-y-4 sm:space-y-6">
-              {viewType === 'cards' ? (
+              {viewType === "cards" ? (
                 // Card Grid View
                 <>
                   {recipesLoading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                       {[...Array(8)].map((_, i) => (
-                        <div key={i} className="h-64 bg-gray-200 rounded-lg animate-pulse" />
+                        <div
+                          key={i}
+                          className="h-64 bg-gray-200 rounded-lg animate-pulse"
+                        />
                       ))}
                     </div>
                   ) : displayRecipes.length === 0 ? (
                     <Card>
                       <CardContent className="p-8 sm:p-12 text-center">
                         <i className="fas fa-utensils text-4xl text-gray-400 mb-4"></i>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No recipes found</h3>
-                        <p className="text-gray-600">Try adjusting your search filters or generate some recipes.</p>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No recipes found
+                        </h3>
+                        <p className="text-gray-600">
+                          Try adjusting your search filters or generate some
+                          recipes.
+                        </p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -470,7 +562,7 @@ export default function Admin() {
                   onDelete={handleIndividualDelete}
                 />
               )}
-              
+
               {/* Simple Pagination Controls */}
               {totalPages > 1 && (
                 <div className="mt-8">
@@ -484,12 +576,18 @@ export default function Admin() {
                     <div className="flex items-center gap-4">
                       {/* Items per page */}
                       <div className="flex items-center gap-2">
-                        <label className="text-sm text-slate-600">Per page:</label>
+                        <label className="text-sm text-slate-600">
+                          Per page:
+                        </label>
                         <Select
                           value={filters.limit.toString()}
                           onValueChange={(value) => {
                             const newLimit = parseInt(value);
-                            setFilters({ ...filters, limit: newLimit, page: 1 });
+                            setFilters({
+                              ...filters,
+                              limit: newLimit,
+                              page: 1,
+                            });
                           }}
                         >
                           <SelectTrigger className="w-[70px]">
@@ -513,11 +611,13 @@ export default function Admin() {
                           placeholder="#"
                           className="w-[60px]"
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              const value = parseInt((e.target as HTMLInputElement).value);
+                            if (e.key === "Enter") {
+                              const value = parseInt(
+                                (e.target as HTMLInputElement).value,
+                              );
                               if (value >= 1 && value <= totalPages) {
                                 handlePageChange(value);
-                                (e.target as HTMLInputElement).value = '';
+                                (e.target as HTMLInputElement).value = "";
                               }
                             }
                           }}
@@ -553,10 +653,6 @@ export default function Admin() {
 
         <TabsContent value="meal-plans">
           <MealPlanGenerator />
-        </TabsContent>
-
-        <TabsContent value="bmad">
-          <BMADRecipeGenerator />
         </TabsContent>
       </Tabs>
 
