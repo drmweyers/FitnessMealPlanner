@@ -1050,37 +1050,44 @@ adminRouter.post("/grant-tier", requireAdmin, async (req, res) => {
       });
     }
 
-    await db
-      .delete(trainerSubscriptions)
-      .where(eq(trainerSubscriptions.trainerId, user.id));
-
+    // Atomic DELETE + INSERT + INSERT. Without the transaction a Stripe webhook
+    // arriving mid-operation could write into a deleted-but-not-yet-recreated
+    // subscription row, losing the update silently.
     const now = new Date();
     const periodEnd = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
 
-    const [sub] = await db
-      .insert(trainerSubscriptions)
-      .values({
-        trainerId: user.id,
-        stripeCustomerId: `cus_canonical_${tier}_${user.id.slice(0, 8)}`,
-        stripeSubscriptionId: `sub_canonical_${tier}_${user.id.slice(0, 8)}`,
-        tier,
+    const sub = await db.transaction(async (tx) => {
+      await tx
+        .delete(trainerSubscriptions)
+        .where(eq(trainerSubscriptions.trainerId, user.id));
+
+      const [created] = await tx
+        .insert(trainerSubscriptions)
+        .values({
+          trainerId: user.id,
+          stripeCustomerId: `cus_canonical_${tier}_${user.id.slice(0, 8)}`,
+          stripeSubscriptionId: `sub_canonical_${tier}_${user.id.slice(0, 8)}`,
+          tier,
+          status: "active",
+          currentPeriodStart: now,
+          currentPeriodEnd: periodEnd,
+          cancelAtPeriodEnd: false,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning();
+
+      await tx.insert(subscriptionItems).values({
+        subscriptionId: created.id,
+        kind: "tier",
+        stripePriceId: `price_${tier}_canonical`,
+        stripeSubscriptionItemId: `si_canonical_${tier}_${created.id.slice(0, 8)}`,
         status: "active",
-        currentPeriodStart: now,
-        currentPeriodEnd: periodEnd,
-        cancelAtPeriodEnd: false,
         createdAt: now,
         updatedAt: now,
-      })
-      .returning();
+      });
 
-    await db.insert(subscriptionItems).values({
-      subscriptionId: sub.id,
-      kind: "tier",
-      stripePriceId: `price_${tier}_canonical`,
-      stripeSubscriptionItemId: `si_canonical_${tier}_${sub.id.slice(0, 8)}`,
-      status: "active",
-      createdAt: now,
-      updatedAt: now,
+      return created;
     });
 
     res.json({
@@ -1642,12 +1649,10 @@ adminRouter.get("/export", requireAdmin, async (req, res) => {
       !type ||
       !["recipes", "users", "mealPlans", "all"].includes(type as string)
     ) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Invalid export type. Must be: recipes, users, mealPlans, or all",
-        });
+      return res.status(400).json({
+        error:
+          "Invalid export type. Must be: recipes, users, mealPlans, or all",
+      });
     }
 
     const exportData: any = {};

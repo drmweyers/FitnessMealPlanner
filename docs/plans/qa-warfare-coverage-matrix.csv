@@ -1,0 +1,275 @@
+suite,role,endpoint_or_route,state,input_class,assertion_type,status,test_id,notes
+auth,anon,POST /api/auth/register,does-not-exist,valid-new-email,http-201+jwt,pending,AUTH-001,Happy path registration
+auth,anon,POST /api/auth/register,does-not-exist,duplicate-email,http-409,pending,AUTH-002,Duplicate email rejection
+auth,anon,POST /api/auth/register,does-not-exist,invalid-email,http-422,pending,AUTH-003,Malformed email
+auth,anon,POST /api/auth/register,does-not-exist,missing-password,http-422,pending,AUTH-004,Required field validation
+auth,anon,POST /api/auth/login,does-not-exist,valid-credentials,http-200+jwt,pending,AUTH-005,Happy path login
+auth,anon,POST /api/auth/login,does-not-exist,wrong-password,http-401,pending,AUTH-006,Invalid credentials
+auth,anon,POST /api/auth/login,does-not-exist,nonexistent-email,http-401,pending,AUTH-007,Unknown user
+auth,anon,POST /api/auth/refresh,does-not-exist,valid-refresh-token,http-200+new-access-token,pending,AUTH-008,Token refresh
+auth,anon,POST /api/auth/refresh,does-not-exist,expired-refresh-token,http-401,pending,AUTH-009,Expired refresh
+auth,anon,POST /api/auth/refresh,does-not-exist,tampered-token,http-401,pending,AUTH-010,JWT tamper
+auth,customer,POST /api/auth/logout,active,valid-session,http-200+cleared-cookie,pending,AUTH-011,Logout clears cookie
+auth,trainer,GET /api/auth/me,active,valid-jwt,http-200+user-object,pending,AUTH-012,Profile from token
+auth,attacker,GET /api/auth/me,active,stolen-jwt-after-logout,http-401,pending,AUTH-013,Revoked token rejected
+auth,anon,GET /api/auth/google,does-not-exist,google-oauth-redirect,http-302,pending,AUTH-014,OAuth redirect fires
+auth,anon,GET /api/auth/google/callback,does-not-exist,valid-oauth-code,http-200+jwt,pending,AUTH-015,OAuth callback happy path
+auth,attacker,POST /api/auth/register,does-not-exist,sql-injection-email,http-422,pending,AUTH-016,SQL injection in email
+auth,attacker,POST /api/auth/login,does-not-exist,brute-force-10-attempts,http-429,pending,AUTH-017,Rate limiting on login
+meal-plans,trainer,POST /api/trainer/meal-plans,does-not-exist,valid-plan-body,http-201+plan-object,pending,MP-001,Create meal plan
+meal-plans,trainer,POST /api/trainer/meal-plans,does-not-exist,missing-required-fields,http-422,pending,MP-002,Validation on create
+meal-plans,trainer,GET /api/trainer/meal-plans,saved,valid-jwt,http-200+array,pending,MP-003,List trainer plans
+meal-plans,trainer,GET /api/trainer/meal-plans/:id,saved,own-plan-id,http-200+plan,pending,MP-004,Get own plan
+meal-plans,attacker,GET /api/trainer/meal-plans/:id,saved,other-trainer-plan-id,http-403,pending,MP-005,IDOR: cross-trainer read
+meal-plans,trainer,PATCH /api/trainer/meal-plans/:id,saved,valid-update-body,http-200+updated,pending,MP-006,Update plan
+meal-plans,attacker,PATCH /api/trainer/meal-plans/:id,saved,other-trainer-plan-id,http-403,pending,MP-007,IDOR: cross-trainer update
+meal-plans,trainer,DELETE /api/trainer/meal-plans/:id,saved,own-plan-id,http-200,pending,MP-008,Delete plan
+meal-plans,attacker,DELETE /api/trainer/meal-plans/:id,saved,other-trainer-plan-id,http-403,pending,MP-009,IDOR: cross-trainer delete
+meal-plans,trainer,DELETE /api/trainer/meal-plans/:id,assigned,plan-with-assignments,http-200+cascade-deleted,pending,MP-010,Delete cascades assignments
+meal-plans,trainer,POST /api/trainer/meal-plans/:id/assign,saved,valid-customer-id,http-200+assignment,pending,MP-011,Assign plan to customer
+meal-plans,trainer,POST /api/trainer/meal-plans/:id/assign,does-not-exist,nonexistent-plan-id,http-404,pending,MP-012,Assign nonexistent plan
+meal-plans,attacker,POST /api/trainer/meal-plans/:id/assign,saved,other-trainers-customer-id,http-403,pending,MP-013,IDOR: cross-tenant assign
+meal-plans,trainer,POST /api/trainer/meal-plans/:id/assign,assigned,already-assigned-same-customer,http-409,pending,MP-014,Duplicate assignment guard
+meal-plans,customer,GET /api/meal-plans,assigned,own-customer-id,http-200+assigned-plans,pending,MP-015,Customer sees assigned plans
+meal-plans,customer,GET /api/meal-plans,does-not-exist,customer-with-no-assignments,http-200+empty-array,pending,MP-016,Empty state for customer
+meal-plans,attacker,GET /api/meal-plans,assigned,other-customer-jwt,http-200+own-plans-only,pending,MP-017,Customer cannot see other customer plans
+meal-plans,customer,GET /api/meal-plans/:id,assigned,own-assigned-plan,http-200+plan,pending,MP-018,Customer reads assigned plan
+meal-plans,attacker,GET /api/meal-plans/:id,assigned,other-customer-plan-id,http-403,pending,MP-019,IDOR: customer cross-tenant read
+meal-plans,customer,POST /api/meal-plans/:id/start,assigned,own-plan-id,http-200,pending,MP-020,Customer starts plan
+meal-plans,customer,POST /api/meal-plans/:id/complete,active,own-plan-id,http-200+email-queued,pending,MP-021,Customer completes plan + email side-effect
+meal-plans,anon,GET /api/trainer/meal-plans,saved,no-auth,http-401,pending,MP-022,Anon blocked from trainer plans
+meal-plans,anon,GET /api/meal-plans,assigned,no-auth,http-401,pending,MP-023,Anon blocked from customer plans
+meal-plans,trainer,POST /api/trainer/meal-plans,saved,generate-via-ai-valid,http-201+ai-plan,pending,MP-024,AI-generated plan (OpenAI call)
+meal-plans,trainer,POST /api/trainer/meal-plans,saved,generate-via-ai-openai-500,http-502,pending,MP-025,AI generation OpenAI 500 — graceful fail
+meal-plans,trainer,POST /api/trainer/meal-plans,saved,generate-via-ai-openai-429,http-429-or-502,pending,MP-026,AI generation rate limit propagated
+meal-plan-sharing,trainer,POST /api/meal-plan-sharing,saved,valid-plan-id,http-201+share-token,pending,MPS-001,Create share link
+meal-plan-sharing,trainer,PATCH /api/meal-plan-sharing/:id,shared,isActive-false,http-200+revoked,pending,MPS-002,Revoke share link
+meal-plan-sharing,trainer,PATCH /api/meal-plan-sharing/:id,share-revoked,isActive-true,http-200+restored,pending,MPS-003,Re-activate share link
+meal-plan-sharing,anon,GET /api/shared/:token,shared,valid-token,http-200+plan,pending,MPS-004,Anon views shared plan
+meal-plan-sharing,anon,GET /api/shared/:token,share-revoked,revoked-token,http-404-or-410,pending,MPS-005,Revoked share returns not-found
+meal-plan-sharing,attacker,GET /api/shared/:token,shared,other-trainer-token,http-200+plan,pending,MPS-006,Shared plans are intentionally public — verify no sensitive data
+recipes,admin,POST /api/admin/generate,does-not-exist,valid-batch-config,http-200+batchId,pending,REC-001,Start BMAD batch generation
+recipes,admin,GET /api/admin/generate/progress/:batchId,unapproved,valid-batchId,http-200+sse-stream,pending,REC-002,SSE progress stream returns events
+recipes,admin,POST /api/admin/generate/stop/:batchId,unapproved,valid-batchId,http-200+stopped,pending,REC-003,Stop in-progress batch
+recipes,admin,POST /api/admin/recipes/:id/approve,unapproved,valid-recipe-id,http-200+isApproved-true,pending,REC-004,Approve recipe
+recipes,trainer,POST /api/admin/recipes/:id/approve,unapproved,valid-recipe-id,http-403,pending,REC-005,Trainer cannot approve
+recipes,customer,POST /api/admin/recipes/:id/approve,unapproved,valid-recipe-id,http-403,pending,REC-006,Customer cannot approve
+recipes,admin,POST /api/admin/recipes/bulk-delete,approved-starter,valid-id-array,http-200+deleted-count,pending,REC-007,Bulk delete approved recipes
+recipes,trainer,POST /api/admin/recipes/bulk-delete,approved-starter,valid-id-array,http-403,pending,REC-008,Trainer cannot bulk-delete
+recipes,trainer,GET /api/recipes,approved-starter,starter-jwt,http-200+starter-recipes,pending,REC-009,Starter trainer sees starter recipes
+recipes,trainer,GET /api/recipes,approved-professional,starter-jwt,http-200+no-pro-recipes,pending,REC-010,Starter trainer cannot see pro recipes
+recipes,trainer,GET /api/recipes,approved-professional,professional-jwt,http-200+pro-recipes,pending,REC-011,Pro trainer sees pro recipes
+recipes,trainer,GET /api/recipes,approved-enterprise,professional-jwt,http-200+no-enterprise,pending,REC-012,Pro trainer cannot see enterprise recipes
+recipes,trainer,GET /api/recipes,approved-enterprise,enterprise-jwt,http-200+all-tiers,pending,REC-013,Enterprise trainer sees all recipes
+recipes,anon,GET /api/recipes,approved-starter,no-auth,http-401,pending,REC-014,Anon blocked from recipe list
+recipes,attacker,GET /api/recipes,approved-enterprise,starter-jwt,http-200+filtered,pending,REC-015,Tier-gating enforced on read
+recipes,admin,POST /api/admin/generate,unapproved,openai-500-failure,http-500-or-partial,pending,REC-016,BMAD batch handles OpenAI 500
+recipes,admin,POST /api/admin/generate,unapproved,dalle-429-failure,http-200+partial-images,pending,REC-017,BMAD batch handles DALL-E rate limit
+recipes,admin,POST /api/admin/generate,unapproved,s3-upload-failure,http-200+no-imageUrl,pending,REC-018,S3 failure — no orphan recipes without imageUrl
+recipes,trainer,GET /api/recipes/:id,approved-starter,own-tier-recipe-id,http-200+recipe,pending,REC-019,Get single recipe
+recipes,attacker,GET /api/recipes/:id,approved-enterprise,starter-tier-enterprise-id,http-403,pending,REC-020,Cross-tier recipe access blocked
+recipes,trainer,POST /api/trainer/recipes/:id/assign,approved-starter,valid-customer-id,http-200,pending,REC-021,Assign recipe to customer
+recipes,trainer,POST /api/recipes/:id/rate,approved-starter,1-to-5-rating,http-200+avg-updated,pending,REC-022,Rate recipe
+recipes,trainer,POST /api/recipes/:id/rate,approved-starter,rating-0-or-6,http-422,pending,REC-023,Rating out of bounds
+recipes,customer,POST /api/recipes/:id/rate,approved-starter,flagged-content,http-200+moderation-queue,pending,REC-024,Flagged rating triggers moderation side-effect
+recipes,trainer,GET /api/favorites,approved-starter,valid-jwt,http-200+array,pending,REC-025,Get favorites list
+recipes,trainer,POST /api/favorites,approved-starter,valid-recipe-id,http-201,pending,REC-026,Add to favorites
+recipes,trainer,DELETE /api/favorites/:id,approved-starter,own-favorite-id,http-200,pending,REC-027,Remove from favorites
+recipes,attacker,DELETE /api/favorites/:id,approved-starter,other-trainer-favorite-id,http-403,pending,REC-028,IDOR: cross-trainer favorite delete
+recipes,admin,GET /api/admin/analytics/recipes,approved-starter,valid-admin-jwt,http-200+metrics,pending,REC-029,Admin recipe analytics
+bug-reports,customer,POST /api/bug-reports,does-not-exist,valid-bug-report,http-201+report-object,pending,BUG-001,Customer submits bug
+bug-reports,customer,POST /api/bug-reports,does-not-exist,valid-bug-report,open,http-201+github-issue-created,pending,BUG-002,Bug submission triggers GitHub issue side-effect
+bug-reports,customer,POST /api/bug-reports,does-not-exist,valid-bug-report,open,http-201+hal-bridge-written,pending,BUG-003,Bug submission writes Hal bridge file
+bug-reports,anon,POST /api/bug-reports,does-not-exist,no-auth,http-401,pending,BUG-004,Anon cannot submit bug
+bug-reports,trainer,POST /api/bug-reports,does-not-exist,valid-bug-report,http-201,pending,BUG-005,Trainer can also submit bug
+bug-reports,admin,GET /api/admin/bug-reports,open,valid-admin-jwt,http-200+list,pending,BUG-006,Admin lists all bugs
+bug-reports,customer,GET /api/admin/bug-reports,open,customer-jwt,http-403,pending,BUG-007,Customer cannot list all bugs
+bug-reports,trainer,GET /api/admin/bug-reports,open,trainer-jwt,http-403,pending,BUG-008,Trainer cannot list all bugs
+bug-reports,admin,PATCH /api/bug-reports/:id,open,status-triaged,http-200+triaged,pending,BUG-009,Admin triages bug (open→triaged)
+bug-reports,admin,PATCH /api/bug-reports/:id,triaged,status-in_progress,http-200+in_progress,pending,BUG-010,Admin moves to in_progress (triaged→in_progress)
+bug-reports,admin,PATCH /api/bug-reports/:id,in_progress,status-resolved,http-200+resolved,pending,BUG-011,Admin resolves bug (in_progress→resolved)
+bug-reports,admin,PATCH /api/bug-reports/:id,resolved,status-closed,http-200+closed,pending,BUG-012,Admin closes bug (resolved→closed)
+bug-reports,admin,PATCH /api/bug-reports/:id,open,status-resolved,http-200,pending,BUG-013,Admin fast-tracks to resolved (skip triaged)
+bug-reports,admin,PATCH /api/bug-reports/:id,resolved,status-in_progress,http-422,pending,BUG-014,Illegal: resolved→in_progress rejected
+bug-reports,admin,PATCH /api/bug-reports/:id,closed,status-in_progress,http-422,pending,BUG-015,Illegal: closed→in_progress rejected
+bug-reports,hal,GET /api/command-centre/bugs,open,valid-HAL_API_KEY,http-200+next-bug,pending,BUG-016,Hal polls for next bug
+bug-reports,hal,PATCH /api/bug-reports/:id,open,claim-to-in_progress,http-200+assignedToHal-true,pending,BUG-017,Hal claims bug atomically
+bug-reports,attacker,GET /api/command-centre/bugs,open,no-HAL_API_KEY,http-401-or-403,pending,BUG-018,Hal endpoint blocked without API key
+bug-reports,hal,PATCH /api/bug-reports/:id,in_progress,concurrent-claim-race,http-409-or-200-idempotent,pending,BUG-019,Concurrent Hal claim race — only one claim wins
+bug-reports,customer,GET /api/bug-reports/mine,open,own-reports,http-200+own-list,pending,BUG-020,Customer views own bug reports
+bug-reports,attacker,GET /api/bug-reports/:id,open,other-user-bug-id,http-403,pending,BUG-021,IDOR: customer cross-tenant bug read
+subscription,trainer,POST /api/payment/subscribe,does-not-exist,valid-stripe-token+starter,http-200+subscription,pending,SUB-001,Trainer subscribes to starter
+subscription,trainer,POST /api/payment/subscribe,does-not-exist,valid-stripe-token+professional,http-200+subscription,pending,SUB-002,Trainer subscribes to professional
+subscription,trainer,POST /api/payment/subscribe,does-not-exist,valid-stripe-token+enterprise,http-200+subscription,pending,SUB-003,Trainer subscribes to enterprise
+subscription,stripe,POST /api/subscription/webhook,trialing,customer.subscription.updated-active,http-200,pending,SUB-004,Stripe webhook: trial→active
+subscription,stripe,POST /api/subscription/webhook,active,invoice.payment_failed,http-200+status-past_due,pending,SUB-005,Stripe webhook: active→past_due
+subscription,stripe,POST /api/subscription/webhook,past_due,invoice.payment_succeeded,http-200+status-active,pending,SUB-006,Stripe webhook: past_due→active (recovery)
+subscription,stripe,POST /api/subscription/webhook,past_due,retry-exhausted,http-200+status-unpaid,pending,SUB-007,Stripe webhook: past_due→unpaid
+subscription,stripe,POST /api/subscription/webhook,active,customer.subscription.deleted,http-200+status-canceled,pending,SUB-008,Stripe webhook: active→canceled
+subscription,attacker,POST /api/subscription/webhook,active,invalid-stripe-signature,http-400,pending,SUB-009,Webhook with tampered signature rejected
+subscription,stripe,POST /api/subscription/webhook,active,duplicate-event-id,http-200,pending,SUB-010,Duplicate webhook idempotent — no double-apply
+subscription,admin,POST /api/admin/grant-tier,trialing,valid-trainer+tier,http-200+tier-applied,pending,SUB-011,Admin grants tier directly
+subscription,customer,POST /api/admin/grant-tier,trialing,customer-jwt,http-403,pending,SUB-012,Customer cannot grant tier
+subscription,trainer,POST /api/payment/upgrade,active,starter-to-professional,http-200+upgraded,pending,SUB-013,Trainer upgrades tier
+subscription,trainer,POST /api/payment/cancel,active,valid-jwt,http-200+cancelAtPeriodEnd-true,pending,SUB-014,Trainer cancels subscription
+subscription,trainer,GET /api/entitlements,active,starter-jwt,http-200+starter-limits,pending,SUB-015,Entitlements reflect active starter tier
+subscription,trainer,GET /api/entitlements,canceled,canceled-jwt,http-200+locked-features,pending,SUB-016,Canceled subscription — features locked
+subscription,trainer,GET /api/entitlements,past_due,past-due-jwt,http-200+grace-features,pending,SUB-017,Past-due subscription — grace period entitlements
+subscription,trainer,GET /api/entitlements,unpaid,unpaid-jwt,http-403-or-locked,pending,SUB-018,Unpaid subscription — access suspended
+subscription,stripe,POST /api/v1/stripe/webhook,active,refund-event,http-200+tier-downgrade,pending,SUB-019,Refund webhook triggers tier downgrade
+subscription,trainer,POST /api/payment/subscribe,active,invalid-card,http-402,pending,SUB-020,Payment failure on subscribe
+admin-analytics,admin,GET /api/admin/analytics/overview,active,valid-admin-jwt,http-200+metrics,pending,ANA-001,Admin analytics overview
+admin-analytics,trainer,GET /api/admin/analytics/overview,active,trainer-jwt,http-403,pending,ANA-002,Trainer blocked from admin analytics
+admin-analytics,admin,GET /api/admin/analytics/revenue,active,valid-admin-jwt,http-200+revenue-data,pending,ANA-003,Revenue analytics
+admin-analytics,admin,GET /api/admin/analytics/users,active,valid-admin-jwt,http-200+user-data,pending,ANA-004,User analytics
+admin-analytics,admin,GET /api/admin/analytics/recipes,active,valid-admin-jwt,http-200+recipe-data,pending,ANA-005,Recipe analytics
+admin-analytics,admin,POST /api/admin/cache/clear,active,valid-admin-jwt,http-200+cleared,pending,ANA-006,Cache clear succeeds
+admin-analytics,trainer,POST /api/admin/cache/clear,active,trainer-jwt,http-403,pending,ANA-007,Trainer cannot clear cache
+admin-analytics,admin,POST /api/admin/cache/clear,active,valid-admin-jwt,http-200+fresh-data-all-users,pending,ANA-008,Cache clear side-effect: all users get fresh data
+tier-gating,trainer,POST /api/trainer/customers/:id/invite,active,at-starter-limit-9,http-200,pending,TG-001,Invite exactly at starter limit (boundary)
+tier-gating,trainer,POST /api/trainer/customers/:id/invite,active,one-over-starter-limit-10,http-402-or-403,pending,TG-002,Invite one over starter limit (N+1 reject)
+tier-gating,trainer,POST /api/trainer/customers/:id/invite,active,at-professional-limit-20,http-200,pending,TG-003,Invite at professional limit (boundary)
+tier-gating,trainer,POST /api/trainer/customers/:id/invite,active,over-professional-limit-21,http-402-or-403,pending,TG-004,Invite over professional limit
+tier-gating,trainer,POST /api/trainer/customers/:id/invite,active,enterprise-unlimited,http-200,pending,TG-005,Enterprise unlimited customers
+tier-gating,trainer,POST /api/trainer/meal-plans,active,at-starter-ai-gen-limit-5,http-200,pending,TG-006,AI gen at starter monthly limit
+tier-gating,trainer,POST /api/trainer/meal-plans,active,over-starter-ai-gen-limit-6,http-402-or-403,pending,TG-007,AI gen over starter limit rejected
+tier-gating,admin,POST /api/admin/grant-tier,active,upgrade-starter-to-pro,http-200+limits-relaxed,pending,TG-008,Tier upgrade relaxes limits immediately
+tier-gating,trainer,GET /api/entitlements,active,just-after-upgrade,http-200+new-limits,pending,TG-009,Entitlements reflect upgrade immediately
+tier-gating,trainer,GET /api/entitlements,active,just-after-downgrade,http-200+overage-clients-locked,pending,TG-010,Downgrade — overage clients locked not deleted
+tier-gating,trainer,GET /api/recipes,active,starter-tier,http-200+max-200-recipes,pending,TG-011,Starter recipe library cap
+tier-gating,trainer,GET /api/recipes,active,professional-tier,http-200+max-500-recipes,pending,TG-012,Professional recipe library cap
+tier-gating,attacker,POST /api/admin/grant-tier,active,trainer-self-escalate,http-403,pending,TG-013,Trainer cannot self-escalate tier
+tier-gating,attacker,GET /api/recipes,active,starter-forged-pro-jwt,http-200+filtered-to-starter,pending,TG-014,Forged tier in JWT — server-side entitlement check overrides
+tier-gating,trainer,GET /api/analytics,active,starter-tier,http-200+basic-only,pending,TG-015,Starter gets basic analytics
+tier-gating,trainer,GET /api/analytics/advanced,active,starter-tier,http-403,pending,TG-016,Starter blocked from advanced analytics
+tier-gating,trainer,GET /api/analytics/advanced,active,professional-tier,http-200,pending,TG-017,Professional gets advanced analytics
+tier-gating,trainer,GET /api/branding,active,starter-tier,http-403-or-empty,pending,TG-018,Starter has no branding customization
+tier-gating,trainer,POST /api/branding,active,professional-tier,http-200,pending,TG-019,Professional can set custom logo
+tier-gating,trainer,POST /api/branding,active,enterprise-tier,http-200+white-label,pending,TG-020,Enterprise white-label branding
+cross-role,trainer,POST /api/trainer/meal-plans/:id/assign,saved,valid-customer,http-200+customer-sees-plan,pending,CR-001,Trainer assigns → customer immediately sees plan
+cross-role,customer,GET /api/meal-plans,assigned,after-trainer-assign,http-200+includes-assigned,pending,CR-002,Customer confirms assignment visible (bidirectional)
+cross-role,trainer,POST /api/trainer/meal-plans/:id/assign,saved,resend-email-check,http-200+email-queued,pending,CR-003,Assignment triggers email to customer (side-effect)
+cross-role,trainer,POST /api/trainer/recipes/:id/assign,approved-starter,starter-customer,http-200+customer-sees,pending,CR-004,Trainer assigns recipe → customer sees (tier-filtered)
+cross-role,customer,GET /api/personalized-recipes,assigned,after-recipe-assign,http-200+includes-recipe,pending,CR-005,Customer confirms recipe visible (bidirectional)
+cross-role,trainer,PATCH /api/trainer/customers/:id,active,status-paused,http-200+features-disabled,pending,CR-006,Trainer pauses customer → features disable
+cross-role,customer,GET /api/meal-plans,paused,after-trainer-pause,http-403-or-locked,pending,CR-007,Paused customer cannot access plans (bidirectional)
+cross-role,customer,POST /api/bug-reports,does-not-exist,valid-report,http-201+admin-sees,pending,CR-008,Customer submits bug → admin sees it
+cross-role,admin,GET /api/admin/bug-reports,open,after-customer-submit,http-200+includes-bug,pending,CR-009,Admin confirms bug visible (bidirectional)
+cross-role,customer,POST /api/recipes/:id/rate,approved-starter,flag-content,http-200+moderation-queue,pending,CR-010,Customer flags recipe → admin moderation queue
+cross-role,admin,GET /api/admin/moderation,flagged,after-customer-flag,http-200+includes-flag,pending,CR-011,Admin sees flagged rating (bidirectional)
+cross-role,admin,POST /api/admin/grant-tier,trialing,professional-tier,http-200+trainer-unlocked,pending,CR-012,Admin grants tier → trainer unlocks features
+cross-role,trainer,GET /api/entitlements,active,after-admin-grant,http-200+new-tier-limits,pending,CR-013,Trainer confirms tier unlock (bidirectional)
+cross-role,admin,POST /api/admin/generate,does-not-exist,valid-batch,http-200+trainer-library-grows,pending,CR-014,Admin bulk generates → trainer recipe library grows
+cross-role,trainer,GET /api/recipes,approved-starter,after-bulk-gen,http-200+new-recipes-visible,pending,CR-015,Trainer confirms new recipes visible (bidirectional)
+cross-role,admin,POST /api/admin/cache/clear,active,all-users,http-200+fresh-data,pending,CR-016,Admin clears cache → all users get fresh data (verify via subsequent GET)
+side-effects,customer,POST /api/bug-reports,does-not-exist,valid-report,github-issue-created,pending,SE-001,Bug submit → GitHub issue created (undici interceptor)
+side-effects,customer,POST /api/bug-reports,does-not-exist,valid-report,hal-bridge-file-written,pending,SE-002,Bug submit → Hal bridge file updated (mtime check)
+side-effects,trainer,POST /api/trainer/meal-plans/:id/assign,saved,valid-customer,resend-email-sent,pending,SE-003,Assignment → Resend email queued (stub log assert)
+side-effects,trainer,POST /api/trainer/customers/:id/invite,active,new-customer-email,resend-email-sent,pending,SE-004,Customer invite → Resend email sent (stub log assert)
+side-effects,customer,POST /api/progress/photos,active,valid-image-upload,s3-object-created,pending,SE-005,Photo upload → DO Spaces object exists (S3 HEAD)
+side-effects,admin,POST /api/admin/generate,does-not-exist,small-batch-3,openai-dalle-called,pending,SE-006,Bulk gen → OpenAI + DALL-E interceptors called correct times
+side-effects,admin,POST /api/admin/generate,does-not-exist,small-batch-3,sse-events-in-order,pending,SE-007,Bulk gen → SSE stream emits progress events in sequence
+side-effects,customer,DELETE /api/auth/account,active,own-account,s3-files-deleted,pending,SE-008,Account delete → S3 files cleaned up (no orphans)
+side-effects,customer,DELETE /api/auth/account,active,own-account,db-cascade-complete,pending,SE-009,Account delete → DB cascade deletes all user rows
+side-effects,customer,POST /api/meal-plans/:id/complete,active,own-plan,trainer-email-sent,pending,SE-010,Customer completes plan → trainer email fired
+side-effects,admin,POST /api/admin/recipes/:id/approve,unapproved,valid-recipe,recipe-visible-to-trainers,pending,SE-011,Recipe approved → immediately visible to entitled trainers
+side-effects,customer,POST /api/recipes/:id/rate,approved-starter,flag-content,moderation-row-inserted,pending,SE-012,Flag rating → moderation queue row created
+chaos,admin,POST /api/admin/generate,unapproved,openai-api-500,http-500-or-partial-batch,pending,CH-001,OpenAI 500 during BMAD — graceful degradation
+chaos,admin,POST /api/admin/generate,unapproved,openai-api-429,http-429-or-retry,pending,CH-002,OpenAI 429 — rate limit handled
+chaos,admin,POST /api/admin/generate,unapproved,dalle-api-500,http-200+no-image-url,pending,CH-003,DALL-E 500 — recipe saved without image (no orphan)
+chaos,trainer,POST /api/progress/photos,active,s3-upload-failure,http-500-or-422,pending,CH-004,S3 upload failure — clean error to client
+chaos,trainer,POST /api/trainer/customers/:id/invite,active,resend-api-500,http-500-or-200-queued,pending,CH-005,Resend 500 — invite fails gracefully
+chaos,stripe,POST /api/subscription/webhook,active,stripe-api-timeout,http-200,pending,CH-006,Stripe webhook timeout — idempotent retry safe
+chaos,customer,POST /api/bug-reports,does-not-exist,github-api-500,http-201+bug-saved-no-github,pending,CH-007,GitHub API 500 — bug saved anyway (async degrade)
+chaos,admin,POST /api/admin/grant-tier,trialing,db-write-failure,http-500+no-partial-state,pending,CH-008,DB write failure — no partial tier state
+chaos,trainer,POST /api/trainer/meal-plans,saved,db-timeout-on-ai-gen,http-504,pending,CH-009,DB timeout during AI gen — no orphan plan row
+chaos,admin,POST /api/admin/generate,unapproved,s3-upload-failure-mid-batch,http-200+partial-images+no-orphans,pending,CH-010,S3 mid-batch failure — orphan prevention (buglog regression)
+chaos,anon,GET /api/recipes,approved-starter,db-connection-lost,http-503,pending,CH-011,DB connection lost — 503 not crash
+chaos,trainer,GET /api/entitlements,active,cache-poisoned,http-200+correct-entitlements,pending,CH-012,Cache poisoned — server-side entitlement always DB-authoritative
+pdf,trainer,GET /api/pdf/:planId,assigned,valid-plan-id,http-200+pdf-binary,pending,PDF-001,PDF generated and returned
+pdf,trainer,GET /api/pdf/:planId,assigned,valid-plan-id,pdf-contains-customer-name,pending,PDF-002,PDF contains correct customer name
+pdf,trainer,GET /api/pdf/:planId,assigned,enterprise-tier,pdf-has-trainer-logo,pending,PDF-003,Enterprise PDF has trainer white-label logo
+pdf,trainer,GET /api/pdf/:planId,assigned,professional-tier,pdf-has-trainer-branding,pending,PDF-004,Professional PDF has custom branding
+pdf,trainer,GET /api/pdf/:planId,assigned,starter-tier,pdf-has-evofitmeals-brand,pending,PDF-005,Starter PDF uses default EvoFitMeals branding
+pdf,attacker,GET /api/pdf/:planId,assigned,other-trainer-plan-id,http-403,pending,PDF-006,IDOR: cross-trainer PDF generation blocked
+pdf,anon,GET /api/pdf/:planId,assigned,no-auth,http-401,pending,PDF-007,Anon blocked from PDF
+pdf,trainer,GET /api/pdf/:planId,assigned,uses-setContent-not-goto,no-spa-trap,pending,PDF-008,PDF uses page.setContent() not page.goto() — buglog regression
+pdf,trainer,GET /api/pdf/:planId,does-not-exist,nonexistent-plan-id,http-404,pending,PDF-009,PDF for nonexistent plan returns 404
+grocery-lists,customer,GET /api/grocery-lists,assigned,own-customer-id,http-200+lists,pending,GRO-001,Customer views grocery lists
+grocery-lists,customer,POST /api/grocery-lists/generate-from-meal-plan,assigned,valid-plan-id,http-201+list,pending,GRO-002,Generate grocery list from meal plan
+grocery-lists,customer,POST /api/grocery-lists/generate-from-meal-plan,assigned,valid-plan-id-duplicate,http-200-or-409,pending,GRO-003,Idempotency: double-generate same plan
+grocery-lists,customer,PATCH /api/grocery-lists/:id/items/:itemId,active,check-off-item,http-200+item-checked,pending,GRO-004,Check off grocery item
+grocery-lists,customer,DELETE /api/grocery-lists/:id,active,own-list-id,http-200,pending,GRO-005,Delete grocery list
+grocery-lists,attacker,GET /api/grocery-lists,assigned,other-customer-jwt,http-200+own-only,pending,GRO-006,Customer cannot see other customer grocery lists
+grocery-lists,attacker,GET /api/grocery-lists/:id,assigned,other-customer-list-id,http-403,pending,GRO-007,IDOR: cross-customer grocery list read
+grocery-lists,customer,GET /api/grocery-lists,active,after-plan-delete-cascade,http-200+orphan-check,pending,GRO-008,Grocery list after plan deletion — verify cascade or null FK
+progress,customer,POST /api/progress/photos,active,valid-image,http-201+photo-saved,pending,PRO-001,Customer uploads progress photo
+progress,customer,GET /api/progress/photos,active,own-customer-id,http-200+own-photos,pending,PRO-002,Customer views own photos
+progress,attacker,GET /api/progress/photos,active,other-customer-jwt,http-200+own-only,pending,PRO-003,Customer cannot see other customer photos
+progress,trainer,GET /api/trainer/customers/:id/progress,active,own-customer-id,http-200+progress-data,pending,PRO-004,Trainer views customer progress
+progress,attacker,GET /api/trainer/customers/:id/progress,active,other-trainer-customer-id,http-403,pending,PRO-005,IDOR: cross-trainer customer progress
+progress,customer,POST /api/progress/photos,active,s3-upload-success,s3-object-head-exists,pending,PRO-006,Photo upload → S3 object verifiable (HEAD)
+progress,customer,POST /api/nutrition/log,active,valid-log-entry,http-201+logged,pending,PRO-007,Customer logs nutrition
+progress,customer,GET /api/nutrition/log,active,own-logs,http-200+own-logs,pending,PRO-008,Customer views nutrition log
+profile,trainer,GET /api/trainer/profile/stats,active,valid-jwt,http-200+stats,pending,PROF-001,Trainer profile stats
+profile,trainer,PATCH /api/profile,active,valid-update-body,http-200+updated,pending,PROF-002,Trainer updates profile
+profile,customer,PATCH /api/profile,active,valid-update-body,http-200+updated,pending,PROF-003,Customer updates profile
+profile,attacker,PATCH /api/profile,active,other-user-id,http-403,pending,PROF-004,IDOR: cross-user profile update
+profile,anon,GET /api/trainer/profile/stats,active,no-auth,http-401,pending,PROF-005,Anon blocked from profile stats
+profile,trainer,PATCH /api/profile,active,fullName-field-nonexistent,http-422-or-ignored,pending,PROF-006,fullName field does not exist on UserProfile — buglog regression
+funnel,anon,GET /get-started,does-not-exist,no-auth,http-200+page-renders,pending,FUN-001,Main landing renders without auth (no 401 bleed)
+funnel,anon,GET /starter,does-not-exist,no-auth,http-200+page-renders,pending,FUN-002,Starter sales page renders without auth
+funnel,anon,GET /professional,does-not-exist,no-auth,http-200+page-renders,pending,FUN-003,Professional sales page renders without auth
+funnel,anon,GET /enterprise,does-not-exist,no-auth,http-200+page-renders,pending,FUN-004,Enterprise sales page renders without auth
+funnel,anon,GET /free-blueprint,does-not-exist,no-auth,http-200+page-renders,pending,FUN-005,Lead magnet page renders without auth
+funnel,anon,POST /api/funnel/capture,does-not-exist,valid-email,http-200+email-queued,pending,FUN-006,Lead magnet email capture + Resend side-effect
+funnel,anon,GET /special-offer,does-not-exist,no-auth,http-200+page-renders,pending,FUN-007,Tripwire offer page renders without auth
+funnel,anon,POST /api/funnel/checkout,does-not-exist,valid-stripe-token+starter,http-200+checkout-session,pending,FUN-008,Funnel checkout creates Stripe session
+funnel,anon,POST /api/funnel/checkout,does-not-exist,missing-tier,http-422,pending,FUN-009,Checkout without tier param rejected
+funnel,anon,GET /pricing,does-not-exist,no-auth,http-200+shows-canonical-prices,pending,FUN-010,Pricing shows $199/$299/$399 canonical (no monthly legacy)
+account-deletion,customer,DELETE /api/auth/account,active,own-account+password-confirm,http-200,pending,DEL-001,Customer deletes own account
+account-deletion,trainer,DELETE /api/auth/account,active,own-account+password-confirm,http-200,pending,DEL-002,Trainer deletes own account
+account-deletion,customer,DELETE /api/auth/account,active,wrong-password-confirm,http-403,pending,DEL-003,Wrong password confirmation rejected
+account-deletion,attacker,DELETE /api/auth/account,active,other-user-id,http-403,pending,DEL-004,IDOR: delete other user's account blocked
+account-deletion,customer,DELETE /api/auth/account,active,own-account,db-cascade-assert,pending,DEL-005,Account delete cascades all user rows
+account-deletion,customer,DELETE /api/auth/account,active,own-account,s3-orphan-sweep-zero,pending,DEL-006,Account delete removes S3 files (no orphans — buglog regression)
+bmad,admin,POST /api/admin/generate,does-not-exist,batch-size-1,http-200+sse-stream,pending,BMAD-001,Single recipe BMAD full agent chain
+bmad,admin,GET /api/admin/generate/progress/:batchId,unapproved,valid-batchId,sse-events-ordered,pending,BMAD-002,SSE stream events in correct agent order
+bmad,admin,POST /api/admin/generate/stop/:batchId,unapproved,mid-generation,http-200+partial-recipes-saved,pending,BMAD-003,Stop mid-batch — partial recipes preserved
+bmad,admin,POST /api/admin/generate,unapproved,agent-failure-mid-chain,http-200+partial-batch+error-event,pending,BMAD-004,Agent failure mid-chain — error SSE event fires
+bmad,admin,POST /api/admin/generate,unapproved,concurrent-two-batches,http-200+both-batches-independent,pending,BMAD-005,Two concurrent batches do not interfere
+bmad,admin,POST /api/admin/generate,unapproved,batch-size-500,http-200+90s-per-recipe-budget,pending,BMAD-006,Large batch respects 90s/recipe timeout budget (buglog regression)
+bmad,trainer,POST /api/admin/generate,unapproved,trainer-jwt,http-403,pending,BMAD-007,Trainer cannot trigger BMAD generation
+idempotency,trainer,POST /api/trainer/meal-plans,saved,double-submit-500ms,http-201+single-plan-only,pending,IDEM-001,Double-submit creates only one plan
+idempotency,customer,POST /api/grocery-lists/generate-from-meal-plan,assigned,double-submit-500ms,http-201-or-409+single-list,pending,IDEM-002,Double-generate grocery list idempotent
+idempotency,anon,POST /api/auth/register,does-not-exist,double-submit-same-email,http-409-second,pending,IDEM-003,Double registration for same email
+idempotency,stripe,POST /api/subscription/webhook,active,same-event-id-twice,http-200+no-double-apply,pending,IDEM-004,Stripe duplicate webhook idempotent
+pagination,admin,GET /api/admin/recipes,approved-starter,page-1,http-200+first-page,pending,PAG-001,First page of recipe list
+pagination,admin,GET /api/admin/recipes,approved-starter,page-2,http-200+second-page,pending,PAG-002,Second page — correct offset
+pagination,admin,GET /api/admin/recipes,approved-starter,page-beyond-total,http-200+empty-array,pending,PAG-003,Page beyond last — empty array not 404
+pagination,trainer,GET /api/recipes,does-not-exist,empty-library,http-200+empty-array,pending,PAG-004,Empty recipe library returns empty array
+pagination,customer,GET /api/meal-plans,does-not-exist,no-assignments,http-200+empty-array,pending,PAG-005,Customer with no plans returns empty array
+pagination,admin,GET /api/admin/recipes,approved-starter,page-not-offset,http-200,pending,PAG-006,Admin API uses page param not offset (buglog regression)
+concurrency,trainer,POST /api/trainer/meal-plans/:id/assign,saved,two-trainers-same-customer-same-time,http-200-or-409,pending,CON-001,Race: two trainers assign same plan to same customer
+concurrency,admin,POST /api/admin/recipes/:id/approve,unapproved,approve-while-trainer-reads,http-200+consistent-read,pending,CON-002,Race: approve while trainer reads recipe list
+concurrency,admin,POST /api/admin/grant-tier,trialing,grant-while-stripe-webhook,http-200+final-consistent-tier,pending,CON-003,Race: admin grant-tier vs Stripe webhook simultaneous
+concurrency,hal,PATCH /api/bug-reports/:id,open,two-hal-instances-claim-same,http-409-or-200-only-one,pending,CON-004,Race: two Hal instances claim same bug — only one wins
+concurrency,customer,POST /api/grocery-lists/generate-from-meal-plan,assigned,two-concurrent-same-plan,http-201+single-list,pending,CON-005,Race: concurrent grocery list generation same plan
+routes,anon,GET /admin,active,no-auth,redirect-to-login,pending,RT-001,/admin redirects anon to login
+routes,customer,GET /admin,active,customer-jwt,http-403-or-redirect,pending,RT-002,/admin blocks customer role
+routes,trainer,GET /admin,active,trainer-jwt,http-403-or-redirect,pending,RT-003,/admin blocks trainer role
+routes,admin,GET /admin,active,admin-jwt,http-200,pending,RT-004,/admin loads for admin
+routes,anon,GET /trainer,active,no-auth,redirect-to-login,pending,RT-005,/trainer redirects anon
+routes,customer,GET /trainer,active,customer-jwt,http-403-or-redirect,pending,RT-006,/trainer blocks customer
+routes,anon,GET /customer,active,no-auth,redirect-to-login,pending,RT-007,/customer redirects anon
+routes,trainer,GET /customer,active,trainer-jwt,http-403-or-redirect,pending,RT-008,/customer blocks trainer
+routes,anon,GET /shared/:token,shared,valid-token,http-200+plan,pending,RT-009,/shared/:token accessible without auth (public)
+routes,anon,GET /get-started,does-not-exist,no-auth,http-200,pending,RT-010,Public funnel routes accessible without auth
+routes,anon,GET /pricing,does-not-exist,no-auth,http-200,pending,RT-011,/pricing accessible without auth
+regression,trainer,GET /api/pdf/:planId,assigned,valid-plan,no-spa-trap,pending,REG-001,PDF SPA trap regression (buglog: never page.goto for SPA HTML→PDF)
+regression,admin,POST /api/admin/generate,unapproved,batch-size-100,90s-per-recipe-budget,pending,REG-002,Batch executor timeout regression (buglog: 90s/recipe budget)
+regression,admin,GET /api/admin/recipes,approved-starter,page-2,uses-page-not-offset,pending,REG-003,Pagination regression — admin API uses page not offset
+regression,customer,DELETE /api/auth/account,active,own-account,s3-no-orphans,pending,REG-004,Image orphan prevention regression (deployed 2026-03-27)
+regression,trainer,PATCH /api/profile,active,fullName-absent,http-200-or-422,pending,REG-005,Profile fullName field absent regression (buglog: no fullName on UserProfile)
+regression,stripe,POST /api/subscription/webhook,active,duplicate-event,idempotent-no-double-apply,pending,REG-006,Stripe duplicate webhook regression
+regression,admin,POST /api/admin/generate,unapproved,batch-size-50,no-duplicate-rows,pending,REG-007,Migration 0022 duplicate row regression

@@ -249,12 +249,14 @@ bugReportsRouter.patch(
   },
 );
 
-// PATCH /api/bugs/:id/assign — Hal claims a bug
+// PATCH /api/bugs/:id/assign — Hal claims a bug (atomic, race-safe)
 bugReportsRouter.patch(
   "/:id/assign",
   requireApiKey,
   async (req: Request, res: Response) => {
     try {
+      // Conditional UPDATE: only claim if not already claimed.
+      // Two Hal instances racing the same bug: the second UPDATE matches zero rows.
       const [updated] = await db
         .update(bugReports)
         .set({
@@ -263,11 +265,29 @@ bugReportsRouter.patch(
           status: "triaged",
           updatedAt: new Date(),
         })
-        .where(eq(bugReports.id, req.params.id))
+        .where(
+          and(
+            eq(bugReports.id, req.params.id),
+            eq(bugReports.assignedToHal, false),
+          ),
+        )
         .returning();
 
-      if (!updated)
-        return res.status(404).json({ error: "Bug report not found" });
+      if (!updated) {
+        // Distinguish "not found" from "already claimed"
+        const [existing] = await db
+          .select({
+            id: bugReports.id,
+            assignedToHal: bugReports.assignedToHal,
+          })
+          .from(bugReports)
+          .where(eq(bugReports.id, req.params.id));
+        if (!existing)
+          return res.status(404).json({ error: "Bug report not found" });
+        return res
+          .status(409)
+          .json({ error: "Bug already claimed by another worker" });
+      }
       return res.json(updated);
     } catch (err) {
       return res.status(500).json({ error: "Failed to assign bug report" });

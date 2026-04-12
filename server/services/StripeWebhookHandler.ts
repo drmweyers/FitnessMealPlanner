@@ -21,9 +21,9 @@
  * - customer.subscription.trial_will_end - Trial ending soon
  */
 
-import Stripe from 'stripe';
-import { db } from '../db';
-import { eq, and } from 'drizzle-orm';
+import Stripe from "stripe";
+import { db } from "../db";
+import { eq, and } from "drizzle-orm";
 import {
   trainerSubscriptions,
   subscriptionItems,
@@ -34,19 +34,21 @@ import {
   InsertSubscriptionItem,
   InsertWebhookEvent,
   InsertPaymentLog,
-} from '../../shared/schema';
-import { entitlementsService } from './EntitlementsService';
+} from "../../shared/schema";
+import { entitlementsService } from "./EntitlementsService";
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+  throw new Error("STRIPE_SECRET_KEY environment variable is required");
 }
 
 if (!process.env.STRIPE_WEBHOOK_SECRET) {
-  console.warn('WARNING: STRIPE_WEBHOOK_SECRET not set. Webhook signature validation disabled.');
+  console.warn(
+    "WARNING: STRIPE_WEBHOOK_SECRET not set. Webhook signature validation disabled.",
+  );
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: "2024-12-18.acacia",
 });
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
@@ -66,7 +68,9 @@ export class StripeWebhookHandler {
   constructEvent(payload: string | Buffer, signature: string): Stripe.Event {
     if (!WEBHOOK_SECRET) {
       // In development without webhook secret, parse payload directly
-      console.warn('Webhook signature validation skipped (no STRIPE_WEBHOOK_SECRET)');
+      console.warn(
+        "Webhook signature validation skipped (no STRIPE_WEBHOOK_SECRET)",
+      );
       return JSON.parse(payload.toString());
     }
 
@@ -81,25 +85,28 @@ export class StripeWebhookHandler {
       where: eq(webhookEvents.eventId, eventId),
     });
 
-    return existing?.status === 'processed';
+    return existing?.status === "processed";
   }
 
   /**
    * Mark event as processed
    */
-  private async markEventProcessed(eventId: string, eventType: string): Promise<void> {
+  private async markEventProcessed(
+    eventId: string,
+    eventType: string,
+  ): Promise<void> {
     await db
       .insert(webhookEvents)
       .values({
         eventId,
         eventType,
-        status: 'processed',
+        status: "processed",
         processedAt: new Date(),
       })
       .onConflictDoUpdate({
         target: webhookEvents.eventId,
         set: {
-          status: 'processed',
+          status: "processed",
           processedAt: new Date(),
         },
       });
@@ -108,7 +115,11 @@ export class StripeWebhookHandler {
   /**
    * Mark event as failed
    */
-  private async markEventFailed(eventId: string, eventType: string, error: string): Promise<void> {
+  private async markEventFailed(
+    eventId: string,
+    eventType: string,
+    error: string,
+  ): Promise<void> {
     const existing = await db.query.webhookEvents.findFirst({
       where: eq(webhookEvents.eventId, eventId),
     });
@@ -117,7 +128,7 @@ export class StripeWebhookHandler {
       await db
         .update(webhookEvents)
         .set({
-          status: 'failed',
+          status: "failed",
           retryCount: existing.retryCount + 1,
           errorMessage: error,
         })
@@ -126,7 +137,7 @@ export class StripeWebhookHandler {
       await db.insert(webhookEvents).values({
         eventId,
         eventType,
-        status: 'failed',
+        status: "failed",
         retryCount: 1,
         errorMessage: error,
       });
@@ -153,28 +164,40 @@ export class StripeWebhookHandler {
 
       // Route to specific handler
       switch (eventType) {
-        case 'checkout.session.completed':
-          await this.handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+        case "checkout.session.completed":
+          await this.handleCheckoutSessionCompleted(
+            event.data.object as Stripe.Checkout.Session,
+          );
           break;
 
-        case 'customer.subscription.updated':
-          await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        case "customer.subscription.updated":
+          await this.handleSubscriptionUpdated(
+            event.data.object as Stripe.Subscription,
+          );
           break;
 
-        case 'customer.subscription.deleted':
-          await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        case "customer.subscription.deleted":
+          await this.handleSubscriptionDeleted(
+            event.data.object as Stripe.Subscription,
+          );
           break;
 
-        case 'invoice.payment_succeeded':
-          await this.handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        case "invoice.payment_succeeded":
+          await this.handleInvoicePaymentSucceeded(
+            event.data.object as Stripe.Invoice,
+          );
           break;
 
-        case 'invoice.payment_failed':
-          await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        case "invoice.payment_failed":
+          await this.handleInvoicePaymentFailed(
+            event.data.object as Stripe.Invoice,
+          );
           break;
 
-        case 'customer.subscription.trial_will_end':
-          await this.handleTrialWillEnd(event.data.object as Stripe.Subscription);
+        case "customer.subscription.trial_will_end":
+          await this.handleTrialWillEnd(
+            event.data.object as Stripe.Subscription,
+          );
           break;
 
         default:
@@ -208,12 +231,17 @@ export class StripeWebhookHandler {
    * Handle checkout.session.completed
    * Creates new trainer subscription in database
    */
-  private async handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {
+  private async handleCheckoutSessionCompleted(
+    session: Stripe.Checkout.Session,
+  ): Promise<void> {
     const trainerId = session.metadata?.trainerId;
-    const tier = session.metadata?.tier as 'starter' | 'professional' | 'enterprise';
+    const tier = session.metadata?.tier as
+      | "starter"
+      | "professional"
+      | "enterprise";
 
     if (!trainerId || !tier) {
-      throw new Error('Missing trainerId or tier in session metadata');
+      throw new Error("Missing trainerId or tier in session metadata");
     }
 
     // Get subscription details from Stripe
@@ -231,7 +259,9 @@ export class StripeWebhookHandler {
         status: subscription.status as any,
         currentPeriodStart: new Date(subscription.current_period_start * 1000),
         currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+        trialEnd: subscription.trial_end
+          ? new Date(subscription.trial_end * 1000)
+          : null,
       })
       .returning();
 
@@ -239,7 +269,7 @@ export class StripeWebhookHandler {
     for (const item of subscription.items.data) {
       await db.insert(subscriptionItems).values({
         subscriptionId: trainerSub.id,
-        kind: 'tier', // Default to tier, AI items will be added later
+        kind: "tier", // Default to tier, AI items will be added later
         stripePriceId: item.price.id,
         stripeSubscriptionItemId: item.id,
         status: subscription.status as any,
@@ -262,10 +292,10 @@ export class StripeWebhookHandler {
     // Log payment event
     await db.insert(paymentLogs).values({
       trainerId,
-      eventType: 'purchase',
+      eventType: "purchase",
       amount: (subscription.items.data[0].price.unit_amount || 0) / 100,
       currency: subscription.items.data[0].price.currency,
-      status: 'completed',
+      status: "completed",
       occurredAt: new Date(),
     });
 
@@ -277,16 +307,20 @@ export class StripeWebhookHandler {
    * Handle customer.subscription.updated
    * Updates subscription status, tier, period dates
    */
-  private async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
+  private async handleSubscriptionUpdated(
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
     const trainerId = subscription.metadata?.trainerId;
 
     if (!trainerId) {
-      console.warn('No trainerId in subscription metadata, skipping update');
+      console.warn("No trainerId in subscription metadata, skipping update");
       return;
     }
 
-    // Update trainer subscription
-    await db
+    // Update trainer subscription.
+    // A silent 0-row update means admin grant-tier raced us and wiped the row,
+    // or the row was never created — both indicate state divergence.
+    const updated = await db
       .update(trainerSubscriptions)
       .set({
         tier: (subscription.metadata?.tier as any) || undefined,
@@ -294,10 +328,21 @@ export class StripeWebhookHandler {
         currentPeriodStart: new Date(subscription.current_period_start * 1000),
         currentPeriodEnd: new Date(subscription.current_period_end * 1000),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+        trialEnd: subscription.trial_end
+          ? new Date(subscription.trial_end * 1000)
+          : null,
         updatedAt: new Date(),
       })
-      .where(eq(trainerSubscriptions.stripeSubscriptionId, subscription.id));
+      .where(eq(trainerSubscriptions.stripeSubscriptionId, subscription.id))
+      .returning({ id: trainerSubscriptions.id });
+
+    if (updated.length === 0) {
+      console.error(
+        `[stripe-webhook] SILENT DROP: subscription.updated for ${subscription.id} ` +
+          `(trainer=${trainerId}) matched 0 rows. Possible race with admin grant-tier ` +
+          `or missing create webhook. Stripe and DB are now divergent.`,
+      );
+    }
 
     // Update subscription items status
     const trainerSub = await db.query.trainerSubscriptions.findFirst({
@@ -317,16 +362,24 @@ export class StripeWebhookHandler {
     }
 
     // Log upgrade/downgrade if tier changed
-    if (subscription.metadata?.previousTier && subscription.metadata?.tier !== subscription.metadata.previousTier) {
-      const isUpgrade = ['starter', 'professional', 'enterprise'].indexOf(subscription.metadata.tier) >
-        ['starter', 'professional', 'enterprise'].indexOf(subscription.metadata.previousTier);
+    if (
+      subscription.metadata?.previousTier &&
+      subscription.metadata?.tier !== subscription.metadata.previousTier
+    ) {
+      const isUpgrade =
+        ["starter", "professional", "enterprise"].indexOf(
+          subscription.metadata.tier,
+        ) >
+        ["starter", "professional", "enterprise"].indexOf(
+          subscription.metadata.previousTier,
+        );
 
       await db.insert(paymentLogs).values({
         trainerId,
-        eventType: isUpgrade ? 'upgrade' : 'downgrade',
+        eventType: isUpgrade ? "upgrade" : "downgrade",
         amount: (subscription.items.data[0].price.unit_amount || 0) / 100,
         currency: subscription.items.data[0].price.currency,
-        status: 'completed',
+        status: "completed",
         metadata: {
           previousTier: subscription.metadata.previousTier,
           newTier: subscription.metadata.tier,
@@ -343,11 +396,13 @@ export class StripeWebhookHandler {
    * Handle customer.subscription.deleted
    * Marks subscription as canceled
    */
-  private async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
+  private async handleSubscriptionDeleted(
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
     await db
       .update(trainerSubscriptions)
       .set({
-        status: 'canceled',
+        status: "canceled",
         updatedAt: new Date(),
       })
       .where(eq(trainerSubscriptions.stripeSubscriptionId, subscription.id));
@@ -366,7 +421,9 @@ export class StripeWebhookHandler {
    * Handle invoice.payment_succeeded
    * Logs successful payment and resets usage for new billing period
    */
-  private async handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
+  private async handleInvoicePaymentSucceeded(
+    invoice: Stripe.Invoice,
+  ): Promise<void> {
     const subscriptionId = invoice.subscription as string;
 
     if (!subscriptionId) {
@@ -385,12 +442,12 @@ export class StripeWebhookHandler {
     // Log payment
     await db.insert(paymentLogs).values({
       trainerId: trainerSub.trainerId,
-      eventType: 'purchase',
+      eventType: "purchase",
       amount: invoice.amount_paid / 100,
       currency: invoice.currency,
       stripeInvoiceId: invoice.id,
       stripePaymentIntentId: invoice.payment_intent as string,
-      status: 'completed',
+      status: "completed",
       occurredAt: new Date(invoice.status_transitions.paid_at! * 1000),
     });
 
@@ -399,7 +456,7 @@ export class StripeWebhookHandler {
     const existingUsage = await db.query.tierUsageTracking.findFirst({
       where: and(
         eq(tierUsageTracking.trainerId, trainerSub.trainerId),
-        eq(tierUsageTracking.periodEnd, trainerSub.currentPeriodEnd)
+        eq(tierUsageTracking.periodEnd, trainerSub.currentPeriodEnd),
       ),
     });
 
@@ -422,7 +479,9 @@ export class StripeWebhookHandler {
    * Handle invoice.payment_failed
    * Logs failed payment
    */
-  private async handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+  private async handleInvoicePaymentFailed(
+    invoice: Stripe.Invoice,
+  ): Promise<void> {
     const subscriptionId = invoice.subscription as string;
 
     if (!subscriptionId) {
@@ -440,11 +499,11 @@ export class StripeWebhookHandler {
     // Log failed payment
     await db.insert(paymentLogs).values({
       trainerId: trainerSub.trainerId,
-      eventType: 'failed',
+      eventType: "failed",
       amount: invoice.amount_due / 100,
       currency: invoice.currency,
       stripeInvoiceId: invoice.id,
-      status: 'failed',
+      status: "failed",
       occurredAt: new Date(),
     });
 
@@ -452,7 +511,7 @@ export class StripeWebhookHandler {
     await db
       .update(trainerSubscriptions)
       .set({
-        status: 'past_due',
+        status: "past_due",
         updatedAt: new Date(),
       })
       .where(eq(trainerSubscriptions.id, trainerSub.id));
@@ -465,7 +524,9 @@ export class StripeWebhookHandler {
    * Handle customer.subscription.trial_will_end
    * Send notification to trainer (optional)
    */
-  private async handleTrialWillEnd(subscription: Stripe.Subscription): Promise<void> {
+  private async handleTrialWillEnd(
+    subscription: Stripe.Subscription,
+  ): Promise<void> {
     // This could trigger an email notification
     // For now, just log it
     console.log(`Trial ending soon for subscription ${subscription.id}`);
