@@ -1,0 +1,149 @@
+{
+  "generatedAt": "2026-04-12T23:47:41.664Z",
+  "totalCells": 274,
+  "covered": 0,
+  "pending": 272,
+  "percentCovered": 0,
+  "bySuite": {
+    "auth": {
+      "pending": 17,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "meal-plans": {
+      "pending": 26,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "meal-plan-sharing": {
+      "pending": 6,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "recipes": {
+      "pending": 29,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "bug-reports": {
+      "pending": 19,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0,
+      "http-201+github-issue-created": null,
+      "http-201+hal-bridge-written": null
+    },
+    "subscription": {
+      "pending": 20,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "admin-analytics": {
+      "pending": 8,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "tier-gating": {
+      "pending": 20,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "cross-role": {
+      "pending": 16,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "side-effects": {
+      "pending": 12,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "chaos": {
+      "pending": 12,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "pdf": {
+      "pending": 9,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "grocery-lists": {
+      "pending": 8,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "progress": {
+      "pending": 8,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "profile": {
+      "pending": 6,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "funnel": {
+      "pending": 10,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "account-deletion": {
+      "pending": 6,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "bmad": {
+      "pending": 7,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "idempotency": {
+      "pending": 4,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "pagination": {
+      "pending": 6,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "concurrency": {
+      "pending": 5,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "routes": {
+      "pending": 11,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    },
+    "regression": {
+      "pending": 7,
+      "covered": 0,
+      "n/a": 0,
+      "blocked": 0
+    }
+  }
+}
