@@ -73,7 +73,12 @@ import {
   Download,
   UserPlus,
   Save,
+  SlidersHorizontal,
+  ChevronDown,
+  Lock,
 } from "lucide-react";
+import { UpgradePrompt } from "./UpgradePrompt";
+import { useTier, type TierLevel } from "../hooks/useTier";
 import EvoFitPDFExport from "./EvoFitPDFExport";
 import html2canvas from "html2canvas";
 import RecipeModal from "./RecipeModal";
@@ -147,6 +152,10 @@ export default function MealPlanGenerator({
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
   const mealPlanRef = useRef<HTMLDivElement>(null);
+  const [showMacroFilters, setShowMacroFilters] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [upgradeFeatureMessage, setUpgradeFeatureMessage] = useState("");
+  const { tier, canAccess } = useTier();
 
   /**
    * Recipe Modal Handlers
@@ -349,22 +358,22 @@ export default function MealPlanGenerator({
           const errorData = await response.json();
           console.log("[Meal Plan Generator] Error response data:", errorData);
           errorMessage = errorData.message || errorData.error || errorMessage;
-          console.log(
-            "[Meal Plan Generator] Extracted error message:",
-            errorMessage,
-          );
+
+          // Tier-gating: show upgrade prompt on 403
+          if (response.status === 403 && errorData.upgradeRequired) {
+            const nextTier: TierLevel =
+              errorData.requiredTier ||
+              (tier === "starter" ? "professional" : "enterprise");
+            setUpgradeFeatureMessage(errorMessage);
+            setShowUpgradePrompt(true);
+          }
         } catch (parseError) {
-          // If response is not JSON, use status text
           console.error(
             "[Meal Plan Generator] Failed to parse error response:",
             parseError,
           );
           errorMessage = response.statusText || errorMessage;
         }
-        console.log(
-          "[Meal Plan Generator] Throwing error with message:",
-          errorMessage,
-        );
         throw new Error(errorMessage);
       }
 
@@ -2013,6 +2022,336 @@ export default function MealPlanGenerator({
                   />
                 </div>
 
+                {/* Advanced Recipe Filters (Collapsible) */}
+                <div className="space-y-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowMacroFilters(!showMacroFilters)}
+                    className="flex items-center gap-2 text-sm sm:text-base font-medium text-purple-700 hover:text-purple-900 transition-colors w-full"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                    Advanced Recipe Filters
+                    <ChevronDown
+                      className={`h-4 w-4 ml-auto transition-transform ${showMacroFilters ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {showMacroFilters && (
+                    <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-4 space-y-5">
+                      <p className="text-xs text-gray-500">
+                        Constrain recipe selection by nutrition and prep time.
+                        These filters apply to every recipe in your generated
+                        plan.
+                      </p>
+
+                      {/* Max Prep Time */}
+                      <FormField
+                        control={form.control}
+                        name="maxPrepTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2 text-sm">
+                              <Clock className="h-4 w-4" />
+                              Max Prep Time (minutes)
+                            </FormLabel>
+                            <FormControl>
+                              <Select
+                                value={field.value?.toString() || "any"}
+                                onValueChange={(value) =>
+                                  field.onChange(
+                                    value === "any"
+                                      ? undefined
+                                      : parseInt(value),
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="text-sm">
+                                  <SelectValue placeholder="Any Time" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="any">Any Time</SelectItem>
+                                  <SelectItem value="15">15 min</SelectItem>
+                                  <SelectItem value="30">30 min</SelectItem>
+                                  <SelectItem value="45">45 min</SelectItem>
+                                  <SelectItem value="60">1 hour</SelectItem>
+                                  <SelectItem value="90">1.5 hours</SelectItem>
+                                  <SelectItem value="120">2 hours</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Calorie Range */}
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-sm font-medium">
+                          <Zap className="h-4 w-4" />
+                          Calories Per Serving
+                        </Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <FormField
+                            control={form.control}
+                            name="minCalories"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="2000"
+                                    placeholder="Min"
+                                    className="text-sm"
+                                    value={field.value ?? ""}
+                                    onChange={(e) =>
+                                      field.onChange(
+                                        e.target.value
+                                          ? parseInt(e.target.value)
+                                          : undefined,
+                                      )
+                                    }
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="maxCalories"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="2000"
+                                    placeholder="Max"
+                                    className="text-sm"
+                                    value={field.value ?? ""}
+                                    onChange={(e) =>
+                                      field.onChange(
+                                        e.target.value
+                                          ? parseInt(e.target.value)
+                                          : undefined,
+                                      )
+                                    }
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Macro Nutrients Section */}
+                      <div className="space-y-3">
+                        <Label className="flex items-center gap-2 text-sm font-medium">
+                          <Activity className="h-4 w-4" />
+                          Macro Nutrients (per serving)
+                        </Label>
+
+                        {/* Protein */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-gray-600">
+                            Protein (g)
+                          </Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <FormField
+                              control={form.control}
+                              name="minProtein"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="200"
+                                      placeholder="Min"
+                                      className="text-sm"
+                                      value={field.value ?? ""}
+                                      onChange={(e) =>
+                                        field.onChange(
+                                          e.target.value
+                                            ? parseInt(e.target.value)
+                                            : undefined,
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="maxProtein"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="200"
+                                      placeholder="Max"
+                                      className="text-sm"
+                                      value={field.value ?? ""}
+                                      onChange={(e) =>
+                                        field.onChange(
+                                          e.target.value
+                                            ? parseInt(e.target.value)
+                                            : undefined,
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Carbohydrates */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-gray-600">
+                            Carbohydrates (g)
+                          </Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <FormField
+                              control={form.control}
+                              name="minCarbs"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="300"
+                                      placeholder="Min"
+                                      className="text-sm"
+                                      value={field.value ?? ""}
+                                      onChange={(e) =>
+                                        field.onChange(
+                                          e.target.value
+                                            ? parseInt(e.target.value)
+                                            : undefined,
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="maxCarbs"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="300"
+                                      placeholder="Max"
+                                      className="text-sm"
+                                      value={field.value ?? ""}
+                                      onChange={(e) =>
+                                        field.onChange(
+                                          e.target.value
+                                            ? parseInt(e.target.value)
+                                            : undefined,
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Fat */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-gray-600">
+                            Fat (g)
+                          </Label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <FormField
+                              control={form.control}
+                              name="minFat"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="200"
+                                      placeholder="Min"
+                                      className="text-sm"
+                                      value={field.value ?? ""}
+                                      onChange={(e) =>
+                                        field.onChange(
+                                          e.target.value
+                                            ? parseInt(e.target.value)
+                                            : undefined,
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="maxFat"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="200"
+                                      placeholder="Max"
+                                      className="text-sm"
+                                      value={field.value ?? ""}
+                                      onChange={(e) =>
+                                        field.onChange(
+                                          e.target.value
+                                            ? parseInt(e.target.value)
+                                            : undefined,
+                                        )
+                                      }
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Clear Filters */}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-gray-500 hover:text-gray-700"
+                        onClick={() => {
+                          form.setValue("maxPrepTime", undefined);
+                          form.setValue("minCalories", undefined);
+                          form.setValue("maxCalories", undefined);
+                          form.setValue("minProtein", undefined);
+                          form.setValue("maxProtein", undefined);
+                          form.setValue("minCarbs", undefined);
+                          form.setValue("maxCarbs", undefined);
+                          form.setValue("minFat", undefined);
+                          form.setValue("maxFat", undefined);
+                        }}
+                      >
+                        Clear All Filters
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <Button
                     type="submit"
@@ -2611,6 +2950,17 @@ export default function MealPlanGenerator({
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Upgrade Prompt Modal */}
+      <UpgradePrompt
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        feature={
+          upgradeFeatureMessage ||
+          "Access to more recipes with advanced filters"
+        }
+        requiredTier={tier === "starter" ? "professional" : "enterprise"}
+      />
     </div>
   );
 }
