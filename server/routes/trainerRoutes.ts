@@ -899,10 +899,21 @@ trainerRouter.post(
           details: error.errors,
         });
       }
+      // Hotfix B9 diag: surface the real error shape so warfare tests + Mark
+      // can see what is actually failing. This is safe to leave in — the
+      // route is admin/trainer-gated, no data leakage risk.
+      const err = error as any;
       res.status(500).json({
         status: "error",
         message: "Failed to assign meal plan",
         code: "SERVER_ERROR",
+        details: {
+          name: err?.name,
+          message: err?.message,
+          pgCode: err?.code,
+          constraint: err?.constraint,
+          hint: err?.hint,
+        },
       });
     }
   },
