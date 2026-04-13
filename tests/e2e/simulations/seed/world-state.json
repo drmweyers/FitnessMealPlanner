@@ -1,0 +1,40 @@
+{
+  "baseUrl": "https://evofitmeals.com",
+  "seededAt": "2026-04-13T00:07:43.809Z",
+  "trainer": {
+    "email": "trainer.test@evofitmeals.com"
+  },
+  "customer": {
+    "email": "customer.test@evofitmeals.com"
+  },
+  "admin": {
+    "email": "admin@fitmeal.pro"
+  },
+  "mealPlanIds": [
+    "c2ea4353-22fa-4a88-b16d-488a321bb868",
+    "584bc78b-85d2-4197-a789-95b563ac9e7b",
+    "9ab82d83-63a4-4047-9c84-5e2c76ee2868",
+    "9fd853d5-5911-4972-873d-be45a5ca1067",
+    "97106e18-9036-4df5-ac7e-fec11a343dc1",
+    "5b472b9e-3969-4044-9541-5c90c01300fa",
+    "85a7944d-b2ce-4d5c-bf50-63e26cac69fe",
+    "7d5a52a0-69f9-4c85-b98d-b51ca4f556f4",
+    "b0217ae3-c108-4775-b0b0-3ff1c05f9eb2",
+    "a626fbf5-30cb-4cde-be48-a56d7c9053ef",
+    "38bef151-81a3-4819-9772-638469f2b01c",
+    "303abc95-c8b3-4c3a-8143-7c1d48ce8504"
+  ],
+  "recipeIds": [
+    "1d9745d8-372b-4edc-b26f-510fa824c8cc",
+    "cfa296a5-1812-411f-afeb-d7611803a043",
+    "d3dfa8b5-1422-4deb-8e17-cab603c3c0d9",
+    "e4f032a9-8a30-4fd4-b9c9-6f45fc2ac63a",
+    "9c19945c-5272-4028-8360-e63203da86f1"
+  ],
+  "measurementIds": [
+    "0d68dbe4-3e06-4874-944e-77e778b1ad26",
+    "2e1d0518-d909-4271-a6de-7fe8cb283a37"
+  ],
+  "favoriteRecipeId": "1d9745d8-372b-4edc-b26f-510fa824c8cc",
+  "groceryListId": "8a552e8a-3ce9-4e8b-aa92-ad769ab25cef"
+}
