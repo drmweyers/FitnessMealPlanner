@@ -1,0 +1,32 @@
+{
+  "trainerUserId": "26589ba9-eea6-4db3-ac30-775206e4c9cb",
+  "customerUserId": "0267d066-6f76-42c1-8189-5b9cd6f70809",
+  "adminUserId": "26dfdfad-d955-48b2-a41b-34afede86b52",
+  "planIds": {
+    "weightLoss": "b0217ae3-c108-4775-b0b0-3ff1c05f9eb2",
+    "muscleGain": "7d5a52a0-69f9-4c85-b98d-b51ca4f556f4",
+    "balanced": "85a7944d-b2ce-4d5c-bf50-63e26cac69fe"
+  },
+  "assignmentIds": {
+    "primary": "af932058-3ae7-4bac-8ff3-d0761016bcc3"
+  },
+  "shareToken": "",
+  "groceryListId": "8a552e8a-3ce9-4e8b-aa92-ad769ab25cef",
+  "measurementIds": [
+    "0d68dbe4-3e06-4874-944e-77e778b1ad26",
+    "2e1d0518-d909-4271-a6de-7fe8cb283a37"
+  ],
+  "recipeIds": [
+    "1d9745d8-372b-4edc-b26f-510fa824c8cc",
+    "cfa296a5-1812-411f-afeb-d7611803a043",
+    "80be7630-1236-4802-86dd-055e2f138ce5",
+    "9c19945c-5272-4028-8360-e63203da86f1",
+    "d4538841-ca96-4743-ab41-d18fe9a7d88a",
+    "e4f032a9-8a30-4fd4-b9c9-6f45fc2ac63a",
+    "d3dfa8b5-1422-4deb-8e17-cab603c3c0d9",
+    "619d78fb-162a-4300-8b33-a200736365f8",
+    "1cd04b00-9850-4f9a-a085-a61fa782d566",
+    "f0170f3a-4005-4c5e-a25d-73acd8ff3705"
+  ],
+  "favoritedRecipeId": "1d9745d8-372b-4edc-b26f-510fa824c8cc"
+}

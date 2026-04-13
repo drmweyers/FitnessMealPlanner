@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-04-12T23:47:41.664Z",
+  "generatedAt": "2026-04-13T00:25:44.102Z",
   "totalCells": 274,
-  "covered": 0,
-  "pending": 272,
-  "percentCovered": 0,
+  "covered": 26,
+  "pending": 246,
+  "percentCovered": 9.5,
   "bySuite": {
     "auth": {
-      "pending": 17,
-      "covered": 0,
+      "pending": 14,
+      "covered": 3,
       "n/a": 0,
       "blocked": 0
     },
     "meal-plans": {
-      "pending": 26,
-      "covered": 0,
+      "pending": 20,
+      "covered": 6,
       "n/a": 0,
       "blocked": 0
     },
@@ -24,14 +24,14 @@
       "blocked": 0
     },
     "recipes": {
-      "pending": 29,
-      "covered": 0,
+      "pending": 22,
+      "covered": 7,
       "n/a": 0,
       "blocked": 0
     },
     "bug-reports": {
-      "pending": 19,
-      "covered": 0,
+      "pending": 9,
+      "covered": 10,
       "n/a": 0,
       "blocked": 0,
       "http-201+github-issue-created": null,

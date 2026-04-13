@@ -1,0 +1,64 @@
+[
+  {
+    "id": "SEC-001",
+    "timestamp": "2026-04-12T00:00:00.000Z",
+    "sprint": "Sprint 3",
+    "severity": "HIGH",
+    "error_message": "GET /api/recipes returns HTTP 200 for unauthenticated (anon) requests",
+    "file": "server/routes/recipes.ts",
+    "root_cause": "The recipe list endpoint lacks requireAuth middleware — the recipe library is publicly readable without a JWT token",
+    "fix": "Add requireAuth middleware to GET /api/recipes route; verify all recipe sub-routes are guarded",
+    "tags": ["auth-bypass", "unauthenticated", "IDOR-adjacent", "ADV-003"],
+    "test": "tests/e2e/simulations/adversarial/03-auth-bypass.spec.ts — anon GET recipes list → 401",
+    "actual_status": 200,
+    "expected_status": 401,
+    "sprint_4_action": "Add requireAuth to recipe list route; regression test ADV-003 must pass without knownPublic flag"
+  },
+  {
+    "id": "SEC-002",
+    "timestamp": "2026-04-12T00:00:00.000Z",
+    "sprint": "Sprint 3",
+    "severity": "HIGH",
+    "error_message": "GET /api/v1/tiers/current and GET /api/v1/tiers/usage hang/timeout for unauthenticated requests (no response within 60s)",
+    "file": "server/routes/tierRoutes.ts",
+    "root_cause": "Tier endpoints have no auth guard — anon request triggers DB query with null userId, causing the query to hang or never respond",
+    "fix": "Add requireAuth middleware as FIRST middleware on all tier routes; ensure null userId short-circuits to 401 immediately",
+    "tags": [
+      "auth-bypass",
+      "unauthenticated",
+      "timeout",
+      "DoS-risk",
+      "ADV-003"
+    ],
+    "test": "tests/e2e/simulations/adversarial/03-auth-bypass.spec.ts — anon GET tiers current/usage → 401",
+    "actual_status": "timeout (no response)",
+    "expected_status": 401,
+    "sprint_4_action": "Add requireAuth to all /api/v1/tiers/* routes; regression test must not timeout"
+  },
+  {
+    "id": "SEC-003",
+    "timestamp": "2026-04-12T00:00:00.000Z",
+    "sprint": "Sprint 3",
+    "severity": "HIGH",
+    "error_message": "Hal dual-claim race: no atomic claim endpoint — two Hal instances can claim the same bug simultaneously",
+    "file": "server/routes/bugReports.ts (PATCH /api/bugs/:id/assign)",
+    "root_cause": "No row-level lock or atomic claim guard. PATCH /api/bugs/:id/assign does a SELECT then UPDATE without a transaction + FOR UPDATE lock",
+    "fix": "Implement atomic claim: BEGIN; SELECT ... FOR UPDATE; check status=open; UPDATE status=in_progress; COMMIT. Return 409 if already claimed.",
+    "tags": ["concurrency", "race-condition", "bug-pipeline", "FSM-001h"],
+    "test": "tests/e2e/simulations/state-machines/bug-report-fsm.spec.ts — Hal dual-claim race",
+    "sprint_4_action": "Add FOR UPDATE row lock to claim endpoint; add unique index on (status=in_progress, assignedToHal=true) per bug"
+  },
+  {
+    "id": "SEC-004",
+    "timestamp": "2026-04-12T00:00:00.000Z",
+    "sprint": "Sprint 3",
+    "severity": "MEDIUM",
+    "error_message": "No unique constraint on (mealPlanId, customerId) in mealPlanAssignments — double-assign creates duplicate rows",
+    "file": "server/db/schema.ts (mealPlanAssignments table)",
+    "root_cause": "Schema has no uniqueness constraint on the assignment join table; calling POST /api/trainer/meal-plans/:id/assign twice creates two rows",
+    "fix": "Add UNIQUE constraint: ALTER TABLE meal_plan_assignments ADD CONSTRAINT uq_plan_customer UNIQUE (meal_plan_id, customer_id)",
+    "tags": ["data-integrity", "schema-gap", "FSM-004e"],
+    "test": "tests/e2e/simulations/state-machines/meal-plan-assignment-fsm.spec.ts — double-assign probe",
+    "sprint_4_action": "Add Drizzle unique() constraint to mealPlanAssignments; create migration 0023"
+  }
+]

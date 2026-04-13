@@ -1,0 +1,3820 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\playwright.warfare.config.ts",
+    "rootDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/simulations",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/screenshots/warfare",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "warfare",
+        "name": "warfare",
+        "testDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/simulations",
+        "testIgnore": [],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      ["list", null],
+      [
+        "html",
+        {
+          "outputFolder": "tests/e2e/reports/warfare",
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "tests/e2e/reports/warfare-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "adversarial\\01-idor-meal-plans.spec.ts",
+      "file": "adversarial/01-idor-meal-plans.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover ADV-001a — attacker GET victim plan returns 403 or 404",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "0f3b64b8d05c745e23fd-21d9b968eba7d640a8a7",
+          "file": "adversarial/01-idor-meal-plans.spec.ts",
+          "line": 39,
+          "column": 1
+        },
+        {
+          "title": "@cover ADV-001b — attacker PUT victim plan returns 403 or 404",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "0f3b64b8d05c745e23fd-3cde4c836bb8c73038e5",
+          "file": "adversarial/01-idor-meal-plans.spec.ts",
+          "line": 49,
+          "column": 1
+        },
+        {
+          "title": "@cover ADV-001c — attacker DELETE victim plan returns 403 or 404",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "0f3b64b8d05c745e23fd-36f9191a02a6313369c0",
+          "file": "adversarial/01-idor-meal-plans.spec.ts",
+          "line": 63,
+          "column": 1
+        },
+        {
+          "title": "@cover ADV-001d — attacker assignForeignPlan returns 403 or 404",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "0f3b64b8d05c745e23fd-c641cb20fa3369ee6775",
+          "file": "adversarial/01-idor-meal-plans.spec.ts",
+          "line": 76,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "adversarial\\02-idor-progress.spec.ts",
+      "file": "adversarial/02-idor-progress.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover ADV-002a — attacker PUT victim measurement returns 403 or 404",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "d0b5fc0c799b2b7d2c9e-e4320a0608dd176d3e3a",
+          "file": "adversarial/02-idor-progress.spec.ts",
+          "line": 34,
+          "column": 1
+        },
+        {
+          "title": "@cover ADV-002b — attacker GET victim measurement returns 403 or 404",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "d0b5fc0c799b2b7d2c9e-dd57e7d8627aaca5b689",
+          "file": "adversarial/02-idor-progress.spec.ts",
+          "line": 47,
+          "column": 1
+        },
+        {
+          "title": "@cover ADV-002c — attacker DELETE victim measurement returns 403 or 404",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "d0b5fc0c799b2b7d2c9e-c3d185113891aa740e85",
+          "file": "adversarial/02-idor-progress.spec.ts",
+          "line": 60,
+          "column": 1
+        },
+        {
+          "title": "@cover ADV-002d — attacker GET victim progress photo list returns empty or 403/404",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "d0b5fc0c799b2b7d2c9e-a36947063ce69ea49e7b",
+          "file": "adversarial/02-idor-progress.spec.ts",
+          "line": 73,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "adversarial\\03-auth-bypass.spec.ts",
+      "file": "adversarial/03-auth-bypass.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover ADV-003 — anon GET auth.me → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-fb96415bc50caa771716",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET profile GET → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-c6fefa32a690dd74cdb5",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon PUT profile PUT → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-2256b251d03433f8ddd7",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET trainer mealPlans list → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-fbda7889e77de19fe378",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon POST trainer createMealPlan → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-5cf81f2af79099f2ba79",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET trainer customers → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-11740ede3151acf83d4f",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET progress measurements → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-1c3c96ff7e8b55c10beb",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon POST progress POST measurement → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-3e8f0af458689a887217",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET progress photos → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-51104517e2ace2ac3421",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET grocery lists → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-891c83971924df0e25a3",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET recipes list → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-366e43eedf51fef45b6b",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET favorites → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-808a43e3f362a2d1a5c4",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET tiers current → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-c4e9cf33acd3dd2a77ff",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET tiers usage → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-2619a144bf9e27e7b06c",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET entitlements → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-e215d693a08270d28ac0",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET usage stats → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-9f14ebc38381135e4d07",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon POST bug submit → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-6c98589c3a1929c7681b",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET bugs list → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-173d8b557b386b7ed933",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET admin customers (gated) → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-7676e2ed0717dcca30e0",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-003 — anon GET admin users (gated) → 401",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f07d220576618c5db04b-64c501b07db7b0572e09",
+          "file": "adversarial/03-auth-bypass.spec.ts",
+          "line": 41,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "adversarial\\04-role-escalation.spec.ts",
+      "file": "adversarial/04-role-escalation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover ADV-004 — trainer hits GET /api/admin/users → 403",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "757d251943a7770623ac-78c7378f67519d6aa566",
+          "file": "adversarial/04-role-escalation.spec.ts",
+          "line": 26,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-004 — trainer hits POST grant-tier → 403",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "757d251943a7770623ac-b3cc25440400034cf1cb",
+          "file": "adversarial/04-role-escalation.spec.ts",
+          "line": 26,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-004 — trainer hits POST bulk-generate → 403",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "757d251943a7770623ac-369cae43356451c3369f",
+          "file": "adversarial/04-role-escalation.spec.ts",
+          "line": 26,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-004 — trainer hits POST BMAD generate → 403",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "757d251943a7770623ac-0a8529e60a645833ee4d",
+          "file": "adversarial/04-role-escalation.spec.ts",
+          "line": 26,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-004 — trainer hits GET admin/customers → 403",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "757d251943a7770623ac-1569b207ddb9fea828b9",
+          "file": "adversarial/04-role-escalation.spec.ts",
+          "line": 26,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-004 — trainer hits POST bulk-delete recipes → 403",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "757d251943a7770623ac-94f3683a66cafefeaa3a",
+          "file": "adversarial/04-role-escalation.spec.ts",
+          "line": 26,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-004 — trainer hits POST clearCache → 403",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "757d251943a7770623ac-f24f46e8ecd07be4622b",
+          "file": "adversarial/04-role-escalation.spec.ts",
+          "line": 26,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-004 — trainer hits GET apiUsage → 403",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "757d251943a7770623ac-3597a8b0b067ded16067",
+          "file": "adversarial/04-role-escalation.spec.ts",
+          "line": 26,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "adversarial\\05-mass-assignment.spec.ts",
+      "file": "adversarial/05-mass-assignment.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover ADV-005a — PUT /api/profile {role:'admin'} does not elevate role",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b352999dbbee91d38e4e-5d94c939662f897411dc",
+          "file": "adversarial/05-mass-assignment.spec.ts",
+          "line": 14,
+          "column": 1
+        },
+        {
+          "title": "@cover ADV-005b — PUT /api/profile {isAdmin:true} does not elevate privileges",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b352999dbbee91d38e4e-0813f6e90576241f43ab",
+          "file": "adversarial/05-mass-assignment.spec.ts",
+          "line": 33,
+          "column": 1
+        },
+        {
+          "title": "@cover ADV-005c — PUT /api/profile {userId:'foreign-id'} does not reassign ownership",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b352999dbbee91d38e4e-158b6c9d2a129d9e018c",
+          "file": "adversarial/05-mass-assignment.spec.ts",
+          "line": 57,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "adversarial\\06-xss-injection.spec.ts",
+      "file": "adversarial/06-xss-injection.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover ADV-006 — XSS payload[0] submitted as bug title does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b3d9ef5a6a74c3904495-3eb72814a17375777bbf",
+          "file": "adversarial/06-xss-injection.spec.ts",
+          "line": 21,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-006 — XSS payload[1] submitted as bug title does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b3d9ef5a6a74c3904495-9a34de72fa980dddb1c4",
+          "file": "adversarial/06-xss-injection.spec.ts",
+          "line": 21,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-006 — XSS payload[2] submitted as bug title does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b3d9ef5a6a74c3904495-d17bd213c93431b6f007",
+          "file": "adversarial/06-xss-injection.spec.ts",
+          "line": 21,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-006 — XSS payload[3] submitted as bug title does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b3d9ef5a6a74c3904495-8e6a80efe3801110a22c",
+          "file": "adversarial/06-xss-injection.spec.ts",
+          "line": 21,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-006 — XSS payload[0] submitted as bug description does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b3d9ef5a6a74c3904495-b01aafb348ea23e2f3f6",
+          "file": "adversarial/06-xss-injection.spec.ts",
+          "line": 56,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-006 — XSS payload[1] submitted as bug description does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b3d9ef5a6a74c3904495-b07664b531a6df6469de",
+          "file": "adversarial/06-xss-injection.spec.ts",
+          "line": 56,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-006 — XSS payload[2] submitted as bug description does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b3d9ef5a6a74c3904495-f6f082d0e12db1c8cfeb",
+          "file": "adversarial/06-xss-injection.spec.ts",
+          "line": 56,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-006 — XSS payload[3] submitted as bug description does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b3d9ef5a6a74c3904495-37d36379cfff66a6b942",
+          "file": "adversarial/06-xss-injection.spec.ts",
+          "line": 56,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "title": "adversarial\\07-sql-wildcard.spec.ts",
+      "file": "adversarial/07-sql-wildcard.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover ADV-007 — sqlWildcard[0] \"' OR 1=1 --\" does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b5c25683913ff4d7e461-69c4dce3c4eb91f3d36d",
+          "file": "adversarial/07-sql-wildcard.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-007 — sqlWildcard[1] \"'; DROP TABLE users;\" does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b5c25683913ff4d7e461-88abd8d7015c9bf60db1",
+          "file": "adversarial/07-sql-wildcard.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-007 — sqlWildcard[2] \"%\" does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b5c25683913ff4d7e461-99be7e1a5fb5151b7811",
+          "file": "adversarial/07-sql-wildcard.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-007 — sqlWildcard[3] \"\\\" does not cause 500",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b5c25683913ff4d7e461-fab0ff23e260c8c1a534",
+          "file": "adversarial/07-sql-wildcard.spec.ts",
+          "line": 18,
+          "column": 3
+        },
+        {
+          "title": "@cover ADV-007 — SQL injection via search does not return error SQL details",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b5c25683913ff4d7e461-4fa678239589bb419889",
+          "file": "adversarial/07-sql-wildcard.spec.ts",
+          "line": 40,
+          "column": 1
+        },
+        {
+          "title": "@cover ADV-007 — bare % wildcard in search does not return all recipes unfiltered",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b5c25683913ff4d7e461-f6a4da128f63ae08c52a",
+          "file": "adversarial/07-sql-wildcard.spec.ts",
+          "line": 54,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "adversarial\\08-idempotency.spec.ts",
+      "file": "adversarial/08-idempotency.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover ADV-008 — replay POST /api/bugs 5 times, document behavior",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "676f67f9336abc5d9b2b-fc8f3fb2889ce7a42237",
+          "file": "adversarial/08-idempotency.spec.ts",
+          "line": 21,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "cross-role\\trainer-assigns-plan-customer-sees.spec.ts",
+      "file": "cross-role/trainer-assigns-plan-customer-sees.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover XR-001 — trainer assigns plan; customer sees it in meal plan list",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c39b93d72d887a602bd0-1c7776cd3f184662a6a0",
+          "file": "cross-role/trainer-assigns-plan-customer-sees.spec.ts",
+          "line": 38,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "cross-role\\trainer-assigns-recipe-customer-sees.spec.ts",
+      "file": "cross-role/trainer-assigns-recipe-customer-sees.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover XR-002 — approved recipe visible to customer via trainer tier",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "22a295c4c55d8e3bcf1c-c4cd6d78b176814b4d2e",
+          "file": "cross-role/trainer-assigns-recipe-customer-sees.spec.ts",
+          "line": 15,
+          "column": 1
+        },
+        {
+          "title": "@cover XR-002b — admin assign-recipe endpoint exists and is admin-only",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "22a295c4c55d8e3bcf1c-b6d7f5c72a9df6c715f1",
+          "file": "cross-role/trainer-assigns-recipe-customer-sees.spec.ts",
+          "line": 61,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "long-form\\30-day-sim.spec.ts",
+      "file": "long-form/30-day-sim.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Long-form 30-day platform simulation @cover LONG-001",
+          "file": "long-form/30-day-sim.spec.ts",
+          "line": 26,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Day 1 — Trainer creates 3 meal plans",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-40a76014cf9f256e448d",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 45,
+              "column": 3
+            },
+            {
+              "title": "Day 2 — Customer logs measurement",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-0d64819ccbbd25561468",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 70,
+              "column": 3
+            },
+            {
+              "title": "Day 3 — Trainer reviews customer roster",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-bbd052036f918b3d9e20",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 85,
+              "column": 3
+            },
+            {
+              "title": "Day 5 — Customer browses recipes (page 1)",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-132f9fae9ec4dfb824fa",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 90,
+              "column": 3
+            },
+            {
+              "title": "Day 7 — Customer logs measurement + week-1 progress",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-8f8f797ec7fc2bf532d8",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 95,
+              "column": 3
+            },
+            {
+              "title": "Day 10 — Trainer pulls profile stats (cache freshness)",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-ff8c2d7acf09c18eef4b",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 105,
+              "column": 3
+            },
+            {
+              "title": "Day 14 — Customer logs week-2 measurement",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-89b86e91412dfeae036c",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 110,
+              "column": 3
+            },
+            {
+              "title": "Day 14 — Customer browses recipes page 5 (pagination cliff check)",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-a128169f351edbb3a0dd",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 120,
+              "column": 3
+            },
+            {
+              "title": "Day 17 — Trainer entitlements + tier still valid",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-3cfb24d8162b4d7a0102",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 127,
+              "column": 3
+            },
+            {
+              "title": "Day 21 — Week-3 measurement + photo upload attempt",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-7cb6646adf13096c45a3",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 133,
+              "column": 3
+            },
+            {
+              "title": "Day 24 — Customer reads measurement history (accumulation check)",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-a1715790c942f485786b",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 143,
+              "column": 3
+            },
+            {
+              "title": "Day 28 — Week-4 measurement",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-fdf08895c592f9f93c14",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 148,
+              "column": 3
+            },
+            {
+              "title": "Day 30 — Admin pulls user list (large state)",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-7c81a3200bbca5a68f6e",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 158,
+              "column": 3
+            },
+            {
+              "title": "Day 30 — Cleanup: trainer's long-form plans",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 900000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Long-form sim is opt-in: set RUN_LONG_FORM=1 to enable",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\long-form\\30-day-sim.spec.ts",
+                        "line": 27,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "64cdcb094cf19952e849-b67a6c887c9487539c7a",
+              "file": "long-form/30-day-sim.spec.ts",
+              "line": 163,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "side-effects\\account-deleted-cascade.spec.ts",
+      "file": "side-effects/account-deleted-cascade.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "SE-08 — Account deleted → cascade to Spaces + DB (design only)",
+          "file": "side-effects/account-deleted-cascade.spec.ts",
+          "line": 29,
+          "column": 6,
+          "specs": [
+            {
+              "title": "account deletion cascades correctly (DESIGN — not executed)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "SE-08 is a design-document test. NEVER run against production or shared test accounts. Provision an ephemeral isolated DB to execute the full cascade assertion.",
+                      "location": {
+                        "file": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\simulations\\side-effects\\account-deleted-cascade.spec.ts",
+                        "line": 30,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "5d4fde2dca347c70a876-6ad1461d191c80e8c90f",
+              "file": "side-effects/account-deleted-cascade.spec.ts",
+              "line": 36,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "side-effects\\bug-submitted-hal-bridge.spec.ts",
+      "file": "side-effects/bug-submitted-hal-bridge.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "SE-02 — Bug submitted → Hal pending list updated",
+          "file": "side-effects/bug-submitted-hal-bridge.spec.ts",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "newly submitted bug appears in Hal pending poll within 5s",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a688a96efb2554f1fe79-dd9c3e8ee3b6246e8fba",
+              "file": "side-effects/bug-submitted-hal-bridge.spec.ts",
+              "line": 27,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "side-effects\\bulk-generation-spaces.spec.ts",
+      "file": "side-effects/bulk-generation-spaces.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "SE-06 — Bulk generation → recipe has DO Spaces imageUrl",
+          "file": "side-effects/bulk-generation-spaces.spec.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "bulk generate count=1 produces recipe with digitaloceanspaces.com imageUrl",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 150000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "9dddaf194b9d329d66b1-d14e79ab9a3fedecd6e4",
+              "file": "side-effects/bulk-generation-spaces.spec.ts",
+              "line": 41,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "side-effects\\customer-invited-email.spec.ts",
+      "file": "side-effects/customer-invited-email.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "SE-07 — Customer invited → invitation row in DB",
+          "file": "side-effects/customer-invited-email.spec.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "sending an invitation creates a row in the invitations table",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8b259101595e897a4758-cd5a9e651bc2bcbdd6b1",
+              "file": "side-effects/customer-invited-email.spec.ts",
+              "line": 26,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "side-effects\\meal-plan-assigned-email.spec.ts",
+      "file": "side-effects/meal-plan-assigned-email.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "SE-03 — Meal plan assigned → email queued (partial coverage)",
+          "file": "side-effects/meal-plan-assigned-email.spec.ts",
+          "line": 25,
+          "column": 6,
+          "specs": [
+            {
+              "title": "assigning a meal plan succeeds and response indicates email action",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3fdb435a708431088ae0-e1e547d669bfeb4ae337",
+              "file": "side-effects/meal-plan-assigned-email.spec.ts",
+              "line": 32,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "side-effects\\photo-uploaded-s3.spec.ts",
+      "file": "side-effects/photo-uploaded-s3.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "SE-05 — Progress photo uploaded → DO Spaces URL returned and accessible",
+          "file": "side-effects/photo-uploaded-s3.spec.ts",
+          "line": 20,
+          "column": 6,
+          "specs": [
+            {
+              "title": "upload progress photo returns digitaloceanspaces.com URL that is HEAD-accessible",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0608c6a5d145828ce01c-b21dba2275b73ff068c3",
+              "file": "side-effects/photo-uploaded-s3.spec.ts",
+              "line": 27,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "side-effects\\recipe-rated-moderation.spec.ts",
+      "file": "side-effects/recipe-rated-moderation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "SE-04 — Recipe rated/flagged → admin moderation queue updated",
+          "file": "side-effects/recipe-rated-moderation.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "flagging a recipe creates a moderation queue entry",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e85cc8cf22fe5b45da67-301680d963f575db1c63",
+              "file": "side-effects/recipe-rated-moderation.spec.ts",
+              "line": 44,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "side-effects\\recipe-submitted-github-issue.spec.ts",
+      "file": "side-effects/recipe-submitted-github-issue.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "SE-01 — Recipe submitted → GitHub issue created",
+          "file": "side-effects/recipe-submitted-github-issue.spec.ts",
+          "line": 19,
+          "column": 6,
+          "specs": [
+            {
+              "title": "submitting a bug report creates a GitHub issue (skip if GITHUB_TOKEN unset)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cfccd398919ed1c522e4-e774483ab5ebb56f96ed",
+              "file": "side-effects/recipe-submitted-github-issue.spec.ts",
+              "line": 26,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "state-machines\\bug-report-fsm.spec.ts",
+      "file": "state-machines/bug-report-fsm.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Bug Report FSM — full happy path",
+          "file": "state-machines/bug-report-fsm.spec.ts",
+          "line": 19,
+          "column": 6,
+          "specs": [
+            {
+              "title": "@cover FSM-001a — newly created bug is in 'open' state",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "b70509d819f7da25010b-5bb53f8c286714f7b455",
+              "file": "state-machines/bug-report-fsm.spec.ts",
+              "line": 37,
+              "column": 3
+            },
+            {
+              "title": "@cover FSM-001b — open → triaged",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "b70509d819f7da25010b-d1fb262723c94f85c0ee",
+              "file": "state-machines/bug-report-fsm.spec.ts",
+              "line": 46,
+              "column": 3
+            },
+            {
+              "title": "@cover FSM-001c — triaged → in_progress",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "b70509d819f7da25010b-0673cb5753feea743986",
+              "file": "state-machines/bug-report-fsm.spec.ts",
+              "line": 57,
+              "column": 3
+            },
+            {
+              "title": "@cover FSM-001d — in_progress → resolved",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "b70509d819f7da25010b-7b1e40a15bbb7a522937",
+              "file": "state-machines/bug-report-fsm.spec.ts",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "@cover FSM-001e — resolved → closed",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "b70509d819f7da25010b-d3c707593a73753a0c0a",
+              "file": "state-machines/bug-report-fsm.spec.ts",
+              "line": 73,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Bug Report FSM — illegal transitions",
+          "file": "state-machines/bug-report-fsm.spec.ts",
+          "line": 82,
+          "column": 6,
+          "specs": [
+            {
+              "title": "@cover FSM-001f — closed → open (illegal): document current behavior",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "b70509d819f7da25010b-285b0584aa6da91c8214",
+              "file": "state-machines/bug-report-fsm.spec.ts",
+              "line": 107,
+              "column": 3
+            },
+            {
+              "title": "@cover FSM-001g — customer PATCH /api/bugs/:id/status → 403",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "b70509d819f7da25010b-ea340b8d7d1b5f0b7507",
+              "file": "state-machines/bug-report-fsm.spec.ts",
+              "line": 123,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Bug Report FSM — Hal dual-claim race",
+          "file": "state-machines/bug-report-fsm.spec.ts",
+          "line": 133,
+          "column": 6,
+          "specs": [
+            {
+              "title": "@cover FSM-001h — Hal dual-claim race: document atomicity (HIGH RISK gap)",
+              "ok": true,
+              "tags": ["cover"],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "b70509d819f7da25010b-0b090a732ce30ca07342",
+              "file": "state-machines/bug-report-fsm.spec.ts",
+              "line": 149,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "state-machines\\meal-plan-assignment-fsm.spec.ts",
+      "file": "state-machines/meal-plan-assignment-fsm.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover FSM-004a — does-not-exist → saved (create plan)",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1aa3b4a5a0902dba74ce-67589af81c39485f63f2",
+          "file": "state-machines/meal-plan-assignment-fsm.spec.ts",
+          "line": 52,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-004b — saved → assigned (assign plan to customer)",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1aa3b4a5a0902dba74ce-abfa80efc138ae5edfbb",
+          "file": "state-machines/meal-plan-assignment-fsm.spec.ts",
+          "line": 68,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-004c — assigned: customer can see the assigned plan",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1aa3b4a5a0902dba74ce-ccee0c79155c7855250e",
+          "file": "state-machines/meal-plan-assignment-fsm.spec.ts",
+          "line": 80,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-004d — assigned → saved (unassign removes assignment row)",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1aa3b4a5a0902dba74ce-c161c625b58ce7743e60",
+          "file": "state-machines/meal-plan-assignment-fsm.spec.ts",
+          "line": 106,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-004e — saved → assigned (reassign — idempotency + duplicate gap probe)",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1aa3b4a5a0902dba74ce-4eb06518504e853e20b3",
+          "file": "state-machines/meal-plan-assignment-fsm.spec.ts",
+          "line": 117,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-004f — saved → deleted (DELETE plan cascades assignment)",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "1aa3b4a5a0902dba74ce-c735a660425cc85b926d",
+          "file": "state-machines/meal-plan-assignment-fsm.spec.ts",
+          "line": 153,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "state-machines\\recipe-approval-fsm.spec.ts",
+      "file": "state-machines/recipe-approval-fsm.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover FSM-003a — admin can approve an unapproved recipe",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "2daf4caaff7320e769a5-31143d89be959473856a",
+          "file": "state-machines/recipe-approval-fsm.spec.ts",
+          "line": 56,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-003b — approved recipe isApproved=true when re-fetched",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "2daf4caaff7320e769a5-3664afe2c26aaec3aa2e",
+          "file": "state-machines/recipe-approval-fsm.spec.ts",
+          "line": 69,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-003c — trainer CANNOT approve a recipe (403)",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "2daf4caaff7320e769a5-471ec8582ffd4421ccba",
+          "file": "state-machines/recipe-approval-fsm.spec.ts",
+          "line": 90,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-003d — customer CANNOT approve a recipe (403)",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "2daf4caaff7320e769a5-77ddd655b7596d17fb01",
+          "file": "state-machines/recipe-approval-fsm.spec.ts",
+          "line": 103,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-003e — re-unapprove endpoint behavior (if exists)",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "2daf4caaff7320e769a5-888d7298ba02c491a400",
+          "file": "state-machines/recipe-approval-fsm.spec.ts",
+          "line": 116,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "state-machines\\subscription-fsm.spec.ts",
+      "file": "state-machines/subscription-fsm.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "@cover FSM-002a — admin grant-tier creates trainer subscription (trialing or active)",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5bad5e621c735ea4aa98-f4a93488124a75dc1a95",
+          "file": "state-machines/subscription-fsm.spec.ts",
+          "line": 41,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-002b — Stripe webhook: trialing → active",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5bad5e621c735ea4aa98-81e9884b272cebd3d5d0",
+          "file": "state-machines/subscription-fsm.spec.ts",
+          "line": 57,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-002c — Stripe webhook: active → past_due",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5bad5e621c735ea4aa98-492ffa2f9cd1f574bce9",
+          "file": "state-machines/subscription-fsm.spec.ts",
+          "line": 74,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-002d — Stripe webhook: active → canceled",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5bad5e621c735ea4aa98-772f110fbb746b503d4b",
+          "file": "state-machines/subscription-fsm.spec.ts",
+          "line": 85,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-002e — invalid Stripe webhook signature returns 400",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5bad5e621c735ea4aa98-9c09f2619e60d811f522",
+          "file": "state-machines/subscription-fsm.spec.ts",
+          "line": 96,
+          "column": 1
+        },
+        {
+          "title": "@cover FSM-002f — canceled→past_due illegal transition: no path exists",
+          "ok": true,
+          "tags": ["cover"],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "warfare",
+              "projectName": "warfare",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5bad5e621c735ea4aa98-4a7a33c5b7bc04f643de",
+          "file": "state-machines/subscription-fsm.spec.ts",
+          "line": 116,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "workflows\\01-onboarding.spec.ts",
+      "file": "workflows/01-onboarding.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 01 — Onboarding",
+          "file": "workflows/01-onboarding.spec.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "AUTH-001 anon can register as customer and receive a token",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "041826b3537fcc737e81-468335edef934269bf09",
+              "file": "workflows/01-onboarding.spec.ts",
+              "line": 38,
+              "column": 3
+            },
+            {
+              "title": "AUTH-005 newly registered account can log in",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "041826b3537fcc737e81-cbd8d681df97232d8ee5",
+              "file": "workflows/01-onboarding.spec.ts",
+              "line": 61,
+              "column": 3
+            },
+            {
+              "title": "AUTH-012 trainer can view own profile via GET /api/auth/me",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "041826b3537fcc737e81-75a91fcefc360b31b8be",
+              "file": "workflows/01-onboarding.spec.ts",
+              "line": 74,
+              "column": 3
+            },
+            {
+              "title": "trainer can invite a new customer email",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "041826b3537fcc737e81-da67997867b7fbdb37c6",
+              "file": "workflows/01-onboarding.spec.ts",
+              "line": 87,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workflows\\02-meal-plan-lifecycle.spec.ts",
+      "file": "workflows/02-meal-plan-lifecycle.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 02 — Meal Plan Lifecycle",
+          "file": "workflows/02-meal-plan-lifecycle.spec.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "MP-001 trainer creates a meal plan with mealPlanData wrapper",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d384099c6155ddef1db5-283a5ab5163e21ec3610",
+              "file": "workflows/02-meal-plan-lifecycle.spec.ts",
+              "line": 38,
+              "column": 3
+            },
+            {
+              "title": "MP-003 trainer can list own meal plans",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d384099c6155ddef1db5-ce30897924ba5bf774bf",
+              "file": "workflows/02-meal-plan-lifecycle.spec.ts",
+              "line": 69,
+              "column": 3
+            },
+            {
+              "title": "MP-011 trainer assigns plan to canonical customer",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d384099c6155ddef1db5-582b07f5464eb5cdf61a",
+              "file": "workflows/02-meal-plan-lifecycle.spec.ts",
+              "line": 82,
+              "column": 3
+            },
+            {
+              "title": "MP-015 customer sees assigned plan",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d384099c6155ddef1db5-95f0d90f203f68b17245",
+              "file": "workflows/02-meal-plan-lifecycle.spec.ts",
+              "line": 112,
+              "column": 3
+            },
+            {
+              "title": "MP-022 anon is blocked from trainer meal plans (401)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d384099c6155ddef1db5-d21e755f986efd3e4a4e",
+              "file": "workflows/02-meal-plan-lifecycle.spec.ts",
+              "line": 126,
+              "column": 3
+            },
+            {
+              "title": "MP-023 anon is blocked from customer meal plans (401)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d384099c6155ddef1db5-7389eb199aca250c2080",
+              "file": "workflows/02-meal-plan-lifecycle.spec.ts",
+              "line": 133,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workflows\\03-recipe-discovery.spec.ts",
+      "file": "workflows/03-recipe-discovery.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 03 — Recipe Discovery",
+          "file": "workflows/03-recipe-discovery.spec.ts",
+          "line": 22,
+          "column": 6,
+          "specs": [
+            {
+              "title": "REC-009 customer can browse recipe list",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c501e5802c2ff334ba32-bde619132cb71ad92e05",
+              "file": "workflows/03-recipe-discovery.spec.ts",
+              "line": 37,
+              "column": 3
+            },
+            {
+              "title": "customer can filter recipes by dietary tag",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c501e5802c2ff334ba32-a7590ae4dd3b00d0224b",
+              "file": "workflows/03-recipe-discovery.spec.ts",
+              "line": 56,
+              "column": 3
+            },
+            {
+              "title": "REC-026 customer can favorite a recipe",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c501e5802c2ff334ba32-ef425bff1f8d71682fe4",
+              "file": "workflows/03-recipe-discovery.spec.ts",
+              "line": 64,
+              "column": 3
+            },
+            {
+              "title": "REC-025 customer favorites list contains the new favorite",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c501e5802c2ff334ba32-bc3a3c30520071cd859a",
+              "file": "workflows/03-recipe-discovery.spec.ts",
+              "line": 80,
+              "column": 3
+            },
+            {
+              "title": "REC-027 customer can remove a favorite",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c501e5802c2ff334ba32-9d462a07a4760f41d77d",
+              "file": "workflows/03-recipe-discovery.spec.ts",
+              "line": 105,
+              "column": 3
+            },
+            {
+              "title": "REC-019 customer can view a single recipe by id",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c501e5802c2ff334ba32-9944cceae80a4fbfcbb7",
+              "file": "workflows/03-recipe-discovery.spec.ts",
+              "line": 115,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workflows\\04-grocery-list.spec.ts",
+      "file": "workflows/04-grocery-list.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 04 — Grocery List",
+          "file": "workflows/04-grocery-list.spec.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "customer can create a grocery list manually",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1572366bf7997c1dfe71-700e71c0e99017ca5c73",
+              "file": "workflows/04-grocery-list.spec.ts",
+              "line": 38,
+              "column": 3
+            },
+            {
+              "title": "customer can add an item to the grocery list",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1572366bf7997c1dfe71-8437dca2c035e119d9bf",
+              "file": "workflows/04-grocery-list.spec.ts",
+              "line": 55,
+              "column": 3
+            },
+            {
+              "title": "customer can check off an item",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1572366bf7997c1dfe71-9067e6e89ec2c549b8a9",
+              "file": "workflows/04-grocery-list.spec.ts",
+              "line": 72,
+              "column": 3
+            },
+            {
+              "title": "grocery list persists after actions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1572366bf7997c1dfe71-0f4fcad27a4415124b62",
+              "file": "workflows/04-grocery-list.spec.ts",
+              "line": 83,
+              "column": 3
+            },
+            {
+              "title": "customer can generate grocery list from meal plan (if plan exists)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1572366bf7997c1dfe71-906b61aac1e940f3a124",
+              "file": "workflows/04-grocery-list.spec.ts",
+              "line": 103,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workflows\\05-progress-tracking.spec.ts",
+      "file": "workflows/05-progress-tracking.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 05 — Progress Tracking",
+          "file": "workflows/05-progress-tracking.spec.ts",
+          "line": 21,
+          "column": 6,
+          "specs": [
+            {
+              "title": "customer can log a measurement",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a88b5816ea437bde7472-98638258a13341bcd629",
+              "file": "workflows/05-progress-tracking.spec.ts",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "customer can list own measurements",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a88b5816ea437bde7472-b2c7927757c9bce2aa9d",
+              "file": "workflows/05-progress-tracking.spec.ts",
+              "line": 52,
+              "column": 3
+            },
+            {
+              "title": "trainer can view customer measurements",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a88b5816ea437bde7472-aa7350497aad623f0e11",
+              "file": "workflows/05-progress-tracking.spec.ts",
+              "line": 72,
+              "column": 3
+            },
+            {
+              "title": "customer measurement is visible after logging",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "a88b5816ea437bde7472-d1190acfbe28b20f37ac",
+              "file": "workflows/05-progress-tracking.spec.ts",
+              "line": 105,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workflows\\06-bug-pipeline.spec.ts",
+      "file": "workflows/06-bug-pipeline.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 06 — Bug Pipeline",
+          "file": "workflows/06-bug-pipeline.spec.ts",
+          "line": 24,
+          "column": 6,
+          "specs": [
+            {
+              "title": "BUG-001 customer can submit a bug report",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1717bcdc1e457f8e6d1a-0b8fcbd5f04dc885d1fc",
+              "file": "workflows/06-bug-pipeline.spec.ts",
+              "line": 39,
+              "column": 3
+            },
+            {
+              "title": "BUG-004 anon cannot submit a bug report (401)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1717bcdc1e457f8e6d1a-0b9ef33e09b7dec1840a",
+              "file": "workflows/06-bug-pipeline.spec.ts",
+              "line": 61,
+              "column": 3
+            },
+            {
+              "title": "BUG-016 Hal can poll /api/bugs/pending",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1717bcdc1e457f8e6d1a-8085f137951ee6ebf715",
+              "file": "workflows/06-bug-pipeline.spec.ts",
+              "line": 72,
+              "column": 3
+            },
+            {
+              "title": "BUG-018 endpoint blocked without HAL_API_KEY",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1717bcdc1e457f8e6d1a-f4351ae5af6156771e44",
+              "file": "workflows/06-bug-pipeline.spec.ts",
+              "line": 84,
+              "column": 3
+            },
+            {
+              "title": "BUG-017 Hal can claim a bug atomically",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1717bcdc1e457f8e6d1a-4e042a33fc21dbd5b5b1",
+              "file": "workflows/06-bug-pipeline.spec.ts",
+              "line": 91,
+              "column": 3
+            },
+            {
+              "title": "BUG-019 dual-claim race — only one claim wins",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1717bcdc1e457f8e6d1a-bc9ea5d0ce56c1ef791c",
+              "file": "workflows/06-bug-pipeline.spec.ts",
+              "line": 108,
+              "column": 3
+            },
+            {
+              "title": "BUG-006 admin can list bug reports",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "1717bcdc1e457f8e6d1a-cc497ccece7a5d44c6b2",
+              "file": "workflows/06-bug-pipeline.spec.ts",
+              "line": 128,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workflows\\07-admin-operations.spec.ts",
+      "file": "workflows/07-admin-operations.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 07 — Admin Operations",
+          "file": "workflows/07-admin-operations.spec.ts",
+          "line": 22,
+          "column": 6,
+          "specs": [
+            {
+              "title": "admin can list users",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "996c3354a4665a1056e2-40b7b00e7fc9805863f9",
+              "file": "workflows/07-admin-operations.spec.ts",
+              "line": 36,
+              "column": 3
+            },
+            {
+              "title": "admin can grant tier to trainer (idempotent)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "996c3354a4665a1056e2-ef46136cc246098ecfa4",
+              "file": "workflows/07-admin-operations.spec.ts",
+              "line": 49,
+              "column": 3
+            },
+            {
+              "title": "BUG-006 admin can list all bug reports",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "996c3354a4665a1056e2-8c15b237def9dce7acac",
+              "file": "workflows/07-admin-operations.spec.ts",
+              "line": 57,
+              "column": 3
+            },
+            {
+              "title": "admin can set bug priority",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "996c3354a4665a1056e2-d438bbdbdd692b7bce2f",
+              "file": "workflows/07-admin-operations.spec.ts",
+              "line": 71,
+              "column": 3
+            },
+            {
+              "title": "BUG-009 admin can triage a bug (open → triaged)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "996c3354a4665a1056e2-2d0305984c2ccca42af4",
+              "file": "workflows/07-admin-operations.spec.ts",
+              "line": 95,
+              "column": 3
+            },
+            {
+              "title": "BUG-010 admin can move bug to in_progress",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "996c3354a4665a1056e2-30a357f888882a4ad76a",
+              "file": "workflows/07-admin-operations.spec.ts",
+              "line": 104,
+              "column": 3
+            },
+            {
+              "title": "BUG-011 admin can resolve a bug",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "996c3354a4665a1056e2-0c354b885e656bb1e5bf",
+              "file": "workflows/07-admin-operations.spec.ts",
+              "line": 112,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workflows\\08-funnel-conversion.spec.ts",
+      "file": "workflows/08-funnel-conversion.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 08 — Funnel Conversion",
+          "file": "workflows/08-funnel-conversion.spec.ts",
+          "line": 37,
+          "column": 6,
+          "specs": [
+            {
+              "title": "all funnel pages return HTTP 200",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "14e669ff73a610ea900d-5014e8c50bbf59a76b56",
+              "file": "workflows/08-funnel-conversion.spec.ts",
+              "line": 38,
+              "column": 3
+            },
+            {
+              "title": "starter page contains canonical pricing $199",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "14e669ff73a610ea900d-4afdeb3fce99aa94e405",
+              "file": "workflows/08-funnel-conversion.spec.ts",
+              "line": 49,
+              "column": 3
+            },
+            {
+              "title": "professional page contains canonical pricing $299",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "14e669ff73a610ea900d-25a42631cdf34be99436",
+              "file": "workflows/08-funnel-conversion.spec.ts",
+              "line": 58,
+              "column": 3
+            },
+            {
+              "title": "enterprise page contains canonical pricing $399",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "14e669ff73a610ea900d-5c9da3a2eb9ab520b9d5",
+              "file": "workflows/08-funnel-conversion.spec.ts",
+              "line": 67,
+              "column": 3
+            },
+            {
+              "title": "pricing page returns 200 and contains all three price tiers",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "14e669ff73a610ea900d-967380dae03a9b706b4d",
+              "file": "workflows/08-funnel-conversion.spec.ts",
+              "line": 76,
+              "column": 3
+            },
+            {
+              "title": "get-started page is the public funnel entry point (200)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "14e669ff73a610ea900d-9489548bce77cb41c884",
+              "file": "workflows/08-funnel-conversion.spec.ts",
+              "line": 87,
+              "column": 3
+            },
+            {
+              "title": "public pricing API returns tier data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "14e669ff73a610ea900d-5ac650041f48b633887c",
+              "file": "workflows/08-funnel-conversion.spec.ts",
+              "line": 98,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workflows\\09-pdf-export.spec.ts",
+      "file": "workflows/09-pdf-export.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 09 — PDF Export",
+          "file": "workflows/09-pdf-export.spec.ts",
+          "line": 21,
+          "column": 6,
+          "specs": [
+            {
+              "title": "trainer can export a meal plan as PDF",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "54678a67786ec369920d-80e34a743641c3806cf2",
+              "file": "workflows/09-pdf-export.spec.ts",
+              "line": 42,
+              "column": 3
+            },
+            {
+              "title": "PDF export returns 401 without auth",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "54678a67786ec369920d-aea65a72e033c8b23b9e",
+              "file": "workflows/09-pdf-export.spec.ts",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "PDF export with non-existent plan id returns 404",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "54678a67786ec369920d-c0a7977042cf786808f7",
+              "file": "workflows/09-pdf-export.spec.ts",
+              "line": 78,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workflows\\10-bulk-generation.spec.ts",
+      "file": "workflows/10-bulk-generation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow 10 — Bulk Generation",
+          "file": "workflows/10-bulk-generation.spec.ts",
+          "line": 28,
+          "column": 6,
+          "specs": [
+            {
+              "title": "REC-001 admin can start bulk generation (count:2)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d2409c1ed7834c3c9452-59b59e0b9da5e5e860e1",
+              "file": "workflows/10-bulk-generation.spec.ts",
+              "line": 31,
+              "column": 3
+            },
+            {
+              "title": "REC-002 progress endpoint responds for active batch",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d2409c1ed7834c3c9452-38fcd50e656587d246c0",
+              "file": "workflows/10-bulk-generation.spec.ts",
+              "line": 52,
+              "column": 3
+            },
+            {
+              "title": "bulk generation endpoint is protected (401 without auth)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d2409c1ed7834c3c9452-948b46ea898c25838ff1",
+              "file": "workflows/10-bulk-generation.spec.ts",
+              "line": 70,
+              "column": 3
+            },
+            {
+              "title": "BMAD progress endpoint is reachable when authenticated",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "warfare",
+                  "projectName": "warfare",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d2409c1ed7834c3c9452-a7e2c28055604eb70135",
+              "file": "workflows/10-bulk-generation.spec.ts",
+              "line": 80,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-13T00:09:17.755Z",
+    "duration": 1682.5220000000004,
+    "expected": 0,
+    "skipped": 157,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

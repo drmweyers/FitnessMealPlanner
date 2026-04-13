@@ -1,24 +1,24 @@
 suite,role,endpoint_or_route,state,input_class,assertion_type,status,test_id,notes
-auth,anon,POST /api/auth/register,does-not-exist,valid-new-email,http-201+jwt,pending,AUTH-001,Happy path registration
+auth,anon,POST /api/auth/register,does-not-exist,valid-new-email,http-201+jwt,covered,AUTH-001,Happy path registration
 auth,anon,POST /api/auth/register,does-not-exist,duplicate-email,http-409,pending,AUTH-002,Duplicate email rejection
 auth,anon,POST /api/auth/register,does-not-exist,invalid-email,http-422,pending,AUTH-003,Malformed email
 auth,anon,POST /api/auth/register,does-not-exist,missing-password,http-422,pending,AUTH-004,Required field validation
-auth,anon,POST /api/auth/login,does-not-exist,valid-credentials,http-200+jwt,pending,AUTH-005,Happy path login
+auth,anon,POST /api/auth/login,does-not-exist,valid-credentials,http-200+jwt,covered,AUTH-005,Happy path login
 auth,anon,POST /api/auth/login,does-not-exist,wrong-password,http-401,pending,AUTH-006,Invalid credentials
 auth,anon,POST /api/auth/login,does-not-exist,nonexistent-email,http-401,pending,AUTH-007,Unknown user
 auth,anon,POST /api/auth/refresh,does-not-exist,valid-refresh-token,http-200+new-access-token,pending,AUTH-008,Token refresh
 auth,anon,POST /api/auth/refresh,does-not-exist,expired-refresh-token,http-401,pending,AUTH-009,Expired refresh
 auth,anon,POST /api/auth/refresh,does-not-exist,tampered-token,http-401,pending,AUTH-010,JWT tamper
 auth,customer,POST /api/auth/logout,active,valid-session,http-200+cleared-cookie,pending,AUTH-011,Logout clears cookie
-auth,trainer,GET /api/auth/me,active,valid-jwt,http-200+user-object,pending,AUTH-012,Profile from token
+auth,trainer,GET /api/auth/me,active,valid-jwt,http-200+user-object,covered,AUTH-012,Profile from token
 auth,attacker,GET /api/auth/me,active,stolen-jwt-after-logout,http-401,pending,AUTH-013,Revoked token rejected
 auth,anon,GET /api/auth/google,does-not-exist,google-oauth-redirect,http-302,pending,AUTH-014,OAuth redirect fires
 auth,anon,GET /api/auth/google/callback,does-not-exist,valid-oauth-code,http-200+jwt,pending,AUTH-015,OAuth callback happy path
 auth,attacker,POST /api/auth/register,does-not-exist,sql-injection-email,http-422,pending,AUTH-016,SQL injection in email
 auth,attacker,POST /api/auth/login,does-not-exist,brute-force-10-attempts,http-429,pending,AUTH-017,Rate limiting on login
-meal-plans,trainer,POST /api/trainer/meal-plans,does-not-exist,valid-plan-body,http-201+plan-object,pending,MP-001,Create meal plan
+meal-plans,trainer,POST /api/trainer/meal-plans,does-not-exist,valid-plan-body,http-201+plan-object,covered,MP-001,Create meal plan
 meal-plans,trainer,POST /api/trainer/meal-plans,does-not-exist,missing-required-fields,http-422,pending,MP-002,Validation on create
-meal-plans,trainer,GET /api/trainer/meal-plans,saved,valid-jwt,http-200+array,pending,MP-003,List trainer plans
+meal-plans,trainer,GET /api/trainer/meal-plans,saved,valid-jwt,http-200+array,covered,MP-003,List trainer plans
 meal-plans,trainer,GET /api/trainer/meal-plans/:id,saved,own-plan-id,http-200+plan,pending,MP-004,Get own plan
 meal-plans,attacker,GET /api/trainer/meal-plans/:id,saved,other-trainer-plan-id,http-403,pending,MP-005,IDOR: cross-trainer read
 meal-plans,trainer,PATCH /api/trainer/meal-plans/:id,saved,valid-update-body,http-200+updated,pending,MP-006,Update plan
@@ -26,19 +26,19 @@ meal-plans,attacker,PATCH /api/trainer/meal-plans/:id,saved,other-trainer-plan-i
 meal-plans,trainer,DELETE /api/trainer/meal-plans/:id,saved,own-plan-id,http-200,pending,MP-008,Delete plan
 meal-plans,attacker,DELETE /api/trainer/meal-plans/:id,saved,other-trainer-plan-id,http-403,pending,MP-009,IDOR: cross-trainer delete
 meal-plans,trainer,DELETE /api/trainer/meal-plans/:id,assigned,plan-with-assignments,http-200+cascade-deleted,pending,MP-010,Delete cascades assignments
-meal-plans,trainer,POST /api/trainer/meal-plans/:id/assign,saved,valid-customer-id,http-200+assignment,pending,MP-011,Assign plan to customer
+meal-plans,trainer,POST /api/trainer/meal-plans/:id/assign,saved,valid-customer-id,http-200+assignment,covered,MP-011,Assign plan to customer
 meal-plans,trainer,POST /api/trainer/meal-plans/:id/assign,does-not-exist,nonexistent-plan-id,http-404,pending,MP-012,Assign nonexistent plan
 meal-plans,attacker,POST /api/trainer/meal-plans/:id/assign,saved,other-trainers-customer-id,http-403,pending,MP-013,IDOR: cross-tenant assign
 meal-plans,trainer,POST /api/trainer/meal-plans/:id/assign,assigned,already-assigned-same-customer,http-409,pending,MP-014,Duplicate assignment guard
-meal-plans,customer,GET /api/meal-plans,assigned,own-customer-id,http-200+assigned-plans,pending,MP-015,Customer sees assigned plans
+meal-plans,customer,GET /api/meal-plans,assigned,own-customer-id,http-200+assigned-plans,covered,MP-015,Customer sees assigned plans
 meal-plans,customer,GET /api/meal-plans,does-not-exist,customer-with-no-assignments,http-200+empty-array,pending,MP-016,Empty state for customer
 meal-plans,attacker,GET /api/meal-plans,assigned,other-customer-jwt,http-200+own-plans-only,pending,MP-017,Customer cannot see other customer plans
 meal-plans,customer,GET /api/meal-plans/:id,assigned,own-assigned-plan,http-200+plan,pending,MP-018,Customer reads assigned plan
 meal-plans,attacker,GET /api/meal-plans/:id,assigned,other-customer-plan-id,http-403,pending,MP-019,IDOR: customer cross-tenant read
 meal-plans,customer,POST /api/meal-plans/:id/start,assigned,own-plan-id,http-200,pending,MP-020,Customer starts plan
 meal-plans,customer,POST /api/meal-plans/:id/complete,active,own-plan-id,http-200+email-queued,pending,MP-021,Customer completes plan + email side-effect
-meal-plans,anon,GET /api/trainer/meal-plans,saved,no-auth,http-401,pending,MP-022,Anon blocked from trainer plans
-meal-plans,anon,GET /api/meal-plans,assigned,no-auth,http-401,pending,MP-023,Anon blocked from customer plans
+meal-plans,anon,GET /api/trainer/meal-plans,saved,no-auth,http-401,covered,MP-022,Anon blocked from trainer plans
+meal-plans,anon,GET /api/meal-plans,assigned,no-auth,http-401,covered,MP-023,Anon blocked from customer plans
 meal-plans,trainer,POST /api/trainer/meal-plans,saved,generate-via-ai-valid,http-201+ai-plan,pending,MP-024,AI-generated plan (OpenAI call)
 meal-plans,trainer,POST /api/trainer/meal-plans,saved,generate-via-ai-openai-500,http-502,pending,MP-025,AI generation OpenAI 500 — graceful fail
 meal-plans,trainer,POST /api/trainer/meal-plans,saved,generate-via-ai-openai-429,http-429-or-502,pending,MP-026,AI generation rate limit propagated
@@ -48,15 +48,15 @@ meal-plan-sharing,trainer,PATCH /api/meal-plan-sharing/:id,share-revoked,isActiv
 meal-plan-sharing,anon,GET /api/shared/:token,shared,valid-token,http-200+plan,pending,MPS-004,Anon views shared plan
 meal-plan-sharing,anon,GET /api/shared/:token,share-revoked,revoked-token,http-404-or-410,pending,MPS-005,Revoked share returns not-found
 meal-plan-sharing,attacker,GET /api/shared/:token,shared,other-trainer-token,http-200+plan,pending,MPS-006,Shared plans are intentionally public — verify no sensitive data
-recipes,admin,POST /api/admin/generate,does-not-exist,valid-batch-config,http-200+batchId,pending,REC-001,Start BMAD batch generation
-recipes,admin,GET /api/admin/generate/progress/:batchId,unapproved,valid-batchId,http-200+sse-stream,pending,REC-002,SSE progress stream returns events
+recipes,admin,POST /api/admin/generate,does-not-exist,valid-batch-config,http-200+batchId,covered,REC-001,Start BMAD batch generation
+recipes,admin,GET /api/admin/generate/progress/:batchId,unapproved,valid-batchId,http-200+sse-stream,covered,REC-002,SSE progress stream returns events
 recipes,admin,POST /api/admin/generate/stop/:batchId,unapproved,valid-batchId,http-200+stopped,pending,REC-003,Stop in-progress batch
 recipes,admin,POST /api/admin/recipes/:id/approve,unapproved,valid-recipe-id,http-200+isApproved-true,pending,REC-004,Approve recipe
 recipes,trainer,POST /api/admin/recipes/:id/approve,unapproved,valid-recipe-id,http-403,pending,REC-005,Trainer cannot approve
 recipes,customer,POST /api/admin/recipes/:id/approve,unapproved,valid-recipe-id,http-403,pending,REC-006,Customer cannot approve
 recipes,admin,POST /api/admin/recipes/bulk-delete,approved-starter,valid-id-array,http-200+deleted-count,pending,REC-007,Bulk delete approved recipes
 recipes,trainer,POST /api/admin/recipes/bulk-delete,approved-starter,valid-id-array,http-403,pending,REC-008,Trainer cannot bulk-delete
-recipes,trainer,GET /api/recipes,approved-starter,starter-jwt,http-200+starter-recipes,pending,REC-009,Starter trainer sees starter recipes
+recipes,trainer,GET /api/recipes,approved-starter,starter-jwt,http-200+starter-recipes,covered,REC-009,Starter trainer sees starter recipes
 recipes,trainer,GET /api/recipes,approved-professional,starter-jwt,http-200+no-pro-recipes,pending,REC-010,Starter trainer cannot see pro recipes
 recipes,trainer,GET /api/recipes,approved-professional,professional-jwt,http-200+pro-recipes,pending,REC-011,Pro trainer sees pro recipes
 recipes,trainer,GET /api/recipes,approved-enterprise,professional-jwt,http-200+no-enterprise,pending,REC-012,Pro trainer cannot see enterprise recipes
@@ -66,36 +66,36 @@ recipes,attacker,GET /api/recipes,approved-enterprise,starter-jwt,http-200+filte
 recipes,admin,POST /api/admin/generate,unapproved,openai-500-failure,http-500-or-partial,pending,REC-016,BMAD batch handles OpenAI 500
 recipes,admin,POST /api/admin/generate,unapproved,dalle-429-failure,http-200+partial-images,pending,REC-017,BMAD batch handles DALL-E rate limit
 recipes,admin,POST /api/admin/generate,unapproved,s3-upload-failure,http-200+no-imageUrl,pending,REC-018,S3 failure — no orphan recipes without imageUrl
-recipes,trainer,GET /api/recipes/:id,approved-starter,own-tier-recipe-id,http-200+recipe,pending,REC-019,Get single recipe
+recipes,trainer,GET /api/recipes/:id,approved-starter,own-tier-recipe-id,http-200+recipe,covered,REC-019,Get single recipe
 recipes,attacker,GET /api/recipes/:id,approved-enterprise,starter-tier-enterprise-id,http-403,pending,REC-020,Cross-tier recipe access blocked
 recipes,trainer,POST /api/trainer/recipes/:id/assign,approved-starter,valid-customer-id,http-200,pending,REC-021,Assign recipe to customer
 recipes,trainer,POST /api/recipes/:id/rate,approved-starter,1-to-5-rating,http-200+avg-updated,pending,REC-022,Rate recipe
 recipes,trainer,POST /api/recipes/:id/rate,approved-starter,rating-0-or-6,http-422,pending,REC-023,Rating out of bounds
 recipes,customer,POST /api/recipes/:id/rate,approved-starter,flagged-content,http-200+moderation-queue,pending,REC-024,Flagged rating triggers moderation side-effect
-recipes,trainer,GET /api/favorites,approved-starter,valid-jwt,http-200+array,pending,REC-025,Get favorites list
-recipes,trainer,POST /api/favorites,approved-starter,valid-recipe-id,http-201,pending,REC-026,Add to favorites
-recipes,trainer,DELETE /api/favorites/:id,approved-starter,own-favorite-id,http-200,pending,REC-027,Remove from favorites
+recipes,trainer,GET /api/favorites,approved-starter,valid-jwt,http-200+array,covered,REC-025,Get favorites list
+recipes,trainer,POST /api/favorites,approved-starter,valid-recipe-id,http-201,covered,REC-026,Add to favorites
+recipes,trainer,DELETE /api/favorites/:id,approved-starter,own-favorite-id,http-200,covered,REC-027,Remove from favorites
 recipes,attacker,DELETE /api/favorites/:id,approved-starter,other-trainer-favorite-id,http-403,pending,REC-028,IDOR: cross-trainer favorite delete
 recipes,admin,GET /api/admin/analytics/recipes,approved-starter,valid-admin-jwt,http-200+metrics,pending,REC-029,Admin recipe analytics
-bug-reports,customer,POST /api/bug-reports,does-not-exist,valid-bug-report,http-201+report-object,pending,BUG-001,Customer submits bug
-bug-reports,customer,POST /api/bug-reports,does-not-exist,valid-bug-report,open,http-201+github-issue-created,pending,BUG-002,Bug submission triggers GitHub issue side-effect
-bug-reports,customer,POST /api/bug-reports,does-not-exist,valid-bug-report,open,http-201+hal-bridge-written,pending,BUG-003,Bug submission writes Hal bridge file
-bug-reports,anon,POST /api/bug-reports,does-not-exist,no-auth,http-401,pending,BUG-004,Anon cannot submit bug
+bug-reports,customer,POST /api/bug-reports,does-not-exist,valid-bug-report,http-201+report-object,covered,BUG-001,Customer submits bug
+bug-reports,customer,POST /api/bug-reports,does-not-exist,valid-bug-report,open,http-201+github-issue-created,pending,BUG-002
+bug-reports,customer,POST /api/bug-reports,does-not-exist,valid-bug-report,open,http-201+hal-bridge-written,pending,BUG-003
+bug-reports,anon,POST /api/bug-reports,does-not-exist,no-auth,http-401,covered,BUG-004,Anon cannot submit bug
 bug-reports,trainer,POST /api/bug-reports,does-not-exist,valid-bug-report,http-201,pending,BUG-005,Trainer can also submit bug
-bug-reports,admin,GET /api/admin/bug-reports,open,valid-admin-jwt,http-200+list,pending,BUG-006,Admin lists all bugs
+bug-reports,admin,GET /api/admin/bug-reports,open,valid-admin-jwt,http-200+list,covered,BUG-006,Admin lists all bugs
 bug-reports,customer,GET /api/admin/bug-reports,open,customer-jwt,http-403,pending,BUG-007,Customer cannot list all bugs
 bug-reports,trainer,GET /api/admin/bug-reports,open,trainer-jwt,http-403,pending,BUG-008,Trainer cannot list all bugs
-bug-reports,admin,PATCH /api/bug-reports/:id,open,status-triaged,http-200+triaged,pending,BUG-009,Admin triages bug (open→triaged)
-bug-reports,admin,PATCH /api/bug-reports/:id,triaged,status-in_progress,http-200+in_progress,pending,BUG-010,Admin moves to in_progress (triaged→in_progress)
-bug-reports,admin,PATCH /api/bug-reports/:id,in_progress,status-resolved,http-200+resolved,pending,BUG-011,Admin resolves bug (in_progress→resolved)
+bug-reports,admin,PATCH /api/bug-reports/:id,open,status-triaged,http-200+triaged,covered,BUG-009,Admin triages bug (open→triaged)
+bug-reports,admin,PATCH /api/bug-reports/:id,triaged,status-in_progress,http-200+in_progress,covered,BUG-010,Admin moves to in_progress (triaged→in_progress)
+bug-reports,admin,PATCH /api/bug-reports/:id,in_progress,status-resolved,http-200+resolved,covered,BUG-011,Admin resolves bug (in_progress→resolved)
 bug-reports,admin,PATCH /api/bug-reports/:id,resolved,status-closed,http-200+closed,pending,BUG-012,Admin closes bug (resolved→closed)
 bug-reports,admin,PATCH /api/bug-reports/:id,open,status-resolved,http-200,pending,BUG-013,Admin fast-tracks to resolved (skip triaged)
 bug-reports,admin,PATCH /api/bug-reports/:id,resolved,status-in_progress,http-422,pending,BUG-014,Illegal: resolved→in_progress rejected
 bug-reports,admin,PATCH /api/bug-reports/:id,closed,status-in_progress,http-422,pending,BUG-015,Illegal: closed→in_progress rejected
-bug-reports,hal,GET /api/command-centre/bugs,open,valid-HAL_API_KEY,http-200+next-bug,pending,BUG-016,Hal polls for next bug
-bug-reports,hal,PATCH /api/bug-reports/:id,open,claim-to-in_progress,http-200+assignedToHal-true,pending,BUG-017,Hal claims bug atomically
-bug-reports,attacker,GET /api/command-centre/bugs,open,no-HAL_API_KEY,http-401-or-403,pending,BUG-018,Hal endpoint blocked without API key
-bug-reports,hal,PATCH /api/bug-reports/:id,in_progress,concurrent-claim-race,http-409-or-200-idempotent,pending,BUG-019,Concurrent Hal claim race — only one claim wins
+bug-reports,hal,GET /api/command-centre/bugs,open,valid-HAL_API_KEY,http-200+next-bug,covered,BUG-016,Hal polls for next bug
+bug-reports,hal,PATCH /api/bug-reports/:id,open,claim-to-in_progress,http-200+assignedToHal-true,covered,BUG-017,Hal claims bug atomically
+bug-reports,attacker,GET /api/command-centre/bugs,open,no-HAL_API_KEY,http-401-or-403,covered,BUG-018,Hal endpoint blocked without API key
+bug-reports,hal,PATCH /api/bug-reports/:id,in_progress,concurrent-claim-race,http-409-or-200-idempotent,covered,BUG-019,Concurrent Hal claim race — only one claim wins
 bug-reports,customer,GET /api/bug-reports/mine,open,own-reports,http-200+own-list,pending,BUG-020,Customer views own bug reports
 bug-reports,attacker,GET /api/bug-reports/:id,open,other-user-bug-id,http-403,pending,BUG-021,IDOR: customer cross-tenant bug read
 subscription,trainer,POST /api/payment/subscribe,does-not-exist,valid-stripe-token+starter,http-200+subscription,pending,SUB-001,Trainer subscribes to starter

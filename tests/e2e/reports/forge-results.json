@@ -1,0 +1,643 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\playwright.forge-qa.config.ts",
+    "rootDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/forge",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\Users\\drmwe\\Claude\\FitnessMealPlanner\\tests\\e2e\\setup\\forge-global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/screenshots/forge",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "as-trainer",
+        "name": "as-trainer",
+        "testDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/forge",
+        "testIgnore": ["/auth-01-login|auth-03-invitation|journeys/"],
+        "testMatch": [
+          "/\\/(auth|meal-plans|recipes|export|shopping|funnel)\\//"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/screenshots/forge",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "as-customer",
+        "name": "as-customer",
+        "testDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/forge",
+        "testIgnore": [],
+        "testMatch": ["/\\/(customer|nutrition|progress)\\//"],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/screenshots/forge",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "as-admin",
+        "name": "as-admin",
+        "testDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/forge",
+        "testIgnore": [],
+        "testMatch": ["/\\/admin\\//"],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/screenshots/forge",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "unauthenticated",
+        "name": "unauthenticated",
+        "testDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/forge",
+        "testIgnore": [],
+        "testMatch": ["/auth-01-login|funl-01|share-01/"],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/screenshots/forge",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "tier-enforcement",
+        "name": "tier-enforcement",
+        "testDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/forge",
+        "testIgnore": [],
+        "testMatch": ["/\\/tiers\\//"],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/screenshots/forge",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "cross-role-journeys",
+        "name": "cross-role-journeys",
+        "testDir": "C:/Users/drmwe/Claude/FitnessMealPlanner/tests/e2e/forge",
+        "testIgnore": [],
+        "testMatch": ["/\\/journeys\\//"],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      ["list", null],
+      [
+        "html",
+        {
+          "outputFolder": "tests/e2e/reports/forge",
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "tests/e2e/reports/forge-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "auth\\auth-01-login.spec.ts",
+      "file": "auth/auth-01-login.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "AUTH-01 — Login Flows",
+          "file": "auth/auth-01-login.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "login page loads with email and password fields",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "57013b3a5e709eb93ed9-d54dea9056b169075c13",
+              "file": "auth/auth-01-login.spec.ts",
+              "line": 20,
+              "column": 3
+            },
+            {
+              "title": "trainer login succeeds and redirects to /trainer",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "57013b3a5e709eb93ed9-92d3fc6b7701d511346f",
+              "file": "auth/auth-01-login.spec.ts",
+              "line": 36,
+              "column": 3
+            },
+            {
+              "title": "customer login succeeds and redirects to /customer",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "57013b3a5e709eb93ed9-916459066b614fe3b7d0",
+              "file": "auth/auth-01-login.spec.ts",
+              "line": 47,
+              "column": 3
+            },
+            {
+              "title": "admin login succeeds and redirects to /admin",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "57013b3a5e709eb93ed9-3041b14af73104ee887b",
+              "file": "auth/auth-01-login.spec.ts",
+              "line": 61,
+              "column": 3
+            },
+            {
+              "title": "invalid credentials keeps user on login page with error visible",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "57013b3a5e709eb93ed9-9d08e2691a3c8a36abe0",
+              "file": "auth/auth-01-login.spec.ts",
+              "line": 76,
+              "column": 3
+            },
+            {
+              "title": "empty form submit shows validation errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "57013b3a5e709eb93ed9-e1c7f1a83ff8394da3ce",
+              "file": "auth/auth-01-login.spec.ts",
+              "line": 98,
+              "column": 3
+            },
+            {
+              "title": "logout clears session and redirects to /login",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "57013b3a5e709eb93ed9-063c79233da603aae0d0",
+              "file": "auth/auth-01-login.spec.ts",
+              "line": 124,
+              "column": 3
+            },
+            {
+              "title": "page reload after login maintains authenticated session",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "57013b3a5e709eb93ed9-7e215e4d9ec4cc24c099",
+              "file": "auth/auth-01-login.spec.ts",
+              "line": 157,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "export\\share-01-meal-plan-sharing.spec.ts",
+      "file": "export/share-01-meal-plan-sharing.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "SHARE-01 — Meal Plan Sharing",
+          "file": "export/share-01-meal-plan-sharing.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "API GET /api/meal-plans/shared/:token returns 200 with plan data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3517d7fbec9dd1ca7ef6-b9bdfd5cf84c61806194",
+              "file": "export/share-01-meal-plan-sharing.spec.ts",
+              "line": 20,
+              "column": 3
+            },
+            {
+              "title": "shared plan API response includes planName field",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3517d7fbec9dd1ca7ef6-6e1d5f61e20155d516e2",
+              "file": "export/share-01-meal-plan-sharing.spec.ts",
+              "line": 30,
+              "column": 3
+            },
+            {
+              "title": "shared plan page /shared/:token loads without requiring login",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3517d7fbec9dd1ca7ef6-66cb740dd5361622bc4d",
+              "file": "export/share-01-meal-plan-sharing.spec.ts",
+              "line": 47,
+              "column": 3
+            },
+            {
+              "title": "shared plan page shows the plan name",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3517d7fbec9dd1ca7ef6-b996d2d42b1a54d89a94",
+              "file": "export/share-01-meal-plan-sharing.spec.ts",
+              "line": 56,
+              "column": 3
+            },
+            {
+              "title": "API POST /api/meal-plans/:planId/share creates a new share token",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3517d7fbec9dd1ca7ef6-715d9097bc1fa9866a83",
+              "file": "export/share-01-meal-plan-sharing.spec.ts",
+              "line": 71,
+              "column": 3
+            },
+            {
+              "title": "shared plan page does not show edit or delete buttons",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3517d7fbec9dd1ca7ef6-2db54b76ac6f7cf6de37",
+              "file": "export/share-01-meal-plan-sharing.spec.ts",
+              "line": 89,
+              "column": 3
+            },
+            {
+              "title": "API GET /api/meal-plans/shared with non-existent token returns 404",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3517d7fbec9dd1ca7ef6-787063ee58d461ddf85e",
+              "file": "export/share-01-meal-plan-sharing.spec.ts",
+              "line": 106,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "funnel\\funl-01-public-sales-pages.spec.ts",
+      "file": "funnel/funl-01-public-sales-pages.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "FUNL-01 — Public Sales Pages",
+          "file": "funnel/funl-01-public-sales-pages.spec.ts",
+          "line": 14,
+          "column": 6,
+          "specs": [
+            {
+              "title": "/get-started loads with hero section and a CTA element",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb5dacdb736474f80e9d-833737b006ade7e2e7ff",
+              "file": "funnel/funl-01-public-sales-pages.spec.ts",
+              "line": 19,
+              "column": 3
+            },
+            {
+              "title": "/starter loads and shows $199 price text",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb5dacdb736474f80e9d-a5864b99dc0ddc77b1e0",
+              "file": "funnel/funl-01-public-sales-pages.spec.ts",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "/professional loads and shows $299 price text",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb5dacdb736474f80e9d-d8fae9e15e4dcdbd35b3",
+              "file": "funnel/funl-01-public-sales-pages.spec.ts",
+              "line": 41,
+              "column": 3
+            },
+            {
+              "title": "/enterprise loads and shows $399 price text",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb5dacdb736474f80e9d-eeeff9d97fa64f9567ce",
+              "file": "funnel/funl-01-public-sales-pages.spec.ts",
+              "line": 47,
+              "column": 3
+            },
+            {
+              "title": "/pricing page loads with tier comparison section",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb5dacdb736474f80e9d-b4cf8956ea6a159b44df",
+              "file": "funnel/funl-01-public-sales-pages.spec.ts",
+              "line": 53,
+              "column": 3
+            },
+            {
+              "title": "/free-blueprint loads with email capture form",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb5dacdb736474f80e9d-0a4f30ba862b3fd6a790",
+              "file": "funnel/funl-01-public-sales-pages.spec.ts",
+              "line": 67,
+              "column": 3
+            },
+            {
+              "title": "API GET /api/v1/tiers/public/pricing returns JSON with 3 tiers",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb5dacdb736474f80e9d-65657062f2dafcf8d562",
+              "file": "funnel/funl-01-public-sales-pages.spec.ts",
+              "line": 78,
+              "column": 3
+            },
+            {
+              "title": "/get-started CTA buttons link to /register or checkout flow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "unauthenticated",
+                  "projectName": "unauthenticated",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "fb5dacdb736474f80e9d-ddb9cabb08a6b93f8dc5",
+              "file": "funnel/funl-01-public-sales-pages.spec.ts",
+              "line": 92,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-08T01:02:04.808Z",
+    "duration": 127.30199999999991,
+    "expected": 0,
+    "skipped": 23,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
