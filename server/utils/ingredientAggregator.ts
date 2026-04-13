@@ -23,8 +23,8 @@ import {
   formatQuantity,
   areUnitsCompatible,
   type ParsedQuantity,
-  UnitCategory
-} from './unitConverter';
+  UnitCategory,
+} from "./unitConverter";
 
 /**
  * Normalized ingredient for aggregation
@@ -36,7 +36,7 @@ export interface AggregatedIngredient {
   parsedQuantity: ParsedQuantity;
   formattedQuantity: string;
   recipeNames: string[];
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   notes?: string;
 }
 
@@ -55,86 +55,182 @@ export interface RecipeIngredient {
  */
 const INGREDIENT_CATEGORIES: Record<string, string> = {
   // Produce
-  'onion': 'produce', 'onions': 'produce',
-  'garlic': 'produce', 'clove': 'produce', 'cloves': 'produce',
-  'tomato': 'produce', 'tomatoes': 'produce',
-  'bell pepper': 'produce', 'peppers': 'produce',
-  'broccoli': 'produce', 'spinach': 'produce', 'lettuce': 'produce',
-  'carrot': 'produce', 'carrots': 'produce',
-  'celery': 'produce', 'potato': 'produce', 'potatoes': 'produce',
-  'sweet potato': 'produce', 'sweet potatoes': 'produce',
-  'avocado': 'produce', 'avocados': 'produce',
-  'lime': 'produce', 'limes': 'produce',
-  'lemon': 'produce', 'lemons': 'produce',
-  'apple': 'produce', 'apples': 'produce',
-  'banana': 'produce', 'bananas': 'produce',
-  'mushroom': 'produce', 'mushrooms': 'produce',
-  'cilantro': 'produce', 'parsley': 'produce', 'basil': 'produce',
-  'ginger': 'produce', 'cucumber': 'produce', 'cucumbers': 'produce',
-  'zucchini': 'produce', 'squash': 'produce',
-  'corn': 'produce', 'cabbage': 'produce',
-  'cauliflower': 'produce', 'asparagus': 'produce',
-  'green beans': 'produce', 'beans': 'produce',
+  onion: "produce",
+  onions: "produce",
+  garlic: "produce",
+  clove: "produce",
+  cloves: "produce",
+  tomato: "produce",
+  tomatoes: "produce",
+  "bell pepper": "produce",
+  peppers: "produce",
+  broccoli: "produce",
+  spinach: "produce",
+  lettuce: "produce",
+  carrot: "produce",
+  carrots: "produce",
+  celery: "produce",
+  potato: "produce",
+  potatoes: "produce",
+  "sweet potato": "produce",
+  "sweet potatoes": "produce",
+  avocado: "produce",
+  avocados: "produce",
+  lime: "produce",
+  limes: "produce",
+  lemon: "produce",
+  lemons: "produce",
+  apple: "produce",
+  apples: "produce",
+  banana: "produce",
+  bananas: "produce",
+  mushroom: "produce",
+  mushrooms: "produce",
+  cilantro: "produce",
+  parsley: "produce",
+  basil: "produce",
+  ginger: "produce",
+  cucumber: "produce",
+  cucumbers: "produce",
+  zucchini: "produce",
+  squash: "produce",
+  corn: "produce",
+  cabbage: "produce",
+  cauliflower: "produce",
+  asparagus: "produce",
+  "green beans": "produce",
+  beans: "produce",
 
   // Meat & Seafood
-  'chicken': 'meat', 'chicken breast': 'meat', 'chicken thigh': 'meat',
-  'beef': 'meat', 'ground beef': 'meat', 'steak': 'meat',
-  'pork': 'meat', 'pork chop': 'meat', 'pork tenderloin': 'meat',
-  'turkey': 'meat', 'ground turkey': 'meat',
-  'salmon': 'meat', 'tuna': 'meat', 'shrimp': 'meat',
-  'bacon': 'meat', 'sausage': 'meat', 'ham': 'meat',
-  'fish': 'meat', 'cod': 'meat', 'tilapia': 'meat',
-  'lamb': 'meat', 'veal': 'meat',
+  chicken: "meat",
+  "chicken breast": "meat",
+  "chicken thigh": "meat",
+  beef: "meat",
+  "ground beef": "meat",
+  steak: "meat",
+  pork: "meat",
+  "pork chop": "meat",
+  "pork tenderloin": "meat",
+  turkey: "meat",
+  "ground turkey": "meat",
+  salmon: "meat",
+  tuna: "meat",
+  shrimp: "meat",
+  bacon: "meat",
+  sausage: "meat",
+  ham: "meat",
+  fish: "meat",
+  cod: "meat",
+  tilapia: "meat",
+  lamb: "meat",
+  veal: "meat",
 
   // Dairy & Eggs
-  'milk': 'dairy', 'whole milk': 'dairy', 'skim milk': 'dairy',
-  'cheese': 'dairy', 'cheddar': 'dairy', 'mozzarella': 'dairy',
-  'parmesan': 'dairy', 'swiss': 'dairy',
-  'yogurt': 'dairy', 'greek yogurt': 'dairy', 'plain yogurt': 'dairy',
-  'butter': 'dairy', 'unsalted butter': 'dairy', 'salted butter': 'dairy',
-  'cream': 'dairy', 'heavy cream': 'dairy', 'sour cream': 'dairy',
-  'cream cheese': 'dairy', 'cottage cheese': 'dairy',
-  'egg': 'dairy', 'eggs': 'dairy', 'egg whites': 'dairy',
+  milk: "dairy",
+  "whole milk": "dairy",
+  "skim milk": "dairy",
+  cheese: "dairy",
+  cheddar: "dairy",
+  mozzarella: "dairy",
+  parmesan: "dairy",
+  swiss: "dairy",
+  yogurt: "dairy",
+  "greek yogurt": "dairy",
+  "plain yogurt": "dairy",
+  butter: "dairy",
+  "unsalted butter": "dairy",
+  "salted butter": "dairy",
+  cream: "dairy",
+  "heavy cream": "dairy",
+  "sour cream": "dairy",
+  "cream cheese": "dairy",
+  "cottage cheese": "dairy",
+  egg: "dairy",
+  eggs: "dairy",
+  "egg whites": "dairy",
 
   // Pantry Staples
-  'rice': 'pantry', 'brown rice': 'pantry', 'white rice': 'pantry',
-  'pasta': 'pantry', 'spaghetti': 'pantry', 'penne': 'pantry',
-  'flour': 'pantry', 'all-purpose flour': 'pantry', 'wheat flour': 'pantry',
-  'sugar': 'pantry', 'brown sugar': 'pantry', 'white sugar': 'pantry',
-  'salt': 'pantry', 'pepper': 'pantry', 'black pepper': 'pantry',
-  'olive oil': 'pantry', 'vegetable oil': 'pantry', 'coconut oil': 'pantry',
-  'vinegar': 'pantry', 'balsamic vinegar': 'pantry', 'apple cider vinegar': 'pantry',
-  'soy sauce': 'pantry', 'honey': 'pantry', 'vanilla': 'pantry',
-  'baking powder': 'pantry', 'baking soda': 'pantry',
-  'breadcrumbs': 'pantry', 'panko': 'pantry',
-  'quinoa': 'pantry', 'oats': 'pantry', 'rolled oats': 'pantry',
-  'bread': 'pantry', 'whole wheat bread': 'pantry',
-  'tortilla': 'pantry', 'tortillas': 'pantry',
-  'canned tomatoes': 'pantry', 'tomato sauce': 'pantry',
-  'pasta sauce': 'pantry', 'marinara': 'pantry',
+  rice: "pantry",
+  "brown rice": "pantry",
+  "white rice": "pantry",
+  pasta: "pantry",
+  spaghetti: "pantry",
+  penne: "pantry",
+  flour: "pantry",
+  "all-purpose flour": "pantry",
+  "wheat flour": "pantry",
+  sugar: "pantry",
+  "brown sugar": "pantry",
+  "white sugar": "pantry",
+  salt: "pantry",
+  pepper: "pantry",
+  "black pepper": "pantry",
+  "olive oil": "pantry",
+  "vegetable oil": "pantry",
+  "coconut oil": "pantry",
+  vinegar: "pantry",
+  "balsamic vinegar": "pantry",
+  "apple cider vinegar": "pantry",
+  "soy sauce": "pantry",
+  honey: "pantry",
+  vanilla: "pantry",
+  "baking powder": "pantry",
+  "baking soda": "pantry",
+  breadcrumbs: "pantry",
+  panko: "pantry",
+  quinoa: "pantry",
+  oats: "pantry",
+  "rolled oats": "pantry",
+  bread: "pantry",
+  "whole wheat bread": "pantry",
+  tortilla: "pantry",
+  tortillas: "pantry",
+  "canned tomatoes": "pantry",
+  "tomato sauce": "pantry",
+  "pasta sauce": "pantry",
+  marinara: "pantry",
 
   // Spices & Herbs
-  'oregano': 'spices', 'thyme': 'spices', 'rosemary': 'spices',
-  'cumin': 'spices', 'paprika': 'spices', 'chili powder': 'spices',
-  'garlic powder': 'spices', 'onion powder': 'spices',
-  'italian seasoning': 'spices', 'bay leaves': 'spices',
-  'cinnamon': 'spices', 'nutmeg': 'spices',
+  oregano: "spices",
+  thyme: "spices",
+  rosemary: "spices",
+  cumin: "spices",
+  paprika: "spices",
+  "chili powder": "spices",
+  "garlic powder": "spices",
+  "onion powder": "spices",
+  "italian seasoning": "spices",
+  "bay leaves": "spices",
+  cinnamon: "spices",
+  nutmeg: "spices",
 
   // Beverages
-  'water': 'beverages', 'juice': 'beverages', 'orange juice': 'beverages',
-  'coffee': 'beverages', 'tea': 'beverages',
-  'almond milk': 'beverages', 'coconut milk': 'beverages',
-  'soy milk': 'beverages', 'oat milk': 'beverages',
+  water: "beverages",
+  juice: "beverages",
+  "orange juice": "beverages",
+  coffee: "beverages",
+  tea: "beverages",
+  "almond milk": "beverages",
+  "coconut milk": "beverages",
+  "soy milk": "beverages",
+  "oat milk": "beverages",
 
   // Frozen
-  'frozen vegetables': 'frozen', 'frozen fruit': 'frozen',
-  'frozen berries': 'frozen', 'ice cream': 'frozen',
+  "frozen vegetables": "frozen",
+  "frozen fruit": "frozen",
+  "frozen berries": "frozen",
+  "ice cream": "frozen",
 
   // Snacks
-  'nuts': 'snacks', 'almonds': 'snacks', 'walnuts': 'snacks',
-  'peanuts': 'snacks', 'cashews': 'snacks',
-  'chips': 'snacks', 'crackers': 'snacks',
-  'granola': 'snacks', 'trail mix': 'snacks',
+  nuts: "snacks",
+  almonds: "snacks",
+  walnuts: "snacks",
+  peanuts: "snacks",
+  cashews: "snacks",
+  chips: "snacks",
+  crackers: "snacks",
+  granola: "snacks",
+  "trail mix": "snacks",
 };
 
 /**
@@ -142,49 +238,73 @@ const INGREDIENT_CATEGORIES: Record<string, string> = {
  */
 const INGREDIENT_VARIATIONS: Record<string, string> = {
   // Pluralization normalization
-  'tomatoes': 'tomato',
-  'onions': 'onion',
-  'carrots': 'carrot',
-  'peppers': 'pepper',
-  'potatoes': 'potato',
-  'eggs': 'egg',
-  'cloves': 'clove',
+  tomatoes: "tomato",
+  onions: "onion",
+  carrots: "carrot",
+  peppers: "pepper",
+  potatoes: "potato",
+  eggs: "egg",
+  cloves: "clove",
 
   // Common brand/type variations
-  'chicken breast': 'chicken breast',
-  'chicken breasts': 'chicken breast',
-  'ground beef': 'ground beef',
-  'lean ground beef': 'ground beef',
-  'extra lean ground beef': 'ground beef',
+  "chicken breast": "chicken breast",
+  "chicken breasts": "chicken breast",
+  "ground beef": "ground beef",
+  "lean ground beef": "ground beef",
+  "extra lean ground beef": "ground beef",
 
   // Size/type descriptors that should be normalized
-  'large egg': 'egg',
-  'large eggs': 'egg',
-  'medium onion': 'onion',
-  'large onion': 'onion',
-  'small onion': 'onion',
+  "large egg": "egg",
+  "large eggs": "egg",
+  "medium onion": "onion",
+  "large onion": "onion",
+  "small onion": "onion",
 
   // Oil variations
-  'extra virgin olive oil': 'olive oil',
-  'evoo': 'olive oil',
+  "extra virgin olive oil": "olive oil",
+  evoo: "olive oil",
 
   // Milk variations
-  '2% milk': 'milk',
-  'whole milk': 'milk',
-  'skim milk': 'milk',
-  '1% milk': 'milk',
+  "2% milk": "milk",
+  "whole milk": "milk",
+  "skim milk": "milk",
+  "1% milk": "milk",
 };
 
 /**
  * Words to ignore when matching ingredient names
  */
 const IGNORE_WORDS = new Set([
-  'fresh', 'dried', 'frozen', 'canned', 'organic', 'free-range',
-  'large', 'medium', 'small', 'extra', 'lean', 'fat-free',
-  'low-fat', 'unsalted', 'salted', 'raw', 'cooked',
-  'chopped', 'diced', 'sliced', 'minced', 'crushed',
-  'ground', 'grated', 'shredded', 'whole', 'half',
-  'boneless', 'skinless', 'trimmed'
+  "fresh",
+  "dried",
+  "frozen",
+  "canned",
+  "organic",
+  "free-range",
+  "large",
+  "medium",
+  "small",
+  "extra",
+  "lean",
+  "fat-free",
+  "low-fat",
+  "unsalted",
+  "salted",
+  "raw",
+  "cooked",
+  "chopped",
+  "diced",
+  "sliced",
+  "minced",
+  "crushed",
+  "ground",
+  "grated",
+  "shredded",
+  "whole",
+  "half",
+  "boneless",
+  "skinless",
+  "trimmed",
 ]);
 
 /**
@@ -199,18 +319,18 @@ function normalizeIngredientName(name: string): string {
   }
 
   // Remove parenthetical information
-  normalized = normalized.replace(/\([^)]*\)/g, '').trim();
+  normalized = normalized.replace(/\([^)]*\)/g, "").trim();
 
   // Remove common descriptors
   const words = normalized.split(/\s+/);
-  const filteredWords = words.filter(word => !IGNORE_WORDS.has(word));
-  normalized = filteredWords.join(' ');
+  const filteredWords = words.filter((word) => !IGNORE_WORDS.has(word));
+  normalized = filteredWords.join(" ");
 
   // Handle common patterns
   normalized = normalized
-    .replace(/\bs\b/g, '') // Remove standalone 's'
-    .replace(/\bof\b/g, '') // Remove 'of'
-    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/\bs\b/g, "") // Remove standalone 's'
+    .replace(/\bof\b/g, "") // Remove 'of'
+    .replace(/\s+/g, " ") // Normalize whitespace
     .trim();
 
   return normalized || name.toLowerCase(); // Fallback to original if empty
@@ -235,7 +355,7 @@ function calculateSimilarity(name1: string, name2: string): number {
   const words1 = new Set(norm1.split(/\s+/));
   const words2 = new Set(norm2.split(/\s+/));
 
-  const intersection = new Set([...words1].filter(x => words2.has(x)));
+  const intersection = new Set([...words1].filter((x) => words2.has(x)));
   const union = new Set([...words1, ...words2]);
 
   if (union.size === 0) return 0;
@@ -262,38 +382,56 @@ function categorizeIngredient(ingredientName: string): string {
   }
 
   // Fallback categorization by keywords
-  if (normalized.includes('oil') || normalized.includes('vinegar')) return 'pantry';
-  if (normalized.includes('cheese') || normalized.includes('milk')) return 'dairy';
-  if (normalized.includes('chicken') || normalized.includes('beef') ||
-      normalized.includes('fish') || normalized.includes('meat')) return 'meat';
-  if (normalized.includes('spice') || normalized.includes('seasoning')) return 'spices';
-  if (normalized.includes('frozen')) return 'frozen';
-  if (normalized.includes('juice') || normalized.includes('drink')) return 'beverages';
+  if (normalized.includes("oil") || normalized.includes("vinegar"))
+    return "pantry";
+  if (normalized.includes("cheese") || normalized.includes("milk"))
+    return "dairy";
+  if (
+    normalized.includes("chicken") ||
+    normalized.includes("beef") ||
+    normalized.includes("fish") ||
+    normalized.includes("meat")
+  )
+    return "meat";
+  if (normalized.includes("spice") || normalized.includes("seasoning"))
+    return "spices";
+  if (normalized.includes("frozen")) return "frozen";
+  if (normalized.includes("juice") || normalized.includes("drink"))
+    return "beverages";
 
   // Default to produce
-  return 'produce';
+  return "produce";
 }
 
 /**
  * Determine priority based on ingredient type and category
  */
-function determinePriority(category: string, quantity: ParsedQuantity): 'high' | 'medium' | 'low' {
+function determinePriority(
+  category: string,
+  quantity: ParsedQuantity,
+): "high" | "medium" | "low" {
   // High priority for perishables and essentials
-  if (category === 'meat' || category === 'dairy') return 'high';
-  if (category === 'produce' && quantity.category === UnitCategory.COUNT && quantity.quantity <= 2) {
-    return 'high'; // Small quantities of fresh produce
+  if (category === "meat" || category === "dairy") return "high";
+  if (
+    category === "produce" &&
+    quantity.category === UnitCategory.COUNT &&
+    quantity.quantity <= 2
+  ) {
+    return "high"; // Small quantities of fresh produce
   }
 
   // Low priority for spices and small amounts
-  if (category === 'spices' || category === 'pantry') return 'low';
+  if (category === "spices" || category === "pantry") return "low";
 
-  return 'medium';
+  return "medium";
 }
 
 /**
  * Aggregate ingredients from multiple recipes into a consolidated grocery list
  */
-export function aggregateIngredients(ingredients: RecipeIngredient[]): AggregatedIngredient[] {
+export function aggregateIngredients(
+  ingredients: RecipeIngredient[],
+): AggregatedIngredient[] {
   const aggregationMap = new Map<string, AggregatedIngredient>();
 
   for (const ingredient of ingredients) {
@@ -306,7 +444,10 @@ export function aggregateIngredients(ingredients: RecipeIngredient[]): Aggregate
     let bestSimilarity = 0;
 
     for (const [key, existing] of aggregationMap.entries()) {
-      const similarity = calculateSimilarity(normalizedName, existing.normalizedName);
+      const similarity = calculateSimilarity(
+        normalizedName,
+        existing.normalizedName,
+      );
       if (similarity >= 0.8 && similarity > bestSimilarity) {
         // Check if units are compatible for aggregation
         if (areUnitsCompatible(parsedQty.unit, existing.parsedQuantity.unit)) {
@@ -319,7 +460,10 @@ export function aggregateIngredients(ingredients: RecipeIngredient[]): Aggregate
     if (existingKey && aggregationMap.has(existingKey)) {
       // Aggregate with existing ingredient
       const existing = aggregationMap.get(existingKey)!;
-      const aggregatedQty = aggregateQuantities(existing.parsedQuantity, parsedQty);
+      const aggregatedQty = aggregateQuantities(
+        existing.parsedQuantity,
+        parsedQty,
+      );
 
       if (aggregatedQty) {
         existing.parsedQuantity = aggregatedQty;
@@ -329,7 +473,10 @@ export function aggregateIngredients(ingredients: RecipeIngredient[]): Aggregate
 
         // Update priority if needed
         const newPriority = determinePriority(category, aggregatedQty);
-        if (newPriority === 'high' || (newPriority === 'medium' && existing.priority === 'low')) {
+        if (
+          newPriority === "high" ||
+          (newPriority === "medium" && existing.priority === "low")
+        ) {
           existing.priority = newPriority;
         }
       }
@@ -343,7 +490,7 @@ export function aggregateIngredients(ingredients: RecipeIngredient[]): Aggregate
         parsedQuantity: parsedQty,
         formattedQuantity: formatQuantity(parsedQty),
         recipeNames: [ingredient.recipeName],
-        priority: determinePriority(category, parsedQty)
+        priority: determinePriority(category, parsedQty),
       });
     }
   }
@@ -352,24 +499,35 @@ export function aggregateIngredients(ingredients: RecipeIngredient[]): Aggregate
   const result = Array.from(aggregationMap.values());
 
   // Add notes for ingredients used in multiple recipes
-  result.forEach(ingredient => {
+  result.forEach((ingredient) => {
     const uniqueRecipes = [...new Set(ingredient.recipeNames)];
     if (uniqueRecipes.length > 1) {
-      ingredient.notes = `Used in: ${uniqueRecipes.slice(0, 3).join(', ')}${
-        uniqueRecipes.length > 3 ? ` and ${uniqueRecipes.length - 3} more` : ''
+      ingredient.notes = `Used in: ${uniqueRecipes.slice(0, 3).join(", ")}${
+        uniqueRecipes.length > 3 ? ` and ${uniqueRecipes.length - 3} more` : ""
       }`;
     }
   });
 
   // Sort by category, then priority, then name
-  const categoryOrder = ['meat', 'dairy', 'produce', 'frozen', 'pantry', 'spices', 'beverages', 'snacks'];
-  const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+  const categoryOrder = [
+    "meat",
+    "dairy",
+    "produce",
+    "frozen",
+    "pantry",
+    "spices",
+    "beverages",
+    "snacks",
+  ];
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
 
   result.sort((a, b) => {
-    const categoryComparison = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+    const categoryComparison =
+      categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
     if (categoryComparison !== 0) return categoryComparison;
 
-    const priorityComparison = priorityOrder[a.priority] - priorityOrder[b.priority];
+    const priorityComparison =
+      priorityOrder[a.priority] - priorityOrder[b.priority];
     if (priorityComparison !== 0) return priorityComparison;
 
     return a.normalizedName.localeCompare(b.normalizedName);
@@ -381,26 +539,43 @@ export function aggregateIngredients(ingredients: RecipeIngredient[]): Aggregate
 /**
  * Extract ingredients from meal plan data structure
  */
-export function extractIngredientsFromMealPlan(mealPlanData: any): RecipeIngredient[] {
+export function extractIngredientsFromMealPlan(
+  mealPlanData: any,
+): RecipeIngredient[] {
   const ingredients: RecipeIngredient[] = [];
 
-  if (mealPlanData && mealPlanData.days) {
+  if (!mealPlanData || typeof mealPlanData !== "object") return ingredients;
+
+  // Helper: extract one meal's ingredients into the accumulator
+  const collect = (meal: any) => {
+    if (!meal || !meal.recipe || !Array.isArray(meal.recipe.ingredientsJson))
+      return;
+    for (const ingredient of meal.recipe.ingredientsJson) {
+      if (!ingredient || !ingredient.name) continue;
+      ingredients.push({
+        name: ingredient.name,
+        amount: ingredient.amount,
+        unit: ingredient.unit,
+        recipeName: meal.recipe.name || "Unknown Recipe",
+      });
+    }
+  };
+
+  // Shape A — nested days[].meals[]: legacy meal plan builder output
+  if (Array.isArray(mealPlanData.days)) {
     for (const day of mealPlanData.days) {
-      if (day.meals) {
-        for (const meal of day.meals) {
-          if (meal.recipe && meal.recipe.ingredientsJson) {
-            for (const ingredient of meal.recipe.ingredientsJson) {
-              ingredients.push({
-                name: ingredient.name,
-                amount: ingredient.amount,
-                unit: ingredient.unit,
-                recipeName: meal.recipe.name || 'Unknown Recipe'
-              });
-            }
-          }
-        }
+      if (day && Array.isArray(day.meals)) {
+        for (const meal of day.meals) collect(meal);
       }
     }
+  }
+
+  // Shape B — flat meals[] with `day` field on each entry: BMAD/personalized
+  // meal plans (the actual production shape — 100% of customer.test plans).
+  // Both shapes can coexist: a plan may have days[] for the schedule and
+  // meals[] for the assignment list. We collect from whichever is present.
+  if (Array.isArray(mealPlanData.meals)) {
+    for (const meal of mealPlanData.meals) collect(meal);
   }
 
   return ingredients;
@@ -411,9 +586,9 @@ export function extractIngredientsFromMealPlan(mealPlanData: any): RecipeIngredi
  */
 export function generateGroceryListItems(
   aggregatedIngredients: AggregatedIngredient[],
-  groceryListId: string
+  groceryListId: string,
 ) {
-  return aggregatedIngredients.map(ingredient => ({
+  return aggregatedIngredients.map((ingredient) => ({
     groceryListId,
     name: ingredient.normalizedName,
     category: ingredient.category,

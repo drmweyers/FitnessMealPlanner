@@ -1,31 +1,35 @@
-import { Router } from 'express';
-import { eq, desc, and, gte, lte } from 'drizzle-orm';
-import { db } from '../db';
-import { 
-  progressMeasurements, 
-  progressPhotos, 
+import { Router } from "express";
+import { eq, desc, and, gte, lte } from "drizzle-orm";
+import { db } from "../db";
+import {
+  progressMeasurements,
+  progressPhotos,
   createMeasurementSchema,
-  uploadProgressPhotoSchema
-} from '@shared/schema';
-import { requireAuth, requireRole } from '../middleware/auth';
-import multer from 'multer';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { v4 as uuidv4 } from 'uuid';
-import sharp from 'sharp';
+  uploadProgressPhotoSchema,
+} from "@shared/schema";
+import { requireAuth, requireRole } from "../middleware/auth";
+import multer from "multer";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+import { v4 as uuidv4 } from "uuid";
+import sharp from "sharp";
 
 /**
  * Progress Tracking API Routes
- * 
+ *
  * This module provides comprehensive REST API endpoints for customer progress tracking,
  * including body measurements, fitness goals, and progress photos. All endpoints require
  * customer authentication and implement proper data validation and security measures.
- * 
+ *
  * Features:
  * - Body measurements CRUD operations with date filtering
  * - Progress photo upload with S3 storage and image processing
  * - Comprehensive error handling and input validation
  * - User data isolation (customers can only access their own data)
- * 
+ *
  * @author FitnessMealPlanner Team
  * @since 1.0.0
  */
@@ -33,10 +37,10 @@ const router = Router();
 
 /**
  * AWS S3 Client Configuration
- * 
+ *
  * Configures S3 client for storing progress photos. Uses environment variables
  * for credentials and region configuration. Defaults to us-east-1 if not specified.
- * 
+ *
  * Environment Variables Required:
  * - AWS_REGION: AWS region for S3 bucket
  * - AWS_ACCESS_KEY_ID: AWS access key for S3 operations
@@ -44,21 +48,21 @@ const router = Router();
  * - S3_BUCKET_NAME: Name of the S3 bucket for photo storage
  */
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.AWS_REGION || "us-east-1",
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
   },
 });
 
 /**
  * Multer Configuration for File Uploads
- * 
+ *
  * Configures multer middleware for handling progress photo uploads with:
  * - 10MB file size limit to prevent abuse
  * - MIME type validation for security (only images allowed)
  * - Memory storage (files processed in memory before S3 upload)
- * 
+ *
  * Supported formats: JPEG, PNG, WebP
  */
 const upload = multer({
@@ -66,11 +70,11 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit to prevent abuse
   },
   fileFilter: (req, file, cb) => {
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
     if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.'));
+      cb(new Error("Invalid file type. Only JPEG, PNG, and WebP are allowed."));
     }
   },
 });
@@ -79,23 +83,23 @@ const upload = multer({
 
 /**
  * GET /api/progress/measurements
- * 
+ *
  * Retrieves all body measurements for the authenticated customer with optional date filtering.
  * Results are ordered by measurement date (most recent first) for easy progress tracking.
- * 
+ *
  * Authentication: Requires customer role
- * 
+ *
  * Query Parameters:
  * @param {string} [startDate] - ISO date string to filter measurements from (inclusive)
  * @param {string} [endDate] - ISO date string to filter measurements to (inclusive)
- * 
+ *
  * @returns {Object} Response object
  * @returns {string} response.status - 'success' or 'error'
  * @returns {Array} response.data - Array of measurement objects
- * 
+ *
  * @example
  * GET /api/progress/measurements?startDate=2024-01-01&endDate=2024-01-31
- * 
+ *
  * Response:
  * {
  *   "status": "success",
@@ -113,7 +117,7 @@ const upload = multer({
  *   ]
  * }
  */
-router.get('/measurements', requireRole('customer'), async (req, res) => {
+router.get("/measurements", requireRole("customer"), async (req, res) => {
   try {
     const userId = req.user!.id;
     const { startDate, endDate } = req.query;
@@ -127,15 +131,25 @@ router.get('/measurements', requireRole('customer'), async (req, res) => {
     // Apply date filters if provided
     if (startDate || endDate) {
       const conditions = [eq(progressMeasurements.customerId, userId)];
-      
+
       if (startDate) {
-        conditions.push(gte(progressMeasurements.measurementDate, new Date(startDate as string)));
+        conditions.push(
+          gte(
+            progressMeasurements.measurementDate,
+            new Date(startDate as string),
+          ),
+        );
       }
-      
+
       if (endDate) {
-        conditions.push(lte(progressMeasurements.measurementDate, new Date(endDate as string)));
+        conditions.push(
+          lte(
+            progressMeasurements.measurementDate,
+            new Date(endDate as string),
+          ),
+        );
       }
-      
+
       query = db
         .select()
         .from(progressMeasurements)
@@ -145,29 +159,77 @@ router.get('/measurements', requireRole('customer'), async (req, res) => {
 
     const measurements = await query;
 
-
     // Fix date serialization issue - manually convert dates to ISO strings
-    const serializedMeasurements = measurements.map(measurement => ({
+    const serializedMeasurements = measurements.map((measurement) => ({
       ...measurement,
-      measurementDate: measurement.measurementDate ? new Date(measurement.measurementDate).toISOString() : null,
-      createdAt: measurement.createdAt ? new Date(measurement.createdAt).toISOString() : null,
+      measurementDate: measurement.measurementDate
+        ? new Date(measurement.measurementDate).toISOString()
+        : null,
+      createdAt: measurement.createdAt
+        ? new Date(measurement.createdAt).toISOString()
+        : null,
     }));
 
     res.json({
-      status: 'success',
+      status: "success",
       data: serializedMeasurements,
     });
   } catch (error) {
-    console.error('Error fetching measurements:', error);
+    console.error("Error fetching measurements:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch measurements',
+      status: "error",
+      message: "Failed to fetch measurements",
+    });
+  }
+});
+
+// GET a single measurement by id (ownership-checked)
+router.get("/measurements/:id", requireRole("customer"), async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const measurementId = req.params.id;
+
+    const [measurement] = await db
+      .select()
+      .from(progressMeasurements)
+      .where(
+        and(
+          eq(progressMeasurements.id, measurementId),
+          eq(progressMeasurements.customerId, userId),
+        ),
+      )
+      .limit(1);
+
+    if (!measurement) {
+      return res.status(404).json({
+        status: "error",
+        message: "Measurement not found",
+      });
+    }
+
+    return res.json({
+      status: "success",
+      data: {
+        ...measurement,
+        measurementDate: measurement.measurementDate
+          ? new Date(measurement.measurementDate).toISOString()
+          : null,
+        createdAt: measurement.createdAt
+          ? new Date(measurement.createdAt).toISOString()
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching measurement:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to fetch measurement",
     });
   }
 });
 
 // Create a new measurement
-router.post('/measurements', requireRole('customer'), async (req, res) => {
+router.post("/measurements", requireRole("customer"), async (req, res) => {
   try {
     const userId = req.user!.id;
     const validatedData = createMeasurementSchema.parse(req.body);
@@ -197,28 +259,28 @@ router.post('/measurements', requireRole('customer'), async (req, res) => {
       .returning();
 
     res.status(201).json({
-      status: 'success',
+      status: "success",
       data: measurement,
     });
   } catch (error) {
-    console.error('Error creating measurement:', error);
-    if (error instanceof Error && error.name === 'ZodError') {
+    console.error("Error creating measurement:", error);
+    if (error instanceof Error && error.name === "ZodError") {
       res.status(400).json({
-        status: 'error',
-        message: 'Invalid measurement data',
+        status: "error",
+        message: "Invalid measurement data",
         errors: error,
       });
     } else {
       res.status(500).json({
-        status: 'error',
-        message: 'Failed to create measurement',
+        status: "error",
+        message: "Failed to create measurement",
       });
     }
   }
 });
 
 // Update a measurement
-router.put('/measurements/:id', requireRole('customer'), async (req, res) => {
+router.put("/measurements/:id", requireRole("customer"), async (req, res) => {
   try {
     const userId = req.user!.id;
     const measurementId = req.params.id;
@@ -231,14 +293,14 @@ router.put('/measurements/:id', requireRole('customer'), async (req, res) => {
       .where(
         and(
           eq(progressMeasurements.id, measurementId),
-          eq(progressMeasurements.customerId, userId)
-        )
+          eq(progressMeasurements.customerId, userId),
+        ),
       );
 
     if (!existing) {
       return res.status(404).json({
-        status: 'error',
-        message: 'Measurement not found',
+        status: "error",
+        message: "Measurement not found",
       });
     }
 
@@ -267,50 +329,54 @@ router.put('/measurements/:id', requireRole('customer'), async (req, res) => {
       .returning();
 
     res.json({
-      status: 'success',
+      status: "success",
       data: updated,
     });
   } catch (error) {
-    console.error('Error updating measurement:', error);
+    console.error("Error updating measurement:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to update measurement',
+      status: "error",
+      message: "Failed to update measurement",
     });
   }
 });
 
 // Delete a measurement
-router.delete('/measurements/:id', requireRole('customer'), async (req, res) => {
-  try {
-    const userId = req.user!.id;
-    const measurementId = req.params.id;
+router.delete(
+  "/measurements/:id",
+  requireRole("customer"),
+  async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const measurementId = req.params.id;
 
-    const result = await db
-      .delete(progressMeasurements)
-      .where(
-        and(
-          eq(progressMeasurements.id, measurementId),
-          eq(progressMeasurements.customerId, userId)
-        )
-      );
+      const result = await db
+        .delete(progressMeasurements)
+        .where(
+          and(
+            eq(progressMeasurements.id, measurementId),
+            eq(progressMeasurements.customerId, userId),
+          ),
+        );
 
-    res.json({
-      status: 'success',
-      message: 'Measurement deleted successfully',
-    });
-  } catch (error) {
-    console.error('Error deleting measurement:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to delete measurement',
-    });
-  }
-});
+      res.json({
+        status: "success",
+        message: "Measurement deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting measurement:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Failed to delete measurement",
+      });
+    }
+  },
+);
 
 // ====== PROGRESS PHOTOS ROUTES ======
 
 // Get all photos for the current customer
-router.get('/photos', requireRole('customer'), async (req, res) => {
+router.get("/photos", requireRole("customer"), async (req, res) => {
   try {
     const userId = req.user!.id;
 
@@ -321,23 +387,23 @@ router.get('/photos', requireRole('customer'), async (req, res) => {
       .orderBy(desc(progressPhotos.photoDate));
 
     res.json({
-      status: 'success',
+      status: "success",
       data: photos,
     });
   } catch (error) {
-    console.error('Error fetching photos:', error);
+    console.error("Error fetching photos:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch photos',
+      status: "error",
+      message: "Failed to fetch photos",
     });
   }
 });
 
 // Upload a progress photo
 router.post(
-  '/photos',
-  requireRole('customer'),
-  upload.single('photo'),
+  "/photos",
+  requireRole("customer"),
+  upload.single("photo"),
   async (req, res) => {
     try {
       const userId = req.user!.id;
@@ -345,8 +411,8 @@ router.post(
 
       if (!file) {
         return res.status(400).json({
-          status: 'error',
-          message: 'No photo provided',
+          status: "error",
+          message: "No photo provided",
         });
       }
 
@@ -360,26 +426,26 @@ router.post(
       // Process images - auto-rotate based on EXIF orientation
       const photoBuffer = await sharp(file.buffer)
         .rotate() // Auto-rotates based on EXIF orientation metadata
-        .resize(1200, 1600, { fit: 'inside', withoutEnlargement: true })
+        .resize(1200, 1600, { fit: "inside", withoutEnlargement: true })
         .webp({ quality: 85 })
         .toBuffer();
 
       const thumbnailBuffer = await sharp(file.buffer)
         .rotate() // Auto-rotates based on EXIF orientation metadata
-        .resize(300, 400, { fit: 'cover' })
+        .resize(300, 400, { fit: "cover" })
         .webp({ quality: 80 })
         .toBuffer();
 
       // Upload to S3
       const bucketName = process.env.S3_BUCKET_NAME;
-      
+
       await s3Client.send(
         new PutObjectCommand({
           Bucket: bucketName,
           Key: photoKey,
           Body: photoBuffer,
-          ContentType: 'image/webp',
-        })
+          ContentType: "image/webp",
+        }),
       );
 
       await s3Client.send(
@@ -387,8 +453,8 @@ router.post(
           Bucket: bucketName,
           Key: thumbnailKey,
           Body: thumbnailBuffer,
-          ContentType: 'image/webp',
-        })
+          ContentType: "image/webp",
+        }),
       );
 
       // Save metadata to database
@@ -409,21 +475,21 @@ router.post(
         .returning();
 
       res.status(201).json({
-        status: 'success',
+        status: "success",
         data: photo,
       });
     } catch (error) {
-      console.error('Error uploading photo:', error);
+      console.error("Error uploading photo:", error);
       res.status(500).json({
-        status: 'error',
-        message: 'Failed to upload photo',
+        status: "error",
+        message: "Failed to upload photo",
       });
     }
-  }
+  },
 );
 
 // Delete a progress photo
-router.delete('/photos/:id', requireRole('customer'), async (req, res) => {
+router.delete("/photos/:id", requireRole("customer"), async (req, res) => {
   try {
     const userId = req.user!.id;
     const photoId = req.params.id;
@@ -435,21 +501,23 @@ router.delete('/photos/:id', requireRole('customer'), async (req, res) => {
       .where(
         and(
           eq(progressPhotos.id, photoId),
-          eq(progressPhotos.customerId, userId)
-        )
+          eq(progressPhotos.customerId, userId),
+        ),
       );
 
     if (!photo) {
       return res.status(404).json({
-        status: 'error',
-        message: 'Photo not found',
+        status: "error",
+        message: "Photo not found",
       });
     }
 
     // Extract S3 keys from URLs
     const bucketName = process.env.S3_BUCKET_NAME;
-    const photoKey = photo.photoUrl.split('.amazonaws.com/')[1];
-    const thumbnailKey = photo.thumbnailUrl ? photo.thumbnailUrl.split('.amazonaws.com/')[1] : null;
+    const photoKey = photo.photoUrl.split(".amazonaws.com/")[1];
+    const thumbnailKey = photo.thumbnailUrl
+      ? photo.thumbnailUrl.split(".amazonaws.com/")[1]
+      : null;
 
     // Delete from S3
     try {
@@ -457,7 +525,7 @@ router.delete('/photos/:id', requireRole('customer'), async (req, res) => {
         new DeleteObjectCommand({
           Bucket: bucketName,
           Key: photoKey,
-        })
+        }),
       );
 
       if (thumbnailKey) {
@@ -465,56 +533,59 @@ router.delete('/photos/:id', requireRole('customer'), async (req, res) => {
           new DeleteObjectCommand({
             Bucket: bucketName,
             Key: thumbnailKey,
-          })
+          }),
         );
       }
     } catch (s3Error) {
-      console.error('Error deleting from S3:', s3Error);
+      console.error("Error deleting from S3:", s3Error);
     }
 
     // Delete from database
-    await db
-      .delete(progressPhotos)
-      .where(eq(progressPhotos.id, photoId));
+    await db.delete(progressPhotos).where(eq(progressPhotos.id, photoId));
 
     res.json({
-      status: 'success',
-      message: 'Photo deleted successfully',
+      status: "success",
+      message: "Photo deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting photo:', error);
+    console.error("Error deleting photo:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to delete photo',
+      status: "error",
+      message: "Failed to delete photo",
     });
   }
 });
 
 // ====== STORY 1.6: ENHANCED PROGRESS TRACKING ======
 
-import { progressAnalyticsService } from '../services/progressAnalyticsService';
-import { milestoneAchievementService } from '../services/milestoneAchievementService';
+import { progressAnalyticsService } from "../services/progressAnalyticsService";
+import { milestoneAchievementService } from "../services/milestoneAchievementService";
 
 /**
  * GET /api/progress/summary
  * Get comprehensive progress summary with analytics
  */
-router.get('/summary', requireRole('customer'), async (req, res) => {
+router.get("/summary", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.user!.id;
-    const period = req.query.period as 'week' | 'month' | 'quarter' | 'year' | 'all' || 'month';
+    const period =
+      (req.query.period as "week" | "month" | "quarter" | "year" | "all") ||
+      "month";
 
-    const summary = await progressAnalyticsService.getProgressSummary(customerId, period);
+    const summary = await progressAnalyticsService.getProgressSummary(
+      customerId,
+      period,
+    );
 
     res.json({
-      status: 'success',
-      data: summary
+      status: "success",
+      data: summary,
     });
   } catch (error) {
-    console.error('Failed to get progress summary:', error);
+    console.error("Failed to get progress summary:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch progress summary'
+      status: "error",
+      message: "Failed to fetch progress summary",
     });
   }
 });
@@ -523,11 +594,15 @@ router.get('/summary', requireRole('customer'), async (req, res) => {
  * GET /api/progress/trends
  * Get progress trends and projections
  */
-router.get('/trends', requireRole('customer'), async (req, res) => {
+router.get("/trends", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.user!.id;
-    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
-    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : undefined;
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : undefined;
 
     const defaultStart = new Date();
     defaultStart.setMonth(defaultStart.getMonth() - 3);
@@ -535,18 +610,18 @@ router.get('/trends', requireRole('customer'), async (req, res) => {
     const trends = await progressAnalyticsService.calculateTrends(
       customerId,
       startDate || defaultStart,
-      endDate || new Date()
+      endDate || new Date(),
     );
 
     res.json({
-      status: 'success',
-      data: trends
+      status: "success",
+      data: trends,
     });
   } catch (error) {
-    console.error('Failed to get progress trends:', error);
+    console.error("Failed to get progress trends:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch progress trends'
+      status: "error",
+      message: "Failed to fetch progress trends",
     });
   }
 });
@@ -555,15 +630,22 @@ router.get('/trends', requireRole('customer'), async (req, res) => {
  * GET /api/progress/compare
  * Compare progress between two periods
  */
-router.get('/compare', requireRole('customer'), async (req, res) => {
+router.get("/compare", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.user!.id;
-    const { metric, currentStart, currentEnd, previousStart, previousEnd } = req.query;
+    const { metric, currentStart, currentEnd, previousStart, previousEnd } =
+      req.query;
 
-    if (!metric || !currentStart || !currentEnd || !previousStart || !previousEnd) {
+    if (
+      !metric ||
+      !currentStart ||
+      !currentEnd ||
+      !previousStart ||
+      !previousEnd
+    ) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Missing required comparison parameters'
+        status: "error",
+        message: "Missing required comparison parameters",
       });
     }
 
@@ -572,23 +654,23 @@ router.get('/compare', requireRole('customer'), async (req, res) => {
       metric as string,
       {
         start: new Date(currentStart as string),
-        end: new Date(currentEnd as string)
+        end: new Date(currentEnd as string),
       },
       {
         start: new Date(previousStart as string),
-        end: new Date(previousEnd as string)
-      }
+        end: new Date(previousEnd as string),
+      },
     );
 
     res.json({
-      status: 'success',
-      data: comparison
+      status: "success",
+      data: comparison,
     });
   } catch (error) {
-    console.error('Failed to compare progress:', error);
+    console.error("Failed to compare progress:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to compare progress'
+      status: "error",
+      message: "Failed to compare progress",
     });
   }
 });
@@ -597,38 +679,42 @@ router.get('/compare', requireRole('customer'), async (req, res) => {
  * GET /api/progress/export
  * Export progress data for sharing with trainer
  */
-router.get('/export', requireRole('customer'), async (req, res) => {
+router.get("/export", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.user!.id;
-    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date('2020-01-01');
-    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
-    const includePhotos = req.query.includePhotos === 'true';
-    const format = req.query.format as 'json' | 'pdf' || 'json';
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : new Date("2020-01-01");
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : new Date();
+    const includePhotos = req.query.includePhotos === "true";
+    const format = (req.query.format as "json" | "pdf") || "json";
 
     const exportData = await progressAnalyticsService.generateProgressExport(
       customerId,
       startDate,
       endDate,
-      includePhotos
+      includePhotos,
     );
 
-    if (format === 'pdf') {
+    if (format === "pdf") {
       // TODO: Generate PDF report
       res.status(501).json({
-        status: 'error',
-        message: 'PDF export not yet implemented'
+        status: "error",
+        message: "PDF export not yet implemented",
       });
     } else {
       res.json({
-        status: 'success',
-        data: exportData
+        status: "success",
+        data: exportData,
       });
     }
   } catch (error) {
-    console.error('Failed to export progress:', error);
+    console.error("Failed to export progress:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to export progress data'
+      status: "error",
+      message: "Failed to export progress data",
     });
   }
 });
@@ -637,21 +723,22 @@ router.get('/export', requireRole('customer'), async (req, res) => {
  * GET /api/progress/achievements
  * Get customer's achievements and milestones
  */
-router.get('/achievements', requireRole('customer'), async (req, res) => {
+router.get("/achievements", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.user!.id;
 
-    const summary = await milestoneAchievementService.getAchievementSummary(customerId);
+    const summary =
+      await milestoneAchievementService.getAchievementSummary(customerId);
 
     res.json({
-      status: 'success',
-      data: summary
+      status: "success",
+      data: summary,
     });
   } catch (error) {
-    console.error('Failed to get achievements:', error);
+    console.error("Failed to get achievements:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch achievements'
+      status: "error",
+      message: "Failed to fetch achievements",
     });
   }
 });
@@ -660,55 +747,63 @@ router.get('/achievements', requireRole('customer'), async (req, res) => {
  * POST /api/progress/achievements/check
  * Check and update milestones
  */
-router.post('/achievements/check', requireRole('customer'), async (req, res) => {
-  try {
-    const customerId = req.user!.id;
+router.post(
+  "/achievements/check",
+  requireRole("customer"),
+  async (req, res) => {
+    try {
+      const customerId = req.user!.id;
 
-    const newMilestones = await milestoneAchievementService.checkAndUpdateMilestones(customerId);
+      const newMilestones =
+        await milestoneAchievementService.checkAndUpdateMilestones(customerId);
 
-    res.json({
-      status: 'success',
-      data: {
-        newAchievements: newMilestones,
-        count: newMilestones.length
-      }
-    });
-  } catch (error) {
-    console.error('Failed to check achievements:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to check achievements'
-    });
-  }
-});
+      res.json({
+        status: "success",
+        data: {
+          newAchievements: newMilestones,
+          count: newMilestones.length,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to check achievements:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Failed to check achievements",
+      });
+    }
+  },
+);
 
 /**
  * GET /api/progress/milestones/:id
  * Get progress towards specific milestone
  */
-router.get('/milestones/:id', requireRole('customer'), async (req, res) => {
+router.get("/milestones/:id", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.user!.id;
     const milestoneId = req.params.id;
 
-    const progress = await milestoneAchievementService.getMilestoneProgress(customerId, milestoneId);
+    const progress = await milestoneAchievementService.getMilestoneProgress(
+      customerId,
+      milestoneId,
+    );
 
     if (!progress) {
       return res.status(404).json({
-        status: 'error',
-        message: 'Milestone not found'
+        status: "error",
+        message: "Milestone not found",
       });
     }
 
     res.json({
-      status: 'success',
-      data: progress
+      status: "success",
+      data: progress,
     });
   } catch (error) {
-    console.error('Failed to get milestone progress:', error);
+    console.error("Failed to get milestone progress:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch milestone progress'
+      status: "error",
+      message: "Failed to fetch milestone progress",
     });
   }
 });
@@ -717,28 +812,33 @@ router.get('/milestones/:id', requireRole('customer'), async (req, res) => {
  * POST /api/progress/milestones/custom
  * Create custom milestone for a goal
  */
-router.post('/milestones/custom', requireRole('customer'), async (req, res) => {
+router.post("/milestones/custom", requireRole("customer"), async (req, res) => {
   try {
     const { goalId, name, targetValue, unit } = req.body;
 
     if (!goalId || !name || !targetValue || !unit) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Missing required milestone data'
+        status: "error",
+        message: "Missing required milestone data",
       });
     }
 
-    await milestoneAchievementService.createCustomMilestone(goalId, name, targetValue, unit);
+    await milestoneAchievementService.createCustomMilestone(
+      goalId,
+      name,
+      targetValue,
+      unit,
+    );
 
     res.status(201).json({
-      status: 'success',
-      message: 'Custom milestone created successfully'
+      status: "success",
+      message: "Custom milestone created successfully",
     });
   } catch (error) {
-    console.error('Failed to create custom milestone:', error);
+    console.error("Failed to create custom milestone:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to create custom milestone'
+      status: "error",
+      message: "Failed to create custom milestone",
     });
   }
 });
@@ -747,57 +847,65 @@ router.post('/milestones/custom', requireRole('customer'), async (req, res) => {
  * POST /api/progress/achievements/:id/share
  * Share achievement on social media
  */
-router.post('/achievements/:id/share', requireRole('customer'), async (req, res) => {
-  try {
-    const customerId = req.user!.id;
-    const achievementId = req.params.id;
-    const { platform } = req.body;
+router.post(
+  "/achievements/:id/share",
+  requireRole("customer"),
+  async (req, res) => {
+    try {
+      const customerId = req.user!.id;
+      const achievementId = req.params.id;
+      const { platform } = req.body;
 
-    if (!platform || !['facebook', 'twitter', 'instagram'].includes(platform)) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invalid social media platform'
+      if (
+        !platform ||
+        !["facebook", "twitter", "instagram"].includes(platform)
+      ) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid social media platform",
+        });
+      }
+
+      const shareData = await milestoneAchievementService.shareAchievement(
+        customerId,
+        achievementId,
+        platform as any,
+      );
+
+      res.json({
+        status: "success",
+        data: shareData,
+      });
+    } catch (error) {
+      console.error("Failed to share achievement:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Failed to share achievement",
       });
     }
-
-    const shareData = await milestoneAchievementService.shareAchievement(
-      customerId,
-      achievementId,
-      platform as any
-    );
-
-    res.json({
-      status: 'success',
-      data: shareData
-    });
-  } catch (error) {
-    console.error('Failed to share achievement:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to share achievement'
-    });
-  }
-});
+  },
+);
 
 /**
  * GET /api/progress/privacy-settings
  * Get progress visibility settings
  */
-router.get('/privacy-settings', requireRole('customer'), async (req, res) => {
+router.get("/privacy-settings", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.user!.id;
 
-    const settings = await progressAnalyticsService.getProgressVisibilitySettings(customerId);
+    const settings =
+      await progressAnalyticsService.getProgressVisibilitySettings(customerId);
 
     res.json({
-      status: 'success',
-      data: settings
+      status: "success",
+      data: settings,
     });
   } catch (error) {
-    console.error('Failed to get privacy settings:', error);
+    console.error("Failed to get privacy settings:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch privacy settings'
+      status: "error",
+      message: "Failed to fetch privacy settings",
     });
   }
 });
@@ -806,22 +914,25 @@ router.get('/privacy-settings', requireRole('customer'), async (req, res) => {
  * PUT /api/progress/privacy-settings
  * Update progress visibility settings
  */
-router.put('/privacy-settings', requireRole('customer'), async (req, res) => {
+router.put("/privacy-settings", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.user!.id;
     const settings = req.body;
 
-    await progressAnalyticsService.updateProgressVisibilitySettings(customerId, settings);
+    await progressAnalyticsService.updateProgressVisibilitySettings(
+      customerId,
+      settings,
+    );
 
     res.json({
-      status: 'success',
-      message: 'Privacy settings updated successfully'
+      status: "success",
+      message: "Privacy settings updated successfully",
     });
   } catch (error) {
-    console.error('Failed to update privacy settings:', error);
+    console.error("Failed to update privacy settings:", error);
     res.status(500).json({
-      status: 'error',
-      message: 'Failed to update privacy settings'
+      status: "error",
+      message: "Failed to update privacy settings",
     });
   }
 });
@@ -832,54 +943,66 @@ router.put('/privacy-settings', requireRole('customer'), async (req, res) => {
  * GET /api/progress/trainer/customer/:customerId/summary
  * Trainer view of customer progress (requires permission)
  */
-router.get('/trainer/customer/:customerId/summary', requireRole('trainer'), async (req, res) => {
-  try {
-    const trainerId = req.user!.id;
-    const { customerId } = req.params;
-    const period = req.query.period as any || 'month';
+router.get(
+  "/trainer/customer/:customerId/summary",
+  requireRole("trainer"),
+  async (req, res) => {
+    try {
+      const trainerId = req.user!.id;
+      const { customerId } = req.params;
+      const period = (req.query.period as any) || "month";
 
-    // Verify trainer-customer relationship
-    const { personalizedMealPlans, personalizedRecipes } = await import('@shared/schema');
-    const hasRelationship = await db.select()
-      .from(personalizedMealPlans)
-      .where(
-        and(
-          eq(personalizedMealPlans.trainerId, trainerId),
-          eq(personalizedMealPlans.customerId, customerId)
+      // Verify trainer-customer relationship
+      const { personalizedMealPlans, personalizedRecipes } =
+        await import("@shared/schema");
+      const hasRelationship = await db
+        .select()
+        .from(personalizedMealPlans)
+        .where(
+          and(
+            eq(personalizedMealPlans.trainerId, trainerId),
+            eq(personalizedMealPlans.customerId, customerId),
+          ),
         )
-      )
-      .limit(1);
+        .limit(1);
 
-    if (hasRelationship.length === 0) {
-      return res.status(403).json({
-        status: 'error',
-        message: 'Not authorized to view this customer\'s progress'
+      if (hasRelationship.length === 0) {
+        return res.status(403).json({
+          status: "error",
+          message: "Not authorized to view this customer's progress",
+        });
+      }
+
+      // Check customer's privacy settings
+      const privacySettings =
+        await progressAnalyticsService.getProgressVisibilitySettings(
+          customerId,
+        );
+
+      if (privacySettings.measurements === "private") {
+        return res.status(403).json({
+          status: "error",
+          message: "Customer has set progress to private",
+        });
+      }
+
+      const summary = await progressAnalyticsService.getProgressSummary(
+        customerId,
+        period,
+      );
+
+      res.json({
+        status: "success",
+        data: summary,
+      });
+    } catch (error) {
+      console.error("Failed to get customer progress:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Failed to fetch customer progress",
       });
     }
-
-    // Check customer's privacy settings
-    const privacySettings = await progressAnalyticsService.getProgressVisibilitySettings(customerId);
-    
-    if (privacySettings.measurements === 'private') {
-      return res.status(403).json({
-        status: 'error',
-        message: 'Customer has set progress to private'
-      });
-    }
-
-    const summary = await progressAnalyticsService.getProgressSummary(customerId, period);
-
-    res.json({
-      status: 'success',
-      data: summary
-    });
-  } catch (error) {
-    console.error('Failed to get customer progress:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch customer progress'
-    });
-  }
-});
+  },
+);
 
 export default router;
