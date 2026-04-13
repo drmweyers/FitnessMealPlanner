@@ -207,8 +207,10 @@ RUN echo '#!/bin/sh' > start.sh && \
     echo '  echo -e "$DATABASE_CA_CERT" > /tmp/ca.pem' >> start.sh && \
     echo '  export NODE_EXTRA_CA_CERTS=/tmp/ca.pem' >> start.sh && \
     echo 'fi' >> start.sh && \
-    echo 'echo "⚡ Running migrations with drizzle.config.ts..."' >> start.sh && \
-    echo 'npx drizzle-kit push --config=./drizzle.config.ts --verbose || echo "⚠️ Migration failed"' >> start.sh && \
+    echo 'echo "⚡ Running hand-written SQL migrations..."' >> start.sh && \
+    echo 'npx tsx scripts/run-sql-migrations.ts || echo "⚠️ Manual SQL migrations failed (non-fatal)"' >> start.sh && \
+    echo 'echo "⚡ Running drizzle-kit push..."' >> start.sh && \
+    echo 'npx drizzle-kit push --config=./drizzle.config.ts --verbose || echo "⚠️ drizzle-kit push failed"' >> start.sh && \
     echo 'echo "🌱 Auto-seeding test accounts..."' >> start.sh && \
     echo 'npm run seed:production || echo "⚠️ Test account seeding failed (non-fatal)"' >> start.sh && \
     echo 'if [ "$RUN_COMPREHENSIVE_SEED" = "true" ]; then' >> start.sh && \
