@@ -30,8 +30,119 @@ import {
   type MealPlan,
 } from "@shared/schema";
 import { db } from "../db";
+import { classifyRecipe } from "../utils/recipeTagClassifier";
 
 const adminRouter = Router();
+
+/**
+ * POST /api/admin/enrich-recipe-tags
+ *
+ * Backfills dietary tags on the production recipe library using the rule-based
+ * classifier in server/utils/recipeTagClassifier.ts. Preserves all existing
+ * tags (never destroys human curation), only adds the canonical dietary tags
+ * that apply: Vegan, Vegetarian, Keto, Low-Carb, Low-Fat, High-Protein, Paleo,
+ * Gluten-Free, Dairy-Free, Mediterranean.
+ *
+ * Run via curl:
+ *   TT=$(login as admin; extract token)
+ *   curl -X POST https://evofitmeals.com/api/admin/enrich-recipe-tags \
+ *        -H "Authorization: Bearer $TT"
+ *
+ * Body (optional):
+ *   { "dryRun": true }  — classify without writing (safe preview)
+ *   { "batchSize": 500 } — default 500; pages through the recipes table
+ *
+ * Returns summary counts and a sample of recipes where tags were added.
+ * Idempotent — safe to re-run. Only adds tags not already present.
+ */
+adminRouter.post("/enrich-recipe-tags", requireAdmin, async (req, res) => {
+  const dryRun = !!req.body?.dryRun;
+  const batchSize = Math.min(
+    Math.max(parseInt(req.body?.batchSize || "500", 10) || 500, 50),
+    2000,
+  );
+  try {
+    console.log(
+      `[enrich-tags] starting ${dryRun ? "(DRY RUN)" : "(WRITE)"}, batchSize=${batchSize}`,
+    );
+
+    let processed = 0;
+    let updated = 0;
+    const tagAddCounts: Record<string, number> = {};
+    const samples: Array<{
+      id: string;
+      name: string;
+      added: string[];
+      before: string[];
+      after: string[];
+    }> = [];
+
+    let offset = 0;
+    let page = 0;
+    while (true) {
+      page++;
+      const batch = await db
+        .select()
+        .from(recipes)
+        .limit(batchSize)
+        .offset(offset);
+      if (batch.length === 0) break;
+
+      for (const recipe of batch) {
+        processed++;
+        const result = classifyRecipe(recipe as any);
+        if (result.added.length === 0) continue;
+
+        for (const tag of result.added) {
+          tagAddCounts[tag] = (tagAddCounts[tag] || 0) + 1;
+        }
+
+        if (samples.length < 20) {
+          samples.push({
+            id: recipe.id,
+            name: recipe.name || "(unnamed)",
+            added: result.added,
+            before: recipe.dietaryTags || [],
+            after: result.tags,
+          });
+        }
+
+        if (!dryRun) {
+          await db
+            .update(recipes)
+            .set({ dietaryTags: result.tags })
+            .where(eq(recipes.id, recipe.id));
+        }
+        updated++;
+      }
+
+      console.log(
+        `[enrich-tags] page ${page}: processed ${processed}, updated ${updated}`,
+      );
+      offset += batchSize;
+      // Safety fuse — never loop more than 50 pages (100k recipes)
+      if (page >= 50) break;
+    }
+
+    console.log(
+      `[enrich-tags] done. processed=${processed} updated=${updated} tagAdds=${JSON.stringify(tagAddCounts)}`,
+    );
+    return res.json({
+      success: true,
+      dryRun,
+      processed,
+      updated,
+      tagAddCounts,
+      samples,
+    });
+  } catch (err: any) {
+    console.error("[enrich-tags] FATAL:", err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message || "enrichment failed",
+    });
+  }
+});
 
 // Admin-only routes
 adminRouter.post("/generate", requireAdmin, async (req, res) => {
