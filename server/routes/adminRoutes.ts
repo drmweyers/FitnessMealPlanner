@@ -1870,4 +1870,109 @@ adminRouter.get("/export", requireAdmin, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/admin/recipe-audit
+ *
+ * Read-only audit of advanced-filter fields across the recipes table.
+ * Flags missing / out-of-range / macro-inconsistent rows. No writes.
+ * Returns counts by failure mode + tier + a capped list of offenders.
+ *
+ * TEMP endpoint — remove after backfill is complete.
+ */
+adminRouter.get("/recipe-audit", requireAdmin, async (_req, res) => {
+  const BOUNDS = {
+    prepMin: 1,
+    prepMax: 240,
+    kcalMin: 30,
+    kcalMax: 1500,
+    proteinMin: 0,
+    proteinMax: 200,
+    carbsMin: 0,
+    carbsMax: 250,
+    fatMin: 0,
+    fatMax: 150,
+    macroMismatchPct: 0.15,
+  };
+
+  try {
+    const result: any = await db.execute(sql`
+      SELECT id, name, tier_level, is_approved,
+             prep_time_minutes, cook_time_minutes, servings,
+             calories_kcal, protein_grams, carbs_grams, fat_grams
+      FROM recipes
+    `);
+    const rows: any[] = result.rows ?? result;
+
+    const counts: Record<string, number> = {};
+    const byTier: Record<string, number> = {};
+    const offenders: any[] = [];
+
+    for (const r of rows) {
+      const protein = parseFloat(r.protein_grams);
+      const carbs = parseFloat(r.carbs_grams);
+      const fat = parseFloat(r.fat_grams);
+      const kcal = Number(r.calories_kcal);
+      const flags: string[] = [];
+
+      if (!r.prep_time_minutes || r.prep_time_minutes <= 0)
+        flags.push("PREP_ZERO_OR_MISSING");
+      else if (
+        r.prep_time_minutes < BOUNDS.prepMin ||
+        r.prep_time_minutes > BOUNDS.prepMax
+      )
+        flags.push("PREP_OUT_OF_RANGE");
+
+      if (!r.servings || r.servings <= 0) flags.push("SERVINGS_INVALID");
+      if (kcal < BOUNDS.kcalMin || kcal > BOUNDS.kcalMax)
+        flags.push("KCAL_OUT_OF_RANGE");
+      if (protein < BOUNDS.proteinMin || protein > BOUNDS.proteinMax)
+        flags.push("PROTEIN_OUT_OF_RANGE");
+      if (carbs < BOUNDS.carbsMin || carbs > BOUNDS.carbsMax)
+        flags.push("CARBS_OUT_OF_RANGE");
+      if (fat < BOUNDS.fatMin || fat > BOUNDS.fatMax)
+        flags.push("FAT_OUT_OF_RANGE");
+      if (protein === 0 && carbs === 0 && fat === 0)
+        flags.push("ALL_MACROS_ZERO");
+
+      if (kcal >= BOUNDS.kcalMin && (protein > 0 || carbs > 0 || fat > 0)) {
+        const computed = 4 * protein + 4 * carbs + 9 * fat;
+        const delta = Math.abs(kcal - computed) / kcal;
+        if (delta > BOUNDS.macroMismatchPct)
+          flags.push("MACRO_CALORIE_MISMATCH");
+      }
+
+      if (flags.length === 0) continue;
+      for (const f of flags) counts[f] = (counts[f] || 0) + 1;
+      byTier[r.tier_level] = (byTier[r.tier_level] || 0) + 1;
+      if (offenders.length < 50) {
+        offenders.push({
+          id: r.id,
+          name: r.name,
+          tier: r.tier_level,
+          prep: r.prep_time_minutes,
+          kcal,
+          protein: r.protein_grams,
+          carbs: r.carbs_grams,
+          fat: r.fat_grams,
+          computedKcal: Math.round(4 * protein + 4 * carbs + 9 * fat),
+          flags,
+        });
+      }
+    }
+
+    const flagged = Object.values(byTier).reduce((a, b) => a + b, 0);
+    res.json({
+      total: rows.length,
+      clean: rows.length - flagged,
+      flagged,
+      counts,
+      byTier,
+      offenders,
+    });
+  } catch (err: any) {
+    console.error("[recipe-audit] failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default adminRouter;

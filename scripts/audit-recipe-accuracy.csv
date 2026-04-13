@@ -1,0 +1,69 @@
+id,name,tier,approved,prep_min,servings,kcal,protein,carbs,fat,computed_kcal,flags
+2ad53a17-f2d7-44ec-a40e-ff141e49e6a9,"Avocado & Berry Smoothie",starter,true,5,2,200,3.00,35.00,9.00,233,MACRO_CALORIE_MISMATCH
+1a8b5060-a980-4740-8d75-80c4ab9f75b6,"Greek Yogurt Parfait",starter,true,5,2,250,25.00,50.00,10.00,390,MACRO_CALORIE_MISMATCH
+dcfd5163-f4bc-4824-a131-65353e799730,"Berry Chia Pudding",starter,true,5,2,200,5.00,35.00,8.00,232,MACRO_CALORIE_MISMATCH
+fd917cf0-6cfb-4c06-96de-7c9cbe192124,"Greek Yogurt Parfait",starter,true,5,2,250,25.00,40.00,10.00,350,MACRO_CALORIE_MISMATCH
+35b875a7-cb3b-483a-bd9b-70e73bd5ba7c,"Berry and Spinach Smoothie",starter,true,5,2,200,5.00,45.00,4.00,236,MACRO_CALORIE_MISMATCH
+cdc01d46-2879-4b48-8dc9-3862b195d0d4,"Spaghetti Squash with Tomato Basil Sauce",starter,true,10,4,120,3.00,22.00,5.00,145,MACRO_CALORIE_MISMATCH
+67840a3c-7c12-49a8-8347-bb4394e2af06,"Spaghetti Squash with Tomato Basil Sauce",starter,true,10,4,150,3.00,30.00,7.00,195,MACRO_CALORIE_MISMATCH
+dcc72dcd-f3dd-49a0-86f7-7d248998c1db,"Baked Salmon with Asparagus",starter,true,10,4,480,52.00,7.00,15.00,371,MACRO_CALORIE_MISMATCH
+fbb3417b-e77b-415a-8277-2066f9e557d9,"Veggie Egg White Omelette",starter,true,10,1,150,26.00,10.00,4.00,180,MACRO_CALORIE_MISMATCH
+f26b9227-1f3b-4c07-8553-2f9f8519bba5,"Greek Yogurt Parfait",starter,true,10,4,250,25.00,45.00,10.00,370,MACRO_CALORIE_MISMATCH
+d48ce9bc-d232-4a97-91ff-98e8c1eb702d,"Baked Salmon with Asparagus",starter,true,10,4,480,52.00,6.00,18.00,394,MACRO_CALORIE_MISMATCH
+5de03dde-7c13-4819-a2d1-d2c6de36bfe4,"Greek Yogurt Parfait",starter,true,5,2,250,25.00,40.00,10.00,350,MACRO_CALORIE_MISMATCH
+c13f93de-d3ef-4b97-bbf9-d6c046eea4d6,"Baked Salmon with Asparagus",starter,true,10,4,480,52.00,8.00,18.00,402,MACRO_CALORIE_MISMATCH
+ae6b8a24-a11a-49df-88fc-1f318cee933c,"Lentil and Spinach Soup",professional,true,10,4,180,12.00,32.00,4.00,212,MACRO_CALORIE_MISMATCH
+d2641e28-6491-4065-817d-942c16280fc3,"Chia Seed Pudding",professional,true,5,2,180,5.00,28.00,9.00,213,MACRO_CALORIE_MISMATCH
+9fc9246f-719b-4c04-b558-82a97e1845f6,"Baked Salmon with Asparagus",professional,true,10,4,480,52.00,8.00,15.00,375,MACRO_CALORIE_MISMATCH
+e530a63e-3258-457c-b57a-b59f3032552f,"Baked Salmon with Asparagus",professional,true,10,4,480,52.00,6.00,18.00,394,MACRO_CALORIE_MISMATCH
+908f48f8-3cb7-4dc7-897d-5b67f3f9ad56,"Berry Chia Pudding",professional,true,5,4,200,6.00,34.00,9.00,241,MACRO_CALORIE_MISMATCH
+65cf3bda-df5f-45bf-8ee1-3daaf06a13f0,"Lentil Soup",professional,true,10,6,180,12.00,32.00,4.00,212,MACRO_CALORIE_MISMATCH
+0daaf501-c03a-4de6-bf82-9b8703ac215d,"Berry Banana Smoothie",professional,true,5,1,230,5.00,50.00,5.00,265,MACRO_CALORIE_MISMATCH
+4eb7a4a9-2413-493e-9449-91c668956c95,"Greek Yogurt Parfait",professional,true,5,2,250,25.00,40.00,10.00,350,MACRO_CALORIE_MISMATCH
+fc3ec6ef-0bf0-40a6-bbe6-e3056c72ad97,"Chia Seed Pudding",professional,true,5,2,150,5.00,24.00,7.00,179,MACRO_CALORIE_MISMATCH
+3195cc1d-b46d-47fe-8fea-17974d02f0d4,"Chia Seed Pudding",professional,true,5,4,200,6.00,30.00,10.00,234,MACRO_CALORIE_MISMATCH
+2e246da4-2d0a-43e4-a1aa-194062cf2e28,"Baked Salmon with Asparagus",professional,true,10,4,480,52.00,5.00,16.00,372,MACRO_CALORIE_MISMATCH
+664f897a-ded5-49f0-a93d-4cc873a6c20c,"Greek Yogurt Parfait",professional,true,5,1,250,25.00,25.00,10.00,290,MACRO_CALORIE_MISMATCH
+619e28a8-efc8-4dc4-9786-6ffbc5340522,"Greek Yogurt Parfait",professional,true,5,1,250,25.00,52.00,7.00,371,MACRO_CALORIE_MISMATCH
+5276ffa7-0d61-4d46-889e-4a36b4a9f584,"Avocado Chocolate Mousse",professional,true,10,4,250,3.00,30.00,18.00,294,MACRO_CALORIE_MISMATCH
+e940e575-2eed-44b0-ab63-f4eb5919d605,"Lentil and Spinach Soup",professional,true,10,4,210,12.00,35.00,6.00,242,MACRO_CALORIE_MISMATCH
+63a635c6-7696-49ce-b7a8-4e6f19811fcb,"Grilled Mediterranean Chicken with Zucchini",starter,false,10,2,410,42.00,12.00,10.00,306,MACRO_CALORIE_MISMATCH
+0630187f-bb42-45ff-ae02-0af082148b90,"Stir-Fried Asian Chicken with Broccoli",starter,false,10,2,420,38.00,14.00,12.00,316,MACRO_CALORIE_MISMATCH
+1f267543-d4f5-40d1-97a2-cdedaacce28b,"Grilled Mediterranean Chicken with Zucchini",starter,false,10,1,410,36.00,8.00,12.00,284,MACRO_CALORIE_MISMATCH
+f1d26a59-0857-40db-9344-70afef5325fa,"Asian Stir-Fried Chicken with Broccoli",starter,false,8,1,400,34.00,15.00,8.00,268,MACRO_CALORIE_MISMATCH
+6a36104e-3985-4698-9f64-2cd57f6da196,"Healthy Turkey Meatballs",starter,false,10,3,460,43.00,20.00,10.00,342,MACRO_CALORIE_MISMATCH
+14cac899-3dd7-4d34-852d-ed70b4bb46aa,"Quick Turkey Stir-Fry",starter,false,10,2,425,41.00,14.00,13.00,337,MACRO_CALORIE_MISMATCH
+0a26fb8d-3266-4a13-b19b-a697359c9d0a,"Turkey Lettuce Wraps",starter,false,8,2,420,38.00,10.00,12.00,300,MACRO_CALORIE_MISMATCH
+26173649-a416-4e47-a55e-83c820bd02be,"Zesty Turkey Lettuce Wraps",starter,false,10,2,420,42.00,18.00,10.00,330,MACRO_CALORIE_MISMATCH
+a591dc6c-863a-4425-b0b1-ca06da698bdd,"Quick Turkey Stir-Fry",starter,false,10,2,430,41.00,20.00,11.00,343,MACRO_CALORIE_MISMATCH
+fcd91724-b0f8-44f2-a398-6073e73463e8,"Turkey Lettuce Wraps",starter,false,10,2,420,38.00,24.00,12.00,356,MACRO_CALORIE_MISMATCH
+b094186c-d8d7-4f8f-8aec-52007f70f793,"Quick Turkey Stir-Fry",starter,false,10,2,460,40.00,28.00,13.00,389,MACRO_CALORIE_MISMATCH
+4dc66f50-8e29-4816-bc6f-2056a7c6a93a,"Quick Turkey Stir-Fry",starter,false,10,2,430,40.00,28.00,10.00,362,MACRO_CALORIE_MISMATCH
+8d487e4e-6957-4cb0-b4cf-13413def7a3b,"Turkey Lettuce Wraps",starter,false,10,2,420,35.00,15.00,10.00,290,MACRO_CALORIE_MISMATCH
+51a83112-c2fc-4834-9e41-c654bd522d29,"Spicy Turkey Stir-Fry",starter,false,10,2,430,40.00,20.00,9.00,321,MACRO_CALORIE_MISMATCH
+559c806c-467f-4a38-8a59-8b233b8573c5,"Turkey Stuffed Peppers",starter,false,10,2,440,38.00,25.00,11.00,351,MACRO_CALORIE_MISMATCH
+f9172948-5c1f-4bf1-8638-9bb7bbf53124,"Turkey Lettuce Wraps",starter,false,10,2,420,42.00,10.00,12.00,316,MACRO_CALORIE_MISMATCH
+817fdf7f-4967-425b-a911-a7c97ff73fc9,"Turkey Stuffed Peppers",starter,false,10,2,430,40.00,16.00,13.00,341,MACRO_CALORIE_MISMATCH
+82fb4d2a-2b89-4f3a-ba31-fa74bbe32622,"Quick Turkey Stir-Fry",starter,false,8,2,450,44.00,22.00,10.00,354,MACRO_CALORIE_MISMATCH
+196ad66e-e61c-4c0e-a8b2-156daf7ecb08,"Turkey Stuffed Peppers",starter,false,10,2,450,40.00,25.00,12.00,368,MACRO_CALORIE_MISMATCH
+d2edbc1d-772d-432a-83ef-fb4a6f2ec134,"Turkey Lettuce Wraps",starter,false,10,2,430,35.00,12.00,12.00,296,MACRO_CALORIE_MISMATCH
+ce5994a8-2020-43ed-95c0-c21f24656a9e,"Turkey Stir-Fry",starter,false,10,2,420,34.00,20.00,10.00,306,MACRO_CALORIE_MISMATCH
+095817ac-cdd2-44b0-ab51-80a90ac1c26c,"Zesty Turkey Lettuce Wraps",starter,false,10,2,440,42.00,16.00,10.00,322,MACRO_CALORIE_MISMATCH
+aa38cf5a-8bf6-4144-af1c-c87f4e40a0fe,"Quick Turkey Stir-Fry with Vegetables",starter,false,5,2,430,40.00,22.00,12.00,356,MACRO_CALORIE_MISMATCH
+412c28bc-8668-4b7c-8e80-83d1a890fba8,"Herb-Infused Turkey Meatballs",starter,false,10,3,450,44.00,20.00,13.00,373,MACRO_CALORIE_MISMATCH
+a463e77e-07d6-4cd3-9fca-4a050c60306e,"Spicy Turkey Stir-Fry",starter,false,5,2,420,40.00,15.00,10.00,310,MACRO_CALORIE_MISMATCH
+51ca2214-a283-412b-840d-15d1981bbea2,"Turkey Lettuce Wraps",starter,false,10,2,430,38.00,20.00,12.00,340,MACRO_CALORIE_MISMATCH
+b11d2b99-8984-480f-9a74-21dd0f375cff,"Turkey Lettuce Wraps",starter,false,10,2,410,38.00,12.00,10.00,290,MACRO_CALORIE_MISMATCH
+ed3ac5be-ef0c-4174-bd35-128f71275fc6,"Quick Turkey Stir-Fry",starter,false,8,2,430,35.00,20.00,11.00,319,MACRO_CALORIE_MISMATCH
+55d60620-7ba7-4abb-a060-35dffa684943,"Turkey Stuffed Bell Peppers",starter,false,10,2,450,40.00,18.00,12.00,340,MACRO_CALORIE_MISMATCH
+9b94b107-86f7-42e1-bb98-894de048d8e3,"Turkey Lettuce Wraps",starter,false,10,2,435,40.00,12.00,12.00,316,MACRO_CALORIE_MISMATCH
+73441f81-d4f9-4d50-b06b-bfcf05390d85,"Quick Turkey Stir-Fry",starter,false,5,2,410,38.00,16.00,10.00,306,MACRO_CALORIE_MISMATCH
+9a67d144-1d90-4b02-9411-2f98363b02ca,"Turkey Stuffed Peppers",starter,false,10,2,420,35.00,22.00,11.00,327,MACRO_CALORIE_MISMATCH
+f1c68811-9ac4-4784-b208-a0cd07e14201,"Stuffed Bell Peppers with Turkey",starter,false,10,2,450,43.00,20.00,12.00,360,MACRO_CALORIE_MISMATCH
+e2de7d46-ac04-4bad-852b-6e42ac5db62a,"Turkey and Spinach Stir-Fry",starter,false,10,2,420,42.00,15.00,10.00,318,MACRO_CALORIE_MISMATCH
+271947c8-dd6d-45e4-a135-02f44236c6d8,"Lean Turkey Lettuce Wraps",starter,false,10,2,430,40.00,17.00,11.00,327,MACRO_CALORIE_MISMATCH
+dce382da-e5a8-4e7d-8e92-dde9a9122d86,"Turkey Lettuce Wraps",starter,false,10,2,420,38.00,8.00,12.00,292,MACRO_CALORIE_MISMATCH
+de945c4e-6ad2-494b-bfe4-5371ec73fcce,"Turkey Lettuce Wraps",starter,false,10,2,420,42.00,18.00,12.00,348,MACRO_CALORIE_MISMATCH
+3c22a3fc-a5d9-468d-bbf0-16084375a27f,"Turkey Stuffed Peppers",starter,false,10,2,450,38.00,30.00,9.00,353,MACRO_CALORIE_MISMATCH
+fc8cf8a5-acb4-4f09-bf87-a68711071705,"Turkey Lettuce Wraps",starter,false,10,2,440,40.00,20.00,12.00,348,MACRO_CALORIE_MISMATCH
+c7510df3-4c85-4361-a3b6-94e518c04aeb,"Healthy Turkey Lettuce Wraps",starter,false,10,2,410,43.00,10.00,12.00,320,MACRO_CALORIE_MISMATCH
