@@ -343,6 +343,20 @@ app.use("/api/command-centre", commandCentreRouter);
 // Apply analytics error handler
 app.use("/api", analyticsErrorHandler);
 
+// API 404 catch-all — MUST come after every /api/* router but BEFORE the
+// SPA catch-all that serves index.html. Without this, an unmatched API
+// path falls through to the SPA route and the browser receives an HTML
+// page on a fetch() that expects JSON, causing the client to hang on
+// JSON parsing or wait for a response that never comes (observed during
+// FORGE QA Warfare v2 — every wrong /api/v1/* path hung for 30s+).
+app.all("/api/*", (req, res) => {
+  res.status(404).json({
+    error: "API endpoint not found",
+    path: req.path,
+    method: req.method,
+  });
+});
+
 // Serve uploaded files
 app.use("/uploads", express.static(resolveProjectPath("public", "uploads")));
 

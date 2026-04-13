@@ -204,7 +204,7 @@ export const API = {
 
   // Tiers
   tiers: {
-    publicPricing: "/api/v1/tiers/public/pricing",
+    publicPricing: "/api/v1/public/pricing",
     purchase: "/api/v1/tiers/purchase",
     upgrade: "/api/v1/tiers/upgrade",
     cancel: "/api/v1/tiers/cancel",
