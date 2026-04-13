@@ -6,7 +6,105 @@
 
 ---
 
-## 🚨 PRICING MODEL REDO — TIER DIFFERENTIATION (2026-04-12, URGENT)
+## 🚨 MEAL PLAN GENERATOR — ACCURACY + VARIETY FAILURES (2026-04-12, URGENT #2)
+
+**Status:** ⚠️ URGENT — launch blocker, trainers see "none match criteria"
+**Owner:** Mark (decision on dietary tag strategy) + Claude (implementation)
+**Raised by:** Dr. Weyers, 2026-04-12 night session
+**Reproduced against production** with direct API probes, 3 failure modes confirmed.
+
+### Symptom
+
+Trainer generates a meal plan in the UI. Result: _"none of them match the criteria"_ or a plan with the same recipe repeated 9+ times. Feature is effectively unusable for real trainers.
+
+### Three failure modes identified (`POST /api/meal-plan/generate`)
+
+#### Failure #1 — Dietary tag catastrophe (the one Mark hit)
+
+**Production database has ONLY ONE dietary tag across all 6000 recipes: `"high-protein"`.** The trainer UI offers multiple dietary tag options (keto, vegan, paleo, vegetarian, mediterranean, gluten-free, etc.) — but NONE of them match the database. Any trainer who picks a dietary preference gets:
+
+```
+400 {"error": "The dietary tag \"keto\" is not available.
+     Available dietary tags: high-protein."}
+```
+
+Verified curl against production:
+
+```bash
+TT=$(curl -s -X POST https://evofitmeals.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"trainer.test@evofitmeals.com","password":"TestTrainer123!"}' \
+  | jq -r '.data.accessToken')
+curl -X POST https://evofitmeals.com/api/meal-plan/generate \
+  -H "Authorization: Bearer $TT" -H "Content-Type: application/json" \
+  -d '{"planName":"test","fitnessGoal":"weight_loss",
+       "dailyCalorieTarget":1800,"days":3,"mealsPerDay":3,
+       "dietaryTag":"keto"}'
+# → 400 "dietary tag 'keto' is not available"
+```
+
+This is a **content gap**, not a code bug. The recipe library was BMAD-generated with only the `high-protein` tag. Every other dietary tag the UI exposes points to an empty bucket.
+
+#### Failure #2 — Recipe repetition (critical quality bug)
+
+With `maxIngredients: 3`, the generator returned **the SAME recipe 9 times** (Silken Tofu and Berry Puree for breakfast, lunch, AND dinner on all 3 days). No variety enforcement when the filter pool is small. This is worse than "none match" — it silently ships an unusable plan.
+
+#### Failure #3 — Lack of variety in narrow filters
+
+With `minProtein: 30, maxCalories: 800`, got 9 beef-only meals (ribeye/filet/brisket in rotation). The generator doesn't attempt protein-source diversity even when it has 10-20 matching recipes to pick from.
+
+### Root causes
+
+1. **Content gap** (Failure #1): recipe library dietary tag distribution is broken. 6000 recipes, 1 tag.
+2. **No deduplication in meal selection** (Failure #2, #3): `server/services/mealPlanGenerator.ts` picks meals one at a time without tracking which recipes have already been used in the current plan. When the candidate pool is small, it hot-loops on the first match.
+3. **No variety enforcement** (Failure #3): even with a larger pool, no logic prefers different `mainIngredientTags` across meals.
+
+### Fix plan
+
+**Phase A — Content gap (fastest path)**
+
+1. Audit what dietary tags the frontend UI exposes (`client/src/pages/MealPlanGenerator.tsx` and related)
+2. Two options — **decide with Mark:**
+   - **(a) Backfill tags on existing recipes** — run a BMAD classification pass over the 6000 existing recipes to add keto/vegan/paleo/vegetarian/mediterranean/gluten-free/low-carb. Requires a script + OpenAI classifier. ~30 min job.
+   - **(b) Restrict the UI** — hide or disable dietary tag options the DB doesn't support. Show only `high-protein` until content catches up. Fastest but Mark loses a conversion-critical filter.
+   - **Recommendation:** do both. Ship (b) tonight as a stopgap, run (a) as a background job to enrich the library over the next day.
+
+**Phase B — Deduplication in generator**
+
+1. In `mealPlanGenerator.ts`, track `usedRecipeIds: Set<string>` as the plan fills up
+2. When picking the next meal, exclude recipes already used
+3. When the remaining pool is empty and we still need meals, relax: allow reuse but prefer least-recently-used
+4. Regression test: generate a 7-day × 3-meal plan and assert `new Set(recipeIds).size >= min(uniqueRecipesAvailable, 21)`
+
+**Phase C — Variety enforcement**
+
+1. Track `usedMainIngredientTags: Map<string, number>` across selected meals
+2. When picking the next recipe, prefer ones whose main ingredients are NOT already dominant (> 3 occurrences)
+3. Fallback to any match if variety constraint can't be met
+4. Regression test: generate a plan and assert no single mainIngredientTag appears in more than 40% of meals
+
+### Files likely to change
+
+- `server/services/mealPlanGenerator.ts` — dedupe + variety logic
+- `client/src/pages/MealPlanGenerator.tsx` — UI filter options (if Phase A.b)
+- `scripts/enrich-recipe-tags.ts` — new, BMAD classifier (if Phase A.a)
+- `test/integration/mealPlanGeneratorVariety.test.ts` — new regression suite
+- Warfare `meal-plans` suite — add a dietary-tag-availability test
+
+### Decisions needed from Mark
+
+- [ ] Phase A strategy: restrict UI (b), backfill tags (a), or both?
+- [ ] Acceptable repetition ceiling: can the same recipe appear twice in a 7-day plan? Three times? Never?
+- [ ] Variety constraint: what % of meals can share the same main ingredient? (Recommend 40% max.)
+- [ ] Is this a launch blocker (fix tonight) or ship-with-workaround (restrict UI, fix generator this week)?
+
+### Immediate workaround for Mark tonight
+
+Generate plans **without** selecting a dietary tag. Use `fitnessGoal` + `dailyCalorieTarget` + `days` + `mealsPerDay` only. Verified working: returns 9 varied meals for a 3-day plan.
+
+---
+
+## 🚨 PRICING MODEL REDO — TIER DIFFERENTIATION (2026-04-12, URGENT #1)
 
 **Status:** ⚠️ URGENT — launch blocker for positioning
 **Owner:** Mark (decision) + Claude (implementation)
