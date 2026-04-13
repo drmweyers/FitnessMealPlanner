@@ -1975,4 +1975,163 @@ adminRouter.get("/recipe-audit", requireAdmin, async (_req, res) => {
   }
 });
 
+/**
+ * POST /api/admin/recipe-backfill-nutrition
+ *
+ * Hybrid backfill for MACRO_CALORIE_MISMATCH recipes:
+ *   - Easy fix (macro-derived > stated OR |delta| < 20%): recompute calories_kcal from macros
+ *   - Hard fix (macro-derived < stated AND |delta| >= 20%): re-query OpenAI to re-derive all macros+kcal
+ *
+ * Body: { dryRun?: boolean, batchSize?: number (default 50 for OpenAI calls) }
+ * TEMP endpoint — remove after backfill is complete.
+ */
+adminRouter.post(
+  "/recipe-backfill-nutrition",
+  requireAdmin,
+  async (req, res) => {
+    const dryRun = !!req.body?.dryRun;
+    const openAiBatchSize = Math.min(req.body?.batchSize ?? 50, 100);
+    const MISMATCH_PCT = 0.15;
+    const HIGH_DELTA_PCT = 0.2;
+
+    try {
+      // Fetch all recipes with nutrition data
+      const result: any = await db.execute(sql`
+      SELECT id, name, tier_level,
+             calories_kcal, protein_grams, carbs_grams, fat_grams,
+             ingredients_json, instructions_text
+      FROM recipes
+    `);
+      const rows: any[] = result.rows ?? result;
+
+      // Classify each row
+      const easyFix: any[] = []; // recompute kcal from macros
+      const hardFix: any[] = []; // re-derive via OpenAI
+
+      for (const r of rows) {
+        const protein = parseFloat(r.protein_grams);
+        const carbs = parseFloat(r.carbs_grams);
+        const fat = parseFloat(r.fat_grams);
+        const kcal = Number(r.calories_kcal);
+        if (kcal <= 0) continue;
+
+        const computed = 4 * protein + 4 * carbs + 9 * fat;
+        const delta = Math.abs(kcal - computed) / kcal;
+        if (delta <= MISMATCH_PCT) continue; // already clean
+
+        if (computed > kcal || delta < HIGH_DELTA_PCT) {
+          // macros produce more kcal than stated, or delta is small — trust macros
+          easyFix.push({ ...r, computedKcal: Math.round(computed) });
+        } else {
+          // macros produce significantly less than stated — macros likely understated
+          hardFix.push(r);
+        }
+      }
+
+      const summary = {
+        dryRun,
+        easyFixCount: easyFix.length,
+        hardFixCount: hardFix.length,
+        easyFixed: 0,
+        hardFixed: 0,
+        hardFailed: 0,
+        openAiCalls: 0,
+        errors: [] as string[],
+      };
+
+      // --- Easy fix: recompute kcal from macros ---
+      if (!dryRun && easyFix.length > 0) {
+        const ids = easyFix.map((r) => r.id);
+        // Update each individually so we use the per-row computed value
+        for (const r of easyFix) {
+          await db.execute(sql`
+          UPDATE recipes SET calories_kcal = ${r.computedKcal} WHERE id = ${r.id}
+        `);
+          summary.easyFixed++;
+        }
+      }
+
+      // --- Hard fix: re-derive via OpenAI ---
+      if (!dryRun && hardFix.length > 0) {
+        const OpenAI = (await import("openai")).default;
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+        for (let i = 0; i < hardFix.length; i += openAiBatchSize) {
+          const batch = hardFix.slice(i, i + openAiBatchSize);
+          await Promise.all(
+            batch.map(async (r) => {
+              try {
+                const ingredients: any[] = Array.isArray(r.ingredients_json)
+                  ? r.ingredients_json
+                  : [];
+                const ingredientList = ingredients
+                  .map((ing: any) =>
+                    [ing.amount, ing.unit, ing.name].filter(Boolean).join(" "),
+                  )
+                  .join(", ");
+
+                const prompt = `You are a nutrition expert. Given this recipe and its ingredients, return ONLY a JSON object with accurate per-serving macros.
+
+Recipe: ${r.name}
+Servings: ${r.servings ?? 1}
+Ingredients: ${ingredientList || "See recipe name for context"}
+
+Return ONLY valid JSON, no markdown, no explanation:
+{"calories_kcal": <integer>, "protein_grams": <number>, "carbs_grams": <number>, "fat_grams": <number>}
+
+Rules:
+- Values are PER SERVING
+- calories_kcal must equal approximately 4*protein + 4*carbs + 9*fat
+- Use realistic nutrition data for the ingredients listed`;
+
+                const response = await openai.chat.completions.create({
+                  model: "gpt-4o-mini",
+                  messages: [{ role: "user", content: prompt }],
+                  max_tokens: 100,
+                  temperature: 0,
+                });
+                summary.openAiCalls++;
+
+                const text =
+                  response.choices[0]?.message?.content?.trim() ?? "";
+                const parsed = JSON.parse(text);
+
+                if (
+                  typeof parsed.calories_kcal === "number" &&
+                  typeof parsed.protein_grams === "number" &&
+                  typeof parsed.carbs_grams === "number" &&
+                  typeof parsed.fat_grams === "number"
+                ) {
+                  await db.execute(sql`
+                  UPDATE recipes SET
+                    calories_kcal = ${Math.round(parsed.calories_kcal)},
+                    protein_grams = ${parsed.protein_grams.toFixed(2)},
+                    carbs_grams   = ${parsed.carbs_grams.toFixed(2)},
+                    fat_grams     = ${parsed.fat_grams.toFixed(2)}
+                  WHERE id = ${r.id}
+                `);
+                  summary.hardFixed++;
+                } else {
+                  summary.hardFailed++;
+                  summary.errors.push(
+                    `${r.id}: unexpected JSON shape: ${text}`,
+                  );
+                }
+              } catch (err: any) {
+                summary.hardFailed++;
+                summary.errors.push(`${r.id}: ${err.message}`);
+              }
+            }),
+          );
+        }
+      }
+
+      res.json(summary);
+    } catch (err: any) {
+      console.error("[recipe-backfill-nutrition] failed:", err);
+      res.status(500).json({ error: err.message });
+    }
+  },
+);
+
 export default adminRouter;
