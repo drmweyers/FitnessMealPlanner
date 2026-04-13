@@ -83,6 +83,7 @@ import EvoFitPDFExport from "./EvoFitPDFExport";
 import html2canvas from "html2canvas";
 import RecipeModal from "./RecipeModal";
 import MealPlanAssignment from "./MealPlanAssignment";
+import MealPrepDisplay from "./MealPrepDisplay";
 
 /**
  * Type definition for meal plan generation results
@@ -1956,9 +1957,8 @@ export default function MealPlanGenerator({
                             Generate Start-of-Week Meal Prep Instructions
                           </FormLabel>
                           <FormDescription>
-                            Include shopping list, prep steps, and storage
-                            instructions to help customers prepare ingredients
-                            at the start of the week
+                            Generate numbered meal prep steps to help customers
+                            prepare ingredients at the start of the week
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -2547,35 +2547,12 @@ export default function MealPlanGenerator({
               </div>
             </div>
 
-            {/* NEW FEATURE: Start of Week Meal Prep Instructions */}
+            {/* Meal Prep Instructions */}
             {generatedPlan.mealPlan.startOfWeekMealPrep && (
-              <div className="bg-blue-50 p-4 sm:p-6 rounded-lg border border-blue-200">
-                <h4 className="font-semibold mb-4 text-sm sm:text-base flex items-center gap-2 text-blue-800">
-                  <ChefHat className="h-5 w-5" />
-                  Start-of-Week Meal Prep Instructions
-                </h4>
-                <div className="space-y-6">
-                  {/* Prep Time Overview */}
-                  {/* Prep Instructions — numbered list only */}
-                  <ol className="space-y-2">
-                    {generatedPlan.mealPlan.startOfWeekMealPrep.prepInstructions.map(
-                      (step, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-3 bg-white p-3 rounded border text-sm"
-                        >
-                          <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                            {step.step}
-                          </span>
-                          <p className="text-gray-800 leading-relaxed">
-                            {step.instruction}
-                          </p>
-                        </li>
-                      ),
-                    )}
-                  </ol>
-                </div>
-              </div>
+              <MealPrepDisplay
+                mealPrep={generatedPlan.mealPlan.startOfWeekMealPrep}
+                planName={generatedPlan.mealPlan.planName}
+              />
             )}
 
             {/* Meal Plan */}
