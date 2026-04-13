@@ -186,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mealsPerDay: Number(mealsPerDay),
         clientName: req.body.clientName || "",
         description: req.body.description || "",
-        generateMealPrep: req.body.generateMealPrep || false,
+        generateMealPrep: req.body.generateMealPrep !== false,
         // Optional filters
         mealType: req.body.mealType || undefined,
         dietaryTag: req.body.dietaryTag || undefined,
@@ -378,11 +378,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: fromZodError(error as any).toString() });
       } else {
         console.error("Error generating meal plan:", error);
-        res
-          .status(500)
-          .json({
-            message: (error as Error).message || "Failed to generate meal plan",
-          });
+        res.status(500).json({
+          message: (error as Error).message || "Failed to generate meal plan",
+        });
       }
     }
   });

@@ -921,7 +921,7 @@ export class MealPlanGeneratorService {
       }
     });
 
-    // Generate shopping list
+    // Build ingredient list for step generation
     const shoppingList = Array.from(ingredientMap.entries()).map(
       ([ingredient, data]) => ({
         ingredient: this.capitalizeFirst(ingredient),
@@ -931,24 +931,10 @@ export class MealPlanGeneratorService {
       }),
     );
 
-    // Generate prep instructions based on ingredient types
+    // Return only the numbered prep steps — no shopping list, storage, or time metadata
     const prepInstructions = this.generatePrepSteps(shoppingList);
 
-    // Generate storage instructions
-    const storageInstructions = this.generateStorageInstructions(shoppingList);
-
-    // Calculate total prep time estimate
-    const totalPrepTime = prepInstructions.reduce(
-      (total, step) => total + step.estimatedTime,
-      0,
-    );
-
-    return {
-      totalPrepTime,
-      shoppingList,
-      prepInstructions,
-      storageInstructions,
-    };
+    return { prepInstructions };
   }
 
   /**

@@ -525,33 +525,21 @@ export const mealPlanSchema = z.object({
   generatedBy: z.string(), // User ID who generated the plan
   createdAt: z.date(),
 
-  // NEW FEATURE: Start of week meal prep instructions
+  // Meal prep instructions — numbered steps only
   startOfWeekMealPrep: z
     .object({
-      totalPrepTime: z.number(), // Estimated total prep time in minutes
-      shoppingList: z.array(
-        z.object({
-          ingredient: z.string(),
-          totalAmount: z.string(),
-          unit: z.string(),
-          usedInRecipes: z.array(z.string()), // Recipe names that use this ingredient
-        }),
-      ),
       prepInstructions: z.array(
         z.object({
           step: z.number(),
           instruction: z.string(),
-          estimatedTime: z.number(), // Time in minutes
-          ingredients: z.array(z.string()), // Ingredients involved in this step
+          estimatedTime: z.number(),
+          ingredients: z.array(z.string()),
         }),
       ),
-      storageInstructions: z.array(
-        z.object({
-          ingredient: z.string(),
-          method: z.string(), // How to store (refrigerate, freeze, pantry, etc.)
-          duration: z.string(), // How long it will last
-        }),
-      ),
+      // Legacy fields — kept for backwards compat with existing saved plans
+      totalPrepTime: z.number().optional(),
+      shoppingList: z.array(z.any()).optional(),
+      storageInstructions: z.array(z.any()).optional(),
     })
     .optional(),
 

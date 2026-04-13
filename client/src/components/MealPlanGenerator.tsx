@@ -1162,27 +1162,6 @@ export default function MealPlanGenerator({
 
       const mealPrep = mealPlan.startOfWeekMealPrep;
 
-      // Prep time overview
-      addRoundedRect(
-        margin,
-        yPosition,
-        pageWidth - 2 * margin,
-        20,
-        3,
-        colors.accent,
-      );
-      addText(
-        `Total Prep Time: ${mealPrep.totalPrepTime} minutes`,
-        margin + 10,
-        yPosition + 13,
-        {
-          fontSize: 11,
-          style: "bold",
-          color: colors.white,
-        },
-      );
-      yPosition += 30;
-
       // Prep steps section
       addText("PREPARATION STEPS", margin, yPosition, {
         fontSize: 12,
@@ -1236,32 +1215,7 @@ export default function MealPlanGenerator({
 
       yPosition += 10;
 
-      // Storage tips
-      if (mealPrep.storageInstructions.length > 0) {
-        addText("STORAGE TIPS", margin, yPosition, {
-          fontSize: 12,
-          style: "bold",
-          color: colors.dark,
-        });
-        yPosition += 15;
-
-        // Show top storage tips
-        mealPrep.storageInstructions.slice(0, 3).forEach((storage, index) => {
-          if (yPosition > pageHeight - 20) {
-            addFooter(pdf.internal.pages.length);
-            pdf.addPage();
-            addHeader("MEAL PREP GUIDE", "Storage Continued");
-            yPosition = 60;
-          }
-
-          const tipText = `${storage.ingredient}: ${storage.method} (${storage.duration})`;
-          addText(`• ${cleanText(tipText)}`, margin + 5, yPosition, {
-            fontSize: 8,
-            color: colors.text,
-          });
-          yPosition += 12;
-        });
-      }
+      // Storage tips removed — prep steps only
 
       if (!pdf.internal.pages.length || yPosition < pageHeight - 50) {
         addFooter(pdf.internal.pages.length);
@@ -2602,105 +2556,24 @@ export default function MealPlanGenerator({
                 </h4>
                 <div className="space-y-6">
                   {/* Prep Time Overview */}
-                  <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-100 px-3 py-2 rounded-md">
-                    <Clock className="h-4 w-4" />
-                    <span className="font-medium">
-                      Total Estimated Prep Time:{" "}
-                      {generatedPlan.mealPlan.startOfWeekMealPrep.totalPrepTime}{" "}
-                      minutes
-                    </span>
-                  </div>
-
-                  {/* Shopping List */}
-                  <div>
-                    <h5 className="font-medium mb-3 text-blue-800">
-                      🛒 Shopping List
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {generatedPlan.mealPlan.startOfWeekMealPrep.shoppingList.map(
-                        (item, index) => (
-                          <div
-                            key={index}
-                            className="bg-white p-3 rounded border text-sm"
-                          >
-                            <div className="font-medium">{item.ingredient}</div>
-                            <div className="text-blue-600">
-                              {item.totalAmount} {item.unit}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              Used in: {item.usedInRecipes.join(", ")}
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Prep Instructions */}
-                  <div>
-                    <h5 className="font-medium mb-3 text-blue-800">
-                      👨‍🍳 Prep Steps
-                    </h5>
-                    <div className="space-y-3">
-                      {generatedPlan.mealPlan.startOfWeekMealPrep.prepInstructions.map(
-                        (step, index) => (
-                          <div
-                            key={index}
-                            className="bg-white p-4 rounded border"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                                {step.step}
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-sm mb-2">
-                                  {step.instruction}
-                                </p>
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {step.estimatedTime} min
-                                  </span>
-                                  {step.ingredients.length > 0 && (
-                                    <span>
-                                      Ingredients: {step.ingredients.join(", ")}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Storage Instructions */}
-                  <div>
-                    <h5 className="font-medium mb-3 text-blue-800">
-                      🥶 Storage Guidelines
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {generatedPlan.mealPlan.startOfWeekMealPrep.storageInstructions.map(
-                        (storage, index) => (
-                          <div
-                            key={index}
-                            className="bg-white p-3 rounded border text-sm"
-                          >
-                            <div className="font-medium text-gray-800">
-                              {storage.ingredient}
-                            </div>
-                            <div className="text-blue-600 text-xs mt-1">
-                              {storage.method}
-                            </div>
-                            <div className="text-gray-500 text-xs">
-                              Duration: {storage.duration}
-                            </div>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
+                  {/* Prep Instructions — numbered list only */}
+                  <ol className="space-y-2">
+                    {generatedPlan.mealPlan.startOfWeekMealPrep.prepInstructions.map(
+                      (step, index) => (
+                        <li
+                          key={index}
+                          className="flex items-start gap-3 bg-white p-3 rounded border text-sm"
+                        >
+                          <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                            {step.step}
+                          </span>
+                          <p className="text-gray-800 leading-relaxed">
+                            {step.instruction}
+                          </p>
+                        </li>
+                      ),
+                    )}
+                  </ol>
                 </div>
               </div>
             )}
