@@ -50,9 +50,24 @@ async function pickArray(value: unknown): Promise<unknown[]> {
   if (Array.isArray(value)) return value;
   if (value && typeof value === "object") {
     const v = value as Record<string, unknown>;
-    if (Array.isArray(v.data)) return v.data;
-    if (Array.isArray(v.items)) return v.items;
-    if (Array.isArray(v.results)) return v.results;
+    // Common shapes across FMP API: {data}, {items}, {results}, {recipes},
+    // {mealPlans}, {customers}, {measurements}, {favorites}, {bugs}.
+    for (const key of [
+      "data",
+      "items",
+      "results",
+      "recipes",
+      "mealPlans",
+      "customers",
+      "measurements",
+      "favorites",
+      "bugs",
+      "groceryLists",
+    ]) {
+      if (Array.isArray(v[key])) return v[key] as unknown[];
+    }
+    // Some endpoints wrap as {mealPlan: {...}, message: ...}
+    if (v.mealPlan && typeof v.mealPlan === "object") return [v.mealPlan];
   }
   return [];
 }
@@ -95,13 +110,23 @@ async function main() {
     const created = await safe(
       () =>
         trainer.createMealPlan({
-          name: "Warfare Seed Plan",
-          description: "Auto-seeded by warfare v2",
-          targetCalories: 2000,
+          mealPlanData: {
+            planName: "Warfare Seed Plan",
+            fitnessGoal: "weight_loss",
+            description: "Auto-seeded by warfare v2",
+            dailyCalorieTarget: 2000,
+            days: 7,
+            mealsPerDay: 3,
+            meals: [],
+          },
+          notes: "warfare v2 auto-seed",
+          tags: ["warfare", "seed"],
+          isTemplate: false,
         }),
       "create seed meal plan",
     );
-    const id = pickId(created);
+    const arr = await pickArray(created);
+    const id = pickId(arr[0] || created);
     if (id) state.mealPlanIds.push(id);
   }
 

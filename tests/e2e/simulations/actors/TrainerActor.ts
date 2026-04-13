@@ -32,7 +32,12 @@ export class TrainerActor extends BaseActor {
   listMealPlans() {
     return this.client.get(API.trainer.mealPlans);
   }
-  createMealPlan(payload: unknown) {
+  createMealPlan(payload: {
+    mealPlanData: Record<string, unknown>;
+    notes?: string;
+    tags?: string[];
+    isTemplate?: boolean;
+  }) {
     return this.client.post(API.trainer.mealPlans, payload);
   }
   generateMealPlan(payload: unknown) {
