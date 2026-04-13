@@ -19,6 +19,7 @@ import {
   timestamp,
   jsonb,
   index,
+  uniqueIndex,
   uuid,
   integer,
   boolean,
@@ -384,6 +385,12 @@ export const mealPlanAssignments = pgTable(
     customerIdx: index("meal_plan_assignments_customer_id_idx").on(
       table.customerId,
     ),
+    // Hotfix B8: prevents duplicate assignments of the same plan to the same
+    // customer. Without this, a double-click or two browser tabs could create
+    // silent duplicate rows and the customer would see the plan twice.
+    uniquePlanCustomer: uniqueIndex(
+      "meal_plan_assignments_plan_customer_uniq",
+    ).on(table.mealPlanId, table.customerId),
   }),
 );
 

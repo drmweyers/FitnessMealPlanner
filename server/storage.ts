@@ -1,11 +1,11 @@
 // @ts-nocheck - Type errors suppressed
 /**
  * FitMeal Pro Storage Layer
- * 
+ *
  * This module provides a clean abstraction layer over the database using the
  * Repository pattern. It handles all CRUD operations for users and recipes,
  * with comprehensive filtering, search capabilities, and proper error handling.
- * 
+ *
  * Architecture:
  * - IStorage interface defines the contract for all storage operations
  * - DatabaseStorage implements the interface using Drizzle ORM
@@ -54,19 +54,20 @@ import {
   passwordResetTokens,
   refreshTokens,
 } from "@shared/schema";
-import {
-  recipeFavorites,
-  type RecipeFavorite,
-} from "@shared/schema-favorites";
+import { recipeFavorites, type RecipeFavorite } from "@shared/schema-favorites";
 import { db } from "./db";
 import { eq, and, like, lte, gte, desc, sql } from "drizzle-orm";
 import { inArray } from "drizzle-orm";
-import { handleMealPlanEvent, createMealPlanEvent, MealPlanEventType } from "./utils/mealPlanEvents";
+import {
+  handleMealPlanEvent,
+  createMealPlanEvent,
+  MealPlanEventType,
+} from "./utils/mealPlanEvents";
 import { normalizeToUTCMidnight } from "./utils/dateUtils";
 
 /**
  * Storage Interface
- * 
+ *
  * Defines all storage operations available in the application.
  * This interface allows for easy testing and potential future
  * implementations (e.g., in-memory storage for tests).
@@ -78,53 +79,81 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  createGoogleUser(user: { email: string; googleId: string; name: string; profilePicture?: string; role: 'admin' | 'trainer' | 'customer' }): Promise<User>;
+  createGoogleUser(user: {
+    email: string;
+    googleId: string;
+    name: string;
+    profilePicture?: string;
+    role: "admin" | "trainer" | "customer";
+  }): Promise<User>;
   linkGoogleAccount(userId: string, googleId: string): Promise<void>;
   updateUserPassword(userId: string, password: string): Promise<void>;
   updateUserEmail(userId: string, email: string): Promise<void>;
-  updateUserProfile(userId: string, fields: Partial<{
-    bio: string | null;
-    specializations: string[] | null;
-    certifications: string[] | null;
-    yearsExperience: number | null;
-    fitnessGoals: string[] | null;
-    dietaryRestrictions: string[] | null;
-    preferredCuisines: string[] | null;
-    activityLevel: string | null;
-    age: number | null;
-    weight: string | null;
-    height: string | null;
-  }>): Promise<User>;
-  getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]>;
-  
+  updateUserProfile(
+    userId: string,
+    fields: Partial<{
+      bio: string | null;
+      specializations: string[] | null;
+      certifications: string[] | null;
+      yearsExperience: number | null;
+      fitnessGoals: string[] | null;
+      dietaryRestrictions: string[] | null;
+      preferredCuisines: string[] | null;
+      activityLevel: string | null;
+      age: number | null;
+      weight: string | null;
+      height: string | null;
+    }>,
+  ): Promise<User>;
+  getCustomers(
+    recipeId?: string,
+    mealPlanId?: string,
+  ): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]>;
+
   // Password Reset
-  createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void>;
-  getPasswordResetToken(token: string): Promise<{ userId: string, expiresAt: Date } | undefined>;
+  createPasswordResetToken(
+    userId: string,
+    token: string,
+    expiresAt: Date,
+  ): Promise<void>;
+  getPasswordResetToken(
+    token: string,
+  ): Promise<{ userId: string; expiresAt: Date } | undefined>;
   deletePasswordResetToken(token: string): Promise<void>;
-  
+
   // Refresh Token Operations
-  createRefreshToken(userId: string, token: string, expiresAt: Date): Promise<void>;
-  getRefreshToken(token: string): Promise<{ userId: string, expiresAt: Date } | undefined>;
+  createRefreshToken(
+    userId: string,
+    token: string,
+    expiresAt: Date,
+  ): Promise<void>;
+  getRefreshToken(
+    token: string,
+  ): Promise<{ userId: string; expiresAt: Date } | undefined>;
   deleteRefreshToken(token: string): Promise<void>;
-  
+
   // Customer Invitation Operations
-  createInvitation(invitation: InsertCustomerInvitation): Promise<CustomerInvitation>;
+  createInvitation(
+    invitation: InsertCustomerInvitation,
+  ): Promise<CustomerInvitation>;
   getInvitation(token: string): Promise<CustomerInvitation | undefined>;
   getInvitationsByTrainer(trainerId: string): Promise<CustomerInvitation[]>;
   markInvitationAsUsed(token: string): Promise<void>;
   deleteExpiredInvitations(): Promise<number>;
-  
+
   // Recipe CRUD operations
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
   getRecipe(id: string): Promise<Recipe | undefined>;
   updateRecipe(id: string, updates: UpdateRecipe): Promise<Recipe | undefined>;
   deleteRecipe(id: string): Promise<boolean>;
   bulkDeleteRecipes(ids: string[]): Promise<number>;
-  
+
   // Advanced recipe operations
-  searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }>;
+  searchRecipes(
+    filters: RecipeFilter,
+  ): Promise<{ recipes: Recipe[]; total: number }>;
   approveRecipe(id: string): Promise<Recipe | undefined>;
-  
+
   // Analytics and reporting
   getRecipeStats(): Promise<{
     total: number;
@@ -134,68 +163,146 @@ export interface IStorage {
 
   // Personalized recipes
   getPersonalizedRecipes(customerId: string): Promise<Recipe[]>;
-  assignRecipeToCustomers(trainerId: string, recipeId: string, customerIds: string[]): Promise<void>;
-  
+  assignRecipeToCustomers(
+    trainerId: string,
+    recipeId: string,
+    customerIds: string[],
+  ): Promise<void>;
+
   // Personalized meal plans
-  assignMealPlanToCustomers(trainerId: string, mealPlanData: MealPlan, customerIds: string[]): Promise<void>;
+  assignMealPlanToCustomers(
+    trainerId: string,
+    mealPlanData: MealPlan,
+    customerIds: string[],
+  ): Promise<void>;
   getPersonalizedMealPlans(customerId: string): Promise<any[]>;
-  
+
   // Trainer meal plans
-  createTrainerMealPlan(mealPlan: InsertTrainerMealPlan): Promise<TrainerMealPlan>;
+  createTrainerMealPlan(
+    mealPlan: InsertTrainerMealPlan,
+  ): Promise<TrainerMealPlan>;
   getTrainerMealPlan(id: string): Promise<TrainerMealPlan | undefined>;
-  getTrainerMealPlans(trainerId: string): Promise<TrainerMealPlanWithAssignments[]>;
-  updateTrainerMealPlan(id: string, updates: Partial<InsertTrainerMealPlan>): Promise<TrainerMealPlan | undefined>;
+  getTrainerMealPlans(
+    trainerId: string,
+  ): Promise<TrainerMealPlanWithAssignments[]>;
+  updateTrainerMealPlan(
+    id: string,
+    updates: Partial<InsertTrainerMealPlan>,
+  ): Promise<TrainerMealPlan | undefined>;
   deleteTrainerMealPlan(id: string): Promise<boolean>;
-  
+
   // Meal plan assignments
-  assignMealPlanToCustomer(mealPlanId: string, customerId: string, assignedBy: string, notes?: string): Promise<MealPlanAssignment>;
-  unassignMealPlanFromCustomer(mealPlanId: string, customerId: string): Promise<boolean>;
+  assignMealPlanToCustomer(
+    mealPlanId: string,
+    customerId: string,
+    assignedBy: string,
+    notes?: string,
+  ): Promise<MealPlanAssignment>;
+  unassignMealPlanFromCustomer(
+    mealPlanId: string,
+    customerId: string,
+  ): Promise<boolean>;
   getMealPlanAssignments(mealPlanId: string): Promise<MealPlanAssignment[]>;
-  
+
   // Customer management
-  getTrainerCustomers(trainerId: string): Promise<{id: string; email: string; firstAssignedAt: string}[]>;
+  getTrainerCustomers(
+    trainerId: string,
+  ): Promise<{ id: string; email: string; firstAssignedAt: string }[]>;
   getCustomerMealPlans(trainerId: string, customerId: string): Promise<any[]>;
-  removeMealPlanAssignment(trainerId: string, assignmentId: string): Promise<boolean>;
-  
+  removeMealPlanAssignment(
+    trainerId: string,
+    assignmentId: string,
+  ): Promise<boolean>;
+
   // Recipe Favorites
-  addRecipeToFavorites(userId: string, recipeId: string, notes?: string): Promise<any>;
+  addRecipeToFavorites(
+    userId: string,
+    recipeId: string,
+    notes?: string,
+  ): Promise<any>;
   removeRecipeFromFavorites(userId: string, recipeId: string): Promise<boolean>;
-  getUserFavorites(userId: string, options: { page?: number; limit?: number; search?: string }): Promise<{ favorites: any[]; total: number }>;
+  getUserFavorites(
+    userId: string,
+    options: { page?: number; limit?: number; search?: string },
+  ): Promise<{ favorites: any[]; total: number }>;
   isRecipeFavorited(userId: string, recipeId: string): Promise<boolean>;
-  
+
   // Recipe Collections
   createRecipeCollection(userId: string, collectionData: any): Promise<any>;
-  getUserCollections(userId: string, options: { page?: number; limit?: number }): Promise<{ collections: any[]; total: number }>;
+  getUserCollections(
+    userId: string,
+    options: { page?: number; limit?: number },
+  ): Promise<{ collections: any[]; total: number }>;
   getCollectionWithRecipes(userId: string, collectionId: string): Promise<any>;
-  addRecipeToCollection(userId: string, collectionId: string, recipeId: string, notes?: string): Promise<void>;
-  removeRecipeFromCollection(userId: string, collectionId: string, recipeId: string): Promise<boolean>;
-  updateRecipeCollection(userId: string, collectionId: string, updates: any): Promise<any>;
-  deleteRecipeCollection(userId: string, collectionId: string): Promise<boolean>;
-  
+  addRecipeToCollection(
+    userId: string,
+    collectionId: string,
+    recipeId: string,
+    notes?: string,
+  ): Promise<void>;
+  removeRecipeFromCollection(
+    userId: string,
+    collectionId: string,
+    recipeId: string,
+  ): Promise<boolean>;
+  updateRecipeCollection(
+    userId: string,
+    collectionId: string,
+    updates: any,
+  ): Promise<any>;
+  deleteRecipeCollection(
+    userId: string,
+    collectionId: string,
+  ): Promise<boolean>;
+
   // Recipe Interactions & Analytics
-  trackRecipeInteraction(userId: string, recipeId: string, interactionType: string, interactionValue?: number, sessionId?: string, metadata?: any): Promise<void>;
+  trackRecipeInteraction(
+    userId: string,
+    recipeId: string,
+    interactionType: string,
+    interactionValue?: number,
+    sessionId?: string,
+    metadata?: any,
+  ): Promise<void>;
   rateRecipe(userId: string, recipeId: string, rating: number): Promise<void>;
   getPopularRecipes(timeframe: string, limit: number): Promise<any[]>;
   getTrendingRecipes(limit: number, category?: string): Promise<any[]>;
-  getRecipeRecommendations(userId: string, type: string, limit: number): Promise<any[]>;
+  getRecipeRecommendations(
+    userId: string,
+    type: string,
+    limit: number,
+  ): Promise<any[]>;
   getUserActivitySummary(userId: string, days: number): Promise<any>;
 
   // Grocery Lists Operations
   getGroceryLists(customerId: string): Promise<GroceryList[]>;
-  getGroceryList(customerId: string, listId: string): Promise<GroceryListWithItems | undefined>;
+  getGroceryList(
+    customerId: string,
+    listId: string,
+  ): Promise<GroceryListWithItems | undefined>;
   createGroceryList(listData: InsertGroceryList): Promise<GroceryList>;
-  updateGroceryList(customerId: string, listId: string, updates: Partial<InsertGroceryList>): Promise<GroceryList | undefined>;
+  updateGroceryList(
+    customerId: string,
+    listId: string,
+    updates: Partial<InsertGroceryList>,
+  ): Promise<GroceryList | undefined>;
   deleteGroceryList(customerId: string, listId: string): Promise<boolean>;
 
   // Grocery List Items Operations
-  addGroceryListItem(listId: string, itemData: InsertGroceryListItem): Promise<GroceryListItem>;
-  updateGroceryListItem(listId: string, itemId: string, updates: Partial<InsertGroceryListItem>): Promise<GroceryListItem | undefined>;
+  addGroceryListItem(
+    listId: string,
+    itemData: InsertGroceryListItem,
+  ): Promise<GroceryListItem>;
+  updateGroceryListItem(
+    listId: string,
+    itemId: string,
+    updates: Partial<InsertGroceryListItem>,
+  ): Promise<GroceryListItem | undefined>;
   deleteGroceryListItem(listId: string, itemId: string): Promise<boolean>;
   getGroceryListItems(listId: string): Promise<GroceryListItem[]>;
 
   // Transaction support
   transaction<T>(action: (trx: any) => Promise<T>): Promise<T>;
-
 }
 
 export class DatabaseStorage implements IStorage {
@@ -208,20 +315,23 @@ export class DatabaseStorage implements IStorage {
 
     try {
       const result = await db.execute(
-        sql`SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'recipes' AND column_name = 'tier_level' LIMIT 1`
+        sql`SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'recipes' AND column_name = 'tier_level' LIMIT 1`,
       );
 
       this.supportsTierFiltering = Array.isArray((result as any)?.rows)
         ? (result as any).rows.length > 0
         : false;
     } catch (error) {
-      console.warn("[DatabaseStorage] Failed to verify tier_level column support:", error);
+      console.warn(
+        "[DatabaseStorage] Failed to verify tier_level column support:",
+        error,
+      );
       this.supportsTierFiltering = false;
     }
 
     if (!this.supportsTierFiltering) {
       console.warn(
-        "[DatabaseStorage] tier_level column not detected. Tier-based recipe filtering is disabled until the migration runs."
+        "[DatabaseStorage] tier_level column not detected. Tier-based recipe filtering is disabled until the migration runs.",
       );
     }
 
@@ -245,7 +355,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.googleId, googleId));
     return user;
   }
 
@@ -254,15 +367,24 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createGoogleUser(userData: { email: string; googleId: string; name: string; profilePicture?: string; role: 'admin' | 'trainer' | 'customer' }): Promise<User> {
-    const [user] = await db.insert(users).values({
-      email: userData.email,
-      googleId: userData.googleId,
-      name: userData.name,
-      profilePicture: userData.profilePicture,
-      role: userData.role,
-      password: null, // No password for Google OAuth users
-    }).returning();
+  async createGoogleUser(userData: {
+    email: string;
+    googleId: string;
+    name: string;
+    profilePicture?: string;
+    role: "admin" | "trainer" | "customer";
+  }): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        email: userData.email,
+        googleId: userData.googleId,
+        name: userData.name,
+        profilePicture: userData.profilePicture,
+        role: userData.role,
+        password: null, // No password for Google OAuth users
+      })
+      .returning();
     return user;
   }
 
@@ -278,19 +400,22 @@ export class DatabaseStorage implements IStorage {
     await db.update(users).set({ email }).where(eq(users.id, userId));
   }
 
-  async updateUserProfile(userId: string, fields: Record<string, any>): Promise<User> {
+  async updateUserProfile(
+    userId: string,
+    fields: Record<string, any>,
+  ): Promise<User> {
     const allowed = [
-      'bio',
-      'specializations',
-      'certifications',
-      'yearsExperience',
-      'fitnessGoals',
-      'dietaryRestrictions',
-      'preferredCuisines',
-      'activityLevel',
-      'age',
-      'weight',
-      'height',
+      "bio",
+      "specializations",
+      "certifications",
+      "yearsExperience",
+      "fitnessGoals",
+      "dietaryRestrictions",
+      "preferredCuisines",
+      "activityLevel",
+      "age",
+      "weight",
+      "height",
     ];
     const update: Record<string, any> = { updatedAt: new Date() };
     for (const key of allowed) {
@@ -304,57 +429,85 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getCustomers(recipeId?: string, mealPlanId?: string): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]> {
-    const customers = await db.select().from(users).where(eq(users.role, 'customer'));
-    
+  async getCustomers(
+    recipeId?: string,
+    mealPlanId?: string,
+  ): Promise<(User & { hasRecipe?: boolean; hasMealPlan?: boolean })[]> {
+    const customers = await db
+      .select()
+      .from(users)
+      .where(eq(users.role, "customer"));
+
     let recipeAssignments: Set<string> = new Set();
     let mealPlanAssignments: Set<string> = new Set();
-    
+
     if (recipeId) {
       const assignments = await db
         .select()
         .from(personalizedRecipes)
         .where(eq(personalizedRecipes.recipeId, recipeId));
-      
-      recipeAssignments = new Set(assignments.map(a => a.customerId));
+
+      recipeAssignments = new Set(assignments.map((a) => a.customerId));
     }
-    
+
     // Check for existing meal plan assignments for each customer
     // This shows which customers already have ANY meal plan assigned to them
     const existingMealPlanAssignments = await db
       .select({ customerId: personalizedMealPlans.customerId })
       .from(personalizedMealPlans);
-    
-    mealPlanAssignments = new Set(existingMealPlanAssignments.map(a => a.customerId));
-    
-    return customers.map(customer => ({
+
+    mealPlanAssignments = new Set(
+      existingMealPlanAssignments.map((a) => a.customerId),
+    );
+
+    return customers.map((customer) => ({
       ...customer,
       hasRecipe: recipeId ? recipeAssignments.has(customer.id) : false,
-      hasMealPlan: mealPlanAssignments.has(customer.id)
+      hasMealPlan: mealPlanAssignments.has(customer.id),
     }));
   }
 
   // Password Reset
-  async createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+  async createPasswordResetToken(
+    userId: string,
+    token: string,
+    expiresAt: Date,
+  ): Promise<void> {
     await db.insert(passwordResetTokens).values({ userId, token, expiresAt });
   }
 
-  async getPasswordResetToken(token: string): Promise<{ userId: string; expiresAt: Date; } | undefined> {
-    const [result] = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+  async getPasswordResetToken(
+    token: string,
+  ): Promise<{ userId: string; expiresAt: Date } | undefined> {
+    const [result] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
     return result;
   }
 
   async deletePasswordResetToken(token: string): Promise<void> {
-    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+    await db
+      .delete(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
   }
 
   // Refresh Token Operations
-  async createRefreshToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+  async createRefreshToken(
+    userId: string,
+    token: string,
+    expiresAt: Date,
+  ): Promise<void> {
     await db.insert(refreshTokens).values({ userId, token, expiresAt });
   }
 
-  async getRefreshToken(token: string): Promise<{ userId: string; expiresAt: Date; } | undefined> {
-    const [result] = await db.select().from(refreshTokens).where(eq(refreshTokens.token, token));
+  async getRefreshToken(
+    token: string,
+  ): Promise<{ userId: string; expiresAt: Date } | undefined> {
+    const [result] = await db
+      .select()
+      .from(refreshTokens)
+      .where(eq(refreshTokens.token, token));
     return result;
   }
 
@@ -364,7 +517,10 @@ export class DatabaseStorage implements IStorage {
 
   // Recipe operations
   async createRecipe(recipeData: InsertRecipe): Promise<Recipe> {
-    const [recipe] = await db.insert(recipes).values(recipeData as any).returning();
+    const [recipe] = await db
+      .insert(recipes)
+      .values(recipeData as any)
+      .returning();
     return recipe;
   }
 
@@ -373,18 +529,23 @@ export class DatabaseStorage implements IStorage {
     return recipe;
   }
 
-  async updateRecipe(id: string, updates: UpdateRecipe): Promise<Recipe | undefined> {
-    const updateData: any = { 
-      ...updates, 
-      lastUpdatedTimestamp: new Date() 
+  async updateRecipe(
+    id: string,
+    updates: UpdateRecipe,
+  ): Promise<Recipe | undefined> {
+    const updateData: any = {
+      ...updates,
+      lastUpdatedTimestamp: new Date(),
     };
-    
+
     // Ensure array fields are properly handled
     if (updates.mealTypes) updateData.mealTypes = updates.mealTypes;
     if (updates.dietaryTags) updateData.dietaryTags = updates.dietaryTags;
-    if (updates.mainIngredientTags) updateData.mainIngredientTags = updates.mainIngredientTags;
-    if (updates.ingredientsJson) updateData.ingredientsJson = updates.ingredientsJson;
-    
+    if (updates.mainIngredientTags)
+      updateData.mainIngredientTags = updates.mainIngredientTags;
+    if (updates.ingredientsJson)
+      updateData.ingredientsJson = updates.ingredientsJson;
+
     const [recipe] = await db
       .update(recipes)
       .set(updateData)
@@ -400,11 +561,11 @@ export class DatabaseStorage implements IStorage {
       if (!existingRecipe) {
         return false;
       }
-      
+
       await db.delete(recipes).where(eq(recipes.id, id));
       return true;
     } catch (error) {
-      console.error('Error deleting recipe:', error);
+      console.error("Error deleting recipe:", error);
       return false;
     }
   }
@@ -414,7 +575,7 @@ export class DatabaseStorage implements IStorage {
       const result = await db.delete(recipes).where(inArray(recipes.id, ids));
       return Number(result.rowCount) || 0;
     } catch (error) {
-      console.error('Error bulk deleting recipes:', error);
+      console.error("Error bulk deleting recipes:", error);
       return 0;
     }
   }
@@ -433,22 +594,32 @@ export class DatabaseStorage implements IStorage {
       .where(eq(personalizedRecipes.customerId, customerId))
       .orderBy(desc(personalizedRecipes.assignedAt));
 
-    return assignedRecipes.map(r => r.recipe).filter((r): r is Recipe => r !== null);
+    return assignedRecipes
+      .map((r) => r.recipe)
+      .filter((r): r is Recipe => r !== null);
   }
 
-  async assignRecipeToCustomers(trainerId: string, recipeId: string, customerIds: string[]): Promise<void> {
+  async assignRecipeToCustomers(
+    trainerId: string,
+    recipeId: string,
+    customerIds: string[],
+  ): Promise<void> {
     // Get current assignments for this recipe
     const currentAssignments = await db
       .select()
       .from(personalizedRecipes)
       .where(eq(personalizedRecipes.recipeId, recipeId));
-    
-    const currentlyAssignedIds = new Set(currentAssignments.map(a => a.customerId));
-    
+
+    const currentlyAssignedIds = new Set(
+      currentAssignments.map((a) => a.customerId),
+    );
+
     // Determine which customers to add and remove
-    const toAdd = customerIds.filter(id => !currentlyAssignedIds.has(id));
-    const toRemove = Array.from(currentlyAssignedIds).filter(id => !customerIds.includes(id));
-    
+    const toAdd = customerIds.filter((id) => !currentlyAssignedIds.has(id));
+    const toRemove = Array.from(currentlyAssignedIds).filter(
+      (id) => !customerIds.includes(id),
+    );
+
     // Remove assignments that are no longer needed
     if (toRemove.length > 0) {
       await db
@@ -456,34 +627,41 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(personalizedRecipes.recipeId, recipeId),
-            inArray(personalizedRecipes.customerId, toRemove)
-          )
+            inArray(personalizedRecipes.customerId, toRemove),
+          ),
         );
     }
-    
+
     // Add new assignments
     if (toAdd.length > 0) {
-      const assignments = toAdd.map(customerId => ({
+      const assignments = toAdd.map((customerId) => ({
         customerId,
         trainerId,
         recipeId,
       }));
-      
+
       await db.insert(personalizedRecipes).values(assignments);
     }
   }
 
-  async assignMealPlanToCustomers(trainerId: string, mealPlanData: MealPlan, customerIds: string[]): Promise<void> {
+  async assignMealPlanToCustomers(
+    trainerId: string,
+    mealPlanData: MealPlan,
+    customerIds: string[],
+  ): Promise<void> {
     // Add new meal plan assignments without removing existing ones
     // This allows customers to have multiple meal plans assigned
     if (customerIds.length > 0) {
-      const assignments = customerIds.map(customerId => ({
+      const assignments = customerIds.map((customerId) => ({
         customerId,
         trainerId,
         mealPlanData,
       }));
 
-      const insertedMealPlans = await db.insert(personalizedMealPlans).values(assignments).returning();
+      const insertedMealPlans = await db
+        .insert(personalizedMealPlans)
+        .values(assignments)
+        .returning();
 
       // Trigger automatic grocery list generation for each assigned meal plan
       for (const mealPlan of insertedMealPlans) {
@@ -495,20 +673,29 @@ export class DatabaseStorage implements IStorage {
             mealPlan.mealPlanData,
             {
               assignedBy: trainerId,
-              planName: (mealPlan.mealPlanData as any)?.planName || 'Assigned Meal Plan',
-              fitnessGoal: (mealPlan.mealPlanData as any)?.fitnessGoal
-            }
+              planName:
+                (mealPlan.mealPlanData as any)?.planName ||
+                "Assigned Meal Plan",
+              fitnessGoal: (mealPlan.mealPlanData as any)?.fitnessGoal,
+            },
           );
 
           const result = await handleMealPlanEvent(event);
 
-          if (result.success && result.action === 'created') {
-            console.log(`[Storage] Auto-generated grocery list for meal plan ${mealPlan.id} assigned to customer ${mealPlan.customerId}`);
+          if (result.success && result.action === "created") {
+            console.log(
+              `[Storage] Auto-generated grocery list for meal plan ${mealPlan.id} assigned to customer ${mealPlan.customerId}`,
+            );
           } else if (!result.success) {
-            console.warn(`[Storage] Failed to auto-generate grocery list for meal plan ${mealPlan.id}: ${result.error}`);
+            console.warn(
+              `[Storage] Failed to auto-generate grocery list for meal plan ${mealPlan.id}: ${result.error}`,
+            );
           }
         } catch (error) {
-          console.error(`[Storage] Error during auto grocery list generation for meal plan ${mealPlan.id}:`, error);
+          console.error(
+            `[Storage] Error during auto grocery list generation for meal plan ${mealPlan.id}:`,
+            error,
+          );
         }
       }
     }
@@ -530,7 +717,9 @@ export class DatabaseStorage implements IStorage {
     return assignedMealPlans;
   }
 
-  async searchRecipes(filters: RecipeFilter): Promise<{ recipes: Recipe[]; total: number }> {
+  async searchRecipes(
+    filters: RecipeFilter,
+  ): Promise<{ recipes: Recipe[]; total: number }> {
     const conditions = [];
 
     // Apply filters
@@ -549,10 +738,12 @@ export class DatabaseStorage implements IStorage {
 
     if (filters.tierLevel && tierFilteringSupported) {
       // Progressive access: trainers can see their tier and all lower tier recipes
-      conditions.push(sql`${recipes.tierLevel} <= ${filters.tierLevel}::tier_level`);
+      conditions.push(
+        sql`${recipes.tierLevel} <= ${filters.tierLevel}::tier_level`,
+      );
     } else if (filters.tierLevel && !tierFilteringSupported) {
       console.warn(
-        "[DatabaseStorage] tier_level filter requested but column is missing. Skipping filter."
+        "[DatabaseStorage] tier_level filter requested but column is missing. Skipping filter.",
       );
     }
 
@@ -563,12 +754,14 @@ export class DatabaseStorage implements IStorage {
           LOWER(${recipes.name}) LIKE ${searchTerm} OR
           LOWER(${recipes.description}) LIKE ${searchTerm} OR
           LOWER(${recipes.ingredientsJson}::text) LIKE ${searchTerm}
-        )`
+        )`,
       );
     }
 
     if (filters.mealType) {
-      conditions.push(sql`${recipes.mealTypes} @> ${JSON.stringify([filters.mealType])}`);
+      conditions.push(
+        sql`${recipes.mealTypes} @> ${JSON.stringify([filters.mealType])}`,
+      );
     }
 
     // Note: dietaryTag filtering is done case-insensitively in-memory after the query
@@ -637,19 +830,25 @@ export class DatabaseStorage implements IStorage {
     let filteredRecipes = recipeResults;
     if (filters.dietaryTag) {
       const normalizedTag = filters.dietaryTag.toLowerCase().trim();
-      filteredRecipes = recipeResults.filter(recipe => {
-        if (!recipe.dietaryTags || recipe.dietaryTags.length === 0) return false;
+      filteredRecipes = recipeResults.filter((recipe) => {
+        if (!recipe.dietaryTags || recipe.dietaryTags.length === 0)
+          return false;
         // Case-insensitive matching: check if any tag matches (normalized to lowercase)
-        return recipe.dietaryTags.some((tag: string) => 
-          tag.toLowerCase().trim() === normalizedTag
+        return recipe.dietaryTags.some(
+          (tag: string) => tag.toLowerCase().trim() === normalizedTag,
         );
       });
       // Update count to reflect filtered results
       const filteredCount = filteredRecipes.length;
-      console.log(`[Storage] Filtered ${recipeResults.length} recipes to ${filteredCount} recipes with dietary tag '${filters.dietaryTag}' (case-insensitive)`);
+      console.log(
+        `[Storage] Filtered ${recipeResults.length} recipes to ${filteredCount} recipes with dietary tag '${filters.dietaryTag}' (case-insensitive)`,
+      );
     }
 
-    return { recipes: filteredRecipes, total: filters.dietaryTag ? filteredRecipes.length : count };
+    return {
+      recipes: filteredRecipes,
+      total: filters.dietaryTag ? filteredRecipes.length : count,
+    };
   }
 
   async getRecipeStats(): Promise<{
@@ -671,19 +870,29 @@ export class DatabaseStorage implements IStorage {
       pending: stats.pending,
     };
   }
-  
+
   // Customer Invitation Operations
-  async createInvitation(invitationData: InsertCustomerInvitation): Promise<CustomerInvitation> {
-    const [invitation] = await db.insert(customerInvitations).values(invitationData).returning();
+  async createInvitation(
+    invitationData: InsertCustomerInvitation,
+  ): Promise<CustomerInvitation> {
+    const [invitation] = await db
+      .insert(customerInvitations)
+      .values(invitationData)
+      .returning();
     return invitation;
   }
 
   async getInvitation(token: string): Promise<CustomerInvitation | undefined> {
-    const [invitation] = await db.select().from(customerInvitations).where(eq(customerInvitations.token, token));
+    const [invitation] = await db
+      .select()
+      .from(customerInvitations)
+      .where(eq(customerInvitations.token, token));
     return invitation;
   }
 
-  async getInvitationsByTrainer(trainerId: string): Promise<CustomerInvitation[]> {
+  async getInvitationsByTrainer(
+    trainerId: string,
+  ): Promise<CustomerInvitation[]> {
     return await db
       .select()
       .from(customerInvitations)
@@ -705,23 +914,33 @@ export class DatabaseStorage implements IStorage {
         .where(lte(customerInvitations.expiresAt, new Date()));
       return Number(result.rowCount) || 0;
     } catch (error) {
-      console.error('Error deleting expired invitations:', error);
+      console.error("Error deleting expired invitations:", error);
       return 0;
     }
   }
 
   // Trainer meal plans
-  async createTrainerMealPlan(mealPlan: InsertTrainerMealPlan): Promise<TrainerMealPlan> {
-    const [created] = await db.insert(trainerMealPlans).values(mealPlan).returning();
+  async createTrainerMealPlan(
+    mealPlan: InsertTrainerMealPlan,
+  ): Promise<TrainerMealPlan> {
+    const [created] = await db
+      .insert(trainerMealPlans)
+      .values(mealPlan)
+      .returning();
     return created;
   }
 
   async getTrainerMealPlan(id: string): Promise<TrainerMealPlan | undefined> {
-    const [plan] = await db.select().from(trainerMealPlans).where(eq(trainerMealPlans.id, id));
+    const [plan] = await db
+      .select()
+      .from(trainerMealPlans)
+      .where(eq(trainerMealPlans.id, id));
     return plan;
   }
 
-  async getTrainerMealPlans(trainerId: string): Promise<TrainerMealPlanWithAssignments[]> {
+  async getTrainerMealPlans(
+    trainerId: string,
+  ): Promise<TrainerMealPlanWithAssignments[]> {
     // Get all meal plans for the trainer
     const plans = await db
       .select()
@@ -744,20 +963,23 @@ export class DatabaseStorage implements IStorage {
 
         return {
           ...plan,
-          assignments: assignments.map(a => ({
+          assignments: assignments.map((a) => ({
             customerId: a.customerId,
-            customerEmail: a.customerEmail || '',
+            customerEmail: a.customerEmail || "",
             assignedAt: a.assignedAt || normalizeToUTCMidnight(),
           })),
           assignmentCount: assignments.length,
         };
-      })
+      }),
     );
 
     return plansWithAssignments;
   }
 
-  async updateTrainerMealPlan(id: string, updates: Partial<InsertTrainerMealPlan>): Promise<TrainerMealPlan | undefined> {
+  async updateTrainerMealPlan(
+    id: string,
+    updates: Partial<InsertTrainerMealPlan>,
+  ): Promise<TrainerMealPlan | undefined> {
     const [updated] = await db
       .update(trainerMealPlans)
       .set({
@@ -770,13 +992,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTrainerMealPlan(id: string): Promise<boolean> {
-    const result = await db.delete(trainerMealPlans).where(eq(trainerMealPlans.id, id));
+    const result = await db
+      .delete(trainerMealPlans)
+      .where(eq(trainerMealPlans.id, id));
     return Number(result.rowCount) > 0;
   }
 
   // Meal plan assignments
-  async assignMealPlanToCustomer(mealPlanId: string, customerId: string, assignedBy: string, notes?: string): Promise<MealPlanAssignment> {
-    const [assignment] = await db
+  async assignMealPlanToCustomer(
+    mealPlanId: string,
+    customerId: string,
+    assignedBy: string,
+    notes?: string,
+  ): Promise<MealPlanAssignment> {
+    // Hotfix B8: idempotent insert. The new unique index on
+    // (mealPlanId, customerId) prevents duplicates; onConflictDoNothing
+    // turns a double-click or two-tab race into a no-op instead of a
+    // constraint error. We then re-fetch the existing row so callers
+    // always get the assignment back.
+    const inserted = await db
       .insert(mealPlanAssignments)
       .values({
         mealPlanId,
@@ -784,11 +1018,39 @@ export class DatabaseStorage implements IStorage {
         assignedBy,
         notes,
       })
+      .onConflictDoNothing({
+        target: [
+          mealPlanAssignments.mealPlanId,
+          mealPlanAssignments.customerId,
+        ],
+      })
       .returning();
+
+    let assignment: MealPlanAssignment;
+    if (inserted.length > 0) {
+      assignment = inserted[0];
+    } else {
+      // Conflict: an assignment already exists. Re-fetch it.
+      const [existing] = await db
+        .select()
+        .from(mealPlanAssignments)
+        .where(
+          and(
+            eq(mealPlanAssignments.mealPlanId, mealPlanId),
+            eq(mealPlanAssignments.customerId, customerId),
+          ),
+        )
+        .limit(1);
+      if (!existing) {
+        throw new Error("Assignment conflict but no existing row found");
+      }
+      assignment = existing;
+    }
 
     // Trigger automatic grocery list generation after successful assignment
     try {
-      const { onMealPlanAssigned, createMealPlanEvent, MealPlanEventType } = await import('./utils/mealPlanEvents.js');
+      const { onMealPlanAssigned, createMealPlanEvent, MealPlanEventType } =
+        await import("./utils/mealPlanEvents.js");
 
       // Fetch meal plan data for the event
       const mealPlan = await this.getTrainerMealPlan(mealPlanId);
@@ -798,32 +1060,39 @@ export class DatabaseStorage implements IStorage {
         MealPlanEventType.ASSIGNED,
         mealPlanId,
         customerId,
-        mealPlan.mealPlanData
+        mealPlan.mealPlanData,
       );
 
       await onMealPlanAssigned(event);
-      console.log(`[Storage] Triggered automatic grocery list generation for customer ${customerId} from meal plan ${mealPlanId}`);
+      console.log(
+        `[Storage] Triggered automatic grocery list generation for customer ${customerId} from meal plan ${mealPlanId}`,
+      );
     } catch (error) {
       // Log error but don't fail the assignment
-      console.error('[Storage] Failed to auto-generate grocery list:', error);
+      console.error("[Storage] Failed to auto-generate grocery list:", error);
     }
 
     return assignment;
   }
 
-  async unassignMealPlanFromCustomer(mealPlanId: string, customerId: string): Promise<boolean> {
+  async unassignMealPlanFromCustomer(
+    mealPlanId: string,
+    customerId: string,
+  ): Promise<boolean> {
     const result = await db
       .delete(mealPlanAssignments)
       .where(
         and(
           eq(mealPlanAssignments.mealPlanId, mealPlanId),
-          eq(mealPlanAssignments.customerId, customerId)
-        )
+          eq(mealPlanAssignments.customerId, customerId),
+        ),
       );
     return Number(result.rowCount) > 0;
   }
 
-  async getMealPlanAssignments(mealPlanId: string): Promise<MealPlanAssignment[]> {
+  async getMealPlanAssignments(
+    mealPlanId: string,
+  ): Promise<MealPlanAssignment[]> {
     return await db
       .select()
       .from(mealPlanAssignments)
@@ -831,59 +1100,76 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Customer management functions
-  async getTrainerCustomers(trainerId: string): Promise<{id: string; email: string; firstAssignedAt: string}[]> {
+  async getTrainerCustomers(
+    trainerId: string,
+  ): Promise<{ id: string; email: string; firstAssignedAt: string }[]> {
     // Get unique customers who have meal plans assigned by this trainer
-    const customersWithMealPlans = await db.select({
-      customerId: personalizedMealPlans.customerId,
-      customerEmail: users.email,
-      assignedAt: personalizedMealPlans.assignedAt,
-    })
-    .from(personalizedMealPlans)
-    .innerJoin(users, eq(users.id, personalizedMealPlans.customerId))
-    .where(eq(personalizedMealPlans.trainerId, trainerId));
-    
-    const customersWithRecipes = await db.select({
-      customerId: personalizedRecipes.customerId,
-      customerEmail: users.email,
-      assignedAt: personalizedRecipes.assignedAt,
-    })
-    .from(personalizedRecipes)
-    .innerJoin(users, eq(users.id, personalizedRecipes.customerId))
-    .where(eq(personalizedRecipes.trainerId, trainerId));
-    
+    const customersWithMealPlans = await db
+      .select({
+        customerId: personalizedMealPlans.customerId,
+        customerEmail: users.email,
+        assignedAt: personalizedMealPlans.assignedAt,
+      })
+      .from(personalizedMealPlans)
+      .innerJoin(users, eq(users.id, personalizedMealPlans.customerId))
+      .where(eq(personalizedMealPlans.trainerId, trainerId));
+
+    const customersWithRecipes = await db
+      .select({
+        customerId: personalizedRecipes.customerId,
+        customerEmail: users.email,
+        assignedAt: personalizedRecipes.assignedAt,
+      })
+      .from(personalizedRecipes)
+      .innerJoin(users, eq(users.id, personalizedRecipes.customerId))
+      .where(eq(personalizedRecipes.trainerId, trainerId));
+
     // Combine and deduplicate customers
     const customerMap = new Map();
-    
-    [...customersWithMealPlans, ...customersWithRecipes].forEach(customer => {
+
+    [...customersWithMealPlans, ...customersWithRecipes].forEach((customer) => {
       if (!customerMap.has(customer.customerId)) {
         customerMap.set(customer.customerId, {
           id: customer.customerId,
           email: customer.customerEmail,
-          firstAssignedAt: customer.assignedAt?.toISOString() || normalizeToUTCMidnight().toISOString(),
+          firstAssignedAt:
+            customer.assignedAt?.toISOString() ||
+            normalizeToUTCMidnight().toISOString(),
         });
       } else {
         const existing = customerMap.get(customer.customerId);
-        if (customer.assignedAt && existing.firstAssignedAt && customer.assignedAt < new Date(existing.firstAssignedAt)) {
+        if (
+          customer.assignedAt &&
+          existing.firstAssignedAt &&
+          customer.assignedAt < new Date(existing.firstAssignedAt)
+        ) {
           existing.firstAssignedAt = customer.assignedAt.toISOString();
         }
       }
     });
-    
+
     return Array.from(customerMap.values());
   }
 
-  async getCustomerMealPlans(trainerId: string, customerId: string): Promise<any[]> {
-    return await db.select()
+  async getCustomerMealPlans(
+    trainerId: string,
+    customerId: string,
+  ): Promise<any[]> {
+    return await db
+      .select()
       .from(personalizedMealPlans)
       .where(
         and(
           eq(personalizedMealPlans.trainerId, trainerId),
-          eq(personalizedMealPlans.customerId, customerId)
-        )
+          eq(personalizedMealPlans.customerId, customerId),
+        ),
       );
   }
 
-  async removeMealPlanAssignment(trainerId: string, assignmentId: string): Promise<boolean> {
+  async removeMealPlanAssignment(
+    trainerId: string,
+    assignmentId: string,
+  ): Promise<boolean> {
     try {
       // Get meal plan data before deletion for cleanup
       const mealPlanToDelete = await db
@@ -892,17 +1178,18 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(personalizedMealPlans.id, assignmentId),
-            eq(personalizedMealPlans.trainerId, trainerId)
-          )
+            eq(personalizedMealPlans.trainerId, trainerId),
+          ),
         )
         .limit(1);
 
-      const result = await db.delete(personalizedMealPlans)
+      const result = await db
+        .delete(personalizedMealPlans)
         .where(
           and(
             eq(personalizedMealPlans.id, assignmentId),
-            eq(personalizedMealPlans.trainerId, trainerId)
-          )
+            eq(personalizedMealPlans.trainerId, trainerId),
+          ),
         );
 
       // Trigger automatic cleanup of orphaned grocery lists
@@ -912,57 +1199,84 @@ export class DatabaseStorage implements IStorage {
             MealPlanEventType.DELETED,
             assignmentId,
             mealPlanToDelete[0].customerId,
-            mealPlanToDelete[0].mealPlanData
+            mealPlanToDelete[0].mealPlanData,
           );
 
           const cleanupResult = await handleMealPlanEvent(event);
 
-          if (cleanupResult.success && cleanupResult.action === 'updated') {
-            console.log(`[Storage] Cleaned up ${cleanupResult.itemCount || 0} orphaned grocery lists for deleted meal plan ${assignmentId}`);
+          if (cleanupResult.success && cleanupResult.action === "updated") {
+            console.log(
+              `[Storage] Cleaned up ${cleanupResult.itemCount || 0} orphaned grocery lists for deleted meal plan ${assignmentId}`,
+            );
           }
         } catch (error) {
-          console.error(`[Storage] Error during grocery list cleanup for deleted meal plan ${assignmentId}:`, error);
+          console.error(
+            `[Storage] Error during grocery list cleanup for deleted meal plan ${assignmentId}:`,
+            error,
+          );
         }
       }
 
       return true;
     } catch (error) {
-      console.error('Error removing meal plan assignment:', error);
+      console.error("Error removing meal plan assignment:", error);
       return false;
     }
   }
 
   // Recipe Favorites
-  async addRecipeToFavorites(userId: string, recipeId: string, notes?: string): Promise<RecipeFavorite> {
+  async addRecipeToFavorites(
+    userId: string,
+    recipeId: string,
+    notes?: string,
+  ): Promise<RecipeFavorite> {
     try {
-      const [favorite] = await db.insert(recipeFavorites).values({
-        userId,
-        recipeId,
-        notes,
-      }).returning();
+      const [favorite] = await db
+        .insert(recipeFavorites)
+        .values({
+          userId,
+          recipeId,
+          notes,
+        })
+        .returning();
       return favorite;
     } catch (error: any) {
-      if (error.code === '23505') { // Unique constraint violation
-        throw new Error('Recipe is already in favorites');
+      if (error.code === "23505") {
+        // Unique constraint violation
+        throw new Error("Recipe is already in favorites");
       }
       throw error;
     }
   }
 
-  async removeRecipeFromFavorites(userId: string, recipeId: string): Promise<boolean> {
+  async removeRecipeFromFavorites(
+    userId: string,
+    recipeId: string,
+  ): Promise<boolean> {
     const result = await db
       .delete(recipeFavorites)
-      .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)));
+      .where(
+        and(
+          eq(recipeFavorites.userId, userId),
+          eq(recipeFavorites.recipeId, recipeId),
+        ),
+      );
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getUserFavorites(userId: string, options: { page?: number; limit?: number; search?: string }) {
+  async getUserFavorites(
+    userId: string,
+    options: { page?: number; limit?: number; search?: string },
+  ) {
     const { page = 1, limit = 20, search } = options;
     const offset = (page - 1) * limit;
 
     // Build where conditions
     const whereConditions = search
-      ? and(eq(recipeFavorites.userId, userId), like(recipes.name, `%${search}%`))
+      ? and(
+          eq(recipeFavorites.userId, userId),
+          like(recipes.name, `%${search}%`),
+        )
       : eq(recipeFavorites.userId, userId);
 
     // Build the query with recipe details
@@ -986,7 +1300,7 @@ export class DatabaseStorage implements IStorage {
       .where(whereConditions);
 
     return {
-      favorites: favorites.map(f => ({
+      favorites: favorites.map((f) => ({
         ...f.recipe,
         createdAt: f.favorite.createdAt,
         notes: f.favorite.notes,
@@ -999,21 +1313,35 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db
       .select({ id: recipeFavorites.id })
       .from(recipeFavorites)
-      .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)))
+      .where(
+        and(
+          eq(recipeFavorites.userId, userId),
+          eq(recipeFavorites.recipeId, recipeId),
+        ),
+      )
       .limit(1);
     return !!result;
   }
 
   // Recipe Collections
-  async createRecipeCollection(userId: string, collectionData: any): Promise<RecipeCollection> {
-    const [collection] = await db.insert(recipeCollections).values({
-      userId,
-      ...collectionData,
-    }).returning();
+  async createRecipeCollection(
+    userId: string,
+    collectionData: any,
+  ): Promise<RecipeCollection> {
+    const [collection] = await db
+      .insert(recipeCollections)
+      .values({
+        userId,
+        ...collectionData,
+      })
+      .returning();
     return collection;
   }
 
-  async getUserCollections(userId: string, options: { page?: number; limit?: number }) {
+  async getUserCollections(
+    userId: string,
+    options: { page?: number; limit?: number },
+  ) {
     const { page = 1, limit = 20 } = options;
     const offset = (page - 1) * limit;
 
@@ -1024,7 +1352,10 @@ export class DatabaseStorage implements IStorage {
         recipeCount: sql<number>`count(${collectionRecipes.id})`,
       })
       .from(recipeCollections)
-      .leftJoin(collectionRecipes, eq(recipeCollections.id, collectionRecipes.collectionId))
+      .leftJoin(
+        collectionRecipes,
+        eq(recipeCollections.id, collectionRecipes.collectionId),
+      )
       .where(eq(recipeCollections.userId, userId))
       .groupBy(recipeCollections.id)
       .orderBy(desc(recipeCollections.createdAt))
@@ -1038,7 +1369,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(recipeCollections.userId, userId));
 
     return {
-      collections: collections.map(c => ({
+      collections: collections.map((c) => ({
         ...c.collection,
         recipeCount: Number(c.recipeCount),
       })),
@@ -1051,7 +1382,12 @@ export class DatabaseStorage implements IStorage {
     const [collection] = await db
       .select()
       .from(recipeCollections)
-      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+      .where(
+        and(
+          eq(recipeCollections.id, collectionId),
+          eq(recipeCollections.userId, userId),
+        ),
+      );
 
     if (!collection) {
       return null;
@@ -1070,7 +1406,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       ...collection,
-      recipes: recipesList.map(r => ({
+      recipes: recipesList.map((r) => ({
         ...r.recipe,
         addedDate: r.collectionRecipe.addedDate,
         notes: r.collectionRecipe.notes,
@@ -1079,15 +1415,25 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async addRecipeToCollection(userId: string, collectionId: string, recipeId: string, notes?: string): Promise<void> {
+  async addRecipeToCollection(
+    userId: string,
+    collectionId: string,
+    recipeId: string,
+    notes?: string,
+  ): Promise<void> {
     // Verify collection belongs to user
     const [collection] = await db
       .select({ id: recipeCollections.id })
       .from(recipeCollections)
-      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+      .where(
+        and(
+          eq(recipeCollections.id, collectionId),
+          eq(recipeCollections.userId, userId),
+        ),
+      );
 
     if (!collection) {
-      throw new Error('Collection not found');
+      throw new Error("Collection not found");
     }
 
     try {
@@ -1097,19 +1443,29 @@ export class DatabaseStorage implements IStorage {
         notes,
       });
     } catch (error: any) {
-      if (error.code === '23505') { // Unique constraint violation
-        throw new Error('Recipe is already in this collection');
+      if (error.code === "23505") {
+        // Unique constraint violation
+        throw new Error("Recipe is already in this collection");
       }
       throw error;
     }
   }
 
-  async removeRecipeFromCollection(userId: string, collectionId: string, recipeId: string): Promise<boolean> {
+  async removeRecipeFromCollection(
+    userId: string,
+    collectionId: string,
+    recipeId: string,
+  ): Promise<boolean> {
     // Verify collection belongs to user
     const [collection] = await db
       .select({ id: recipeCollections.id })
       .from(recipeCollections)
-      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+      .where(
+        and(
+          eq(recipeCollections.id, collectionId),
+          eq(recipeCollections.userId, userId),
+        ),
+      );
 
     if (!collection) {
       return false;
@@ -1117,25 +1473,47 @@ export class DatabaseStorage implements IStorage {
 
     const result = await db
       .delete(collectionRecipes)
-      .where(and(eq(collectionRecipes.collectionId, collectionId), eq(collectionRecipes.recipeId, recipeId)));
+      .where(
+        and(
+          eq(collectionRecipes.collectionId, collectionId),
+          eq(collectionRecipes.recipeId, recipeId),
+        ),
+      );
 
     return (result.rowCount ?? 0) > 0;
   }
 
-  async updateRecipeCollection(userId: string, collectionId: string, updates: any) {
+  async updateRecipeCollection(
+    userId: string,
+    collectionId: string,
+    updates: any,
+  ) {
     const [collection] = await db
       .update(recipeCollections)
       .set({ ...updates, updatedAt: new Date() })
-      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)))
+      .where(
+        and(
+          eq(recipeCollections.id, collectionId),
+          eq(recipeCollections.userId, userId),
+        ),
+      )
       .returning();
 
     return collection;
   }
 
-  async deleteRecipeCollection(userId: string, collectionId: string): Promise<boolean> {
+  async deleteRecipeCollection(
+    userId: string,
+    collectionId: string,
+  ): Promise<boolean> {
     const result = await db
       .delete(recipeCollections)
-      .where(and(eq(recipeCollections.id, collectionId), eq(recipeCollections.userId, userId)));
+      .where(
+        and(
+          eq(recipeCollections.id, collectionId),
+          eq(recipeCollections.userId, userId),
+        ),
+      );
 
     return (result.rowCount ?? 0) > 0;
   }
@@ -1147,7 +1525,7 @@ export class DatabaseStorage implements IStorage {
     interactionType: string,
     interactionValue?: number,
     sessionId?: string,
-    metadata?: any
+    metadata?: any,
   ): Promise<void> {
     await db.insert(recipeInteractions).values({
       userId,
@@ -1159,8 +1537,12 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async rateRecipe(userId: string, recipeId: string, rating: number): Promise<void> {
-    await this.trackRecipeInteraction(userId, recipeId, 'rate', rating);
+  async rateRecipe(
+    userId: string,
+    recipeId: string,
+    rating: number,
+  ): Promise<void> {
+    await this.trackRecipeInteraction(userId, recipeId, "rate", rating);
   }
 
   async getPopularRecipes(timeframe: string, limit: number) {
@@ -1168,13 +1550,13 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
 
     switch (timeframe) {
-      case 'day':
+      case "day":
         dateFilter = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         break;
-      case 'week':
+      case "week":
         dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
-      case 'month':
+      case "month":
         dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         break;
       default:
@@ -1192,20 +1574,24 @@ export class DatabaseStorage implements IStorage {
         recipeInteractions,
         and(
           eq(recipeInteractions.recipeId, recipes.id),
-          eq(recipeInteractions.interactionType, 'view'),
-          gte(recipeInteractions.interactionDate, dateFilter)
-        )
+          eq(recipeInteractions.interactionType, "view"),
+          gte(recipeInteractions.interactionDate, dateFilter),
+        ),
       )
       .leftJoin(
         recipeFavorites,
         and(
           eq(recipeFavorites.recipeId, recipes.id),
-          gte(recipeFavorites.createdAt, dateFilter)
-        )
+          gte(recipeFavorites.createdAt, dateFilter),
+        ),
       )
       .where(eq(recipes.isApproved, true))
       .groupBy(recipes.id)
-      .orderBy(desc(sql`count(${recipeInteractions.id}) + count(${recipeFavorites.id})`))
+      .orderBy(
+        desc(
+          sql`count(${recipeInteractions.id}) + count(${recipeFavorites.id})`,
+        ),
+      )
       .limit(limit);
   }
 
@@ -1217,7 +1603,7 @@ export class DatabaseStorage implements IStorage {
     const whereConditions = category
       ? and(
           eq(recipes.isApproved, true),
-          sql`${recipes.mealTypes} @> ${JSON.stringify([category])}`
+          sql`${recipes.mealTypes} @> ${JSON.stringify([category])}`,
         )
       : eq(recipes.isApproved, true);
 
@@ -1233,7 +1619,11 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(recipeFavorites, eq(recipeFavorites.recipeId, recipes.id))
       .where(whereConditions)
       .groupBy(recipes.id)
-      .orderBy(desc(sql`count(case when ${recipeInteractions.interactionDate} >= ${last7Days} then 1 end)`))
+      .orderBy(
+        desc(
+          sql`count(case when ${recipeInteractions.interactionDate} >= ${last7Days} then 1 end)`,
+        ),
+      )
       .limit(limit);
   }
 
@@ -1269,8 +1659,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(recipeInteractions.userId, userId),
-          gte(recipeInteractions.interactionDate, dateFilter)
-        )
+          gte(recipeInteractions.interactionDate, dateFilter),
+        ),
       );
 
     return activity;
@@ -1285,7 +1675,10 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(groceryLists.updatedAt));
   }
 
-  async getGroceryList(customerId: string, listId: string): Promise<GroceryListWithItems | undefined> {
+  async getGroceryList(
+    customerId: string,
+    listId: string,
+  ): Promise<GroceryListWithItems | undefined> {
     // Get grocery list
     const [groceryList] = await db
       .select()
@@ -1293,8 +1686,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(groceryLists.id, listId),
-          eq(groceryLists.customerId, customerId)
-        )
+          eq(groceryLists.customerId, customerId),
+        ),
       )
       .limit(1);
 
@@ -1310,7 +1703,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(
         groceryListItems.isChecked,
         groceryListItems.category,
-        groceryListItems.name
+        groceryListItems.name,
       );
 
     return {
@@ -1320,38 +1713,51 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createGroceryList(listData: InsertGroceryList): Promise<GroceryList> {
-    const [created] = await db.insert(groceryLists).values(listData).returning();
+    const [created] = await db
+      .insert(groceryLists)
+      .values(listData)
+      .returning();
     return created;
   }
 
-  async updateGroceryList(customerId: string, listId: string, updates: Partial<InsertGroceryList>): Promise<GroceryList | undefined> {
+  async updateGroceryList(
+    customerId: string,
+    listId: string,
+    updates: Partial<InsertGroceryList>,
+  ): Promise<GroceryList | undefined> {
     const [updated] = await db
       .update(groceryLists)
       .set(updates)
       .where(
         and(
           eq(groceryLists.id, listId),
-          eq(groceryLists.customerId, customerId)
-        )
+          eq(groceryLists.customerId, customerId),
+        ),
       )
       .returning();
     return updated;
   }
 
-  async deleteGroceryList(customerId: string, listId: string): Promise<boolean> {
+  async deleteGroceryList(
+    customerId: string,
+    listId: string,
+  ): Promise<boolean> {
     const result = await db
       .delete(groceryLists)
       .where(
         and(
           eq(groceryLists.id, listId),
-          eq(groceryLists.customerId, customerId)
-        )
+          eq(groceryLists.customerId, customerId),
+        ),
       );
     return Number(result.rowCount) > 0;
   }
 
   // Grocery List Items Operations
-  async addGroceryListItem(listId: string, itemData: InsertGroceryListItem): Promise<GroceryListItem> {
+  async addGroceryListItem(
+    listId: string,
+    itemData: InsertGroceryListItem,
+  ): Promise<GroceryListItem> {
     const [created] = await db
       .insert(groceryListItems)
       .values({ ...itemData, groceryListId: listId })
@@ -1359,28 +1765,35 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async updateGroceryListItem(listId: string, itemId: string, updates: Partial<InsertGroceryListItem>): Promise<GroceryListItem | undefined> {
+  async updateGroceryListItem(
+    listId: string,
+    itemId: string,
+    updates: Partial<InsertGroceryListItem>,
+  ): Promise<GroceryListItem | undefined> {
     const [updated] = await db
       .update(groceryListItems)
       .set(updates)
       .where(
         and(
           eq(groceryListItems.id, itemId),
-          eq(groceryListItems.groceryListId, listId)
-        )
+          eq(groceryListItems.groceryListId, listId),
+        ),
       )
       .returning();
     return updated;
   }
 
-  async deleteGroceryListItem(listId: string, itemId: string): Promise<boolean> {
+  async deleteGroceryListItem(
+    listId: string,
+    itemId: string,
+  ): Promise<boolean> {
     const result = await db
       .delete(groceryListItems)
       .where(
         and(
           eq(groceryListItems.id, itemId),
-          eq(groceryListItems.groceryListId, listId)
-        )
+          eq(groceryListItems.groceryListId, listId),
+        ),
       );
     return Number(result.rowCount) > 0;
   }
@@ -1393,7 +1806,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(
         groceryListItems.isChecked,
         groceryListItems.category,
-        groceryListItems.name
+        groceryListItems.name,
       );
   }
 
