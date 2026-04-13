@@ -1005,32 +1005,41 @@ export class DatabaseStorage implements IStorage {
     assignedBy: string,
     notes?: string,
   ): Promise<MealPlanAssignment> {
-    // Hotfix B8: idempotent insert. The new unique index on
-    // (mealPlanId, customerId) prevents duplicates; onConflictDoNothing
-    // turns a double-click or two-tab race into a no-op instead of a
-    // constraint error. We then re-fetch the existing row so callers
-    // always get the assignment back.
-    const inserted = await db
-      .insert(mealPlanAssignments)
-      .values({
-        mealPlanId,
-        customerId,
-        assignedBy,
-        notes,
-      })
-      .onConflictDoNothing({
-        target: [
-          mealPlanAssignments.mealPlanId,
-          mealPlanAssignments.customerId,
-        ],
-      })
-      .returning();
-
+    // Hotfix B9 (2026-04-12 night, supersedes B8): race-safe idempotent insert.
+    //
+    // Three scenarios this must survive:
+    //   (a) Migration 0028 applied + B8 code live → unique index exists,
+    //       onConflictDoNothing handles races, re-fetch on skip works.
+    //   (b) Migration 0028 NOT applied, code is live → no unique index;
+    //       onConflictDoNothing with target=[columns] raises PG error
+    //       "there is no unique or exclusion constraint matching the
+    //       ON CONFLICT specification" → 500.
+    //   (c) Pre-existing duplicate rows in production → re-fetch .limit(1)
+    //       is still safe since we just need one row back to the caller.
+    //
+    // Fix: try the plain insert first. If it throws a unique-violation,
+    // re-fetch. No ON CONFLICT clause is used at all, so the code works
+    // regardless of whether migration 0028 has been applied.
     let assignment: MealPlanAssignment;
-    if (inserted.length > 0) {
-      assignment = inserted[0];
-    } else {
-      // Conflict: an assignment already exists. Re-fetch it.
+    try {
+      const [inserted] = await db
+        .insert(mealPlanAssignments)
+        .values({
+          mealPlanId,
+          customerId,
+          assignedBy,
+          notes,
+        })
+        .returning();
+      assignment = inserted;
+    } catch (err: any) {
+      // 23505 = PostgreSQL unique_violation
+      const isUniqueViolation =
+        err?.code === "23505" ||
+        String(err?.message || "").includes("duplicate key") ||
+        String(err?.message || "").includes("unique");
+      if (!isUniqueViolation) throw err;
+
       const [existing] = await db
         .select()
         .from(mealPlanAssignments)
@@ -1040,9 +1049,12 @@ export class DatabaseStorage implements IStorage {
             eq(mealPlanAssignments.customerId, customerId),
           ),
         )
+        .orderBy(mealPlanAssignments.assignedAt)
         .limit(1);
       if (!existing) {
-        throw new Error("Assignment conflict but no existing row found");
+        throw new Error(
+          "Assignment unique violation but no existing row found",
+        );
       }
       assignment = existing;
     }
