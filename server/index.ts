@@ -116,10 +116,26 @@ function resolveProjectPath(...segments: string[]): string {
 const app = express();
 
 // Configure CORS based on environment
+// Accepts both the legacy evofitmeals.com domain and the new meals.evofit.io subdomain
+const productionOrigins = [
+  process.env.FRONTEND_URL || "https://evofitmeals.com",
+  "https://evofitmeals.com",
+  "https://meals.evofit.io",
+];
+
 const corsOptions = {
   origin:
     process.env.NODE_ENV === "production"
-      ? process.env.FRONTEND_URL || "https://evofitmeals.com"
+      ? (
+          origin: string | undefined,
+          callback: (err: Error | null, allow?: boolean) => void,
+        ) => {
+          if (!origin || productionOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`CORS: origin ${origin} not allowed`));
+          }
+        }
       : [
           "http://localhost:3000",
           "http://localhost:5173",
