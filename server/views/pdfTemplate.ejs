@@ -175,6 +175,8 @@
        ============================================================ */
     .cover-page {
       min-height: 100vh;
+      /* Negative margins cancel out Puppeteer's page margins so cover bleeds to edges */
+      margin: -10mm -10mm -15mm -10mm;
       background: var(--dark-bg);
       color: var(--white);
       position: relative;
@@ -1324,18 +1326,7 @@
        FOOTER — Every Page
        ============================================================ */
     .page-footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 10px var(--sp-xl);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 8pt;
-      color: var(--mid-grey);
-      border-top: 1px solid var(--light-grey);
-      background: var(--white);
+      display: none; /* replaced by Puppeteer footerTemplate in margin area */
     }
 
     .footer-brand {

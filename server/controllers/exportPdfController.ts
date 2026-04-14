@@ -137,15 +137,31 @@ export async function exportPdfController(
       timeout,
     });
 
-    // Generate PDF with optimal settings and timeout
-    // No margin override — let CSS @page rules handle margins:
-    //   @page :first { margin: 0 }          → cover page fills full A4
-    //   @page { margin: 15mm 12mm 20mm 12mm } → content pages have proper clearance
+    // Puppeteer footer — renders in the margin area, never covers content.
+    // The EJS template's position:fixed footer is hidden (display:none).
+    // Cover page uses negative CSS margins to bleed to page edges.
+    const footerTemplate = `
+      <div style="font-family: Outfit, Helvetica, sans-serif; font-size: 8pt;
+        color: #94949E; padding: 0 24px; width: 100%; display: flex;
+        justify-content: space-between; align-items: center;
+        border-top: 1px solid #E8E8F0; box-sizing: border-box; height: 100%;">
+        <span>
+          <span style="font-weight: 600; color: #9333EA;">${templateData.brandInfo.name}</span>
+          ${templateData.generatedBy ? `&nbsp;|&nbsp; Trainer: ${templateData.generatedBy}` : ""}
+        </span>
+        <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+          &nbsp;&bull;&nbsp; ${templateData.brandInfo.website}
+        </span>
+      </div>`;
+
     const pdf = await page.pdf({
       format: exportOptions.pageSize as any,
       printBackground: true,
       preferCSSPageSize: true,
-      displayHeaderFooter: false,
+      margin: { top: "10mm", right: "10mm", bottom: "15mm", left: "10mm" },
+      displayHeaderFooter: true,
+      headerTemplate: "<div></div>",
+      footerTemplate,
       timeout,
     });
 
