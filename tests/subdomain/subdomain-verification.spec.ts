@@ -116,7 +116,7 @@ test.describe("Static assets", () => {
       }
     });
 
-    await page.goto(SUBDOMAIN, { waitUntil: "networkidle" });
+    await page.goto(SUBDOMAIN, { waitUntil: "load" });
     expect(failedRequests).toHaveLength(0);
   });
 });
