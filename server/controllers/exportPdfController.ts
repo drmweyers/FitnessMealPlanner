@@ -138,11 +138,12 @@ export async function exportPdfController(
     });
 
     // Generate PDF with optimal settings and timeout
-    // Zero margins: the EJS template handles all padding internally (dark cover fills full page)
+    // No margin override — let CSS @page rules handle margins:
+    //   @page :first { margin: 0 }          → cover page fills full A4
+    //   @page { margin: 15mm 12mm 20mm 12mm } → content pages have proper clearance
     const pdf = await page.pdf({
       format: exportOptions.pageSize as any,
       printBackground: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
       preferCSSPageSize: true,
       displayHeaderFooter: false,
       timeout,
