@@ -646,18 +646,18 @@ export default function StarterSalesPage() {
               </h3>
               <p className="text-white/60 mb-6 leading-relaxed">
                 Professional unlocks 20 clients, custom branding on your PDFs,
-                seasonal recipes, natural language AI input, and priority
-                support. You pay the $100 difference — your data transfers
+                3,000+ recipes, natural language AI input, and recipe
+                collections. You pay the $100 difference — your data transfers
                 instantly.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-sm">
                 {[
                   "20 client slots (vs 9 on Starter)",
                   "Custom logo + brand colors on PDFs",
-                  "Complete + seasonal recipe library",
+                  "3,000+ recipe library",
                   "Natural language AI meal generation",
-                  "CSV + PDF analytics reports",
-                  "Priority support",
+                  "Recipe collections",
+                  "Advanced analytics",
                 ].map((item) => (
                   <div
                     key={item}

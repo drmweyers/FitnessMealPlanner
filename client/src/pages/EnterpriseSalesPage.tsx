@@ -565,8 +565,8 @@ export default function EnterpriseSalesPage() {
               },
               {
                 icon: Headphones,
-                title: "Dedicated Support",
-                desc: "Priority support response for Enterprise accounts. Get help faster when you're running a high-volume operation.",
+                title: "Direct Support",
+                desc: "Get help when you're running a high-volume operation. Enterprise accounts have access to our support team.",
               },
               {
                 icon: InfinityIcon,
@@ -735,7 +735,7 @@ export default function EnterpriseSalesPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Headphones className="w-4 h-4" />
-                Priority support
+                Direct support access
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4" />

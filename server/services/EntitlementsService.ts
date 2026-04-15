@@ -80,8 +80,8 @@ export class EntitlementsService {
         recipes: 3000, // 3,000 recipes for Professional
       },
       enterprise: {
-        customers: 50,
-        mealPlans: 500,
+        customers: -1,
+        mealPlans: -1,
         aiGenerations: -1, // unlimited
         recipes: 6000, // 6,000 recipes for Enterprise (all recipes)
       },

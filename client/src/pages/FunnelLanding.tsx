@@ -668,7 +668,7 @@ function FeatureGrid() {
         }
         bullets={[
           "Generate complete, macro-balanced plans from one natural-language prompt",
-          "Built-in support for keto, vegan, paleo, halal, gluten-free and 8+ protocols",
+          "Built-in support for keto, vegan, paleo, gluten-free, high-protein and 9 dietary protocols",
           "Your clients get custom nutrition — you get the credit",
         ]}
       />
@@ -754,7 +754,8 @@ function TierComparison() {
       price: 199,
       popular: false,
       features: [
-        "Up to 5 active clients",
+        "Up to 9 clients",
+        "50 meal plans/month",
         "AI meal plan generation",
         "1,500+ recipes",
         "PDF exports",
@@ -774,12 +775,13 @@ function TierComparison() {
       popular: true,
       extras: "Everything in Starter, PLUS:",
       features: [
-        "Unlimited active clients",
+        "Up to 20 clients",
+        "200 meal plans/month",
+        "3,000+ recipes",
         "Custom branding (logo + colors)",
         "Natural language AI input",
-        "Recipe collections & templates",
-        "CSV + PDF analytics",
-        "Bulk client operations",
+        "Recipe collections",
+        "Advanced analytics",
       ],
       cta: "Get Professional",
       accent: "border-orange-500 ring-2 ring-orange-500/20",
@@ -794,9 +796,10 @@ function TierComparison() {
       extras: "Everything in Professional, PLUS:",
       features: [
         "Unlimited clients",
+        "Unlimited meal plans",
+        "6,000+ recipe library",
         "Admin dashboard",
         "Bulk operations",
-        "All 17 meal type categories",
         "All export formats (PDF, CSV)",
         "Security audit trail",
       ],
@@ -1178,7 +1181,7 @@ function FAQSection() {
     },
     {
       q: "What if I need more clients?",
-      a: "Simply upgrade to the next tier and pay only the difference. Going from Starter (5 clients) to Professional (unlimited clients) is just $100. Enterprise gives you admin tools and advanced features for $399 total. All upgrades are one-time payments too.",
+      a: "Simply upgrade to the next tier and pay only the difference. Going from Starter (9 clients) to Professional (20 clients) is just $100. Enterprise gives you unlimited clients, admin tools, and advanced features for $399 total. All upgrades are one-time payments too.",
     },
     {
       q: "Can my clients access plans without signing up?",
@@ -1186,7 +1189,7 @@ function FAQSection() {
     },
     {
       q: "What dietary restrictions do you support?",
-      a: "We support 8+ dietary protocols out of the box: keto, vegan, vegetarian, paleo, halal, kosher, gluten-free, dairy-free, and more. Our AI also handles custom restrictions — just describe what your client needs in plain English and the system adapts.",
+      a: "We support 9 dietary protocols out of the box: vegetarian, vegan, keto, paleo, gluten-free, low-carb, high-protein, mediterranean, and pescatarian. Our AI also handles custom restrictions — just describe what your client needs in plain English and the system adapts.",
     },
     {
       q: "Is there a free trial?",
