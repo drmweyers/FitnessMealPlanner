@@ -93,290 +93,296 @@ export default function Router() {
   }
 
   return (
-    <Layout>
-      <Switch>
-        <Route
-          path="/"
-          component={() => {
-            switch (user.role) {
-              case "customer":
-                return <Redirect to="/my-meal-plans" />;
-              case "trainer":
-                return <Redirect to="/trainer" />;
-              case "admin":
-                return <Redirect to="/admin" />;
-              default:
+    <Switch>
+      {/* Public/marketing routes — no app Layout, regardless of auth state */}
+      <Route path="/get-started" component={FunnelLanding} />
+      <Route path="/starter" component={StarterSalesPage} />
+      <Route path="/professional" component={ProfessionalSalesPage} />
+      <Route path="/enterprise" component={EnterpriseSalesPage} />
+      <Route path="/free-blueprint" component={LeadMagnetPage} />
+      <Route path="/special-offer" component={TripwirePage} />
+      <Route path="/pricing" component={HybridPricing} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={BlogPost} />
+      <Route path="/payment/success" component={CheckoutSuccess} />
+      <Route path="/checkout/cancel" component={CheckoutCancel} />
+
+      {/* App routes — all wrapped in Layout */}
+      <Route>
+        <Layout>
+          <Switch>
+            <Route
+              path="/"
+              component={() => {
+                switch (user.role) {
+                  case "customer":
+                    return <Redirect to="/my-meal-plans" />;
+                  case "trainer":
+                    return <Redirect to="/trainer" />;
+                  case "admin":
+                    return <Redirect to="/admin" />;
+                  default:
+                    return <Trainer />;
+                }
+              }}
+            />
+            <Route
+              path="/billing"
+              component={() => (
+                <ProtectedRoute requiredRole="trainer">
+                  <Billing />
+                </ProtectedRoute>
+              )}
+            />
+
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              component={() => (
+                <ProtectedRoute requiredRole="admin">
+                  <Admin />
+                </ProtectedRoute>
+              )}
+            />
+
+            <Route
+              path="/admin/analytics"
+              component={() => (
+                <ProtectedRoute requiredRole="admin">
+                  <AdminAnalytics />
+                </ProtectedRoute>
+              )}
+            />
+
+            <Route
+              path="/admin/dashboard"
+              component={() => (
+                <ProtectedRoute requiredRole="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              )}
+            />
+
+            <Route
+              path="/admin/bulk-generation"
+              component={() => (
+                <ProtectedRoute requiredRole="admin">
+                  <BulkRecipeGeneration />
+                </ProtectedRoute>
+              )}
+            />
+
+            {/* Customer Routes */}
+            <Route
+              path="/customer"
+              component={() => {
+                if (user.role !== "customer") {
+                  return <Redirect to="/" />;
+                }
+                return <Customer />;
+              }}
+            />
+
+            <Route
+              path="/customer/meal-plans"
+              component={() => {
+                if (user.role !== "customer") {
+                  return <Redirect to="/" />;
+                }
+                return <Customer />;
+              }}
+            />
+
+            <Route
+              path="/customer/progress"
+              component={() => {
+                if (user.role !== "customer") {
+                  return <Redirect to="/" />;
+                }
+                const Component = Customer;
+                return <Component initialTab="progress" />;
+              }}
+            />
+
+            <Route
+              path="/customer/grocery-list"
+              component={() => {
+                if (user.role !== "customer") {
+                  return <Redirect to="/" />;
+                }
+                const Component = Customer;
+                return <Component initialTab="grocery-list" />;
+              }}
+            />
+
+            <Route
+              path="/my-meal-plans"
+              component={() => {
+                if (user.role !== "customer") {
+                  return <Redirect to="/" />;
+                }
+                return <Customer />;
+              }}
+            />
+
+            {/* New Milestone 9 Routes - Customer only */}
+            <Route
+              path="/nutrition"
+              component={() => {
+                if (user.role !== "customer") {
+                  return <Redirect to="/" />;
+                }
+                return (
+                  <MacroTrackingDashboard
+                    userId={user.id}
+                    userRole={user.role}
+                  />
+                );
+              }}
+            />
+
+            <Route
+              path="/grocery-list"
+              component={() => {
+                if (user.role !== "customer") {
+                  return <Redirect to="/" />;
+                }
+                return <GroceryListWrapper />;
+              }}
+            />
+
+            {/* Common Routes */}
+            <Route
+              path="/recipes"
+              component={() => {
+                // Recipes page accessible to all authenticated users
                 return <Trainer />;
-            }
-          }}
-        />
+              }}
+            />
 
-        {/* Public Routes */}
-        <Route path="/blog" component={Blog} />
-        <Route path="/blog/:slug" component={BlogPost} />
+            <Route
+              path="/favorites"
+              component={() => {
+                // Favorites page accessible to trainers and customers
+                if (user.role === "admin") {
+                  return <Redirect to="/" />;
+                }
+                return <Trainer />;
+              }}
+            />
 
-        {/* Public/Common Routes */}
-        <Route path="/pricing" component={HybridPricing} />
-        <Route path="/get-started" component={FunnelLanding} />
-        <Route path="/starter" component={StarterSalesPage} />
-        <Route path="/professional" component={ProfessionalSalesPage} />
-        <Route path="/enterprise" component={EnterpriseSalesPage} />
-        <Route path="/free-blueprint" component={LeadMagnetPage} />
-        <Route path="/special-offer" component={TripwirePage} />
-        <Route path="/payment/success" component={CheckoutSuccess} />
-        <Route path="/checkout/cancel" component={CheckoutCancel} />
-        <Route
-          path="/billing"
-          component={() => (
-            <ProtectedRoute requiredRole="trainer">
-              <Billing />
-            </ProtectedRoute>
-          )}
-        />
+            {/* Trainer Routes - More specific routes first */}
+            <Route
+              path="/trainer/customers"
+              component={() => {
+                if (user.role !== "trainer") {
+                  return (
+                    <AccessDenied message="Trainer access required. You don't have permission to view customer management." />
+                  );
+                }
+                return <Trainer />;
+              }}
+            />
 
-        {/* Admin Routes */}
-        <Route
-          path="/admin"
-          component={() => (
-            <ProtectedRoute requiredRole="admin">
-              <Admin />
-            </ProtectedRoute>
-          )}
-        />
+            <Route
+              path="/trainer/meal-plans"
+              component={() => {
+                if (user.role !== "trainer") {
+                  return (
+                    <AccessDenied message="Trainer access required. You don't have permission to view meal plans management." />
+                  );
+                }
+                return <Trainer />;
+              }}
+            />
 
-        <Route
-          path="/admin/analytics"
-          component={() => (
-            <ProtectedRoute requiredRole="admin">
-              <AdminAnalytics />
-            </ProtectedRoute>
-          )}
-        />
+            <Route
+              path="/trainer/manual-meal-plan"
+              component={() => {
+                if (user.role !== "trainer") {
+                  return (
+                    <AccessDenied message="Trainer access required. You don't have permission to create meal plans." />
+                  );
+                }
+                return <Trainer />;
+              }}
+            />
 
-        <Route
-          path="/admin/dashboard"
-          component={() => (
-            <ProtectedRoute requiredRole="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          )}
-        />
+            <Route
+              path="/meal-plan-generator"
+              component={() => {
+                if (user.role !== "trainer" && user.role !== "admin") {
+                  return (
+                    <AccessDenied message="Trainer or Admin access required. You don't have permission to generate meal plans." />
+                  );
+                }
+                return <Trainer />;
+              }}
+            />
 
-        <Route
-          path="/admin/bulk-generation"
-          component={() => (
-            <ProtectedRoute requiredRole="admin">
-              <BulkRecipeGeneration />
-            </ProtectedRoute>
-          )}
-        />
+            <Route
+              path="/trainer"
+              component={() => {
+                if (user.role !== "trainer") {
+                  return (
+                    <AccessDenied message="Trainer access required. You don't have permission to access the trainer dashboard." />
+                  );
+                }
+                return <Trainer />;
+              }}
+            />
 
-        {/* Customer Routes */}
-        <Route
-          path="/customer"
-          component={() => {
-            if (user.role !== "customer") {
-              return <Redirect to="/" />;
-            }
-            return <Customer />;
-          }}
-        />
+            {/* Profile Routes */}
+            <Route
+              path="/profile"
+              component={() => {
+                switch (user.role) {
+                  case "admin":
+                    return <AdminProfile />;
+                  case "trainer":
+                    return <TrainerProfile />;
+                  case "customer":
+                    return <CustomerProfile />;
+                  default:
+                    return <Redirect to="/" />;
+                }
+              }}
+            />
 
-        <Route
-          path="/customer/meal-plans"
-          component={() => {
-            if (user.role !== "customer") {
-              return <Redirect to="/" />;
-            }
-            return <Customer />;
-          }}
-        />
-
-        <Route
-          path="/customer/progress"
-          component={() => {
-            if (user.role !== "customer") {
-              return <Redirect to="/" />;
-            }
-            const Component = Customer;
-            return <Component initialTab="progress" />;
-          }}
-        />
-
-        <Route
-          path="/customer/grocery-list"
-          component={() => {
-            if (user.role !== "customer") {
-              return <Redirect to="/" />;
-            }
-            const Component = Customer;
-            return <Component initialTab="grocery-list" />;
-          }}
-        />
-
-        <Route
-          path="/my-meal-plans"
-          component={() => {
-            if (user.role !== "customer") {
-              return <Redirect to="/" />;
-            }
-            return <Customer />;
-          }}
-        />
-
-        {/* New Milestone 9 Routes - Customer only */}
-        <Route
-          path="/nutrition"
-          component={() => {
-            if (user.role !== "customer") {
-              return <Redirect to="/" />;
-            }
-            return (
-              <MacroTrackingDashboard userId={user.id} userRole={user.role} />
-            );
-          }}
-        />
-
-        <Route
-          path="/grocery-list"
-          component={() => {
-            if (user.role !== "customer") {
-              return <Redirect to="/" />;
-            }
-            return <GroceryListWrapper />;
-          }}
-        />
-
-        {/* Common Routes */}
-        <Route
-          path="/recipes"
-          component={() => {
-            // Recipes page accessible to all authenticated users
-            return <Trainer />;
-          }}
-        />
-
-        <Route
-          path="/favorites"
-          component={() => {
-            // Favorites page accessible to trainers and customers
-            if (user.role === "admin") {
-              return <Redirect to="/" />;
-            }
-            return <Trainer />;
-          }}
-        />
-
-        {/* Trainer Routes - More specific routes first */}
-        <Route
-          path="/trainer/customers"
-          component={() => {
-            if (user.role !== "trainer") {
-              return (
-                <AccessDenied message="Trainer access required. You don't have permission to view customer management." />
-              );
-            }
-            return <Trainer />;
-          }}
-        />
-
-        <Route
-          path="/trainer/meal-plans"
-          component={() => {
-            if (user.role !== "trainer") {
-              return (
-                <AccessDenied message="Trainer access required. You don't have permission to view meal plans management." />
-              );
-            }
-            return <Trainer />;
-          }}
-        />
-
-        <Route
-          path="/trainer/manual-meal-plan"
-          component={() => {
-            if (user.role !== "trainer") {
-              return (
-                <AccessDenied message="Trainer access required. You don't have permission to create meal plans." />
-              );
-            }
-            return <Trainer />;
-          }}
-        />
-
-        <Route
-          path="/meal-plan-generator"
-          component={() => {
-            if (user.role !== "trainer" && user.role !== "admin") {
-              return (
-                <AccessDenied message="Trainer or Admin access required. You don't have permission to generate meal plans." />
-              );
-            }
-            return <Trainer />;
-          }}
-        />
-
-        <Route
-          path="/trainer"
-          component={() => {
-            if (user.role !== "trainer") {
-              return (
-                <AccessDenied message="Trainer access required. You don't have permission to access the trainer dashboard." />
-              );
-            }
-            return <Trainer />;
-          }}
-        />
-
-        {/* Profile Routes */}
-        <Route
-          path="/profile"
-          component={() => {
-            switch (user.role) {
-              case "admin":
+            <Route
+              path="/admin/profile"
+              component={() => {
+                if (user.role !== "admin") {
+                  return <Redirect to="/" />;
+                }
                 return <AdminProfile />;
-              case "trainer":
+              }}
+            />
+
+            <Route
+              path="/trainer/profile"
+              component={() => {
+                if (user.role !== "trainer") {
+                  return <Redirect to="/" />;
+                }
                 return <TrainerProfile />;
-              case "customer":
+              }}
+            />
+
+            <Route
+              path="/customer/profile"
+              component={() => {
+                if (user.role !== "customer") {
+                  return <Redirect to="/" />;
+                }
                 return <CustomerProfile />;
-              default:
-                return <Redirect to="/" />;
-            }
-          }}
-        />
+              }}
+            />
 
-        <Route
-          path="/admin/profile"
-          component={() => {
-            if (user.role !== "admin") {
-              return <Redirect to="/" />;
-            }
-            return <AdminProfile />;
-          }}
-        />
-
-        <Route
-          path="/trainer/profile"
-          component={() => {
-            if (user.role !== "trainer") {
-              return <Redirect to="/" />;
-            }
-            return <TrainerProfile />;
-          }}
-        />
-
-        <Route
-          path="/customer/profile"
-          component={() => {
-            if (user.role !== "customer") {
-              return <Redirect to="/" />;
-            }
-            return <CustomerProfile />;
-          }}
-        />
-
-        <Route path="*" component={NotFound} />
-      </Switch>
-    </Layout>
+            <Route path="*" component={NotFound} />
+          </Switch>
+        </Layout>
+      </Route>
+    </Switch>
   );
 }
