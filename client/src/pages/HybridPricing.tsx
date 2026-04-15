@@ -13,6 +13,7 @@ interface PricingTier {
   tagline: string;
   popular?: boolean;
   price: number;
+  totalValue: string;
   clientLimit: string;
   features: TierFeature[];
   cta: string;
@@ -24,6 +25,7 @@ const PRICING_TIERS: PricingTier[] = [
     id: "STARTER",
     tagline: "Perfect for new trainers",
     price: 199,
+    totalValue: "$2,488",
     clientLimit: "Up to 9 clients",
     features: [
       { name: "Up to 9 clients", included: true },
@@ -35,6 +37,10 @@ const PRICING_TIERS: PricingTier[] = [
       { name: "Shareable client links", included: true },
       { name: "Progress tracking", included: true },
       { name: "8+ dietary protocols", included: true },
+      { name: "Lifetime platform updates", included: true },
+      { name: "Trainer Toolkit (8 calculators)", included: true },
+      { name: "Marketing Vault (email scripts + templates)", included: true },
+      { name: "2 specialized plan packs/year", included: true },
       { name: "Custom branding", included: false },
     ],
     cta: "Get Started",
@@ -45,6 +51,7 @@ const PRICING_TIERS: PricingTier[] = [
     tagline: "For growing practices",
     popular: true,
     price: 299,
+    totalValue: "$4,982",
     clientLimit: "Up to 20 clients",
     features: [
       { name: "Up to 20 clients", included: true },
@@ -55,6 +62,10 @@ const PRICING_TIERS: PricingTier[] = [
       { name: "Recipe collections", included: true },
       { name: "Progress tracking", included: true },
       { name: "Custom branding", included: true },
+      { name: "Lifetime platform updates", included: true },
+      { name: "Trainer Toolkit (8 calculators)", included: true },
+      { name: "Marketing Vault + Advanced Playbooks", included: true },
+      { name: "All specialized meal plan drops (12+/year)", included: true },
       { name: "White-label + custom domain", included: false },
     ],
     cta: "Start Growing",
@@ -64,6 +75,7 @@ const PRICING_TIERS: PricingTier[] = [
     id: "ENTERPRISE",
     tagline: "For gyms and high-volume trainers",
     price: 399,
+    totalValue: "$7,976",
     clientLimit: "Unlimited clients",
     features: [
       { name: "Unlimited clients", included: true },
@@ -73,6 +85,10 @@ const PRICING_TIERS: PricingTier[] = [
       { name: "Bulk operations", included: true },
       { name: "All export formats (PDF + CSV)", included: true },
       { name: "Full analytics dashboard", included: true },
+      { name: "Lifetime platform updates", included: true },
+      { name: "White-labeled Trainer Toolkit", included: true },
+      { name: "Team & gym marketing SOPs", included: true },
+      { name: "Custom protocol request (1/year)", included: true },
     ],
     cta: "Get Enterprise",
   },
@@ -191,6 +207,22 @@ export default function HybridPricing() {
                   <p className="text-sm text-gray-500 mt-1">
                     Lifetime access. No monthly fees.
                   </p>
+                </div>
+
+                {/* Value stack summary */}
+                <div className="mb-4 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3 text-center">
+                  <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-0.5">
+                    Total package value
+                  </div>
+                  <div className="text-base font-black text-orange-500 line-through opacity-60">
+                    {tier.totalValue}
+                  </div>
+                  <div className="text-sm font-bold text-gray-800">
+                    Yours today:{" "}
+                    <span className="text-orange-600">
+                      ${tier.price} one-time
+                    </span>
+                  </div>
                 </div>
 
                 {/* CTA Button */}

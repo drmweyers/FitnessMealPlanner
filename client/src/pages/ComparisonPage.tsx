@@ -233,6 +233,22 @@ const tableFeatures: { label: string; values: CellValue[] }[] = [
     label: "Free Trial",
     values: ["14 days", "1 client", false, false],
   },
+  {
+    label: "Lifetime Updates Included",
+    values: [true, false, false, false],
+  },
+  {
+    label: "Marketing Resources Included",
+    values: [true, false, false, false],
+  },
+  {
+    label: "Fitness Calculator Toolkit",
+    values: [true, false, false, false],
+  },
+  {
+    label: "Specialized Protocol Drops",
+    values: [true, false, false, false],
+  },
 ];
 
 const savingsStats = [

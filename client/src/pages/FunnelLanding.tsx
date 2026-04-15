@@ -209,6 +209,7 @@ export default function FunnelLanding() {
         <SolutionSection />
         <FeatureGrid />
         <TierComparison />
+        <BonusSection />
         <SocialProof />
         <CompetitorTable />
         <FAQSection />
@@ -752,6 +753,7 @@ function TierComparison() {
       name: "Starter",
       tagline: "Launch",
       price: 199,
+      totalValue: "$2,488",
       popular: false,
       features: [
         "Up to 9 clients",
@@ -763,6 +765,10 @@ function TierComparison() {
         "Shareable client links",
         "Progress tracking",
         "8+ dietary protocols",
+        "Lifetime platform updates",
+        "Trainer Toolkit (8 calculators)",
+        "Marketing Vault (email scripts + templates)",
+        "2 specialized plan packs/year",
       ],
       cta: "Get Starter",
       accent: "border-gray-200",
@@ -772,6 +778,7 @@ function TierComparison() {
       name: "Professional",
       tagline: "Scale",
       price: 299,
+      totalValue: "$4,982",
       popular: true,
       extras: "Everything in Starter, PLUS:",
       features: [
@@ -782,6 +789,10 @@ function TierComparison() {
         "Natural language AI input",
         "Recipe collections",
         "Advanced analytics",
+        "All specialized meal plan drops (12+/year)",
+        "Advanced marketing playbooks",
+        "Trainer Toolkit (8 calculators)",
+        "Lifetime platform updates",
       ],
       cta: "Get Professional",
       accent: "border-orange-500 ring-2 ring-orange-500/20",
@@ -792,6 +803,7 @@ function TierComparison() {
       name: "Enterprise",
       tagline: "Dominate",
       price: 399,
+      totalValue: "$7,976",
       popular: false,
       extras: "Everything in Professional, PLUS:",
       features: [
@@ -802,6 +814,10 @@ function TierComparison() {
         "Bulk operations",
         "All export formats (PDF, CSV)",
         "Security audit trail",
+        "Custom protocol request (1/year)",
+        "Team & gym marketing SOPs",
+        "White-labeled Trainer Toolkit",
+        "Lifetime platform updates",
       ],
       cta: "Get Enterprise",
       accent: "border-gray-200",
@@ -883,6 +899,20 @@ function TierComparison() {
                     ))}
                   </ul>
 
+                  {/* Value stack summary */}
+                  <div className="mb-5 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3 text-center">
+                    <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-0.5">
+                      Total package value
+                    </div>
+                    <div className="text-lg font-black text-orange-600 line-through opacity-60">
+                      {tier.totalValue}
+                    </div>
+                    <div className="text-sm font-bold text-gray-800">
+                      Yours today:{" "}
+                      <span className="text-orange-600">${tier.price}</span>
+                    </div>
+                  </div>
+
                   {/* CTA */}
                   <Link href="/pricing">
                     <Button
@@ -910,7 +940,190 @@ function TierComparison() {
 }
 
 /* ──────────────────────────────────────────────
-   6. SOCIAL PROOF
+   6. BONUS SECTION
+   ────────────────────────────────────────────── */
+function BonusSection() {
+  const universalBonuses = [
+    {
+      title: "Lifetime Platform Updates",
+      desc: "Every new feature, every improvement, delivered to your account forever. No upgrade fees. No version lock. Ever.",
+      value: "$997 value",
+    },
+    {
+      title: "Trainer Toolkit — 8 Professional Calculators",
+      desc: "BMI, TDEE, Macro Splitter, 1RM, Body Fat %, BMR, Protein Target, and Water Intake — all built into your dashboard.",
+      value: "$297 value",
+    },
+    {
+      title: "Trainer Marketing Vault (Base)",
+      desc: "10 email scripts, 20 social media templates, 1 lead magnet template, and a client acquisition playbook — delivered to your account.",
+      value: "$497 value",
+    },
+  ];
+
+  const tierBonuses = [
+    {
+      tier: "Starter",
+      color: "border-gray-300",
+      headerClass: "bg-gray-100 text-gray-700",
+      bonuses: [
+        "2 new specialized meal plan packs per year (weight loss + muscle gain variants)",
+      ],
+      bonusValues: ["$197 value"],
+      total: "$2,488 total value",
+      price: "$199",
+    },
+    {
+      tier: "Professional",
+      color: "border-orange-400",
+      headerClass: "bg-orange-500 text-white",
+      bonuses: [
+        "ALL new specialized meal plan drops as released — competition prep, menopause, injury recovery, sports-specific, 12+ protocols/year",
+        "Advanced Marketing Playbooks — funnel templates, ad copy swipe file, referral system playbook",
+      ],
+      bonusValues: ["$997 value", "$497 value"],
+      total: "$4,982 total value",
+      price: "$299",
+    },
+    {
+      tier: "Enterprise",
+      color: "border-purple-500",
+      headerClass: "bg-gradient-to-r from-purple-700 to-purple-600 text-white",
+      bonuses: [
+        "1 custom protocol request per year — request a specialized plan type and we build it for you",
+        "Team & Gym Marketing SOPs — staff onboarding marketing kit, white-label client-facing marketing collateral",
+        "White-labeled Trainer Toolkit — all 8 calculators embeddable on your own domain with your branding",
+      ],
+      bonusValues: ["$1,997 value", "$997 value", "$597 value"],
+      total: "$7,976 total value",
+      price: "$399",
+    },
+  ];
+
+  return (
+    <section className="py-20 sm:py-28 bg-[#0A0A0F]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Reveal>
+          <div className="text-center mb-16">
+            <span className="inline-block text-sm font-semibold text-purple-400 uppercase tracking-widest mb-3">
+              Bonuses
+            </span>
+            <h2 className="font-clash font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4">
+              Every Plan Comes Loaded.
+            </h2>
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+              These bonuses aren't tacked on. They're built in — delivered to
+              your account on day one, regardless of which plan you choose.
+            </p>
+          </div>
+        </Reveal>
+
+        {/* Universal bonuses */}
+        <Reveal>
+          <div className="mb-4">
+            <span className="inline-block bg-purple-600/20 border border-purple-500/30 text-purple-300 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
+              Included with every plan
+            </span>
+          </div>
+        </Reveal>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={staggerContainer}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16"
+        >
+          {universalBonuses.map((bonus) => (
+            <motion.div key={bonus.title} variants={fadeUp}>
+              <div className="relative bg-white/5 border border-white/10 rounded-2xl p-6 h-full hover:border-purple-500/40 transition-all duration-300">
+                <div className="absolute -top-3 right-4">
+                  <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    {bonus.value}
+                  </span>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-purple-600/30 flex items-center justify-center mb-4">
+                  <Star className="w-5 h-5 text-orange-400" />
+                </div>
+                <h3 className="font-clash font-bold text-white text-lg mb-2">
+                  {bonus.title}
+                </h3>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  {bonus.desc}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Tier-specific bonuses */}
+        <Reveal>
+          <div className="mb-6">
+            <span className="inline-block bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full">
+              Additional bonuses by tier
+            </span>
+          </div>
+        </Reveal>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={staggerContainer}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          {tierBonuses.map((t) => (
+            <motion.div key={t.tier} variants={fadeUp}>
+              <div
+                className={`border-2 ${t.color} rounded-2xl overflow-hidden h-full flex flex-col`}
+              >
+                <div
+                  className={`${t.headerClass} px-5 py-3 font-clash font-bold text-base`}
+                >
+                  {t.tier} Extras
+                </div>
+                <div className="bg-white/5 p-5 flex-1 flex flex-col">
+                  <ul className="space-y-4 flex-1">
+                    {t.bonuses.map((bonus, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <span className="text-white text-sm leading-snug">
+                            {bonus}
+                          </span>
+                          <span className="block text-orange-400 text-xs font-semibold mt-0.5">
+                            {t.bonusValues[i]}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-6 pt-4 border-t border-white/10 text-center">
+                    <div className="text-gray-400 text-xs uppercase tracking-widest mb-1">
+                      Total package value
+                    </div>
+                    <div className="text-white font-black text-xl">
+                      {t.total}
+                    </div>
+                    <div className="text-gray-400 text-sm mt-1">
+                      Yours today:{" "}
+                      <span className="text-orange-400 font-bold">
+                        {t.price} one-time
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   7. SOCIAL PROOF
    ────────────────────────────────────────────── */
 function SocialProof() {
   const testimonials = [

@@ -468,6 +468,10 @@ export default function ProfessionalSalesPage() {
               >
                 Everything In Professional
               </h2>
+              <p className="text-white/50 text-lg mt-4 max-w-xl mx-auto">
+                Serious trainers pick Professional. $100 more than Starter
+                unlocks $2,494 in protocols and marketing you'll use every week.
+              </p>
             </div>
           </AnimatedSection>
 
@@ -551,29 +555,50 @@ export default function ProfessionalSalesPage() {
                 </span>
               </div>
               <ValueStackItem
-                icon={CalendarDays}
-                label="Seasonal Recipe Updates (Forever)"
-                value="$500/yr"
+                icon={Zap}
+                label="Lifetime Platform Updates"
+                value="$997"
                 delay={0.5}
                 isBonus
               />
               <ValueStackItem
-                icon={Layout}
-                label="Premium Template Library"
-                value="$400/yr"
+                icon={BadgeCheck}
+                label="Trainer Toolkit — 8 Professional Calculators"
+                value="$297"
                 delay={0.55}
+                isBonus
+              />
+              <ValueStackItem
+                icon={BookOpen}
+                label="Marketing Vault — Email Scripts + Social Templates"
+                value="$497"
+                delay={0.6}
+                isBonus
+              />
+              <ValueStackItem
+                icon={CalendarDays}
+                label="ALL Specialized Meal Plan Drops (12+/year)"
+                value="$997"
+                delay={0.65}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Layout}
+                label="Advanced Marketing Playbooks"
+                value="$497"
+                delay={0.7}
                 isBonus
               />
             </div>
 
             {/* Total */}
-            <AnimatedSection delay={0.6}>
+            <AnimatedSection delay={0.75}>
               <div className="mt-8 pt-8 border-t border-white/20 text-center">
                 <div className="text-white/50 text-lg mb-2">
-                  Total Annual Value
+                  Total Package Value
                 </div>
                 <div className="text-4xl sm:text-5xl font-black text-white/30 line-through mb-4">
-                  $13,500/yr
+                  $4,982
                 </div>
                 <div className="text-sm text-white/50 mb-2">YOUR PRICE</div>
                 <div className="text-5xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">

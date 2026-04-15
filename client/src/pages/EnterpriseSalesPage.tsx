@@ -482,29 +482,71 @@ export default function EnterpriseSalesPage() {
                 </span>
               </div>
               <ValueStackItem
-                icon={BarChart3}
-                label="Full Analytics Dashboard"
-                value="$500/yr"
+                icon={Zap}
+                label="Lifetime Platform Updates"
+                value="$997"
                 delay={0.36}
                 isBonus
               />
               <ValueStackItem
-                icon={Sparkles}
-                label="Onboarding Support"
-                value="$300/yr"
+                icon={BadgeCheck}
+                label="Trainer Toolkit — 8 Professional Calculators"
+                value="$297"
                 delay={0.4}
+                isBonus
+              />
+              <ValueStackItem
+                icon={BookOpen}
+                label="Marketing Vault — Email Scripts + Social Templates"
+                value="$497"
+                delay={0.44}
+                isBonus
+              />
+              <ValueStackItem
+                icon={CalendarDays}
+                label="ALL Specialized Meal Plan Drops (12+/year)"
+                value="$997"
+                delay={0.48}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Layout}
+                label="Advanced Marketing Playbooks"
+                value="$497"
+                delay={0.52}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Sparkles}
+                label="Custom Protocol Request (1/year — we build it for you)"
+                value="$1,997"
+                delay={0.56}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Building2}
+                label="Team & Gym Marketing SOPs"
+                value="$997"
+                delay={0.6}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Globe}
+                label="White-Labeled Trainer Toolkit (embeddable on your domain)"
+                value="$597"
+                delay={0.64}
                 isBonus
               />
             </div>
 
             {/* Total */}
-            <AnimatedSection delay={0.5}>
+            <AnimatedSection delay={0.7}>
               <div className="mt-8 pt-8 border-t border-white/20 text-center">
                 <div className="text-white/50 text-lg mb-2">
-                  Total Annual Value
+                  Total Package Value
                 </div>
                 <div className="text-4xl sm:text-5xl font-black text-white/30 line-through mb-4">
-                  $33,500/yr
+                  $7,976
                 </div>
                 <div className="text-sm text-white/50 mb-2">YOUR PRICE</div>
                 <div className="text-5xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">

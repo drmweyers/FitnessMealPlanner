@@ -353,30 +353,48 @@ export default function StarterSalesPage() {
               delay={0.4}
             />
 
-            {/* Bonus */}
+            {/* Bonuses */}
             <div className="mt-6 pt-6 border-t border-purple-500/30">
               <div className="flex items-center gap-2 mb-4">
                 <Star className="w-5 h-5 text-orange-400" />
                 <span className="text-orange-400 font-bold text-sm tracking-widest uppercase">
-                  FREE BONUS
+                  FREE BONUSES
                 </span>
               </div>
               <ValueStackItem
-                icon={ImageIcon}
-                label="Recipe Image Library"
-                value="$500/yr"
+                icon={Zap}
+                label="Lifetime Platform Updates"
+                value="$997"
                 delay={0.45}
+              />
+              <ValueStackItem
+                icon={BadgeCheck}
+                label="Trainer Toolkit — 8 Professional Calculators"
+                value="$297"
+                delay={0.5}
+              />
+              <ValueStackItem
+                icon={BookOpen}
+                label="Marketing Vault — Email Scripts + Social Templates"
+                value="$497"
+                delay={0.55}
+              />
+              <ValueStackItem
+                icon={Sparkles}
+                label="2 Specialized Meal Plan Packs/Year"
+                value="$197"
+                delay={0.6}
               />
             </div>
 
             {/* Total */}
-            <AnimatedSection delay={0.5}>
+            <AnimatedSection delay={0.65}>
               <div className="mt-8 pt-8 border-t border-white/20 text-center">
                 <div className="text-white/50 text-lg mb-2">
-                  Total Annual Value
+                  Total Package Value
                 </div>
                 <div className="text-4xl sm:text-5xl font-black text-white/30 line-through mb-4">
-                  $5,200/yr
+                  $2,488
                 </div>
                 <div className="text-sm text-white/50 mb-2">YOUR PRICE</div>
                 <div className="text-5xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
@@ -545,6 +563,53 @@ export default function StarterSalesPage() {
               </AnimatedSection>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          SECTION 5b: UPGRADE VISIBILITY (VISIBLE CEILING)
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 sm:py-20 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0F] via-[#120a20] to-[#0A0A0F]" />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AnimatedSection>
+            <div className="border border-purple-500/30 bg-purple-600/5 rounded-2xl p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-5 h-5 text-purple-400" />
+                <span className="text-purple-400 font-bold text-sm tracking-widest uppercase">
+                  When you're ready to scale
+                </span>
+              </div>
+              <h3
+                className="text-xl sm:text-2xl font-black text-white mb-3"
+                style={{ fontFamily: "'Clash Display', 'Satoshi', sans-serif" }}
+              >
+                Professional adds $2,494 more in protocols + marketing tools
+              </h3>
+              <p className="text-white/60 text-sm leading-relaxed mb-5">
+                Starter is the right starting point. When you're ready to go
+                deeper — specialized plans for competition prep, menopause,
+                injury recovery, and sports-specific protocols drop throughout
+                the year. Plus advanced marketing playbooks to grow your client
+                base. All for $100 more.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "All specialized plan drops (12+/year)",
+                  "Competition prep protocols",
+                  "Advanced marketing playbooks",
+                  "Upgrade: pay only the $100 difference",
+                ].map((item) => (
+                  <span
+                    key={item}
+                    className="bg-purple-600/20 border border-purple-500/30 text-purple-300 text-xs px-3 py-1.5 rounded-full"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
