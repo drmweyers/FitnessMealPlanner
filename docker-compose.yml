@@ -77,7 +77,7 @@ services:
     container_name: fitnessmealplanner-dev
     ports:
       - "4000:4000"
-      - "24678:24678"
+      # - "24678:24678"  # HMR port — disabled (Windows port conflict)
     env_file:
       - .env
     environment:

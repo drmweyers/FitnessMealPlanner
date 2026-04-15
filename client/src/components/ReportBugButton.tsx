@@ -162,7 +162,7 @@ export function ReportBugButton() {
       {/* Floating button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-purple-600 px-4 py-3 text-white shadow-lg transition-all hover:bg-purple-700 hover:shadow-xl lg:rounded-md"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-orange-500 px-4 py-3 text-white shadow-lg transition-all hover:bg-orange-600 hover:shadow-xl lg:rounded-md"
         aria-label="Report a Problem"
       >
         <Bug className="h-5 w-5" />
