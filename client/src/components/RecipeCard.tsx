@@ -40,7 +40,7 @@ interface RecipeCardProps {
 // Memoized color mapping functions outside component to avoid recreation
 const MEAL_TYPE_COLORS = {
   breakfast: "bg-orange-100 text-orange-700",
-  lunch: "bg-yellow-100 text-yellow-700", 
+  lunch: "bg-yellow-100 text-yellow-700",
   dinner: "bg-primary/10 text-primary",
   snack: "bg-pink-100 text-pink-700",
 } as const;
@@ -50,24 +50,30 @@ const DIETARY_TAG_COLORS = {
   vegan: "bg-blue-100 text-blue-700",
   keto: "bg-green-100 text-green-700",
   paleo: "bg-orange-100 text-orange-700",
-  "gluten-free": "bg-purple-100 text-purple-700",
+  "gluten-free": "bg-orange-100 text-orange-700",
   "low-carb": "bg-red-100 text-red-700",
-  "high-protein": "bg-purple-100 text-purple-700",
+  "high-protein": "bg-orange-100 text-orange-700",
 } as const;
 
 const getMealTypeColor = (mealType: string) => {
-  return MEAL_TYPE_COLORS[mealType as keyof typeof MEAL_TYPE_COLORS] || "bg-slate-100 text-slate-700";
+  return (
+    MEAL_TYPE_COLORS[mealType as keyof typeof MEAL_TYPE_COLORS] ||
+    "bg-slate-100 text-slate-700"
+  );
 };
 
 const getDietaryTagColor = (tag: string) => {
-  return DIETARY_TAG_COLORS[tag as keyof typeof DIETARY_TAG_COLORS] || "bg-slate-100 text-slate-700";
+  return (
+    DIETARY_TAG_COLORS[tag as keyof typeof DIETARY_TAG_COLORS] ||
+    "bg-slate-100 text-slate-700"
+  );
 };
 
-function RecipeCard({ 
-  recipe, 
-  onClick, 
-  showCheckbox = false, 
-  isSelected = false, 
+function RecipeCard({
+  recipe,
+  onClick,
+  showCheckbox = false,
+  isSelected = false,
   onSelectionChange,
   showFavoriteButton = true,
   showEngagementStats = false,
@@ -78,7 +84,7 @@ function RecipeCard({
 }: RecipeCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
-  
+
   const { trackView } = useRecipeViewTracking();
 
   // Memoized callbacks to prevent unnecessary re-renders
@@ -91,38 +97,51 @@ function RecipeCard({
     setImageLoading(false);
   }, []);
 
-  const handleCheckboxChange = useCallback((checked: boolean) => {
-    if (onSelectionChange) {
-      onSelectionChange(recipe.id, checked);
-    }
-  }, [recipe.id, onSelectionChange]);
-
-  const handleCardClick = useCallback((e: React.MouseEvent) => {
-    // Don't trigger card click if checkbox, favorite button, or rating was clicked
-    if (e.target !== e.currentTarget) {
-      const target = e.target as HTMLElement;
-      if (target.closest('[data-checkbox]') || 
-          target.closest('[data-favorite-button]') || 
-          target.closest('[data-rating-component]')) {
-        return;
+  const handleCheckboxChange = useCallback(
+    (checked: boolean) => {
+      if (onSelectionChange) {
+        onSelectionChange(recipe.id, checked);
       }
-    }
-    
-    // Track recipe view
-    trackView(recipe.id);
-    
-    onClick();
-  }, [onClick, showCheckbox, trackView, recipe.id]);
+    },
+    [recipe.id, onSelectionChange],
+  );
 
-  const handleRating = useCallback((rating: number) => {
-    if (onRateRecipe) {
-      onRateRecipe(recipe.id, rating);
-    }
-  }, [recipe.id, onRateRecipe]);
+  const handleCardClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't trigger card click if checkbox, favorite button, or rating was clicked
+      if (e.target !== e.currentTarget) {
+        const target = e.target as HTMLElement;
+        if (
+          target.closest("[data-checkbox]") ||
+          target.closest("[data-favorite-button]") ||
+          target.closest("[data-rating-component]")
+        ) {
+          return;
+        }
+      }
+
+      // Track recipe view
+      trackView(recipe.id);
+
+      onClick();
+    },
+    [onClick, showCheckbox, trackView, recipe.id],
+  );
+
+  const handleRating = useCallback(
+    (rating: number) => {
+      if (onRateRecipe) {
+        onRateRecipe(recipe.id, rating);
+      }
+    },
+    [recipe.id, onRateRecipe],
+  );
 
   // Auto-track view when card comes into viewport (optional)
   useEffect(() => {
-    const cardElement = document.querySelector(`[data-recipe-id="${recipe.id}"]`);
+    const cardElement = document.querySelector(
+      `[data-recipe-id="${recipe.id}"]`,
+    );
     if (!cardElement) return;
 
     const observer = new IntersectionObserver(
@@ -134,7 +153,7 @@ function RecipeCard({
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     );
 
     observer.observe(cardElement);
@@ -142,22 +161,40 @@ function RecipeCard({
   }, [recipe.id, trackView]);
 
   // Memoized computed values
-  const { primaryMealType, primaryDietaryTag, totalTime, formattedProtein, formattedCarbs, formattedFat } = useMemo(() => ({
-    primaryMealType: recipe.mealTypes?.[0] || 'dinner',
-    primaryDietaryTag: recipe.dietaryTags?.[0],
-    totalTime: recipe.prepTimeMinutes + recipe.cookTimeMinutes,
-    formattedProtein: Number(recipe.proteinGrams).toFixed(0),
-    formattedCarbs: Number(recipe.carbsGrams).toFixed(0),
-    formattedFat: Number(recipe.fatGrams).toFixed(0),
-  }), [recipe.mealTypes, recipe.dietaryTags, recipe.prepTimeMinutes, recipe.cookTimeMinutes, recipe.proteinGrams, recipe.carbsGrams, recipe.fatGrams]);
+  const {
+    primaryMealType,
+    primaryDietaryTag,
+    totalTime,
+    formattedProtein,
+    formattedCarbs,
+    formattedFat,
+  } = useMemo(
+    () => ({
+      primaryMealType: recipe.mealTypes?.[0] || "dinner",
+      primaryDietaryTag: recipe.dietaryTags?.[0],
+      totalTime: recipe.prepTimeMinutes + recipe.cookTimeMinutes,
+      formattedProtein: Number(recipe.proteinGrams).toFixed(0),
+      formattedCarbs: Number(recipe.carbsGrams).toFixed(0),
+      formattedFat: Number(recipe.fatGrams).toFixed(0),
+    }),
+    [
+      recipe.mealTypes,
+      recipe.dietaryTags,
+      recipe.prepTimeMinutes,
+      recipe.cookTimeMinutes,
+      recipe.proteinGrams,
+      recipe.carbsGrams,
+      recipe.fatGrams,
+    ],
+  );
 
   return (
-    <Card 
+    <Card
       className={cn(
         "overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group h-full border-0 shadow-sm relative",
         "mobile-card touch-manipulation",
-        isSelected && 'ring-2 ring-primary ring-offset-2',
-        className
+        isSelected && "ring-2 ring-primary ring-offset-2",
+        className,
       )}
       onClick={handleCardClick}
       data-recipe-id={recipe.id}
@@ -180,28 +217,30 @@ function RecipeCard({
           </div>
         )}
         {!imageError ? (
-          <img 
-            src={recipe.imageUrl ?? '/api/placeholder/400/250'} 
+          <img
+            src={recipe.imageUrl ?? "/api/placeholder/400/250"}
             alt={recipe.name}
             className="w-full h-36 sm:h-40 lg:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
             onLoad={handleImageLoad}
             onError={handleImageError}
-            style={{ display: imageLoading ? 'none' : 'block' }}
+            style={{ display: imageLoading ? "none" : "block" }}
           />
         ) : (
           <div className="w-full h-36 sm:h-40 lg:h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
             <div className="text-center text-gray-500 px-2">
               <i className="fas fa-utensils text-xl sm:text-2xl lg:text-3xl mb-2"></i>
-              <p className="text-xs sm:text-sm font-medium line-clamp-2">{recipe.name}</p>
+              <p className="text-xs sm:text-sm font-medium line-clamp-2">
+                {recipe.name}
+              </p>
             </div>
           </div>
         )}
-        
+
         {/* Favorite Button */}
         {showFavoriteButton && (
           <div className="absolute top-2 right-2 z-10" data-favorite-button>
-            <FavoriteButton 
-              recipeId={recipe.id} 
+            <FavoriteButton
+              recipeId={recipe.id}
               size="sm"
               variant="ghost"
               className="bg-white/90 backdrop-blur-sm hover:bg-white/95 shadow-sm"
@@ -209,25 +248,30 @@ function RecipeCard({
           </div>
         )}
       </div>
-      
+
       <CardContent className="p-3 sm:p-4 flex flex-col h-auto">
         {/* Meal Type and Dietary Tags */}
         <div className="mb-2 sm:mb-3 flex flex-wrap gap-1 sm:gap-2">
-          <div className={`inline-block text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 sm:py-2 rounded-lg ${getMealTypeColor(primaryMealType)} shadow-sm`}>
+          <div
+            className={`inline-block text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 sm:py-2 rounded-lg ${getMealTypeColor(primaryMealType)} shadow-sm`}
+          >
             {primaryMealType.charAt(0).toUpperCase() + primaryMealType.slice(1)}
           </div>
           {primaryDietaryTag && (
-            <span className={`text-xs font-medium px-2 py-1 rounded-full ${getDietaryTagColor(primaryDietaryTag)}`}>
-              {primaryDietaryTag.charAt(0).toUpperCase() + primaryDietaryTag.slice(1)}
+            <span
+              className={`text-xs font-medium px-2 py-1 rounded-full ${getDietaryTagColor(primaryDietaryTag)}`}
+            >
+              {primaryDietaryTag.charAt(0).toUpperCase() +
+                primaryDietaryTag.slice(1)}
             </span>
           )}
         </div>
-        
+
         {/* Recipe Name */}
         <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-primary transition-colors text-sm sm:text-base line-clamp-2 leading-tight">
           {recipe.name}
         </h3>
-        
+
         {/* Enhanced Rating Display */}
         {(showEngagementStats || allowRating) && (
           <div className="mb-2 sm:mb-3" data-rating-component>
@@ -244,8 +288,9 @@ function RecipeCard({
                 {engagementData?.totalRatings && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>
-                      {engagementData.avgRating?.toFixed(1)} 
-                      ({engagementData.totalRatings} review{engagementData.totalRatings !== 1 ? 's' : ''})
+                      {engagementData.avgRating?.toFixed(1)}(
+                      {engagementData.totalRatings} review
+                      {engagementData.totalRatings !== 1 ? "s" : ""})
                     </span>
                     {engagementData.viewCount && (
                       <>
@@ -271,18 +316,20 @@ function RecipeCard({
                   helpfulCount: null,
                   wouldCookAgainCount: null,
                   averageDifficulty: null,
-                  lastUpdated: null
+                  lastUpdated: null,
                 }}
                 size="sm"
                 className="justify-start"
               />
             ) : null}
-            
+
             {/* Recent Review Preview */}
             {engagementData?.recentReview && (
               <div className="mt-2 p-2 bg-muted/50 rounded-md text-xs">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium">{engagementData.recentReview.authorName}</span>
+                  <span className="font-medium">
+                    {engagementData.recentReview.authorName}
+                  </span>
                   <div className="flex items-center gap-1">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     <span>{engagementData.recentReview.rating}</span>
@@ -293,23 +340,26 @@ function RecipeCard({
                 </p>
               </div>
             )}
-            
+
             {/* Recommendation Badge */}
             {engagementData?.isRecommended && (
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="mt-2 text-xs bg-blue-100 text-blue-800 border-blue-200"
               >
                 <Star className="h-3 w-3 mr-1 fill-blue-600 text-blue-600" />
                 Recommended
                 {engagementData.recommendationReason && (
-                  <span className="hidden sm:inline"> - {engagementData.recommendationReason}</span>
+                  <span className="hidden sm:inline">
+                    {" "}
+                    - {engagementData.recommendationReason}
+                  </span>
                 )}
               </Badge>
             )}
           </div>
         )}
-        
+
         {/* Basic Info */}
         <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm text-slate-600 mb-3 sm:mb-4">
           <div className="flex items-center space-x-1">
@@ -321,13 +371,13 @@ function RecipeCard({
             <span className="truncate">{recipe.caloriesKcal} cal</span>
           </div>
         </div>
-        
+
         {/* Nutrition Information */}
         <div className="mt-auto">
           <h4 className="text-xs sm:text-sm font-medium text-slate-700 mb-2">
             Nutrition
           </h4>
-          
+
           {/* Primary Nutrition - Mobile Layout */}
           <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm mb-2 sm:mb-3">
             <div className="text-center bg-orange-50 rounded-lg p-2 sm:p-3">
@@ -343,7 +393,7 @@ function RecipeCard({
               <div className="text-xs text-slate-500">Protein</div>
             </div>
           </div>
-          
+
           {/* Secondary Nutrition - Compact */}
           <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
             <div className="text-center bg-blue-50 rounded-lg p-2 sm:p-3">

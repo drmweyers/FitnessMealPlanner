@@ -1,16 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Download, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const DISMISS_KEY = 'evofitmeals-install-dismissed';
+const DISMISS_KEY = "evofitmeals-install-dismissed";
 
 export default function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -24,15 +25,15 @@ export default function InstallPrompt() {
       setShow(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   const handleInstall = useCallback(async () => {
     if (!deferredPrompt) return;
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
+    if (outcome === "accepted") {
       setShow(false);
     }
     setDeferredPrompt(null);
@@ -40,7 +41,7 @@ export default function InstallPrompt() {
 
   const handleDismiss = useCallback(() => {
     setShow(false);
-    localStorage.setItem(DISMISS_KEY, 'true');
+    localStorage.setItem(DISMISS_KEY, "true");
     setDeferredPrompt(null);
   }, []);
 
@@ -51,13 +52,13 @@ export default function InstallPrompt() {
           initial={{ opacity: 0, y: 80 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 80 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="fixed bottom-4 left-4 z-[100] max-w-sm"
         >
-          <div className="bg-[#0A0A0F] border border-purple-600/30 rounded-xl shadow-2xl shadow-purple-900/20 p-4">
+          <div className="bg-[#0A0A0F] border border-orange-600/30 rounded-xl shadow-2xl shadow-orange-900/20 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center">
-                <Download className="w-5 h-5 text-purple-400" />
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-600/20 flex items-center justify-center">
+                <Download className="w-5 h-5 text-orange-400" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white">
@@ -69,7 +70,7 @@ export default function InstallPrompt() {
                 <div className="flex items-center gap-2 mt-3">
                   <button
                     onClick={handleInstall}
-                    className="px-4 py-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+                    className="px-4 py-1.5 text-xs font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors"
                   >
                     Install
                   </button>

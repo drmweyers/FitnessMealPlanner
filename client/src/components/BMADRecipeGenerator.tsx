@@ -2,18 +2,38 @@ import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { Progress } from "./ui/progress";
 import { useToast } from "../hooks/use-toast";
 import { Checkbox } from "./ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { invalidateRecipeQueries } from "../lib/recipeQueryInvalidation";
 import {
   Sparkles,
@@ -29,7 +49,7 @@ import {
   ChefHat,
   Target,
   Utensils,
-  Clock
+  Clock,
 } from "lucide-react";
 import { z } from "zod";
 
@@ -145,14 +165,14 @@ export default function BMADRecipeGenerator() {
 
   // Check for active batch on mount and reconnect if found
   useEffect(() => {
-    const activeBatchId = localStorage.getItem('bmad-active-batch');
+    const activeBatchId = localStorage.getItem("bmad-active-batch");
     if (activeBatchId) {
-      console.log('[BMAD] Found active batch on mount:', activeBatchId);
+      console.log("[BMAD] Found active batch on mount:", activeBatchId);
       setIsGenerating(true);
-      
+
       // Reset reconnection attempts
       reconnectAttemptsRef.current = 0;
-      
+
       // Fetch current progress first, then connect to SSE
       fetchCurrentProgress(activeBatchId).then(() => {
         connectToSSE(activeBatchId);
@@ -170,17 +190,19 @@ export default function BMADRecipeGenerator() {
   useEffect(() => {
     return () => {
       if (eventSourceRef.current) {
-        console.log('[BMAD] Component unmounting, closing SSE (server continues)');
+        console.log(
+          "[BMAD] Component unmounting, closing SSE (server continues)",
+        );
         eventSourceRef.current.close();
         eventSourceRef.current = null;
       }
-      
+
       // Clear any pending reconnection attempts
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
       }
-      
+
       // Note: We DON'T clear localStorage here - batch may still be running
     };
   }, []);
@@ -189,24 +211,27 @@ export default function BMADRecipeGenerator() {
   const fetchCurrentProgress = async (batchId: string) => {
     try {
       const response = await fetch(`/api/admin/bmad-progress/${batchId}`, {
-        credentials: 'include',
+        credentials: "include",
       });
-      
+
       if (response.ok) {
         const progressData = await response.json();
-        console.log('[BMAD] Fetched current progress:', progressData);
+        console.log("[BMAD] Fetched current progress:", progressData);
         setProgress(progressData);
-        
+
         // If generation is complete, handle it
-        if (progressData.phase === 'complete' || progressData.phase === 'error') {
+        if (
+          progressData.phase === "complete" ||
+          progressData.phase === "error"
+        ) {
           setIsGenerating(false);
-          localStorage.removeItem('bmad-active-batch');
+          localStorage.removeItem("bmad-active-batch");
         } else {
           setIsGenerating(true);
         }
       }
     } catch (error) {
-      console.error('[BMAD] Failed to fetch current progress:', error);
+      console.error("[BMAD] Failed to fetch current progress:", error);
     }
   };
 
@@ -216,53 +241,53 @@ export default function BMADRecipeGenerator() {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    
+
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
 
     // Store active batchId in localStorage for reconnection
-    localStorage.setItem('bmad-active-batch', batchId);
-    console.log('[BMAD] Stored active batch in localStorage:', batchId);
+    localStorage.setItem("bmad-active-batch", batchId);
+    console.log("[BMAD] Stored active batch in localStorage:", batchId);
 
     const eventSource = new EventSource(
-      `/api/admin/bmad-progress-stream/${batchId}`
+      `/api/admin/bmad-progress-stream/${batchId}`,
     );
 
-    eventSource.addEventListener('connected', (event) => {
+    eventSource.addEventListener("connected", (event) => {
       const data = JSON.parse(event.data);
-      console.log('[BMAD SSE] Connected:', data);
-      
+      console.log("[BMAD SSE] Connected:", data);
+
       // Reset reconnection attempts on successful connection
       reconnectAttemptsRef.current = 0;
       setError(null);
-      
+
       // Fetch current progress to sync state
       fetchCurrentProgress(batchId);
     });
 
-    eventSource.addEventListener('progress', (event) => {
+    eventSource.addEventListener("progress", (event) => {
       const progressData: ProgressState = JSON.parse(event.data);
-      console.log('[BMAD SSE] Progress:', progressData);
+      console.log("[BMAD SSE] Progress:", progressData);
       setProgress(progressData);
       setError(null);
-      
+
       // Reset reconnection attempts on successful progress update
       reconnectAttemptsRef.current = 0;
     });
 
-    eventSource.addEventListener('complete', (event) => {
+    eventSource.addEventListener("complete", (event) => {
       const result = JSON.parse(event.data);
-      console.log('[BMAD SSE] Complete:', result);
+      console.log("[BMAD SSE] Complete:", result);
 
       setIsGenerating(false);
 
       // Clear active batch from localStorage
-      localStorage.removeItem('bmad-active-batch');
-      console.log('[BMAD] Cleared active batch from localStorage');
+      localStorage.removeItem("bmad-active-batch");
+      console.log("[BMAD] Cleared active batch from localStorage");
 
       // CRITICAL FIX: Invalidate ALL recipe queries to refresh UI
-      invalidateRecipeQueries(queryClient, 'BMAD-Generation-Complete');
+      invalidateRecipeQueries(queryClient, "BMAD-Generation-Complete");
 
       toast({
         title: "Generation Complete!",
@@ -274,10 +299,10 @@ export default function BMADRecipeGenerator() {
       eventSourceRef.current = null;
     });
 
-    eventSource.addEventListener('error', (event: any) => {
+    eventSource.addEventListener("error", (event: any) => {
       if (event.data) {
         const errorData = JSON.parse(event.data);
-        console.error('[BMAD SSE] Error:', errorData);
+        console.error("[BMAD SSE] Error:", errorData);
         setError(errorData.error);
 
         toast({
@@ -290,56 +315,67 @@ export default function BMADRecipeGenerator() {
       setIsGenerating(false);
 
       // Clear active batch from localStorage on error
-      localStorage.removeItem('bmad-active-batch');
-      console.log('[BMAD] Cleared active batch from localStorage (error)');
+      localStorage.removeItem("bmad-active-batch");
+      console.log("[BMAD] Cleared active batch from localStorage (error)");
 
       eventSource.close();
       eventSourceRef.current = null;
     });
 
     eventSource.onerror = (error) => {
-      console.error('[BMAD SSE] Connection error:', error);
-      
+      console.error("[BMAD SSE] Connection error:", error);
+
       // Check if connection is in a reconnectable state
       const readyState = eventSource.readyState;
-      console.log('[BMAD SSE] EventSource readyState:', readyState);
-      
+      console.log("[BMAD SSE] EventSource readyState:", readyState);
+
       // EventSource.CONNECTING = 0, EventSource.OPEN = 1, EventSource.CLOSED = 2
       if (readyState === EventSource.CLOSED) {
         // Connection closed - attempt to reconnect
         eventSource.close();
         eventSourceRef.current = null;
-        
+
         // Only attempt reconnection if we haven't exceeded max attempts
         if (reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current += 1;
-          console.log(`[BMAD SSE] Attempting to reconnect (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
-          
-          setError(`Connection lost. Reconnecting... (${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
-          
+          console.log(
+            `[BMAD SSE] Attempting to reconnect (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`,
+          );
+
+          setError(
+            `Connection lost. Reconnecting... (${reconnectAttemptsRef.current}/${maxReconnectAttempts})`,
+          );
+
           // Attempt reconnection after delay
           reconnectTimeoutRef.current = setTimeout(() => {
             connectToSSE(batchId);
           }, reconnectDelayMs);
         } else {
           // Max reconnection attempts exceeded
-          console.error('[BMAD SSE] Max reconnection attempts exceeded');
-          setError("SSE connection lost. Please refresh the page to check progress.");
+          console.error("[BMAD SSE] Max reconnection attempts exceeded");
+          setError(
+            "SSE connection lost. Please refresh the page to check progress.",
+          );
           setIsGenerating(false);
-          
+
           // Clear active batch from localStorage
-          localStorage.removeItem('bmad-active-batch');
-          console.log('[BMAD] Cleared active batch from localStorage (max reconnection attempts exceeded)');
-          
+          localStorage.removeItem("bmad-active-batch");
+          console.log(
+            "[BMAD] Cleared active batch from localStorage (max reconnection attempts exceeded)",
+          );
+
           toast({
             variant: "destructive",
             title: "Connection Lost",
-            description: "Unable to reconnect. The generation may still be running. Please refresh the page.",
+            description:
+              "Unable to reconnect. The generation may still be running. Please refresh the page.",
           });
         }
       } else {
         // Connection is still trying to connect or is open - don't treat as fatal error yet
-        console.warn('[BMAD SSE] Connection error but readyState is not CLOSED, waiting...');
+        console.warn(
+          "[BMAD SSE] Connection error but readyState is not CLOSED, waiting...",
+        );
       }
     };
 
@@ -364,12 +400,12 @@ export default function BMADRecipeGenerator() {
         mainIngredient: undefined, // Legacy field, prefer focusIngredient
       };
 
-      const response = await fetch('/api/admin/generate-bmad', {
-        method: 'POST',
+      const response = await fetch("/api/admin/generate-bmad", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(backendPayload),
       });
 
@@ -379,7 +415,7 @@ export default function BMADRecipeGenerator() {
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
-          console.error('[BMAD] Error response:', errorData);
+          console.error("[BMAD] Error response:", errorData);
         } catch {
           // If response is not JSON, use status text
           errorMessage = response.statusText || errorMessage;
@@ -391,7 +427,7 @@ export default function BMADRecipeGenerator() {
 
       // Reset reconnection attempts for new generation
       reconnectAttemptsRef.current = 0;
-      
+
       // Connect to SSE stream with returned batchId
       connectToSSE(result.batchId);
 
@@ -399,15 +435,14 @@ export default function BMADRecipeGenerator() {
         title: "Bulk Generation Started",
         description: `Generating ${result.count} recipes with AI-powered workflow`,
       });
-
     } catch (error) {
       setIsGenerating(false);
-      setError(error instanceof Error ? error.message : 'Unknown error');
+      setError(error instanceof Error ? error.message : "Unknown error");
 
       toast({
         variant: "destructive",
         title: "Failed to Start Generation",
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     }
   };
@@ -420,7 +455,7 @@ export default function BMADRecipeGenerator() {
     // - 20: Medium batch for content creation
     // - 30: Standard production batch
     // - 50: Large production batch for comprehensive libraries
-    
+
     form.reset({
       count: count,
       // Leave all parameters undefined to maximize variety and ensure unique recipes/images
@@ -454,15 +489,15 @@ export default function BMADRecipeGenerator() {
     form.handleSubmit(onSubmit)();
 
     const purposeDescriptions: Record<number, string> = {
-      10: 'Quick test batch - Fast validation and testing',
-      20: 'Medium batch - Content creation and variety',
-      30: 'Standard batch - Production-ready recipes',
-      50: 'Large batch - Comprehensive recipe library'
+      10: "Quick test batch - Fast validation and testing",
+      20: "Medium batch - Content creation and variety",
+      30: "Standard batch - Production-ready recipes",
+      50: "Large batch - Comprehensive recipe library",
     };
 
     toast({
       title: "Quick Generation Started",
-      description: `Generating ${count} diverse fitness-focused recipes: ${purposeDescriptions[count] || 'Production batch'}`,
+      description: `Generating ${count} diverse fitness-focused recipes: ${purposeDescriptions[count] || "Production batch"}`,
     });
   };
 
@@ -471,7 +506,8 @@ export default function BMADRecipeGenerator() {
     if (!naturalLanguageInput || naturalLanguageInput.trim().length === 0) {
       toast({
         title: "Input Required",
-        description: "Please enter a recipe generation prompt in natural language",
+        description:
+          "Please enter a recipe generation prompt in natural language",
         variant: "destructive",
       });
       return;
@@ -482,18 +518,18 @@ export default function BMADRecipeGenerator() {
       setError(null);
 
       // Call parse endpoint to extract parameters
-      const response = await fetch('/api/admin/parse-recipe-prompt', {
-        method: 'POST',
+      const response = await fetch("/api/admin/parse-recipe-prompt", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({ prompt: naturalLanguageInput }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to parse prompt');
+        throw new Error(errorData.message || "Failed to parse prompt");
       }
 
       const result = await response.json();
@@ -502,147 +538,185 @@ export default function BMADRecipeGenerator() {
       // Map parsed parameters to form fields
       // Handle count
       if (parsedParams.count) {
-        form.setValue('count', parsedParams.count);
+        form.setValue("count", parsedParams.count);
       }
-      
+
       // Handle focus ingredient (prefer focusIngredient, fallback to mainIngredientTags)
-      const focusIngredient = parsedParams.focusIngredient || 
-        (parsedParams.mainIngredientTags && Array.isArray(parsedParams.mainIngredientTags) 
-          ? parsedParams.mainIngredientTags.join(', ') 
+      const focusIngredient =
+        parsedParams.focusIngredient ||
+        (parsedParams.mainIngredientTags &&
+        Array.isArray(parsedParams.mainIngredientTags)
+          ? parsedParams.mainIngredientTags.join(", ")
           : undefined);
       if (focusIngredient) {
-        form.setValue('focusIngredient', focusIngredient);
+        form.setValue("focusIngredient", focusIngredient);
       }
-      
+
       // Handle difficulty (map 'difficulty' to 'difficultyLevel')
       if (parsedParams.difficulty) {
-        form.setValue('difficultyLevel', parsedParams.difficulty);
+        form.setValue("difficultyLevel", parsedParams.difficulty);
       }
-      
+
       // Handle recipe preferences/description
       if (parsedParams.description || parsedParams.recipePreferences) {
-        form.setValue('recipePreferences', parsedParams.description || parsedParams.recipePreferences);
+        form.setValue(
+          "recipePreferences",
+          parsedParams.description || parsedParams.recipePreferences,
+        );
       }
-      
+
       // Handle fitness goal
       if (parsedParams.fitnessGoal) {
         // Map common variations to form values
         const fitnessGoalLower = parsedParams.fitnessGoal.toLowerCase();
         const fitnessGoalMap: Record<string, string> = {
-          'muscle_gain': 'muscle_gain',
-          'muscle gain': 'muscle_gain',
-          'build muscle': 'muscle_gain',
-          'build muscles': 'muscle_gain',
-          'muscle building': 'muscle_gain',
-          'gain muscle': 'muscle_gain',
-          'weight_loss': 'weight_loss',
-          'weight loss': 'weight_loss',
-          'lose weight': 'weight_loss',
-          'maintenance': 'maintenance',
-          'endurance': 'endurance',
+          muscle_gain: "muscle_gain",
+          "muscle gain": "muscle_gain",
+          "build muscle": "muscle_gain",
+          "build muscles": "muscle_gain",
+          "muscle building": "muscle_gain",
+          "gain muscle": "muscle_gain",
+          weight_loss: "weight_loss",
+          "weight loss": "weight_loss",
+          "lose weight": "weight_loss",
+          maintenance: "maintenance",
+          endurance: "endurance",
         };
-        
+
         // Check for partial matches (e.g., "build muscles" contains "build")
         let mappedGoal = fitnessGoalMap[fitnessGoalLower];
         if (!mappedGoal) {
           // Try to find a partial match
-          if (fitnessGoalLower.includes('muscle') || fitnessGoalLower.includes('build') || fitnessGoalLower.includes('gain')) {
-            mappedGoal = 'muscle_gain';
-          } else if (fitnessGoalLower.includes('weight') || fitnessGoalLower.includes('lose')) {
-            mappedGoal = 'weight_loss';
+          if (
+            fitnessGoalLower.includes("muscle") ||
+            fitnessGoalLower.includes("build") ||
+            fitnessGoalLower.includes("gain")
+          ) {
+            mappedGoal = "muscle_gain";
+          } else if (
+            fitnessGoalLower.includes("weight") ||
+            fitnessGoalLower.includes("lose")
+          ) {
+            mappedGoal = "weight_loss";
           } else {
             mappedGoal = parsedParams.fitnessGoal;
           }
         }
-        
-        form.setValue('fitnessGoal', mappedGoal);
+
+        form.setValue("fitnessGoal", mappedGoal);
       }
-      
+
       // Handle calorie targets
       if (parsedParams.dailyCalorieTarget) {
-        form.setValue('dailyCalorieTarget', parsedParams.dailyCalorieTarget);
+        form.setValue("dailyCalorieTarget", parsedParams.dailyCalorieTarget);
       }
       if (parsedParams.maxCalories) {
-        form.setValue('maxCalories', parsedParams.maxCalories);
+        form.setValue("maxCalories", parsedParams.maxCalories);
       }
       if (parsedParams.minCalories) {
         // Note: form doesn't have minCalories, but we can use maxCalories as a range hint
         // This is handled by the backend
       }
-      
+
       // Handle other parameters
       if (parsedParams.maxIngredients) {
-        form.setValue('maxIngredients', parsedParams.maxIngredients);
+        form.setValue("maxIngredients", parsedParams.maxIngredients);
       }
-      if (parsedParams.mealTypes && Array.isArray(parsedParams.mealTypes) && parsedParams.mealTypes.length > 0) {
-        form.setValue('mealTypes', parsedParams.mealTypes);
+      if (
+        parsedParams.mealTypes &&
+        Array.isArray(parsedParams.mealTypes) &&
+        parsedParams.mealTypes.length > 0
+      ) {
+        form.setValue("mealTypes", parsedParams.mealTypes);
       }
-      if (parsedParams.dietaryTags && Array.isArray(parsedParams.dietaryTags) && parsedParams.dietaryTags.length > 0) {
+      if (
+        parsedParams.dietaryTags &&
+        Array.isArray(parsedParams.dietaryTags) &&
+        parsedParams.dietaryTags.length > 0
+      ) {
         // Map dietary tags to form values (handle both normalized and raw values)
         const dietaryTagMap: Record<string, string> = {
-          'high_carb': 'high_carb',
-          'high carb': 'high_carb',
-          'high-carb': 'high_carb',
-          'carb diet': 'high_carb',
-          'low_carb': 'low_carb',
-          'low carb': 'low_carb',
-          'low-carb': 'low_carb',
-          'high_protein': 'high_protein',
-          'high protein': 'high_protein',
-          'high-protein': 'high_protein',
-          'gluten_free': 'gluten_free',
-          'gluten-free': 'gluten_free',
-          'gluten free': 'gluten_free',
-          'dairy_free': 'dairy_free',
-          'dairy-free': 'dairy_free',
-          'dairy free': 'dairy_free',
+          high_carb: "high_carb",
+          "high carb": "high_carb",
+          "high-carb": "high_carb",
+          "carb diet": "high_carb",
+          low_carb: "low_carb",
+          "low carb": "low_carb",
+          "low-carb": "low_carb",
+          high_protein: "high_protein",
+          "high protein": "high_protein",
+          "high-protein": "high_protein",
+          gluten_free: "gluten_free",
+          "gluten-free": "gluten_free",
+          "gluten free": "gluten_free",
+          dairy_free: "dairy_free",
+          "dairy-free": "dairy_free",
+          "dairy free": "dairy_free",
         };
-        
+
         const firstTag = parsedParams.dietaryTags[0];
         const mappedTag = dietaryTagMap[firstTag.toLowerCase()] || firstTag;
-        
+
         // Only set if it's a valid form value
-        const validTags = ['vegetarian', 'vegan', 'keto', 'paleo', 'gluten_free', 'low_carb', 
-                          'high_carb', 'high_protein', 'mediterranean', 'pescatarian', 'dairy_free'];
-        
+        const validTags = [
+          "vegetarian",
+          "vegan",
+          "keto",
+          "paleo",
+          "gluten_free",
+          "low_carb",
+          "high_carb",
+          "high_protein",
+          "mediterranean",
+          "pescatarian",
+          "dairy_free",
+        ];
+
         if (validTags.includes(mappedTag)) {
-          form.setValue('dietaryTag', mappedTag);
+          form.setValue("dietaryTag", mappedTag);
         } else {
           // Try to find a matching tag
-          const matchingTag = validTags.find(tag => 
-            firstTag.toLowerCase().includes(tag.replace('_', ' ')) ||
-            tag.replace('_', ' ').includes(firstTag.toLowerCase())
+          const matchingTag = validTags.find(
+            (tag) =>
+              firstTag.toLowerCase().includes(tag.replace("_", " ")) ||
+              tag.replace("_", " ").includes(firstTag.toLowerCase()),
           );
           if (matchingTag) {
-            form.setValue('dietaryTag', matchingTag);
+            form.setValue("dietaryTag", matchingTag);
           }
         }
       }
       if (parsedParams.maxPrepTime) {
-        form.setValue('maxPrepTime', parsedParams.maxPrepTime);
+        form.setValue("maxPrepTime", parsedParams.maxPrepTime);
       }
       if (parsedParams.minProtein) {
-        form.setValue('minProtein', parsedParams.minProtein);
+        form.setValue("minProtein", parsedParams.minProtein);
       }
       if (parsedParams.maxProtein) {
-        form.setValue('maxProtein', parsedParams.maxProtein);
+        form.setValue("maxProtein", parsedParams.maxProtein);
       }
       if (parsedParams.minCarbs) {
-        form.setValue('minCarbs', parsedParams.minCarbs);
+        form.setValue("minCarbs", parsedParams.minCarbs);
       }
       if (parsedParams.maxCarbs) {
-        form.setValue('maxCarbs', parsedParams.maxCarbs);
+        form.setValue("maxCarbs", parsedParams.maxCarbs);
       }
       if (parsedParams.minFat) {
-        form.setValue('minFat', parsedParams.minFat);
+        form.setValue("minFat", parsedParams.minFat);
       }
       if (parsedParams.maxFat) {
-        form.setValue('maxFat', parsedParams.maxFat);
+        form.setValue("maxFat", parsedParams.maxFat);
       }
 
       // Show advanced form if any advanced fields were parsed
-      if (parsedParams.minProtein || parsedParams.maxProtein || parsedParams.minCarbs || 
-          parsedParams.maxCarbs || parsedParams.minFat || parsedParams.maxFat) {
+      if (
+        parsedParams.minProtein ||
+        parsedParams.maxProtein ||
+        parsedParams.minCarbs ||
+        parsedParams.maxCarbs ||
+        parsedParams.minFat ||
+        parsedParams.maxFat
+      ) {
         setShowAdvancedForm(true);
       }
 
@@ -651,18 +725,17 @@ export default function BMADRecipeGenerator() {
         description: `Parsed ${Object.keys(parsedParams).length} parameters from your description. Review and adjust as needed, then click "Start Bulk Generation".`,
       });
 
-      console.log('[Parse AI] Parsed parameters:', parsedParams);
-
+      console.log("[Parse AI] Parsed parameters:", parsedParams);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unknown error');
+      setError(error instanceof Error ? error.message : "Unknown error");
 
       toast({
         variant: "destructive",
         title: "Parse Failed",
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description: error instanceof Error ? error.message : "Unknown error",
       });
 
-      console.error('[Parse AI] Error:', error);
+      console.error("[Parse AI] Error:", error);
     } finally {
       setIsParsing(false);
     }
@@ -673,7 +746,8 @@ export default function BMADRecipeGenerator() {
     if (!naturalLanguageInput || naturalLanguageInput.trim().length === 0) {
       toast({
         title: "Input Required",
-        description: "Please enter a recipe generation prompt in natural language",
+        description:
+          "Please enter a recipe generation prompt in natural language",
         variant: "destructive",
       });
       return;
@@ -685,52 +759,63 @@ export default function BMADRecipeGenerator() {
       setError(null);
 
       // Parse the prompt first to get parameters
-      const parseResponse = await fetch('/api/admin/parse-recipe-prompt', {
-        method: 'POST',
+      const parseResponse = await fetch("/api/admin/parse-recipe-prompt", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({ prompt: naturalLanguageInput }),
       });
 
       if (!parseResponse.ok) {
         const errorData = await parseResponse.json();
-        throw new Error(errorData.message || 'Failed to parse prompt');
+        throw new Error(errorData.message || "Failed to parse prompt");
       }
 
       const parseResult = await parseResponse.json();
       const parsedParams = parseResult.parsedParameters || {};
 
       // Map parsed parameters to BMAD generation options (same mapping as Parse AI)
-      const focusIngredient = parsedParams.focusIngredient || 
-        (parsedParams.mainIngredientTags && Array.isArray(parsedParams.mainIngredientTags) 
-          ? parsedParams.mainIngredientTags.join(', ') 
+      const focusIngredient =
+        parsedParams.focusIngredient ||
+        (parsedParams.mainIngredientTags &&
+        Array.isArray(parsedParams.mainIngredientTags)
+          ? parsedParams.mainIngredientTags.join(", ")
           : undefined);
-      
+
       // Map fitness goal variations (same logic as Parse AI)
-      const fitnessGoalLower = parsedParams.fitnessGoal?.toLowerCase() || '';
+      const fitnessGoalLower = parsedParams.fitnessGoal?.toLowerCase() || "";
       const fitnessGoalMap: Record<string, string> = {
-        'muscle_gain': 'muscle_gain',
-        'muscle gain': 'muscle_gain',
-        'build muscle': 'muscle_gain',
-        'build muscles': 'muscle_gain',
-        'muscle building': 'muscle_gain',
-        'gain muscle': 'muscle_gain',
-        'weight_loss': 'weight_loss',
-        'weight loss': 'weight_loss',
-        'lose weight': 'weight_loss',
-        'maintenance': 'maintenance',
-        'endurance': 'endurance',
+        muscle_gain: "muscle_gain",
+        "muscle gain": "muscle_gain",
+        "build muscle": "muscle_gain",
+        "build muscles": "muscle_gain",
+        "muscle building": "muscle_gain",
+        "gain muscle": "muscle_gain",
+        weight_loss: "weight_loss",
+        "weight loss": "weight_loss",
+        "lose weight": "weight_loss",
+        maintenance: "maintenance",
+        endurance: "endurance",
       };
-      
-      let mappedFitnessGoal = parsedParams.fitnessGoal ? fitnessGoalMap[fitnessGoalLower] : undefined;
+
+      let mappedFitnessGoal = parsedParams.fitnessGoal
+        ? fitnessGoalMap[fitnessGoalLower]
+        : undefined;
       if (!mappedFitnessGoal && parsedParams.fitnessGoal) {
         // Try to find a partial match
-        if (fitnessGoalLower.includes('muscle') || fitnessGoalLower.includes('build') || fitnessGoalLower.includes('gain')) {
-          mappedFitnessGoal = 'muscle_gain';
-        } else if (fitnessGoalLower.includes('weight') || fitnessGoalLower.includes('lose')) {
-          mappedFitnessGoal = 'weight_loss';
+        if (
+          fitnessGoalLower.includes("muscle") ||
+          fitnessGoalLower.includes("build") ||
+          fitnessGoalLower.includes("gain")
+        ) {
+          mappedFitnessGoal = "muscle_gain";
+        } else if (
+          fitnessGoalLower.includes("weight") ||
+          fitnessGoalLower.includes("lose")
+        ) {
+          mappedFitnessGoal = "weight_loss";
         } else {
           mappedFitnessGoal = parsedParams.fitnessGoal;
         }
@@ -740,10 +825,12 @@ export default function BMADRecipeGenerator() {
         count: parsedParams.count || 10,
         mealTypes: parsedParams.mealTypes,
         dietaryRestrictions: parsedParams.dietaryTags,
-        targetCalories: parsedParams.dailyCalorieTarget || parsedParams.maxCalories,
+        targetCalories:
+          parsedParams.dailyCalorieTarget || parsedParams.maxCalories,
         focusIngredient: focusIngredient,
         difficultyLevel: parsedParams.difficulty,
-        recipePreferences: parsedParams.description || parsedParams.recipePreferences,
+        recipePreferences:
+          parsedParams.description || parsedParams.recipePreferences,
         fitnessGoal: mappedFitnessGoal,
         maxIngredients: parsedParams.maxIngredients,
         naturalLanguagePrompt: naturalLanguageInput,
@@ -761,12 +848,12 @@ export default function BMADRecipeGenerator() {
       };
 
       // Call BMAD generation endpoint
-      const response = await fetch('/api/admin/generate-bmad', {
-        method: 'POST',
+      const response = await fetch("/api/admin/generate-bmad", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(backendPayload),
       });
 
@@ -785,7 +872,7 @@ export default function BMADRecipeGenerator() {
 
       // Reset reconnection attempts for new generation
       reconnectAttemptsRef.current = 0;
-      
+
       // Connect to SSE stream with returned batchId
       connectToSSE(result.batchId);
 
@@ -794,36 +881,35 @@ export default function BMADRecipeGenerator() {
         description: `Generating ${result.count} recipes from your natural language prompt`,
       });
 
-      console.log('[Direct Generation] Started BMAD batch:', result);
-      console.log('[Direct Generation] Parsed parameters:', parsedParams);
-
+      console.log("[Direct Generation] Started BMAD batch:", result);
+      console.log("[Direct Generation] Parsed parameters:", parsedParams);
     } catch (error) {
       setIsGenerating(false);
-      setError(error instanceof Error ? error.message : 'Unknown error');
+      setError(error instanceof Error ? error.message : "Unknown error");
 
       toast({
         variant: "destructive",
         title: "Generation Failed",
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description: error instanceof Error ? error.message : "Unknown error",
       });
 
-      console.error('[Direct Generation] Error:', error);
+      console.error("[Direct Generation] Error:", error);
     }
   };
 
   const getPhaseIcon = (phase: string) => {
     switch (phase) {
-      case 'planning':
+      case "planning":
         return <Circle className="h-4 w-4 text-blue-500" />;
-      case 'generating':
+      case "generating":
         return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
-      case 'validating':
+      case "validating":
         return <Shield className="h-4 w-4 text-yellow-500" />;
-      case 'saving':
+      case "saving":
         return <Database className="h-4 w-4 text-green-500" />;
-      case 'imaging':
-        return <ImageIcon className="h-4 w-4 text-purple-500" />;
-      case 'complete':
+      case "imaging":
+        return <ImageIcon className="h-4 w-4 text-orange-500" />;
+      case "complete":
         return <CheckCircle2 className="h-4 w-4 text-green-600" />;
       default:
         return <Activity className="h-4 w-4 text-gray-400" />;
@@ -834,9 +920,11 @@ export default function BMADRecipeGenerator() {
     if (!status) return null;
 
     const variant =
-      status === 'complete' ? 'default' :
-      status === 'working' ? 'secondary' :
-      'outline';
+      status === "complete"
+        ? "default"
+        : status === "working"
+          ? "secondary"
+          : "outline";
 
     return (
       <Badge variant={variant} className="text-xs">
@@ -853,11 +941,12 @@ export default function BMADRecipeGenerator() {
     <Card className="w-full">
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-purple-600" />
+          <Sparkles className="h-6 w-6 text-orange-600" />
           <CardTitle>Bulk Recipe Generator</CardTitle>
         </div>
         <CardDescription>
-          Bulk recipe generation with AI-powered workflow, nutrition validation, and image generation
+          Bulk recipe generation with AI-powered workflow, nutrition validation,
+          and image generation
         </CardDescription>
       </CardHeader>
 
@@ -870,12 +959,16 @@ export default function BMADRecipeGenerator() {
               AI-Powered Natural Language Generator
             </CardTitle>
             <CardDescription className="text-blue-600">
-              Describe your recipe requirements in plain English and let AI automatically fill the form below.
+              Describe your recipe requirements in plain English and let AI
+              automatically fill the form below.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <Label htmlFor="natural-language" className="text-blue-700 font-medium">
+              <Label
+                htmlFor="natural-language"
+                className="text-blue-700 font-medium"
+              >
                 Describe Your Recipe Requirements
               </Label>
               <Textarea
@@ -892,7 +985,9 @@ export default function BMADRecipeGenerator() {
                 <Button
                   type="button"
                   onClick={handleParseAI}
-                  disabled={!naturalLanguageInput.trim() || isGenerating || isParsing}
+                  disabled={
+                    !naturalLanguageInput.trim() || isGenerating || isParsing
+                  }
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   {isParsing ? (
@@ -944,34 +1039,45 @@ export default function BMADRecipeGenerator() {
         </Card>
 
         {/* Quick Bulk Generation */}
-        <Card className="mb-6 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
+        <Card className="mb-6 border-orange-200 bg-gradient-to-r from-orange-50 to-pink-50">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-purple-800">
+            <CardTitle className="flex items-center gap-2 text-orange-800">
               <Zap className="h-5 w-5" />
               Quick Bulk Generation
             </CardTitle>
-            <CardDescription className="text-purple-600">
-              Generate multiple recipes quickly with default fitness-focused parameters.
+            <CardDescription className="text-orange-600">
+              Generate multiple recipes quickly with default fitness-focused
+              parameters.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { count: 10, label: 'Quick Test', desc: 'Fast validation' },
-                { count: 20, label: 'Medium Batch', desc: 'Content creation' },
-                { count: 30, label: 'Standard Batch', desc: 'Production ready' },
-                { count: 50, label: 'Large Batch', desc: 'Full library' }
+                { count: 10, label: "Quick Test", desc: "Fast validation" },
+                { count: 20, label: "Medium Batch", desc: "Content creation" },
+                {
+                  count: 30,
+                  label: "Standard Batch",
+                  desc: "Production ready",
+                },
+                { count: 50, label: "Large Batch", desc: "Full library" },
               ].map(({ count, label, desc }) => (
                 <Button
                   key={count}
                   variant="outline"
                   onClick={() => handleQuickGenerate(count)}
                   disabled={isGenerating}
-                  className="h-24 flex flex-col items-center justify-center border-purple-300 hover:bg-purple-100 hover:border-purple-400 transition-all"
+                  className="h-24 flex flex-col items-center justify-center border-orange-300 hover:bg-orange-100 hover:border-orange-400 transition-all"
                 >
-                  <span className="text-2xl font-bold text-purple-700">{count}</span>
-                  <span className="text-xs font-medium text-purple-600">{label}</span>
-                  <span className="text-[10px] text-purple-500 mt-0.5">{desc}</span>
+                  <span className="text-2xl font-bold text-orange-700">
+                    {count}
+                  </span>
+                  <span className="text-xs font-medium text-orange-600">
+                    {label}
+                  </span>
+                  <span className="text-[10px] text-orange-500 mt-0.5">
+                    {desc}
+                  </span>
                 </Button>
               ))}
             </div>
@@ -997,7 +1103,9 @@ export default function BMADRecipeGenerator() {
                         min={1}
                         max={100}
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value))
+                        }
                         disabled={isGenerating}
                       />
                     </FormControl>
@@ -1089,7 +1197,8 @@ export default function BMADRecipeGenerator() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Additional preferences or requirements for recipe generation
+                      Additional preferences or requirements for recipe
+                      generation
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -1146,7 +1255,13 @@ export default function BMADRecipeGenerator() {
                         min={5}
                         max={50}
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value
+                              ? parseInt(e.target.value)
+                              : undefined,
+                          )
+                        }
                         disabled={isGenerating}
                       />
                     </FormControl>
@@ -1187,7 +1302,9 @@ export default function BMADRecipeGenerator() {
 
               {/* Filter Preferences Section */}
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Filter Preferences</Label>
+                <Label className="text-base font-semibold">
+                  Filter Preferences
+                </Label>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Meal Type - moved from checkboxes to here */}
@@ -1245,17 +1362,29 @@ export default function BMADRecipeGenerator() {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="all">All Diets</SelectItem>
-                            <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                            <SelectItem value="vegetarian">
+                              Vegetarian
+                            </SelectItem>
                             <SelectItem value="vegan">Vegan</SelectItem>
                             <SelectItem value="keto">Keto</SelectItem>
                             <SelectItem value="paleo">Paleo</SelectItem>
-                            <SelectItem value="gluten_free">Gluten Free</SelectItem>
+                            <SelectItem value="gluten_free">
+                              Gluten Free
+                            </SelectItem>
                             <SelectItem value="low_carb">Low Carb</SelectItem>
                             <SelectItem value="high_carb">High Carb</SelectItem>
-                            <SelectItem value="high_protein">High Protein</SelectItem>
-                            <SelectItem value="mediterranean">Mediterranean</SelectItem>
-                            <SelectItem value="pescatarian">Pescatarian</SelectItem>
-                            <SelectItem value="dairy_free">Dairy Free</SelectItem>
+                            <SelectItem value="high_protein">
+                              High Protein
+                            </SelectItem>
+                            <SelectItem value="mediterranean">
+                              Mediterranean
+                            </SelectItem>
+                            <SelectItem value="pescatarian">
+                              Pescatarian
+                            </SelectItem>
+                            <SelectItem value="dairy_free">
+                              Dairy Free
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -1271,7 +1400,11 @@ export default function BMADRecipeGenerator() {
                       <FormItem>
                         <FormLabel>Max Prep Time</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(value === "any" ? undefined : parseInt(value))}
+                          onValueChange={(value) =>
+                            field.onChange(
+                              value === "any" ? undefined : parseInt(value),
+                            )
+                          }
                           value={field.value?.toString() || "any"}
                           disabled={isGenerating}
                         >
@@ -1301,7 +1434,11 @@ export default function BMADRecipeGenerator() {
                       <FormItem>
                         <FormLabel>Max Calories</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(value === "any" ? undefined : parseInt(value))}
+                          onValueChange={(value) =>
+                            field.onChange(
+                              value === "any" ? undefined : parseInt(value),
+                            )
+                          }
                           value={field.value?.toString() || "any"}
                           disabled={isGenerating}
                         >
@@ -1329,7 +1466,9 @@ export default function BMADRecipeGenerator() {
 
               {/* Nutrition Ranges Section */}
               <div className="space-y-4">
-                <Label className="text-base font-semibold">Nutrition Ranges (Optional)</Label>
+                <Label className="text-base font-semibold">
+                  Nutrition Ranges (Optional)
+                </Label>
 
                 {/* Protein Range */}
                 <div className="space-y-2">
@@ -1346,7 +1485,13 @@ export default function BMADRecipeGenerator() {
                               type="number"
                               placeholder="e.g., 20"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value
+                                    ? parseInt(e.target.value)
+                                    : undefined,
+                                )
+                              }
                               disabled={isGenerating}
                             />
                           </FormControl>
@@ -1365,7 +1510,13 @@ export default function BMADRecipeGenerator() {
                               type="number"
                               placeholder="e.g., 40"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value
+                                    ? parseInt(e.target.value)
+                                    : undefined,
+                                )
+                              }
                               disabled={isGenerating}
                             />
                           </FormControl>
@@ -1378,7 +1529,9 @@ export default function BMADRecipeGenerator() {
 
                 {/* Carbs Range */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Carbohydrates (g)</Label>
+                  <Label className="text-sm font-medium">
+                    Carbohydrates (g)
+                  </Label>
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -1391,7 +1544,13 @@ export default function BMADRecipeGenerator() {
                               type="number"
                               placeholder="e.g., 30"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value
+                                    ? parseInt(e.target.value)
+                                    : undefined,
+                                )
+                              }
                               disabled={isGenerating}
                             />
                           </FormControl>
@@ -1410,7 +1569,13 @@ export default function BMADRecipeGenerator() {
                               type="number"
                               placeholder="e.g., 60"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value
+                                    ? parseInt(e.target.value)
+                                    : undefined,
+                                )
+                              }
                               disabled={isGenerating}
                             />
                           </FormControl>
@@ -1436,7 +1601,13 @@ export default function BMADRecipeGenerator() {
                               type="number"
                               placeholder="e.g., 10"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value
+                                    ? parseInt(e.target.value)
+                                    : undefined,
+                                )
+                              }
                               disabled={isGenerating}
                             />
                           </FormControl>
@@ -1455,7 +1626,13 @@ export default function BMADRecipeGenerator() {
                               type="number"
                               placeholder="e.g., 25"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value
+                                    ? parseInt(e.target.value)
+                                    : undefined,
+                                )
+                              }
                               disabled={isGenerating}
                             />
                           </FormControl>
@@ -1467,90 +1644,81 @@ export default function BMADRecipeGenerator() {
                 </div>
               </div>
 
-            <Separator />
+              <Separator />
 
-            {/* Feature Toggles */}
-            <div className="space-y-4">
-              <Label className="text-base font-semibold">Features</Label>
+              {/* Feature Toggles */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Features</Label>
 
-              <FormField
-                control={form.control}
-                name="enableImageGeneration"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isGenerating}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Generate Images (DALL-E 3)
-                      </FormLabel>
-                      <FormDescription>
-                        Create unique AI-generated images for each recipe
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="enableImageGeneration"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isGenerating}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Generate Images (DALL-E 3)</FormLabel>
+                        <FormDescription>
+                          Create unique AI-generated images for each recipe
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="enableS3Upload"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isGenerating}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Upload to S3 Storage
-                      </FormLabel>
-                      <FormDescription>
-                        Upload images to DigitalOcean Spaces for permanent storage
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="enableS3Upload"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isGenerating}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Upload to S3 Storage</FormLabel>
+                        <FormDescription>
+                          Upload images to DigitalOcean Spaces for permanent
+                          storage
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="enableNutritionValidation"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isGenerating}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Nutrition Validation
-                      </FormLabel>
-                      <FormDescription>
-                        Validate and auto-fix nutritional data
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
+                <FormField
+                  control={form.control}
+                  name="enableNutritionValidation"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isGenerating}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Nutrition Validation</FormLabel>
+                        <FormDescription>
+                          Validate and auto-fix nutritional data
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isGenerating}
-              >
+              <Button type="submit" className="w-full" disabled={isGenerating}>
                 {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1575,13 +1743,16 @@ export default function BMADRecipeGenerator() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  {getPhaseIcon(progress?.phase || 'planning')}
+                  {getPhaseIcon(progress?.phase || "planning")}
                   <span className="text-sm font-medium capitalize">
-                    {progress?.phase || 'Initializing'}
+                    {progress?.phase || "Initializing"}
                   </span>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {progress ? `${progress.recipesCompleted}/${progress.totalRecipes}` : '0/0'} recipes
+                  {progress
+                    ? `${progress.recipesCompleted}/${progress.totalRecipes}`
+                    : "0/0"}{" "}
+                  recipes
                 </span>
               </div>
 
@@ -1589,11 +1760,14 @@ export default function BMADRecipeGenerator() {
 
               <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                 <span>
-                  {progress ? `Chunk ${progress.currentChunk}/${progress.totalChunks}` : 'Starting...'}
+                  {progress
+                    ? `Chunk ${progress.currentChunk}/${progress.totalChunks}`
+                    : "Starting..."}
                 </span>
                 {progress?.estimatedTimeRemaining && (
                   <span>
-                    ~{Math.round(progress.estimatedTimeRemaining / 1000)}s remaining
+                    ~{Math.round(progress.estimatedTimeRemaining / 1000)}s
+                    remaining
                   </span>
                 )}
               </div>
@@ -1624,19 +1798,15 @@ export default function BMADRecipeGenerator() {
             {/* Images Generated */}
             {progress && progress.imagesGenerated > 0 && (
               <div className="flex items-center gap-2 text-sm">
-                <ImageIcon className="h-4 w-4 text-purple-500" />
-                <span>
-                  {progress.imagesGenerated} images generated
-                </span>
+                <ImageIcon className="h-4 w-4 text-orange-500" />
+                <span>{progress.imagesGenerated} images generated</span>
               </div>
             )}
 
             {/* Error Display */}
             {error && (
               <div className="p-4 bg-destructive/10 border border-destructive rounded-md">
-                <p className="text-sm text-destructive font-medium">
-                  {error}
-                </p>
+                <p className="text-sm text-destructive font-medium">{error}</p>
               </div>
             )}
           </div>

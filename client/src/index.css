@@ -134,63 +134,48 @@
   animation: shimmer 2s infinite;
 }
 
-/* EvoFit Canonical Brand — Meals sub-brand: Purple + Orange on Dark */
-/* Matches meals lead magnets + brand spec at brand-audit/CANONICAL-BRAND.md */
+/* EvoFit Design System — App UI tokens (light theme, orange accent) */
+/* See: ~/.claude/skills/evofit-design-system/tokens.json */
 :root {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  /* Canonical meals primary: #9333EA purple (was hsl(158, 64.4%, 51.6%) green/teal) */
-  --primary: hsl(271, 81%, 56%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  /* Canonical shared orange: #F97316 (was hsl(43, 89.8%, 48.6%) amber) */
-  --secondary: hsl(25, 95%, 53%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(271, 81%, 56%);
-  --radius: 0.5rem;
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  /* Orange primary — replaces purple across app UI */
+  --primary: 25 95% 53%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --accent: 33 100% 96%;
+  --accent-foreground: 21 90% 48%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --ring: 25 95% 53%;
+  --radius: 0.75rem;
+  /* Sidebar tokens — dark navy chrome */
+  --sidebar-background:             222 47% 11%;
+  --sidebar-foreground:             215 16% 65%;
+  --sidebar-primary:                25 95% 53%;
+  --sidebar-primary-foreground:     0 0% 100%;
+  --sidebar-accent:                 215 28% 17%;
+  --sidebar-accent-foreground:      210 40% 96%;
+  --sidebar-border:                 215 28% 17%;
+  --sidebar-ring:                   25 95% 53%;
   /* Brand dark tokens for funnel/public pages (match lead magnets) */
   --brand-dark: #0A0A0F;
   --brand-dark-card: #141420;
   --brand-surface: #1A1A2E;
-  --brand-primary-hex: #9333EA;
+  --brand-primary-hex: #F97316;
   --brand-accent-hex: #F97316;
 }
 
-.dark {
-  /* Canonical meals brand-dark: #0A0A0F (was hsl(240, 10%, 3.9%) near-black) */
-  --background: hsl(240, 20%, 5%);
-  --foreground: hsl(0, 0%, 98%);
-  --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
-  --popover: hsl(240, 20%, 5%);
-  --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 20%, 8%);
-  --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(271, 40%, 20%);
-  --input: hsl(240, 3.7%, 15.9%);
-  /* Same purple primary in dark mode */
-  --primary: hsl(271, 81%, 56%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(25, 95%, 53%);
-  --secondary-foreground: hsl(0, 0%, 100%);
-  --accent: hsl(240, 3.7%, 15.9%);
-  --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
-  --radius: 0.5rem;
-}
+/* Light theme only — dark mode not used in app UI */
 
 @layer base {
   * {

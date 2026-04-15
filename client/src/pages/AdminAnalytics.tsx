@@ -1,18 +1,18 @@
 /**
  * Admin Analytics Dashboard
  * Story 1.9: Advanced Analytics Dashboard
- * 
+ *
  * Comprehensive analytics and monitoring interface for admin users
  * with real-time metrics, charts, and system health monitoring
  */
 
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useLocation } from 'wouter';
-import { 
-  Users, 
-  TrendingUp, 
-  Activity, 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useLocation } from "wouter";
+import {
+  Users,
+  TrendingUp,
+  Activity,
   Database,
   AlertTriangle,
   CheckCircle,
@@ -24,31 +24,42 @@ import {
   RefreshCw,
   Download,
   Shield,
-  Server
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Badge } from '../components/ui/badge';
-import { Progress } from '../components/ui/progress';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { useToast } from '../hooks/use-toast';
-import { cn } from '../lib/utils';
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  PieChart as RechartsPieChart, 
-  Pie, 
+  Server,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import { Badge } from "../components/ui/badge";
+import { Progress } from "../components/ui/progress";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { useToast } from "../hooks/use-toast";
+import { cn } from "../lib/utils";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
   Cell,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
-} from 'recharts';
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 interface SystemMetrics {
   users: {
@@ -101,7 +112,7 @@ const AdminAnalytics: React.FC = () => {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [userActivity, setUserActivity] = useState<any[]>([]);
   const [contentMetrics, setContentMetrics] = useState<any>(null);
@@ -109,12 +120,12 @@ const AdminAnalytics: React.FC = () => {
   const [systemHealth, setSystemHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Redirect if not admin
   useEffect(() => {
-    if (user?.role !== 'admin') {
-      setLocation('/');
+    if (user?.role !== "admin") {
+      setLocation("/");
     }
   }, [user, setLocation]);
 
@@ -129,55 +140,66 @@ const AdminAnalytics: React.FC = () => {
   const fetchAllMetrics = async () => {
     try {
       setLoading(true);
-      
-      const [metricsRes, activityRes, contentRes, securityRes, healthRes] = await Promise.all([
-        fetch('/api/analytics/metrics', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        }),
-        fetch('/api/analytics/users?limit=10', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        }),
-        fetch('/api/analytics/content', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        }),
-        fetch('/api/analytics/security', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        }),
-        fetch('/api/analytics/health', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        })
-      ]);
+
+      const [metricsRes, activityRes, contentRes, securityRes, healthRes] =
+        await Promise.all([
+          fetch("/api/analytics/metrics", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+          fetch("/api/analytics/users?limit=10", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+          fetch("/api/analytics/content", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+          fetch("/api/analytics/security", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+          fetch("/api/analytics/health", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+        ]);
 
       if (metricsRes.ok) {
         const data = await metricsRes.json();
         setMetrics(data.data);
       }
-      
+
       if (activityRes.ok) {
         const data = await activityRes.json();
         setUserActivity(data.data);
       }
-      
+
       if (contentRes.ok) {
         const data = await contentRes.json();
         setContentMetrics(data.data);
       }
-      
+
       if (securityRes.ok) {
         const data = await securityRes.json();
         setSecurityMetrics(data.data);
       }
-      
+
       if (healthRes.ok) {
         const data = await healthRes.json();
         setSystemHealth(data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch metrics:', error);
+      console.error("Failed to fetch metrics:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to load analytics data',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to load analytics data",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -190,53 +212,53 @@ const AdminAnalytics: React.FC = () => {
     fetchAllMetrics();
   };
 
-  const handleExport = async (format: 'json' | 'csv') => {
+  const handleExport = async (format: "json" | "csv") => {
     try {
       const response = await fetch(`/api/analytics/export?format=${format}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `analytics-export.${format}`;
         a.click();
-        
+
         toast({
-          title: 'Success',
-          description: `Analytics exported as ${format.toUpperCase()}`
+          title: "Success",
+          description: `Analytics exported as ${format.toUpperCase()}`,
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to export analytics',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to export analytics",
+        variant: "destructive",
       });
     }
   };
 
   const clearCache = async () => {
     try {
-      const response = await fetch('/api/analytics/cache/clear', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      const response = await fetch("/api/analytics/cache/clear", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      
+
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Analytics cache cleared'
+          title: "Success",
+          description: "Analytics cache cleared",
         });
         fetchAllMetrics();
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to clear cache',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to clear cache",
+        variant: "destructive",
       });
     }
   };
@@ -255,7 +277,9 @@ const AdminAnalytics: React.FC = () => {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Analytics Dashboard
+            </h1>
             <p className="text-gray-600 mt-1">System metrics and monitoring</p>
           </div>
           <div className="flex gap-2">
@@ -266,13 +290,15 @@ const AdminAnalytics: React.FC = () => {
               disabled={refreshing}
               className="touch-target"
             >
-              <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
+              <RefreshCw
+                className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")}
+              />
               Refresh
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleExport('json')}
+              onClick={() => handleExport("json")}
               className="touch-target"
             >
               <Download className="h-4 w-4 mr-2" />
@@ -300,7 +326,9 @@ const AdminAnalytics: React.FC = () => {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{metrics?.users.total || 0}</p>
+                <p className="text-2xl font-bold">
+                  {metrics?.users.total || 0}
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {metrics?.users.newThisWeek || 0} new this week
                 </p>
@@ -309,10 +337,14 @@ const AdminAnalytics: React.FC = () => {
             </div>
             {metrics?.users.growthRate !== undefined && (
               <div className="mt-3">
-                <div className={cn(
-                  "inline-flex items-center text-xs font-medium",
-                  metrics.users.growthRate >= 0 ? "text-green-600" : "text-red-600"
-                )}>
+                <div
+                  className={cn(
+                    "inline-flex items-center text-xs font-medium",
+                    metrics.users.growthRate >= 0
+                      ? "text-green-600"
+                      : "text-red-600",
+                  )}
+                >
                   {metrics.users.growthRate >= 0 ? (
                     <ArrowUp className="h-3 w-3 mr-1" />
                   ) : (
@@ -333,7 +365,9 @@ const AdminAnalytics: React.FC = () => {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{metrics?.engagement.dailyActiveUsers || 0}</p>
+                <p className="text-2xl font-bold">
+                  {metrics?.engagement.dailyActiveUsers || 0}
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Daily active
                 </p>
@@ -343,11 +377,15 @@ const AdminAnalytics: React.FC = () => {
             <div className="mt-3 space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Weekly</span>
-                <span className="font-medium">{metrics?.engagement.weeklyActiveUsers || 0}</span>
+                <span className="font-medium">
+                  {metrics?.engagement.weeklyActiveUsers || 0}
+                </span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Monthly</span>
-                <span className="font-medium">{metrics?.engagement.monthlyActiveUsers || 0}</span>
+                <span className="font-medium">
+                  {metrics?.engagement.monthlyActiveUsers || 0}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -356,7 +394,9 @@ const AdminAnalytics: React.FC = () => {
         {/* Revenue */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Monthly Revenue
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -368,14 +408,18 @@ const AdminAnalytics: React.FC = () => {
                   {metrics?.business.activeSubscriptions || 0} active subs
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
+              <TrendingUp className="h-8 w-8 text-orange-500" />
             </div>
             {metrics?.business.revenue.growth !== undefined && (
               <div className="mt-3">
-                <div className={cn(
-                  "inline-flex items-center text-xs font-medium",
-                  metrics.business.revenue.growth >= 0 ? "text-green-600" : "text-red-600"
-                )}>
+                <div
+                  className={cn(
+                    "inline-flex items-center text-xs font-medium",
+                    metrics.business.revenue.growth >= 0
+                      ? "text-green-600"
+                      : "text-red-600",
+                  )}
+                >
                   {metrics.business.revenue.growth >= 0 ? (
                     <ArrowUp className="h-3 w-3 mr-1" />
                   ) : (
@@ -396,21 +440,25 @@ const AdminAnalytics: React.FC = () => {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{metrics?.performance.uptime || 0}%</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Uptime
+                <p className="text-2xl font-bold">
+                  {metrics?.performance.uptime || 0}%
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">Uptime</p>
               </div>
               <Server className="h-8 w-8 text-emerald-500" />
             </div>
             <div className="mt-3 space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Response</span>
-                <span className="font-medium">{metrics?.performance.avgResponseTime || 0}ms</span>
+                <span className="font-medium">
+                  {metrics?.performance.avgResponseTime || 0}ms
+                </span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Error Rate</span>
-                <span className="font-medium">{metrics?.performance.errorRate || 0}%</span>
+                <span className="font-medium">
+                  {metrics?.performance.errorRate || 0}%
+                </span>
               </div>
             </div>
           </CardContent>
@@ -418,13 +466,27 @@ const AdminAnalytics: React.FC = () => {
       </div>
 
       {/* Tabbed Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="grid grid-cols-2 lg:grid-cols-5 gap-2">
-          <TabsTrigger value="overview" className="touch-target">Overview</TabsTrigger>
-          <TabsTrigger value="users" className="touch-target">Users</TabsTrigger>
-          <TabsTrigger value="content" className="touch-target">Content</TabsTrigger>
-          <TabsTrigger value="performance" className="touch-target">Performance</TabsTrigger>
-          <TabsTrigger value="security" className="touch-target">Security</TabsTrigger>
+          <TabsTrigger value="overview" className="touch-target">
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="users" className="touch-target">
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="content" className="touch-target">
+            Content
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="touch-target">
+            Performance
+          </TabsTrigger>
+          <TabsTrigger value="security" className="touch-target">
+            Security
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -438,38 +500,54 @@ const AdminAnalytics: React.FC = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  {metrics?.users.byRole && Object.entries(metrics.users.byRole).map(([role, count]) => (
-                    <div key={role} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium capitalize">{role}s</span>
-                        <span className="text-2xl font-bold">{count}</span>
-                      </div>
-                      <Progress 
-                        value={(count / metrics.users.total) * 100} 
-                        className="h-2"
-                      />
-                    </div>
-                  ))}
+                  {metrics?.users.byRole &&
+                    Object.entries(metrics.users.byRole).map(
+                      ([role, count]) => (
+                        <div key={role} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium capitalize">
+                              {role}s
+                            </span>
+                            <span className="text-2xl font-bold">{count}</span>
+                          </div>
+                          <Progress
+                            value={(count / metrics.users.total) * 100}
+                            className="h-2"
+                          />
+                        </div>
+                      ),
+                    )}
                 </div>
                 {metrics?.users.byRole && (
                   <ResponsiveContainer width="100%" height={200}>
                     <RechartsPieChart>
                       <Pie
-                        data={Object.entries(metrics.users.byRole).map(([role, count]) => ({
-                          name: role.charAt(0).toUpperCase() + role.slice(1),
-                          value: count
-                        }))}
+                        data={Object.entries(metrics.users.byRole).map(
+                          ([role, count]) => ({
+                            name: role.charAt(0).toUpperCase() + role.slice(1),
+                            value: count,
+                          }),
+                        )}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) =>
+                          `${name} ${(percent * 100).toFixed(0)}%`
+                        }
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
                       >
-                        {Object.entries(metrics.users.byRole).map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28'][index % 3]} />
-                        ))}
+                        {Object.entries(metrics.users.byRole).map(
+                          (_, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={
+                                ["#0088FE", "#00C49F", "#FFBB28"][index % 3]
+                              }
+                            />
+                          ),
+                        )}
                       </Pie>
                       <Tooltip />
                     </RechartsPieChart>
@@ -489,7 +567,9 @@ const AdminAnalytics: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Total Recipes</p>
-                  <p className="text-2xl font-bold">{metrics?.content.totalRecipes || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.content.totalRecipes || 0}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Approved</p>
@@ -505,15 +585,23 @@ const AdminAnalytics: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Meal Plans</p>
-                  <p className="text-2xl font-bold">{metrics?.content.totalMealPlans || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.content.totalMealPlans || 0}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Active Plans</p>
-                  <p className="text-2xl font-bold">{metrics?.content.activeMealPlans || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.content.activeMealPlans || 0}
+                  </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Avg Recipes/Plan</p>
-                  <p className="text-2xl font-bold">{metrics?.content.avgRecipesPerPlan || 0}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Avg Recipes/Plan
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.content.avgRecipesPerPlan || 0}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -529,19 +617,29 @@ const AdminAnalytics: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Customers</p>
-                  <p className="text-2xl font-bold">{metrics?.business.totalCustomers || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.business.totalCustomers || 0}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Churn Rate</p>
-                  <p className="text-2xl font-bold">{metrics?.business.churnRate || 0}%</p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.business.churnRate || 0}%
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Conversion</p>
-                  <p className="text-2xl font-bold">{metrics?.business.conversionRate || 0}%</p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.business.conversionRate || 0}%
+                  </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Avg per Trainer</p>
-                  <p className="text-2xl font-bold">{metrics?.business.avgCustomersPerTrainer || 0}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Avg per Trainer
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.business.avgCustomersPerTrainer || 0}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -553,19 +651,29 @@ const AdminAnalytics: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>Recent User Activity</CardTitle>
-              <CardDescription>Last active users and their actions</CardDescription>
+              <CardDescription>
+                Last active users and their actions
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {userActivity.map((user, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div className="flex-1">
                       <p className="font-medium">{user.email}</p>
                       <p className="text-sm text-muted-foreground">
-                        {user.role} • {user.sessionCount} sessions • {user.totalDuration}min total
+                        {user.role} • {user.sessionCount} sessions •{" "}
+                        {user.totalDuration}min total
                       </p>
                     </div>
-                    <Badge variant={user.role === 'admin' ? 'destructive' : 'default'}>
+                    <Badge
+                      variant={
+                        user.role === "admin" ? "destructive" : "default"
+                      }
+                    >
                       {user.role}
                     </Badge>
                   </div>
@@ -589,12 +697,18 @@ const AdminAnalytics: React.FC = () => {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Total Sessions</p>
-                  <p className="text-2xl font-bold">{metrics?.engagement.totalSessions || 0}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Total Sessions
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.engagement.totalSessions || 0}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Bounce Rate</p>
-                  <p className="text-2xl font-bold">{metrics?.engagement.bounceRate || 0}%</p>
+                  <p className="text-2xl font-bold">
+                    {metrics?.engagement.bounceRate || 0}%
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -619,17 +733,17 @@ const AdminAnalytics: React.FC = () => {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="created" 
-                        stroke="#8884d8" 
+                      <Line
+                        type="monotone"
+                        dataKey="created"
+                        stroke="#8884d8"
                         name="Created"
                         strokeWidth={2}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="approved" 
-                        stroke="#82ca9d" 
+                      <Line
+                        type="monotone"
+                        dataKey="approved"
+                        stroke="#82ca9d"
                         name="Approved"
                         strokeWidth={2}
                       />
@@ -642,20 +756,23 @@ const AdminAnalytics: React.FC = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Popular Recipes</CardTitle>
-                  <CardDescription>Most viewed and used recipes</CardDescription>
+                  <CardDescription>
+                    Most viewed and used recipes
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {contentMetrics.popularRecipes?.map((recipe: any) => (
-                      <div key={recipe.id} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{recipe.name}</span>
+                      <div
+                        key={recipe.id}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-sm font-medium">
+                          {recipe.name}
+                        </span>
                         <div className="flex gap-4">
-                          <Badge variant="outline">
-                            {recipe.views} views
-                          </Badge>
-                          <Badge variant="outline">
-                            {recipe.uses} uses
-                          </Badge>
+                          <Badge variant="outline">{recipe.views} views</Badge>
+                          <Badge variant="outline">{recipe.uses} uses</Badge>
                         </div>
                       </div>
                     ))}
@@ -683,12 +800,16 @@ const AdminAnalytics: React.FC = () => {
                         {metrics?.performance.avgResponseTime || 0}ms
                       </span>
                     </div>
-                    <Progress 
-                      value={Math.min((metrics?.performance.avgResponseTime || 0) / 500 * 100, 100)} 
+                    <Progress
+                      value={Math.min(
+                        ((metrics?.performance.avgResponseTime || 0) / 500) *
+                          100,
+                        100,
+                      )}
                       className="h-2"
                     />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium">Error Rate</span>
@@ -696,40 +817,49 @@ const AdminAnalytics: React.FC = () => {
                         {metrics?.performance.errorRate || 0}%
                       </span>
                     </div>
-                    <Progress 
-                      value={metrics?.performance.errorRate || 0} 
+                    <Progress
+                      value={metrics?.performance.errorRate || 0}
                       className="h-2"
                     />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium">Cache Hit Rate</span>
+                      <span className="text-sm font-medium">
+                        Cache Hit Rate
+                      </span>
                       <span className="text-sm font-bold">
                         {metrics?.performance.cacheHitRate || 0}%
                       </span>
                     </div>
-                    <Progress 
-                      value={metrics?.performance.cacheHitRate || 0} 
+                    <Progress
+                      value={metrics?.performance.cacheHitRate || 0}
                       className="h-2"
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm font-medium mb-2">Database</p>
-                    <p className="text-2xl font-bold">{metrics?.performance.databaseSize}</p>
+                    <p className="text-2xl font-bold">
+                      {metrics?.performance.databaseSize}
+                    </p>
                   </div>
-                  
+
                   {systemHealth && (
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm font-medium mb-2">Memory Usage</p>
                       <p className="text-2xl font-bold">
-                        {systemHealth.memory.used} / {systemHealth.memory.total} MB
+                        {systemHealth.memory.used} / {systemHealth.memory.total}{" "}
+                        MB
                       </p>
-                      <Progress 
-                        value={(systemHealth.memory.used / systemHealth.memory.total) * 100} 
+                      <Progress
+                        value={
+                          (systemHealth.memory.used /
+                            systemHealth.memory.total) *
+                          100
+                        }
                         className="h-2 mt-2"
                       />
                     </div>
@@ -748,21 +878,35 @@ const AdminAnalytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(systemHealth.components).map(([component, status]) => (
-                    <div key={component} className="flex items-center justify-between">
-                      <span className="text-sm font-medium capitalize">{component}</span>
-                      <Badge 
-                        variant={status === 'healthy' ? 'success' : status === 'not configured' ? 'secondary' : 'destructive'}
+                  {Object.entries(systemHealth.components).map(
+                    ([component, status]) => (
+                      <div
+                        key={component}
+                        className="flex items-center justify-between"
                       >
-                        {status as string}
-                      </Badge>
-                    </div>
-                  ))}
+                        <span className="text-sm font-medium capitalize">
+                          {component}
+                        </span>
+                        <Badge
+                          variant={
+                            status === "healthy"
+                              ? "success"
+                              : status === "not configured"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {status as string}
+                        </Badge>
+                      </div>
+                    ),
+                  )}
                   <div className="pt-3 border-t">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium">System Uptime</span>
                       <span className="text-sm font-bold">
-                        {Math.floor(systemHealth.uptime / 3600)}h {Math.floor((systemHealth.uptime % 3600) / 60)}m
+                        {Math.floor(systemHealth.uptime / 3600)}h{" "}
+                        {Math.floor((systemHealth.uptime % 3600) / 60)}m
                       </span>
                     </div>
                   </div>
@@ -784,16 +928,28 @@ const AdminAnalytics: React.FC = () => {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Security Score</p>
-                      <p className="text-2xl font-bold">{securityMetrics.securityScore}/100</p>
+                      <p className="text-sm text-muted-foreground">
+                        Security Score
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {securityMetrics.securityScore}/100
+                      </p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Failed Logins</p>
-                      <p className="text-2xl font-bold">{securityMetrics.failedLogins}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Failed Logins
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {securityMetrics.failedLogins}
+                      </p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Blocked IPs</p>
-                      <p className="text-2xl font-bold">{securityMetrics.blockedIPs?.length || 0}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Blocked IPs
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {securityMetrics.blockedIPs?.length || 0}
+                      </p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Alerts</p>
@@ -802,31 +958,39 @@ const AdminAnalytics: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   {securityMetrics.suspiciousActivities?.length > 0 && (
                     <Alert className="mb-4">
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        {securityMetrics.suspiciousActivities.length} suspicious activities detected
+                        {securityMetrics.suspiciousActivities.length} suspicious
+                        activities detected
                       </AlertDescription>
                     </Alert>
                   )}
-                  
+
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium">Recent Security Events</h4>
-                    {securityMetrics.suspiciousActivities?.map((activity: any, index: number) => (
-                      <div key={index} className="p-3 border rounded-lg">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-sm font-medium">{activity.action}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {activity.ip} • {new Date(activity.timestamp).toLocaleString()}
-                            </p>
+                    <h4 className="text-sm font-medium">
+                      Recent Security Events
+                    </h4>
+                    {securityMetrics.suspiciousActivities?.map(
+                      (activity: any, index: number) => (
+                        <div key={index} className="p-3 border rounded-lg">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="text-sm font-medium">
+                                {activity.action}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {activity.ip} •{" "}
+                                {new Date(activity.timestamp).toLocaleString()}
+                              </p>
+                            </div>
+                            <Badge variant="warning">Alert</Badge>
                           </div>
-                          <Badge variant="warning">Alert</Badge>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -1,21 +1,26 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Badge } from '../components/ui/badge';
-import { Textarea } from '../components/ui/textarea';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { useToast } from '../hooks/use-toast';
-import { useAuth } from '../contexts/AuthContext';
-import { apiRequest } from '../lib/queryClient';
-import PDFExportButton from '../components/PDFExportButton';
-import { 
-  User, 
-  Dumbbell, 
-  Users, 
-  ChefHat, 
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Badge } from "../components/ui/badge";
+import { Textarea } from "../components/ui/textarea";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { useToast } from "../hooks/use-toast";
+import { useAuth } from "../contexts/AuthContext";
+import { apiRequest } from "../lib/queryClient";
+import PDFExportButton from "../components/PDFExportButton";
+import {
+  User,
+  Dumbbell,
+  Users,
+  ChefHat,
   Target,
   TrendingUp,
   Calendar,
@@ -29,8 +34,8 @@ import {
   Plus,
   Copy,
   FileText,
-  Download
-} from 'lucide-react';
+  Download,
+} from "lucide-react";
 
 interface TrainerStats {
   totalClients: number;
@@ -60,7 +65,7 @@ interface Invitation {
   expiresAt: string;
   usedAt?: string;
   createdAt: string;
-  status: 'pending' | 'accepted' | 'expired';
+  status: "pending" | "accepted" | "expired";
 }
 
 export default function TrainerProfile() {
@@ -69,14 +74,14 @@ export default function TrainerProfile() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    email: user?.email || '',
-    bio: '',
-    specializations: '',
-    certifications: '',
-    yearsExperience: '',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    email: user?.email || "",
+    bio: "",
+    specializations: "",
+    certifications: "",
+    yearsExperience: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [showInvitationForm, setShowInvitationForm] = useState(false);
   const [customerEmail, setCustomerEmail] = useState("");
@@ -84,51 +89,54 @@ export default function TrainerProfile() {
 
   // Fetch trainer statistics
   const { data: stats, isLoading: statsLoading } = useQuery<TrainerStats>({
-    queryKey: ['trainerProfile', 'stats'],
+    queryKey: ["trainerProfile", "stats"],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/trainer/profile/stats');
+      const res = await apiRequest("GET", "/api/trainer/profile/stats");
       return res.json();
     },
-    enabled: !!user
+    enabled: !!user,
   });
 
   // Fetch trainer profile details
-  const { data: profile, isLoading: profileLoading } = useQuery<TrainerProfileData>({
-    queryKey: ['trainerProfile', 'details'],
-    queryFn: async () => {
-      const res = await apiRequest('GET', '/api/profile');
-      return res.json();
-    },
-    enabled: !!user
-  });
+  const { data: profile, isLoading: profileLoading } =
+    useQuery<TrainerProfileData>({
+      queryKey: ["trainerProfile", "details"],
+      queryFn: async () => {
+        const res = await apiRequest("GET", "/api/profile");
+        return res.json();
+      },
+      enabled: !!user,
+    });
 
   // Update form when profile data is loaded
   React.useEffect(() => {
     if (profile) {
-      setEditForm(prev => ({
+      setEditForm((prev) => ({
         ...prev,
-        bio: profile.bio || '',
-        specializations: profile.specializations?.join(', ') || '',
-        certifications: profile.certifications?.join(', ') || '',
-        yearsExperience: profile.yearsExperience?.toString() || ''
+        bio: profile.bio || "",
+        specializations: profile.specializations?.join(", ") || "",
+        certifications: profile.certifications?.join(", ") || "",
+        yearsExperience: profile.yearsExperience?.toString() || "",
       }));
     }
   }, [profile]);
 
   // Fetch invitations
-  const { data: invitations, isLoading: invitationsLoading } = useQuery<Invitation[]>({
-    queryKey: ['/api/invitations'],
+  const { data: invitations, isLoading: invitationsLoading } = useQuery<
+    Invitation[]
+  >({
+    queryKey: ["/api/invitations"],
     queryFn: async () => {
-      const response = await fetch('/api/invitations', {
+      const response = await fetch("/api/invitations", {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch invitations');
+        throw new Error("Failed to fetch invitations");
       }
-      
+
       const data = await response.json();
       return data.data.invitations;
     },
@@ -137,9 +145,9 @@ export default function TrainerProfile() {
 
   // Fetch trainer customers for PDF export
   const { data: customers } = useQuery({
-    queryKey: ['trainerProfileCustomers', user?.id],
+    queryKey: ["trainerProfileCustomers", user?.id],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/trainer/customers');
+      const res = await apiRequest("GET", "/api/trainer/customers");
       return res.json();
     },
     enabled: !!user,
@@ -149,19 +157,24 @@ export default function TrainerProfile() {
 
   // Fetch all customer meal plans for PDF export
   const { data: allCustomerMealPlans } = useQuery({
-    queryKey: ['allCustomerMealPlans'],
+    queryKey: ["allCustomerMealPlans"],
     queryFn: async () => {
       if (!customers?.customers) return [];
-      
-      const mealPlansPromises = customers.customers.map(async (customer: any) => {
-        const res = await apiRequest('GET', `/api/trainer/customers/${customer.id}/meal-plans`);
-        const data = await res.json();
-        return {
-          customer,
-          mealPlans: data.mealPlans || []
-        };
-      });
-      
+
+      const mealPlansPromises = customers.customers.map(
+        async (customer: any) => {
+          const res = await apiRequest(
+            "GET",
+            `/api/trainer/customers/${customer.id}/meal-plans`,
+          );
+          const data = await res.json();
+          return {
+            customer,
+            mealPlans: data.mealPlans || [],
+          };
+        },
+      );
+
       return Promise.all(mealPlansPromises);
     },
     enabled: !!customers?.customers,
@@ -170,7 +183,7 @@ export default function TrainerProfile() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest('PUT', '/api/profile', data);
+      const res = await apiRequest("PUT", "/api/profile", data);
       return res.json();
     },
     onSuccess: () => {
@@ -179,8 +192,13 @@ export default function TrainerProfile() {
         description: "Your profile has been successfully updated.",
       });
       setIsEditing(false);
-      setEditForm(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
-      queryClient.invalidateQueries({ queryKey: ['trainerProfile'] });
+      setEditForm((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+      queryClient.invalidateQueries({ queryKey: ["trainerProfile"] });
     },
     onError: (error: any) => {
       toast({
@@ -188,24 +206,24 @@ export default function TrainerProfile() {
         description: error.message || "Failed to update profile",
         variant: "destructive",
       });
-    }
+    },
   });
 
   // Send invitation mutation
   const sendInvitationMutation = useMutation({
     mutationFn: async (data: { customerEmail: string; message?: string }) => {
-      const response = await fetch('/api/invitations/send', {
-        method: 'POST',
+      const response = await fetch("/api/invitations/send", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to send invitation');
+        throw new Error(error.message || "Failed to send invitation");
       }
 
       return response.json();
@@ -218,11 +236,14 @@ export default function TrainerProfile() {
       setCustomerEmail("");
       setInvitationMessage("");
       setShowInvitationForm(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/invitations'] });
-      
+      queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
+
       // In development, show the invitation link
-      if (process.env.NODE_ENV === 'development' && data.data.invitation.invitationLink) {
-        console.log('Invitation Link:', data.data.invitation.invitationLink);
+      if (
+        process.env.NODE_ENV === "development" &&
+        data.data.invitation.invitationLink
+      ) {
+        console.log("Invitation Link:", data.data.invitation.invitationLink);
         toast({
           title: "Development Mode",
           description: `Invitation link: ${data.data.invitation.invitationLink}`,
@@ -240,7 +261,10 @@ export default function TrainerProfile() {
   });
 
   const handleSaveProfile = () => {
-    if (editForm.newPassword && editForm.newPassword !== editForm.confirmPassword) {
+    if (
+      editForm.newPassword &&
+      editForm.newPassword !== editForm.confirmPassword
+    ) {
       toast({
         title: "Password Mismatch",
         description: "New password and confirm password do not match.",
@@ -250,27 +274,39 @@ export default function TrainerProfile() {
     }
 
     const updateData: any = {};
-    
+
     if (editForm.email !== user?.email) {
       updateData.email = editForm.email;
     }
-    
-    if (editForm.bio !== (profile?.bio || '')) {
+
+    if (editForm.bio !== (profile?.bio || "")) {
       updateData.bio = editForm.bio;
     }
-    
-    if (editForm.specializations !== (profile?.specializations?.join(', ') || '')) {
-      updateData.specializations = editForm.specializations.split(',').map(s => s.trim()).filter(s => s);
+
+    if (
+      editForm.specializations !== (profile?.specializations?.join(", ") || "")
+    ) {
+      updateData.specializations = editForm.specializations
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s);
     }
-    
-    if (editForm.certifications !== (profile?.certifications?.join(', ') || '')) {
-      updateData.certifications = editForm.certifications.split(',').map(s => s.trim()).filter(s => s);
+
+    if (
+      editForm.certifications !== (profile?.certifications?.join(", ") || "")
+    ) {
+      updateData.certifications = editForm.certifications
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s);
     }
-    
-    if (editForm.yearsExperience !== (profile?.yearsExperience?.toString() || '')) {
+
+    if (
+      editForm.yearsExperience !== (profile?.yearsExperience?.toString() || "")
+    ) {
       updateData.yearsExperience = parseInt(editForm.yearsExperience) || 0;
     }
-    
+
     if (editForm.newPassword) {
       if (!editForm.currentPassword) {
         toast({
@@ -294,22 +330,27 @@ export default function TrainerProfile() {
 
   const handleCancelEdit = () => {
     setEditForm({
-      email: user?.email || '',
-      bio: profile?.bio || '',
-      specializations: profile?.specializations?.join(', ') || '',
-      certifications: profile?.certifications?.join(', ') || '',
-      yearsExperience: profile?.yearsExperience?.toString() || '',
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+      email: user?.email || "",
+      bio: profile?.bio || "",
+      specializations: profile?.specializations?.join(", ") || "",
+      certifications: profile?.certifications?.join(", ") || "",
+      yearsExperience: profile?.yearsExperience?.toString() || "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     });
     setIsEditing(false);
   };
 
   const handleSendInvitation = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted, customerEmail:', customerEmail, 'message:', invitationMessage);
-    
+    console.log(
+      "Form submitted, customerEmail:",
+      customerEmail,
+      "message:",
+      invitationMessage,
+    );
+
     if (!customerEmail.trim()) {
       toast({
         title: "Error",
@@ -319,11 +360,11 @@ export default function TrainerProfile() {
       return;
     }
 
-    console.log('Sending invitation with data:', {
+    console.log("Sending invitation with data:", {
       customerEmail: customerEmail.trim(),
       message: invitationMessage.trim() || undefined,
     });
-    
+
     sendInvitationMutation.mutate({
       customerEmail: customerEmail.trim(),
       message: invitationMessage.trim() || undefined,
@@ -332,24 +373,45 @@ export default function TrainerProfile() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
-      case 'accepted':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Accepted</Badge>;
-      case 'expired':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Expired</Badge>;
+      case "pending":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-yellow-50 text-yellow-700 border-yellow-200"
+          >
+            Pending
+          </Badge>
+        );
+      case "accepted":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200"
+          >
+            Accepted
+          </Badge>
+        );
+      case "expired":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200"
+          >
+            Expired
+          </Badge>
+        );
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -366,11 +428,13 @@ export default function TrainerProfile() {
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-orange-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
             <Dumbbell className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 truncate">Trainer Profile</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 truncate">
+              Trainer Profile
+            </h1>
           </div>
         </div>
       </div>
@@ -378,7 +442,6 @@ export default function TrainerProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Profile Information */}
         <div className="lg:col-span-2 space-y-6">
-
           {/* Account Details Card */}
           <Card>
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 pb-4">
@@ -423,50 +486,84 @@ export default function TrainerProfile() {
               {!isEditing ? (
                 <>
                   <div>
-                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Email Address</Label>
-                    <p className="text-sm sm:text-base text-slate-900 font-medium truncate">{user?.email}</p>
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">
+                      Email Address
+                    </Label>
+                    <p className="text-sm sm:text-base text-slate-900 font-medium truncate">
+                      {user?.email}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Bio</Label>
-                    <p className="text-sm sm:text-base text-slate-900 leading-relaxed">{profile?.bio || 'No bio provided'}</p>
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">
+                      Bio
+                    </Label>
+                    <p className="text-sm sm:text-base text-slate-900 leading-relaxed">
+                      {profile?.bio || "No bio provided"}
+                    </p>
                   </div>
                   <div>
-                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Specializations</Label>
+                    <Label className="text-xs sm:text-sm font-medium text-slate-600">
+                      Specializations
+                    </Label>
                     <div className="flex flex-wrap gap-1 sm:gap-2 mt-1 sm:mt-2">
-                      {profile?.specializations && profile.specializations.length > 0 ? (
+                      {profile?.specializations &&
+                      profile.specializations.length > 0 ? (
                         profile.specializations.map((spec, index) => (
-                          <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="bg-orange-50 text-orange-700"
+                          >
                             {spec}
                           </Badge>
                         ))
                       ) : (
-                        <p className="text-slate-500 text-sm">No specializations listed</p>
+                        <p className="text-slate-500 text-sm">
+                          No specializations listed
+                        </p>
                       )}
                     </div>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Certifications</Label>
+                    <Label className="text-sm font-medium text-slate-600">
+                      Certifications
+                    </Label>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {profile?.certifications && profile.certifications.length > 0 ? (
+                      {profile?.certifications &&
+                      profile.certifications.length > 0 ? (
                         profile.certifications.map((cert, index) => (
-                          <Badge key={index} variant="outline" className="bg-green-50 text-green-700">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="bg-green-50 text-green-700"
+                          >
                             <Award className="w-3 h-3 mr-1" />
                             {cert}
                           </Badge>
                         ))
                       ) : (
-                        <p className="text-slate-500 text-sm">No certifications listed</p>
+                        <p className="text-slate-500 text-sm">
+                          No certifications listed
+                        </p>
                       )}
                     </div>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Years of Experience</Label>
-                    <p className="text-slate-900">{profile?.yearsExperience || 0} years</p>
+                    <Label className="text-sm font-medium text-slate-600">
+                      Years of Experience
+                    </Label>
+                    <p className="text-slate-900">
+                      {profile?.yearsExperience || 0} years
+                    </p>
                   </div>
                   {profile && (
                     <div>
-                      <Label className="text-sm font-medium text-slate-600">Member Since</Label>
-                      <p className="text-slate-900">{formatDate(profile.createdAt)}</p>
+                      <Label className="text-sm font-medium text-slate-600">
+                        Member Since
+                      </Label>
+                      <p className="text-slate-900">
+                        {formatDate(profile.createdAt)}
+                      </p>
                     </div>
                   )}
                 </>
@@ -478,68 +575,106 @@ export default function TrainerProfile() {
                       id="email"
                       type="email"
                       value={editForm.email}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="bio">Bio</Label>
                     <Textarea
                       id="bio"
                       value={editForm.bio}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          bio: e.target.value,
+                        }))
+                      }
                       className="mt-1"
                       placeholder="Tell clients about yourself..."
                       rows={3}
                     />
                   </div>
-                  
+
                   <div>
-                    <Label htmlFor="specializations">Specializations (comma-separated)</Label>
+                    <Label htmlFor="specializations">
+                      Specializations (comma-separated)
+                    </Label>
                     <Input
                       id="specializations"
                       value={editForm.specializations}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, specializations: e.target.value }))}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          specializations: e.target.value,
+                        }))
+                      }
                       className="mt-1"
                       placeholder="Weight Loss, Muscle Building, Athletic Performance..."
                     />
                   </div>
-                  
+
                   <div>
-                    <Label htmlFor="certifications">Certifications (comma-separated)</Label>
+                    <Label htmlFor="certifications">
+                      Certifications (comma-separated)
+                    </Label>
                     <Input
                       id="certifications"
                       value={editForm.certifications}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, certifications: e.target.value }))}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          certifications: e.target.value,
+                        }))
+                      }
                       className="mt-1"
                       placeholder="NASM-CPT, ACSM, ACE..."
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="yearsExperience">Years of Experience</Label>
                     <Input
                       id="yearsExperience"
                       type="number"
                       value={editForm.yearsExperience}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, yearsExperience: e.target.value }))}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          yearsExperience: e.target.value,
+                        }))
+                      }
                       className="mt-1"
                       min="0"
                       max="50"
                     />
                   </div>
-                  
+
                   <div className="border-t pt-4">
-                    <h4 className="font-medium text-slate-900 mb-3">Change Password</h4>
+                    <h4 className="font-medium text-slate-900 mb-3">
+                      Change Password
+                    </h4>
                     <div className="space-y-3">
                       <div>
-                        <Label htmlFor="currentPassword">Current Password</Label>
+                        <Label htmlFor="currentPassword">
+                          Current Password
+                        </Label>
                         <Input
                           id="currentPassword"
                           type="password"
                           value={editForm.currentPassword}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              currentPassword: e.target.value,
+                            }))
+                          }
                           className="mt-1"
                           placeholder="Enter current password"
                         />
@@ -550,18 +685,30 @@ export default function TrainerProfile() {
                           id="newPassword"
                           type="password"
                           value={editForm.newPassword}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              newPassword: e.target.value,
+                            }))
+                          }
                           className="mt-1"
                           placeholder="Enter new password"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                        <Label htmlFor="confirmPassword">
+                          Confirm New Password
+                        </Label>
                         <Input
                           id="confirmPassword"
                           type="password"
                           value={editForm.confirmPassword}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              confirmPassword: e.target.value,
+                            }))
+                          }
                           className="mt-1"
                           placeholder="Confirm new password"
                         />
@@ -584,32 +731,42 @@ export default function TrainerProfile() {
             <CardContent className="p-4 sm:p-6">
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
-                  <Users className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mx-auto mb-2" />
+                  <Users className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 mx-auto mb-2" />
                   <div className="text-lg sm:text-2xl font-bold text-slate-900">
-                    {statsLoading ? '...' : stats?.totalClients || 0}
+                    {statsLoading ? "..." : stats?.totalClients || 0}
                   </div>
-                  <div className="text-xs sm:text-sm text-slate-600">Total Clients</div>
+                  <div className="text-xs sm:text-sm text-slate-600">
+                    Total Clients
+                  </div>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
                   <ChefHat className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 mx-auto mb-2" />
                   <div className="text-lg sm:text-2xl font-bold text-slate-900">
-                    {statsLoading ? '...' : stats?.totalMealPlansCreated || 0}
+                    {statsLoading ? "..." : stats?.totalMealPlansCreated || 0}
                   </div>
-                  <div className="text-xs sm:text-sm text-slate-600">Meal Plans</div>
+                  <div className="text-xs sm:text-sm text-slate-600">
+                    Meal Plans
+                  </div>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
-                  <Target className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 mx-auto mb-2" />
+                  <Target className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 mx-auto mb-2" />
                   <div className="text-lg sm:text-2xl font-bold text-slate-900">
-                    {statsLoading ? '...' : stats?.activeMealPlans || 0}
+                    {statsLoading ? "..." : stats?.activeMealPlans || 0}
                   </div>
-                  <div className="text-xs sm:text-sm text-slate-600">Active Plans</div>
+                  <div className="text-xs sm:text-sm text-slate-600">
+                    Active Plans
+                  </div>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-slate-50 rounded-lg">
                   <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 mx-auto mb-2" />
                   <div className="text-lg sm:text-2xl font-bold text-slate-900">
-                    {statsLoading ? '...' : `${stats?.clientSatisfactionRate || 0}%`}
+                    {statsLoading
+                      ? "..."
+                      : `${stats?.clientSatisfactionRate || 0}%`}
                   </div>
-                  <div className="text-xs sm:text-sm text-slate-600">Satisfaction</div>
+                  <div className="text-xs sm:text-sm text-slate-600">
+                    Satisfaction
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -626,21 +783,31 @@ export default function TrainerProfile() {
             <CardContent className="p-4 sm:p-6">
               <div className="space-y-4">
                 <p className="text-sm text-slate-600">
-                  Export recipe cards from customer meal plans to PDF format for easy printing and sharing.
+                  Export recipe cards from customer meal plans to PDF format for
+                  easy printing and sharing.
                 </p>
-                
+
                 {allCustomerMealPlans && allCustomerMealPlans.length > 0 ? (
                   <div className="space-y-3">
                     {/* Export All Button */}
                     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                       <div>
-                        <div className="font-medium text-slate-900">Export All Customer Meal Plans</div>
+                        <div className="font-medium text-slate-900">
+                          Export All Customer Meal Plans
+                        </div>
                         <div className="text-sm text-slate-600">
-                          {allCustomerMealPlans.reduce((total, customer) => total + customer.mealPlans.length, 0)} total meal plans
+                          {allCustomerMealPlans.reduce(
+                            (total, customer) =>
+                              total + customer.mealPlans.length,
+                            0,
+                          )}{" "}
+                          total meal plans
                         </div>
                       </div>
                       <PDFExportButton
-                        mealPlans={allCustomerMealPlans.flatMap(customer => customer.mealPlans)}
+                        mealPlans={allCustomerMealPlans.flatMap(
+                          (customer) => customer.mealPlans,
+                        )}
                         variant="outline"
                         size="sm"
                       >
@@ -650,35 +817,49 @@ export default function TrainerProfile() {
 
                     {/* Individual Customer Exports */}
                     <div className="space-y-2">
-                      <div className="text-sm font-medium text-slate-700">Export by Customer:</div>
-                      {allCustomerMealPlans.map((customerData) => (
-                        customerData.mealPlans.length > 0 && (
-                          <div key={customerData.customer.id} className="flex items-center justify-between p-2 border rounded-lg">
-                            <div>
-                              <div className="font-medium text-sm">{customerData.customer.email}</div>
-                              <div className="text-xs text-slate-600">
-                                {customerData.mealPlans.length} meal plan{customerData.mealPlans.length !== 1 ? 's' : ''}
-                              </div>
-                            </div>
-                            <PDFExportButton
-                              mealPlans={customerData.mealPlans}
-                              customerName={customerData.customer.email}
-                              variant="ghost"
-                              size="sm"
+                      <div className="text-sm font-medium text-slate-700">
+                        Export by Customer:
+                      </div>
+                      {allCustomerMealPlans.map(
+                        (customerData) =>
+                          customerData.mealPlans.length > 0 && (
+                            <div
+                              key={customerData.customer.id}
+                              className="flex items-center justify-between p-2 border rounded-lg"
                             >
-                              <Download className="w-3 h-3" />
-                            </PDFExportButton>
-                          </div>
-                        )
-                      ))}
+                              <div>
+                                <div className="font-medium text-sm">
+                                  {customerData.customer.email}
+                                </div>
+                                <div className="text-xs text-slate-600">
+                                  {customerData.mealPlans.length} meal plan
+                                  {customerData.mealPlans.length !== 1
+                                    ? "s"
+                                    : ""}
+                                </div>
+                              </div>
+                              <PDFExportButton
+                                mealPlans={customerData.mealPlans}
+                                customerName={customerData.customer.email}
+                                variant="ghost"
+                                size="sm"
+                              >
+                                <Download className="w-3 h-3" />
+                              </PDFExportButton>
+                            </div>
+                          ),
+                      )}
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-6 text-slate-500">
                     <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400" />
-                    <p className="text-sm">No meal plans available for export</p>
+                    <p className="text-sm">
+                      No meal plans available for export
+                    </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      Create meal plans and assign them to customers to enable PDF export
+                      Create meal plans and assign them to customers to enable
+                      PDF export
                     </p>
                   </div>
                 )}
@@ -701,7 +882,7 @@ export default function TrainerProfile() {
               <Button
                 variant="outline"
                 className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
-                onClick={() => window.location.href = '/trainer'}
+                onClick={() => (window.location.href = "/trainer")}
               >
                 <ChefHat className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">Browse Recipes</span>
@@ -709,7 +890,7 @@ export default function TrainerProfile() {
               <Button
                 variant="outline"
                 className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
-                onClick={() => window.location.href = '/meal-plan-generator'}
+                onClick={() => (window.location.href = "/meal-plan-generator")}
               >
                 <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">Create Meal Plan</span>
@@ -718,7 +899,10 @@ export default function TrainerProfile() {
                 variant="outline"
                 className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => {
-                  console.log('Send invitation button clicked, current state:', showInvitationForm);
+                  console.log(
+                    "Send invitation button clicked, current state:",
+                    showInvitationForm,
+                  );
                   setShowInvitationForm(!showInvitationForm);
                 }}
               >
@@ -728,7 +912,7 @@ export default function TrainerProfile() {
               <Button
                 variant="outline"
                 className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm"
-                onClick={() => window.location.href = '/trainer/customers'}
+                onClick={() => (window.location.href = "/trainer/customers")}
               >
                 <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">Manage Clients</span>
@@ -755,20 +939,33 @@ export default function TrainerProfile() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600">Recipes Assigned</span>
-                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                  {statsLoading ? '...' : stats?.totalRecipesAssigned || 0}
+                <Badge
+                  variant="outline"
+                  className="bg-orange-50 text-orange-700 border-orange-200"
+                >
+                  {statsLoading ? "..." : stats?.totalRecipesAssigned || 0}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-600">Experience Level</span>
-                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                <Badge
+                  variant="outline"
+                  className="bg-orange-50 text-orange-700 border-orange-200"
+                >
                   {profile?.yearsExperience || 0} years
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Client Satisfaction</span>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  {statsLoading ? '...' : `${stats?.clientSatisfactionRate || 0}%`}
+                <span className="text-sm text-slate-600">
+                  Client Satisfaction
+                </span>
+                <Badge
+                  variant="outline"
+                  className="bg-green-50 text-green-700 border-green-200"
+                >
+                  {statsLoading
+                    ? "..."
+                    : `${stats?.clientSatisfactionRate || 0}%`}
                 </Badge>
               </div>
             </CardContent>
@@ -805,78 +1002,81 @@ export default function TrainerProfile() {
       </div>
 
       {/* Invitation Form Modal */}
-      {showInvitationForm && (
-        console.log('Rendering invitation form modal'),
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Send Customer Invitation</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowInvitationForm(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSendInvitation} className="space-y-4">
-                <div>
-                  <Label htmlFor="customerEmail">Customer Email Address</Label>
-                  <Input
-                    id="customerEmail"
-                    type="email"
-                    placeholder="customer@example.com"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="message">Personal Message (Optional)</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Add a personal message to your invitation..."
-                    value={invitationMessage}
-                    onChange={(e) => setInvitationMessage(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex gap-2">
+      {showInvitationForm &&
+        (console.log("Rendering invitation form modal"),
+        (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Send Customer Invitation</span>
                   <Button
-                    type="submit"
-                    disabled={sendInvitationMutation.isPending}
-                    className="flex-1"
-                  >
-                    {sendInvitationMutation.isPending ? (
-                      <>
-                        <Clock className="w-4 h-4 mr-2 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Mail className="w-4 h-4 mr-2" />
-                        Send Invitation
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setShowInvitationForm(false)}
                   >
-                    Cancel
+                    <X className="w-4 h-4" />
                   </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSendInvitation} className="space-y-4">
+                  <div>
+                    <Label htmlFor="customerEmail">
+                      Customer Email Address
+                    </Label>
+                    <Input
+                      id="customerEmail"
+                      type="email"
+                      placeholder="customer@example.com"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="message">Personal Message (Optional)</Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Add a personal message to your invitation..."
+                      value={invitationMessage}
+                      onChange={(e) => setInvitationMessage(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      type="submit"
+                      disabled={sendInvitationMutation.isPending}
+                      className="flex-1"
+                    >
+                      {sendInvitationMutation.isPending ? (
+                        <>
+                          <Clock className="w-4 h-4 mr-2 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-4 h-4 mr-2" />
+                          Send Invitation
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowInvitationForm(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        ))}
 
       {/* Invitations List */}
       {invitations && invitations.length > 0 && (
@@ -890,7 +1090,10 @@ export default function TrainerProfile() {
           <CardContent>
             <div className="space-y-3">
               {invitations.slice(0, 5).map((invitation) => (
-                <div key={invitation.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div
+                  key={invitation.id}
+                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-slate-900">
@@ -903,7 +1106,7 @@ export default function TrainerProfile() {
                     </div>
                   </div>
 
-                  {invitation.status === 'pending' && (
+                  {invitation.status === "pending" && (
                     <Button
                       variant="outline"
                       size="sm"

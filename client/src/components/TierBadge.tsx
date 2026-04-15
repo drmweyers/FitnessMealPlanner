@@ -34,7 +34,7 @@ const TIER_CONFIG: Record<
   enterprise: {
     label: "Enterprise",
     icon: <Crown className="h-3 w-3" />,
-    className: "bg-purple-100 text-purple-800 border-purple-300",
+    className: "bg-orange-100 text-orange-800 border-orange-300",
     description: "6,000 recipes • 17 meal types • White-label",
   },
 };

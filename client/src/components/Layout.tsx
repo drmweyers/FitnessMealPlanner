@@ -10,16 +10,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-// ProfileAvatar removed - using initials only
 import {
   Home,
   User,
   LogOut,
-  Menu,
   ChevronDown,
   Bell,
   Utensils,
-  X,
+  BarChart2,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import MobileNavigation from "./MobileNavigation";
@@ -35,7 +34,6 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const handleLogout = () => {
     logout();
@@ -45,168 +43,171 @@ const Layout = ({ children }: LayoutProps) => {
   const navigation = [
     // Customer navigation
     ...(user?.role === "customer"
-      ? [{ name: "My Dashboard", href: "/customer", icon: User }]
+      ? [
+          { name: "My Dashboard", href: "/customer", icon: Home },
+          { name: "Profile", href: "/profile", icon: User },
+        ]
       : []),
 
     // Trainer navigation
     ...(user?.role === "trainer"
       ? [
-          { name: "Trainer Dashboard", href: "/trainer", icon: Home },
+          { name: "Dashboard", href: "/trainer", icon: Home },
           {
-            name: "Meal Plan Generator",
+            name: "Meal Generator",
             href: "/meal-plan-generator",
             icon: Utensils,
           },
+          { name: "Billing", href: "/billing", icon: BarChart2 },
+          { name: "Profile", href: "/profile", icon: User },
         ]
       : []),
 
     // Admin navigation
     ...(user?.role === "admin"
-      ? [{ name: "Admin", href: "/admin", icon: User }]
+      ? [
+          { name: "Admin", href: "/admin", icon: ShieldCheck },
+          { name: "Profile", href: "/profile", icon: User },
+        ]
       : []),
   ];
 
-  // Check if mobile viewport
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Offline Banner - Shows when network connection is lost */}
+    <div className="min-h-screen bg-[#F8FAFC]">
       <OfflineBanner />
-      {/* PWA Install Prompt */}
       <InstallPrompt />
 
-      {/* Mobile Navigation Component */}
+      {/* Desktop Sidebar — lg+ only */}
+      <aside className="hidden lg:flex lg:flex-col fixed inset-y-0 left-0 w-64 bg-[#0F172A] z-40">
+        {/* Sidebar Header — Logo */}
+        <div className="flex items-center h-16 px-6 border-b border-[#1E293B]">
+          <img src="/logo.png" alt="EvoFit Meals" className="h-8 w-8 mr-3" />
+          <span className="text-white font-bold text-lg font-display">
+            EvoFit Meals
+          </span>
+        </div>
+
+        {/* Sidebar Nav */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          {navigation.map((item) => {
+            const isActive =
+              location === item.href || location.startsWith(item.href + "/");
+            return (
+              <a
+                key={item.name}
+                href={item.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setLocation(item.href);
+                }}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150",
+                  isActive
+                    ? "bg-orange-500 text-white"
+                    : "text-slate-400 hover:bg-[#1E293B] hover:text-slate-100",
+                )}
+                data-testid={`sidebar-nav-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
+              >
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {item.name}
+              </a>
+            );
+          })}
+        </nav>
+
+        {/* Sidebar Footer — User info + logout */}
+        <div className="border-t border-[#1E293B] p-4">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-medium text-orange-400">
+                {user?.email?.substring(0, 2).toUpperCase() || "U"}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-slate-300 truncate">
+                {user?.email}
+              </p>
+              <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-1.5 text-slate-500 hover:text-slate-300 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile Navigation (bottom nav — keep existing) */}
       <MobileNavigation />
 
-      {/* Desktop Navigation Bar - Visible on Desktop Only */}
+      {/* Desktop Top Header — lg+ only, sits to right of sidebar */}
       <header
-        className="hidden lg:block bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm"
+        className="hidden lg:flex fixed top-0 left-64 right-0 h-16 bg-white border-b border-gray-200 z-30 items-center px-6 justify-between shadow-sm"
         data-testid="desktop-header"
         data-desktop-nav="true"
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo and Navigation */}
-            <div className="flex items-center min-w-0 flex-1">
-              <div className="flex-shrink-0">
-                <div className="flex items-center">
-                  {/* <Utensils className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 mr-2" />
-                  <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-                    EvoFitMeals
-                  </h1> */}
-                  <img
-                    src="/logo.png"
-                    alt="EvoFitMeals"
-                    className="w-10 h-10"
-                  />
+        <div>{/* Page title area — pages manage their own headings */}</div>
+        <div className="flex items-center gap-4">
+          {user?.role === "trainer" && <TierBadge size="sm" />}
+          <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+            <Bell className="w-5 h-5" />
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2 p-2">
+                <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                  <span className="text-xs font-medium text-orange-600">
+                    {user?.email?.substring(0, 2).toUpperCase() || "U"}
+                  </span>
                 </div>
-              </div>
-
-              {/* Desktop Navigation */}
-              <nav className="hidden lg:ml-6 xl:ml-8 lg:flex lg:space-x-4 xl:space-x-8">
-                {navigation.map((item) => {
-                  const isActive = location === item.href;
-                  return (
-                    <a
-                      key={item.name}
-                      href={item.href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setLocation(item.href);
-                      }}
-                      className={cn(
-                        "inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 transition-colors duration-200 whitespace-nowrap",
-                        isActive
-                          ? "border-primary text-gray-900"
-                          : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
-                      )}
-                      data-testid={`desktop-nav-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
-                    >
-                      <item.icon className="w-4 h-4 mr-2" />
-                      <span className="hidden xl:inline">{item.name}</span>
-                      <span className="xl:hidden">
-                        {item.name.split(" ")[0]}
-                      </span>
-                    </a>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* Right side items */}
-            <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
-              {/* Tier Badge - Only for trainers */}
-              {user?.role === "trainer" && (
-                <div className="hidden md:block">
-                  <TierBadge size="sm" />
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium truncate">
+                    {user?.email}
+                  </span>
+                  <span className="text-xs text-gray-500 capitalize">
+                    {user?.role}
+                  </span>
                 </div>
-              )}
-
-              {/* Notifications - Hidden on small screens */}
-              <button className="hidden sm:block p-2 text-gray-400 hover:text-gray-500 rounded-full hover:bg-gray-100 transition-colors duration-200">
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-
-              {/* User Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2"
-                  >
-                    <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs sm:text-sm font-medium text-primary">
-                        {user?.email?.substring(0, 2).toUpperCase() || "U"}
-                      </span>
-                    </div>
-                    <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 hidden sm:block" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 sm:w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium truncate">
-                        {user?.email}
-                      </span>
-                      <span className="text-xs text-gray-500 capitalize">
-                        {user?.role}
-                      </span>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setLocation("/profile")}>
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="text-red-600 focus:text-red-600"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setLocation("/profile")}>
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="text-red-600 focus:text-red-600"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-grow w-full">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 lg:py-6 xl:py-8">
+      {/* Main Content — offset by sidebar on desktop */}
+      <main className="lg:pl-64 lg:pt-16 flex-grow w-full pb-16 lg:pb-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {children}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 lg:py-6">
+      <footer className="lg:pl-64 bg-white border-t border-gray-200 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
             <p className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
-              © {new Date().getFullYear()} EvoFitMeals. All rights reserved.
+              © {new Date().getFullYear()} EvoFit Meals. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center sm:justify-end space-x-4 sm:space-x-6">
               <a
@@ -231,6 +232,7 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         </div>
       </footer>
+
       {user && <ReportBugButton />}
     </div>
   );

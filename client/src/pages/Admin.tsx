@@ -298,7 +298,7 @@ export default function Admin() {
           <Link href="/admin/bulk-generation">
             <Button
               variant="default"
-              className="gap-2 bg-purple-600 hover:bg-purple-700"
+              className="gap-2 bg-orange-500 hover:bg-orange-600"
             >
               <ChefHat className="h-4 w-4" />
               Bulk Generation
@@ -494,12 +494,12 @@ export default function Admin() {
                         <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">
                           Users
                         </p>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-600">
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">
                           {stats.users?.toLocaleString() || 0}
                         </p>
                       </div>
-                      <div className="p-2 sm:p-3 bg-purple-100 rounded-full flex-shrink-0 ml-2">
-                        <i className="fas fa-users text-purple-600 text-sm sm:text-lg lg:text-xl"></i>
+                      <div className="p-2 sm:p-3 bg-orange-100 rounded-full flex-shrink-0 ml-2">
+                        <i className="fas fa-users text-orange-600 text-sm sm:text-lg lg:text-xl"></i>
                       </div>
                     </div>
                   </CardContent>

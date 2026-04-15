@@ -2,7 +2,14 @@ import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { useToast } from "../hooks/use-toast";
-import { Loader2, Download, Database, Users, Calendar, CheckCircle } from "lucide-react";
+import {
+  Loader2,
+  Download,
+  Database,
+  Users,
+  Calendar,
+  CheckCircle,
+} from "lucide-react";
 
 interface ExportJSONModalProps {
   isOpen: boolean;
@@ -12,7 +19,11 @@ interface ExportJSONModalProps {
 
 type ExportType = "recipes" | "users" | "mealPlans" | "all";
 
-export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: ExportJSONModalProps) {
+export default function ExportJSONModal({
+  isOpen,
+  onClose,
+  selectedRecipeIds,
+}: ExportJSONModalProps) {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState<ExportType | null>(null);
@@ -28,28 +39,41 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
 
     try {
       const token = localStorage.getItem("token");
-      
+
       // Re-check selectedRecipeIds at the time of export (in case it changed)
-      const currentHasSelected = selectedRecipeIds && selectedRecipeIds.size > 0;
-      console.log('[Export] Export type:', type);
-      console.log('[Export] Has selected recipes:', currentHasSelected);
-      console.log('[Export] Selected recipe IDs:', selectedRecipeIds ? Array.from(selectedRecipeIds) : 'none');
-      
+      const currentHasSelected =
+        selectedRecipeIds && selectedRecipeIds.size > 0;
+      console.log("[Export] Export type:", type);
+      console.log("[Export] Has selected recipes:", currentHasSelected);
+      console.log(
+        "[Export] Selected recipe IDs:",
+        selectedRecipeIds ? Array.from(selectedRecipeIds) : "none",
+      );
+
       // Build query parameters
       const params = new URLSearchParams({ type });
-      
+
       // If exporting recipes and we have selected recipe IDs, include them
-      if (type === 'recipes' && currentHasSelected && selectedRecipeIds) {
+      if (type === "recipes" && currentHasSelected && selectedRecipeIds) {
         const recipeIdsArray = Array.from(selectedRecipeIds);
-        console.log('[Export] Including recipe IDs in request:', recipeIdsArray);
-        params.append('recipeIds', recipeIdsArray.join(','));
+        console.log(
+          "[Export] Including recipe IDs in request:",
+          recipeIdsArray,
+        );
+        params.append("recipeIds", recipeIdsArray.join(","));
       } else {
-        console.log('[Export] Not including recipe IDs (type:', type, ', hasSelected:', currentHasSelected, ')');
+        console.log(
+          "[Export] Not including recipe IDs (type:",
+          type,
+          ", hasSelected:",
+          currentHasSelected,
+          ")",
+        );
       }
-      
+
       const requestUrl = `/api/admin/export?${params.toString()}`;
-      console.log('[Export] Request URL:', requestUrl);
-      
+      console.log("[Export] Request URL:", requestUrl);
+
       const response = await fetch(requestUrl, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -61,13 +85,15 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
       }
 
       const data = await response.json();
-      
+
       // Create and download JSON file
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = `fitnessmealplanner-${type}-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `fitnessmealplanner-${type}-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -80,12 +106,13 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
         setExportStatus({ [type]: true });
       }
 
-      const exportDescription = type === "recipes" && hasSelectedRecipes
-        ? `${selectedRecipeIds.size} selected recipe${selectedRecipeIds.size === 1 ? '' : 's'} exported successfully`
-        : type === "all" 
-          ? "All data exported successfully"
-          : `${type} exported successfully`;
-      
+      const exportDescription =
+        type === "recipes" && hasSelectedRecipes
+          ? `${selectedRecipeIds.size} selected recipe${selectedRecipeIds.size === 1 ? "" : "s"} exported successfully`
+          : type === "all"
+            ? "All data exported successfully"
+            : `${type} exported successfully`;
+
       toast({
         title: "Export successful",
         description: exportDescription,
@@ -130,18 +157,21 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
           {hasSelectedRecipes && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800 font-medium">
-                {selectedRecipeIds.size} recipe{selectedRecipeIds.size === 1 ? '' : 's'} selected. 
-                Click "Recipes" to export only the selected recipes, or use "Export All" to export everything.
+                {selectedRecipeIds.size} recipe
+                {selectedRecipeIds.size === 1 ? "" : "s"} selected. Click
+                "Recipes" to export only the selected recipes, or use "Export
+                All" to export everything.
               </p>
             </div>
           )}
           <p className="text-gray-600 mb-6">
-            Select the data you want to export. The data will be downloaded as a JSON file.
+            Select the data you want to export. The data will be downloaded as a
+            JSON file.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Export Recipes */}
-            <Card 
+            <Card
               className={`cursor-pointer transition-all hover:shadow-md ${
                 exportStatus.recipes ? "border-green-500 bg-green-50" : ""
               }`}
@@ -158,9 +188,9 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
                 </div>
                 <h3 className="text-lg font-semibold mb-1">Recipes</h3>
                 <p className="text-sm text-gray-600">
-                  {hasSelectedRecipes 
-                    ? `Export ${selectedRecipeIds.size} selected recipe${selectedRecipeIds.size === 1 ? '' : 's'} with nutritional data`
-                    : 'Export all recipes with nutritional data'}
+                  {hasSelectedRecipes
+                    ? `Export ${selectedRecipeIds.size} selected recipe${selectedRecipeIds.size === 1 ? "" : "s"} with nutritional data`
+                    : "Export all recipes with nutritional data"}
                 </p>
                 {isExporting && exportType === "recipes" && (
                   <div className="mt-3">
@@ -171,7 +201,7 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
             </Card>
 
             {/* Export Users */}
-            <Card 
+            <Card
               className={`cursor-pointer transition-all hover:shadow-md ${
                 exportStatus.users ? "border-green-500 bg-green-50" : ""
               }`}
@@ -179,15 +209,17 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Users className="h-5 w-5 text-purple-600" />
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <Users className="h-5 w-5 text-orange-600" />
                   </div>
                   {exportStatus.users && (
                     <CheckCircle className="h-5 w-5 text-green-500" />
                   )}
                 </div>
                 <h3 className="text-lg font-semibold mb-1">Users</h3>
-                <p className="text-sm text-gray-600">Export user profiles and preferences</p>
+                <p className="text-sm text-gray-600">
+                  Export user profiles and preferences
+                </p>
                 {isExporting && exportType === "users" && (
                   <div className="mt-3">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -197,7 +229,7 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
             </Card>
 
             {/* Export Meal Plans */}
-            <Card 
+            <Card
               className={`cursor-pointer transition-all hover:shadow-md ${
                 exportStatus.mealPlans ? "border-green-500 bg-green-50" : ""
               }`}
@@ -213,7 +245,9 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
                   )}
                 </div>
                 <h3 className="text-lg font-semibold mb-1">Meal Plans</h3>
-                <p className="text-sm text-gray-600">Export all generated meal plans</p>
+                <p className="text-sm text-gray-600">
+                  Export all generated meal plans
+                </p>
                 {isExporting && exportType === "mealPlans" && (
                   <div className="mt-3">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -223,10 +257,12 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
             </Card>
 
             {/* Export All */}
-            <Card 
+            <Card
               className={`cursor-pointer transition-all hover:shadow-md ${
-                exportStatus.recipes && exportStatus.users && exportStatus.mealPlans 
-                  ? "border-green-500 bg-green-50" 
+                exportStatus.recipes &&
+                exportStatus.users &&
+                exportStatus.mealPlans
+                  ? "border-green-500 bg-green-50"
                   : ""
               }`}
               onClick={() => !isExporting && handleExport("all")}
@@ -236,12 +272,16 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
                   <div className="p-2 bg-orange-100 rounded-lg">
                     <Download className="h-5 w-5 text-orange-600" />
                   </div>
-                  {exportStatus.recipes && exportStatus.users && exportStatus.mealPlans && (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  )}
+                  {exportStatus.recipes &&
+                    exportStatus.users &&
+                    exportStatus.mealPlans && (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    )}
                 </div>
                 <h3 className="text-lg font-semibold mb-1">Export All</h3>
-                <p className="text-sm text-gray-600">Export complete database backup</p>
+                <p className="text-sm text-gray-600">
+                  Export complete database backup
+                </p>
                 {isExporting && exportType === "all" && (
                   <div className="mt-3">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -253,18 +293,15 @@ export default function ExportJSONModal({ isOpen, onClose, selectedRecipeIds }: 
 
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-600">
-              <strong>Note:</strong> Exported data includes all available information in JSON format. 
-              Large datasets may take a moment to download.
+              <strong>Note:</strong> Exported data includes all available
+              information in JSON format. Large datasets may take a moment to
+              download.
             </p>
           </div>
         </div>
 
         <div className="flex justify-end gap-2 p-6 border-t">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isExporting}
-          >
+          <Button variant="outline" onClick={onClose} disabled={isExporting}>
             Close
           </Button>
         </div>

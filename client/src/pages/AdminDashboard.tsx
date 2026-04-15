@@ -260,7 +260,7 @@ function MealPlanRow({
           )}
           {d?.dailyCalorieTarget && <span>{d.dailyCalorieTarget} kcal</span>}
           {d?.clientName && (
-            <span className="text-purple-500">{d.clientName}</span>
+            <span className="text-orange-500">{d.clientName}</span>
           )}
         </div>
       </div>
@@ -1986,7 +1986,7 @@ export default function AdminDashboard() {
                           >
                             Customers
                             {assignedPlans.length > 0 && (
-                              <span className="ml-2 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-purple-100 text-xs font-medium text-purple-700">
+                              <span className="ml-2 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-orange-100 text-xs font-medium text-orange-700">
                                 {assignedPlans.length}
                               </span>
                             )}
@@ -2040,12 +2040,12 @@ export default function AdminDashboard() {
                                   Customers
                                 </div>
                               </div>
-                              <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100/50 p-5">
-                                <Zap className="h-5 w-5 text-purple-500 mb-2" />
-                                <div className="text-3xl font-bold text-purple-700">
+                              <div className="rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/50 p-5">
+                                <Zap className="h-5 w-5 text-orange-500 mb-2" />
+                                <div className="text-3xl font-bold text-orange-700">
                                   {assignedPlans.length}
                                 </div>
-                                <div className="text-xs text-purple-500 font-medium mt-1">
+                                <div className="text-xs text-orange-500 font-medium mt-1">
                                   Assigned
                                 </div>
                               </div>
@@ -2170,8 +2170,8 @@ export default function AdminDashboard() {
                             <div>
                               <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                                  <div className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
-                                    <Users className="h-4 w-4 text-purple-600" />
+                                  <div className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
+                                    <Users className="h-4 w-4 text-orange-600" />
                                   </div>
                                   Assigned to Customers
                                 </h3>
@@ -2186,7 +2186,7 @@ export default function AdminDashboard() {
                                       key={mp.id}
                                       mp={mp}
                                       dateField="assignedAt"
-                                      color="purple"
+                                      color="orange"
                                       formatDate={formatDate}
                                     />
                                   ))}
@@ -2251,8 +2251,8 @@ export default function AdminDashboard() {
                         >
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
-                                <Users className="h-4 w-4 text-purple-600" />
+                              <div className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center">
+                                <Users className="h-4 w-4 text-orange-600" />
                               </div>
                               Customer Assignments
                             </h3>
@@ -2265,10 +2265,10 @@ export default function AdminDashboard() {
                               {assignedPlans.map((mp: any) => (
                                 <div
                                   key={mp.id}
-                                  className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-slate-100 bg-white hover:border-purple-200 hover:shadow-sm transition-all"
+                                  className="flex items-center gap-4 px-4 py-3.5 rounded-xl border border-slate-100 bg-white hover:border-orange-200 hover:shadow-sm transition-all"
                                 >
-                                  <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                                    <UserPlus className="h-4 w-4 text-purple-600" />
+                                  <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                    <UserPlus className="h-4 w-4 text-orange-600" />
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="font-medium text-sm text-slate-900 truncate">
@@ -2277,7 +2277,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
                                       {mp.mealPlanData?.clientName && (
-                                        <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
+                                        <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">
                                           {mp.mealPlanData.clientName}
                                         </span>
                                       )}
@@ -2625,7 +2625,7 @@ function BugReportsTab() {
                           </p>
                         )}
                         {bug.assignedToHal && (
-                          <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-2 py-0.5 text-xs font-medium mt-1">
+                          <span className="inline-flex items-center rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-xs font-medium mt-1">
                             Assigned to Hal
                           </span>
                         )}
@@ -2690,7 +2690,7 @@ function BugReportsTab() {
                           href={bug.githubIssueUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-purple-600 hover:text-purple-800 text-xs"
+                          className="text-orange-600 hover:text-orange-800 text-xs"
                         >
                           #{bug.githubIssueNumber}
                         </a>
@@ -2704,7 +2704,7 @@ function BugReportsTab() {
                           onClick={() =>
                             setScreenshotDialog(bug.screenshotBase64)
                           }
-                          className="text-purple-600 hover:text-purple-800"
+                          className="text-orange-600 hover:text-orange-800"
                         >
                           <ImageIcon className="h-4 w-4" />
                         </button>

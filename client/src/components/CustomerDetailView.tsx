@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { useToast } from '../hooks/use-toast';
-import { apiRequest } from '../lib/queryClient';
-import { SimplePDFExportButton } from './PDFExportButton';
-import MealPlanGenerator from './MealPlanGenerator';
-import MealPlanModal from './MealPlanModal';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { useToast } from "../hooks/use-toast";
+import { apiRequest } from "../lib/queryClient";
+import { SimplePDFExportButton } from "./PDFExportButton";
+import MealPlanGenerator from "./MealPlanGenerator";
+import MealPlanModal from "./MealPlanModal";
 import {
   User,
   Target,
@@ -19,10 +19,10 @@ import {
   Activity,
   Plus,
   ArrowLeft,
-  Zap
-} from 'lucide-react';
-import type { MealPlan, CustomerMealPlan } from '@shared/schema';
-import { formatDateSafe } from '../utils/dateUtils';
+  Zap,
+} from "lucide-react";
+import type { MealPlan, CustomerMealPlan } from "@shared/schema";
+import { formatDateSafe } from "../utils/dateUtils";
 
 interface Customer {
   id: string;
@@ -54,7 +54,7 @@ interface CustomerGoal {
   currentValue?: string;
   targetUnit: string;
   progressPercentage: number;
-  status: 'active' | 'achieved' | 'paused';
+  status: "active" | "achieved" | "paused";
   startDate: string;
   targetDate?: string;
   achievedDate?: string;
@@ -65,37 +65,59 @@ interface CustomerDetailViewProps {
   onBack: () => void;
 }
 
-export default function CustomerDetailView({ customer, onBack }: CustomerDetailViewProps) {
+export default function CustomerDetailView({
+  customer,
+  onBack,
+}: CustomerDetailViewProps) {
   const [showMealPlanGenerator, setShowMealPlanGenerator] = useState(false);
-  const [selectedMealPlan, setSelectedMealPlan] = useState<CustomerMealPlan | null>(null);
+  const [selectedMealPlan, setSelectedMealPlan] =
+    useState<CustomerMealPlan | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch customer's assigned meal plans
-  const { data: mealPlansData, isLoading: mealPlansLoading } = useQuery<{ mealPlans: CustomerMealPlan[]; total: number }>({
-    queryKey: ['customerMealPlans', customer.id],
+  const { data: mealPlansData, isLoading: mealPlansLoading } = useQuery<{
+    mealPlans: CustomerMealPlan[];
+    total: number;
+  }>({
+    queryKey: ["customerMealPlans", customer.id],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/trainer/customers/${customer.id}/meal-plans`);
+      const res = await apiRequest(
+        "GET",
+        `/api/trainer/customers/${customer.id}/meal-plans`,
+      );
       return res.json();
-    }
+    },
   });
 
   // Fetch customer's progress measurements (for trainer view)
-  const { data: measurementsData, isLoading: measurementsLoading } = useQuery<{ status: string; data: ProgressMeasurement[] }>({
-    queryKey: ['customerMeasurements', customer.id],
+  const { data: measurementsData, isLoading: measurementsLoading } = useQuery<{
+    status: string;
+    data: ProgressMeasurement[];
+  }>({
+    queryKey: ["customerMeasurements", customer.id],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/trainer/customers/${customer.id}/measurements`);
+      const res = await apiRequest(
+        "GET",
+        `/api/trainer/customers/${customer.id}/measurements`,
+      );
       return res.json();
-    }
+    },
   });
 
   // Fetch customer's goals (for trainer view)
-  const { data: goalsData, isLoading: goalsLoading } = useQuery<{ status: string; data: CustomerGoal[] }>({
-    queryKey: ['customerGoals', customer.id],
+  const { data: goalsData, isLoading: goalsLoading } = useQuery<{
+    status: string;
+    data: CustomerGoal[];
+  }>({
+    queryKey: ["customerGoals", customer.id],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/trainer/customers/${customer.id}/goals`);
+      const res = await apiRequest(
+        "GET",
+        `/api/trainer/customers/${customer.id}/goals`,
+      );
       return res.json();
-    }
+    },
   });
 
   const mealPlans = mealPlansData?.mealPlans || [];
@@ -106,13 +128,20 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
   // Get customer health metrics summary
   const getHealthMetrics = () => {
     if (!latestMeasurement) return undefined;
-    
+
     return {
-      weight: latestMeasurement.weightLbs ? `${latestMeasurement.weightLbs} lbs` :
-              latestMeasurement.weightKg ? `${latestMeasurement.weightKg} kg` : 'Not recorded',
-      bodyFat: latestMeasurement.bodyFatPercentage ? `${latestMeasurement.bodyFatPercentage}%` : 'Not recorded',
-      waist: latestMeasurement.waistCm ? `${latestMeasurement.waistCm} cm` : 'Not recorded',
-      lastUpdated: formatDateSafe(latestMeasurement.measurementDate)
+      weight: latestMeasurement.weightLbs
+        ? `${latestMeasurement.weightLbs} lbs`
+        : latestMeasurement.weightKg
+          ? `${latestMeasurement.weightKg} kg`
+          : "Not recorded",
+      bodyFat: latestMeasurement.bodyFatPercentage
+        ? `${latestMeasurement.bodyFatPercentage}%`
+        : "Not recorded",
+      waist: latestMeasurement.waistCm
+        ? `${latestMeasurement.waistCm} cm`
+        : "Not recorded",
+      lastUpdated: formatDateSafe(latestMeasurement.measurementDate),
     };
   };
 
@@ -125,12 +154,12 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
       customerId: customer.id,
       customerEmail: customer.email,
       healthMetrics,
-      goals: goals.filter(g => g.status === 'active'),
-      recentMeasurements: measurements.slice(0, 3)
+      goals: goals.filter((g) => g.status === "active"),
+      recentMeasurements: measurements.slice(0, 3),
     };
-    
+
     // Store context for meal plan generator
-    sessionStorage.setItem('customerContext', JSON.stringify(customerContext));
+    sessionStorage.setItem("customerContext", JSON.stringify(customerContext));
     setShowMealPlanGenerator(true);
   };
 
@@ -138,15 +167,19 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
     // Auto-assign the new meal plan to this customer
     assignMealToCustomer(mealPlan);
     setShowMealPlanGenerator(false);
-    sessionStorage.removeItem('customerContext');
+    sessionStorage.removeItem("customerContext");
   };
 
   // Mutation to assign meal plan to customer
   const assignMealPlanMutation = useMutation({
     mutationFn: async (mealPlanData: MealPlan) => {
-      const res = await apiRequest('POST', `/api/trainer/customers/${customer.id}/meal-plans`, {
-        mealPlanData
-      });
+      const res = await apiRequest(
+        "POST",
+        `/api/trainer/customers/${customer.id}/meal-plans`,
+        {
+          mealPlanData,
+        },
+      );
       return res.json();
     },
     onSuccess: () => {
@@ -154,8 +187,10 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
         title: "Meal Plan Created & Assigned",
         description: `Successfully created and assigned a personalized meal plan to ${customer.email}`,
       });
-      queryClient.invalidateQueries({ queryKey: ['customerMealPlans', customer.id] });
-      queryClient.invalidateQueries({ queryKey: ['trainerCustomers'] });
+      queryClient.invalidateQueries({
+        queryKey: ["customerMealPlans", customer.id],
+      });
+      queryClient.invalidateQueries({ queryKey: ["trainerCustomers"] });
     },
     onError: (error: any) => {
       toast({
@@ -163,7 +198,7 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
         description: error.message || "Failed to assign meal plan",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const assignMealToCustomer = (mealPlan: MealPlan) => {
@@ -174,8 +209,8 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
     return (
       <div className="space-y-6">
         <div className="flex items-center space-x-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setShowMealPlanGenerator(false)}
             className="flex items-center space-x-2"
           >
@@ -183,9 +218,12 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
             <span>Back to {customer.email}</span>
           </Button>
           <div>
-            <h2 className="text-xl font-bold">Create Meal Plan for {customer.email}</h2>
+            <h2 className="text-xl font-bold">
+              Create Meal Plan for {customer.email}
+            </h2>
             <p className="text-sm text-gray-600">
-              Use the customer's health metrics and goals below to create a personalized meal plan
+              Use the customer's health metrics and goals below to create a
+              personalized meal plan
             </p>
           </div>
         </div>
@@ -222,32 +260,42 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
               <div className="text-center">
                 <Heart className="h-5 w-5 mx-auto mb-1 text-blue-600" />
                 <div className="text-sm font-medium">Active Goals</div>
-                <div className="text-lg">{goals.filter(g => g.status === 'active').length}</div>
+                <div className="text-lg">
+                  {goals.filter((g) => g.status === "active").length}
+                </div>
               </div>
             </div>
-            
-            {goals.filter(g => g.status === 'active').length > 0 && (
+
+            {goals.filter((g) => g.status === "active").length > 0 && (
               <div>
-                <h4 className="font-medium text-blue-800 mb-2">Active Goals:</h4>
+                <h4 className="font-medium text-blue-800 mb-2">
+                  Active Goals:
+                </h4>
                 <div className="flex flex-wrap gap-2">
-                  {goals.filter(g => g.status === 'active').map(goal => (
-                    <Badge key={goal.id} variant="outline" className="bg-white">
-                      {goal.goalName} ({goal.progressPercentage}%)
-                    </Badge>
-                  ))}
+                  {goals
+                    .filter((g) => g.status === "active")
+                    .map((goal) => (
+                      <Badge
+                        key={goal.id}
+                        variant="outline"
+                        className="bg-white"
+                      >
+                        {goal.goalName} ({goal.progressPercentage}%)
+                      </Badge>
+                    ))}
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <MealPlanGenerator 
+        <MealPlanGenerator
           onMealPlanGenerated={handleMealPlanCreated}
           customerContext={{
             customerId: customer.id,
             customerEmail: customer.email,
             healthMetrics,
-            goals: goals.filter(g => g.status === 'active')
+            goals: goals.filter((g) => g.status === "active"),
           }}
         />
       </div>
@@ -259,18 +307,27 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={onBack} className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="flex items-center space-x-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Customers</span>
           </Button>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">{customer.email}</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {customer.email}
+            </h2>
             <p className="text-gray-600">
               Customer since {formatDateSafe(customer.firstAssignedAt)}
             </p>
           </div>
         </div>
-        <Button onClick={handleCreateMealPlan} className="bg-green-600 hover:bg-green-700">
+        <Button
+          onClick={handleCreateMealPlan}
+          className="bg-green-600 hover:bg-green-700"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Create New Meal Plan
         </Button>
@@ -279,7 +336,9 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="meal-plans">Meal Plans ({mealPlans.length})</TabsTrigger>
+          <TabsTrigger value="meal-plans">
+            Meal Plans ({mealPlans.length})
+          </TabsTrigger>
           <TabsTrigger value="health-metrics">Health Metrics</TabsTrigger>
           <TabsTrigger value="goals">Goals ({goals.length})</TabsTrigger>
         </TabsList>
@@ -297,13 +356,15 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
             <Card>
               <CardContent className="p-4 text-center">
                 <Target className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                <div className="text-2xl font-bold">{goals.filter(g => g.status === 'active').length}</div>
+                <div className="text-2xl font-bold">
+                  {goals.filter((g) => g.status === "active").length}
+                </div>
                 <div className="text-sm text-gray-600">Active Goals</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <TrendingUp className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                <TrendingUp className="h-8 w-8 mx-auto mb-2 text-orange-600" />
                 <div className="text-2xl font-bold">{measurements.length}</div>
                 <div className="text-sm text-gray-600">Measurements</div>
               </CardContent>
@@ -312,7 +373,7 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
               <CardContent className="p-4 text-center">
                 <Zap className="h-8 w-8 mx-auto mb-2 text-orange-600" />
                 <div className="text-2xl font-bold">
-                  {goals.filter(g => g.status === 'achieved').length}
+                  {goals.filter((g) => g.status === "achieved").length}
                 </div>
                 <div className="text-sm text-gray-600">Goals Achieved</div>
               </CardContent>
@@ -333,18 +394,30 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="text-center">
                     <Scale className="h-6 w-6 mx-auto mb-2 text-blue-600" />
-                    <div className="text-sm font-medium text-gray-600">Weight</div>
-                    <div className="text-xl font-bold">{healthMetrics.weight}</div>
+                    <div className="text-sm font-medium text-gray-600">
+                      Weight
+                    </div>
+                    <div className="text-xl font-bold">
+                      {healthMetrics.weight}
+                    </div>
                   </div>
                   <div className="text-center">
                     <Heart className="h-6 w-6 mx-auto mb-2 text-red-600" />
-                    <div className="text-sm font-medium text-gray-600">Body Fat</div>
-                    <div className="text-xl font-bold">{healthMetrics.bodyFat}</div>
+                    <div className="text-sm font-medium text-gray-600">
+                      Body Fat
+                    </div>
+                    <div className="text-xl font-bold">
+                      {healthMetrics.bodyFat}
+                    </div>
                   </div>
                   <div className="text-center">
                     <Target className="h-6 w-6 mx-auto mb-2 text-green-600" />
-                    <div className="text-sm font-medium text-gray-600">Waist</div>
-                    <div className="text-xl font-bold">{healthMetrics.waist}</div>
+                    <div className="text-sm font-medium text-gray-600">
+                      Waist
+                    </div>
+                    <div className="text-xl font-bold">
+                      {healthMetrics.waist}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -359,8 +432,8 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                   <ChefHat className="h-5 w-5" />
                   <span>Recent Meal Plans</span>
                 </div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={handleCreateMealPlan}
                 >
@@ -373,16 +446,19 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
               {mealPlansLoading ? (
                 <div className="space-y-3">
                   {[1, 2].map((i) => (
-                    <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+                    <div
+                      key={i}
+                      className="h-16 bg-gray-100 rounded-lg animate-pulse"
+                    />
                   ))}
                 </div>
               ) : mealPlans.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <ChefHat className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                   <p>No meal plans assigned yet</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="mt-2"
                     onClick={handleCreateMealPlan}
                   >
@@ -392,13 +468,15 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
               ) : (
                 <div className="space-y-3">
                   {mealPlans.slice(0, 3).map((assignment) => (
-                    <div 
-                      key={assignment.id} 
+                    <div
+                      key={assignment.id}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
                       onClick={() => setSelectedMealPlan(assignment)}
                     >
                       <div className="flex-1">
-                        <h5 className="font-medium hover:text-blue-600 transition-colors">{assignment.mealPlanData.planName}</h5>
+                        <h5 className="font-medium hover:text-blue-600 transition-colors">
+                          {assignment.mealPlanData.planName}
+                        </h5>
                         <p className="text-sm text-gray-600">
                           Assigned {formatDateSafe(assignment.assignedAt)}
                         </p>
@@ -424,8 +502,13 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
 
         <TabsContent value="meal-plans" className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Assigned Meal Plans ({mealPlans.length})</h3>
-            <Button onClick={handleCreateMealPlan} className="bg-green-600 hover:bg-green-700">
+            <h3 className="text-lg font-medium">
+              Assigned Meal Plans ({mealPlans.length})
+            </h3>
+            <Button
+              onClick={handleCreateMealPlan}
+              className="bg-green-600 hover:bg-green-700"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create New Plan
             </Button>
@@ -434,18 +517,27 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
           {mealPlansLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+                <div
+                  key={i}
+                  className="h-24 bg-gray-100 rounded-lg animate-pulse"
+                />
               ))}
             </div>
           ) : mealPlans.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
                 <ChefHat className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Meal Plans Yet</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No Meal Plans Yet
+                </h3>
                 <p className="text-gray-600 mb-4">
-                  Create a personalized meal plan for {customer.email} based on their health metrics and goals.
+                  Create a personalized meal plan for {customer.email} based on
+                  their health metrics and goals.
                 </p>
-                <Button onClick={handleCreateMealPlan} className="bg-green-600 hover:bg-green-700">
+                <Button
+                  onClick={handleCreateMealPlan}
+                  className="bg-green-600 hover:bg-green-700"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Meal Plan
                 </Button>
@@ -454,8 +546,8 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
           ) : (
             <div className="space-y-4">
               {mealPlans.map((assignment) => (
-                <Card 
-                  key={assignment.id} 
+                <Card
+                  key={assignment.id}
                   className="hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => setSelectedMealPlan(assignment)}
                 >
@@ -469,19 +561,32 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                           <div>
                             <div className="text-sm text-gray-600">Goal</div>
                             <div className="text-sm font-medium">
-                              {assignment.mealPlanData.fitnessGoal?.replace('_', ' ')}
+                              {assignment.mealPlanData.fitnessGoal?.replace(
+                                "_",
+                                " ",
+                              )}
                             </div>
                           </div>
                           <div>
-                            <div className="text-sm text-gray-600">Duration</div>
-                            <div className="text-sm font-medium">{assignment.mealPlanData.days} days</div>
+                            <div className="text-sm text-gray-600">
+                              Duration
+                            </div>
+                            <div className="text-sm font-medium">
+                              {assignment.mealPlanData.days} days
+                            </div>
                           </div>
                           <div>
-                            <div className="text-sm text-gray-600">Calories/Day</div>
-                            <div className="text-sm font-medium">{assignment.mealPlanData.dailyCalorieTarget}</div>
+                            <div className="text-sm text-gray-600">
+                              Calories/Day
+                            </div>
+                            <div className="text-sm font-medium">
+                              {assignment.mealPlanData.dailyCalorieTarget}
+                            </div>
                           </div>
                           <div>
-                            <div className="text-sm text-gray-600">Assigned</div>
+                            <div className="text-sm text-gray-600">
+                              Assigned
+                            </div>
                             <div className="text-sm font-medium">
                               {formatDateSafe(assignment.assignedAt)}
                             </div>
@@ -509,14 +614,19 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
           {measurementsLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+                <div
+                  key={i}
+                  className="h-20 bg-gray-100 rounded-lg animate-pulse"
+                />
               ))}
             </div>
           ) : measurements.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
                 <Scale className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Measurements Yet</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No Measurements Yet
+                </h3>
                 <p className="text-gray-600">
                   The customer hasn't recorded any measurements yet.
                 </p>
@@ -541,25 +651,33 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                       {measurement.weightLbs && (
                         <div>
                           <div className="text-sm text-gray-600">Weight</div>
-                          <div className="font-medium">{measurement.weightLbs} lbs</div>
+                          <div className="font-medium">
+                            {measurement.weightLbs} lbs
+                          </div>
                         </div>
                       )}
                       {measurement.bodyFatPercentage && (
                         <div>
                           <div className="text-sm text-gray-600">Body Fat</div>
-                          <div className="font-medium">{measurement.bodyFatPercentage}%</div>
+                          <div className="font-medium">
+                            {measurement.bodyFatPercentage}%
+                          </div>
                         </div>
                       )}
                       {measurement.waistCm && (
                         <div>
                           <div className="text-sm text-gray-600">Waist</div>
-                          <div className="font-medium">{measurement.waistCm} cm</div>
+                          <div className="font-medium">
+                            {measurement.waistCm} cm
+                          </div>
                         </div>
                       )}
                       {measurement.chestCm && (
                         <div>
                           <div className="text-sm text-gray-600">Chest</div>
-                          <div className="font-medium">{measurement.chestCm} cm</div>
+                          <div className="font-medium">
+                            {measurement.chestCm} cm
+                          </div>
                         </div>
                       )}
                     </div>
@@ -577,18 +695,25 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
         </TabsContent>
 
         <TabsContent value="goals" className="space-y-4">
-          <h3 className="text-lg font-medium">Customer Goals ({goals.length})</h3>
+          <h3 className="text-lg font-medium">
+            Customer Goals ({goals.length})
+          </h3>
           {goalsLoading ? (
             <div className="space-y-4">
               {[1, 2].map((i) => (
-                <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+                <div
+                  key={i}
+                  className="h-20 bg-gray-100 rounded-lg animate-pulse"
+                />
               ))}
             </div>
           ) : goals.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
                 <Target className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Goals Set</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No Goals Set
+                </h3>
                 <p className="text-gray-600">
                   The customer hasn't set any fitness goals yet.
                 </p>
@@ -603,45 +728,69 @@ export default function CustomerDetailView({ customer, onBack }: CustomerDetailV
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
                           <h5 className="font-medium">{goal.goalName}</h5>
-                          <Badge 
-                            variant={goal.status === 'achieved' ? 'default' : goal.status === 'active' ? 'secondary' : 'outline'}
+                          <Badge
+                            variant={
+                              goal.status === "achieved"
+                                ? "default"
+                                : goal.status === "active"
+                                  ? "secondary"
+                                  : "outline"
+                            }
                             className={
-                              goal.status === 'achieved' ? 'bg-green-100 text-green-800' :
-                              goal.status === 'active' ? 'bg-blue-100 text-blue-800' : ''
+                              goal.status === "achieved"
+                                ? "bg-green-100 text-green-800"
+                                : goal.status === "active"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : ""
                             }
                           >
                             {goal.status}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-600 mb-3">{goal.description}</p>
+                        <p className="text-sm text-gray-600 mb-3">
+                          {goal.description}
+                        </p>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <div className="text-gray-600">Target</div>
-                            <div className="font-medium">{goal.targetValue} {goal.targetUnit}</div>
+                            <div className="font-medium">
+                              {goal.targetValue} {goal.targetUnit}
+                            </div>
                           </div>
                           <div>
                             <div className="text-gray-600">Current</div>
-                            <div className="font-medium">{goal.currentValue || 'Not set'} {goal.targetUnit}</div>
+                            <div className="font-medium">
+                              {goal.currentValue || "Not set"} {goal.targetUnit}
+                            </div>
                           </div>
                           <div>
                             <div className="text-gray-600">Progress</div>
-                            <div className="font-medium">{goal.progressPercentage}%</div>
+                            <div className="font-medium">
+                              {goal.progressPercentage}%
+                            </div>
                           </div>
                           <div>
                             <div className="text-gray-600">Target Date</div>
                             <div className="font-medium">
-                              {goal.targetDate ? formatDateSafe(goal.targetDate) : 'No deadline'}
+                              {goal.targetDate
+                                ? formatDateSafe(goal.targetDate)
+                                : "No deadline"}
                             </div>
                           </div>
                         </div>
                         <div className="mt-3">
                           <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
+                            <div
                               className={`h-2 rounded-full transition-all ${
-                                goal.progressPercentage >= 100 ? 'bg-green-500' :
-                                goal.progressPercentage >= 50 ? 'bg-blue-500' : 'bg-orange-500'
+                                goal.progressPercentage >= 100
+                                  ? "bg-green-500"
+                                  : goal.progressPercentage >= 50
+                                    ? "bg-blue-500"
+                                    : "bg-orange-500"
                               }`}
-                              style={{ width: `${Math.min(goal.progressPercentage, 100)}%` }}
+                              style={{
+                                width: `${Math.min(goal.progressPercentage, 100)}%`,
+                              }}
                             />
                           </div>
                         </div>

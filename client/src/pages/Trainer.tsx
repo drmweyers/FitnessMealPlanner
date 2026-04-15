@@ -150,14 +150,14 @@ export default function Trainer() {
           </TabsTrigger>
           <TabsTrigger
             value="manual-plan"
-            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm bg-blue-50 hover:bg-blue-100"
+            className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm bg-orange-50 hover:bg-orange-100"
           >
-            <i className="fas fa-wand-magic-sparkles text-sm sm:text-base text-blue-600"></i>
-            <span className="hidden lg:inline text-blue-700">
+            <i className="fas fa-wand-magic-sparkles text-sm sm:text-base text-orange-600"></i>
+            <span className="hidden lg:inline text-orange-700">
               Create Custom
             </span>
-            <span className="lg:hidden text-blue-700">Custom</span>
-            <span className="text-[10px] text-blue-600 font-semibold hidden xl:inline">
+            <span className="lg:hidden text-orange-700">Custom</span>
+            <span className="text-[10px] text-orange-600 font-semibold hidden xl:inline">
               (No AI)
             </span>
           </TabsTrigger>
@@ -188,10 +188,10 @@ export default function Trainer() {
           />
 
           {/* Recipe Count Display - Story 2.14 */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 bg-orange-50 rounded-lg border border-orange-100 shadow-sm">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="bg-blue-100 p-2.5 sm:p-3 rounded-full flex-shrink-0">
-                <i className="fas fa-book-open text-blue-600 text-lg sm:text-xl"></i>
+              <div className="bg-orange-100 p-2.5 sm:p-3 rounded-full flex-shrink-0">
+                <i className="fas fa-book-open text-orange-600 text-lg sm:text-xl"></i>
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm text-slate-600 mb-1">

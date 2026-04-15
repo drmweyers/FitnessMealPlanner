@@ -154,7 +154,7 @@ const ResetPasswordPage = () => {
         >
           {/* Brand mark */}
           <motion.div variants={fadeUp} className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-medium tracking-wide uppercase mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-300 text-xs font-medium tracking-wide uppercase mb-4">
               <Sparkles className="w-3.5 h-3.5" />
               EvoFit Meals
             </div>
@@ -163,7 +163,7 @@ const ResetPasswordPage = () => {
               style={{ fontFamily: "'Clash Display', sans-serif" }}
             >
               Set a New{" "}
-              <span className="bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-orange-400 to-orange-300 bg-clip-text text-transparent">
                 Password.
               </span>
             </h1>
@@ -175,11 +175,11 @@ const ResetPasswordPage = () => {
           {/* Form card */}
           <motion.div
             variants={fadeUp}
-            className="rounded-2xl border border-purple-500/20 bg-gray-900/80 backdrop-blur-xl shadow-2xl shadow-purple-500/5 p-6 sm:p-8"
+            className="rounded-2xl border border-orange-500/20 bg-gray-900/80 backdrop-blur-xl shadow-2xl shadow-orange-500/5 p-6 sm:p-8"
           >
             <div className="mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/15 border border-purple-500/20 flex items-center justify-center">
-                <KeyRound className="w-5 h-5 text-purple-400" />
+              <div className="w-10 h-10 rounded-lg bg-orange-500/15 border border-orange-500/20 flex items-center justify-center">
+                <KeyRound className="w-5 h-5 text-orange-400" />
               </div>
               <div>
                 <h2
@@ -213,7 +213,7 @@ const ResetPasswordPage = () => {
                           autoComplete="new-password"
                           placeholder="At least 8 characters"
                           {...field}
-                          className="h-11 sm:h-12 text-sm sm:text-base bg-gray-800/60 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20 rounded-lg"
+                          className="h-11 sm:h-12 text-sm sm:text-base bg-gray-800/60 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-orange-500 focus:ring-orange-500/20 rounded-lg"
                           style={{
                             fontSize: "16px",
                             minHeight: "44px",
@@ -239,7 +239,7 @@ const ResetPasswordPage = () => {
                           autoComplete="new-password"
                           placeholder="Re-enter your password"
                           {...field}
-                          className="h-11 sm:h-12 text-sm sm:text-base bg-gray-800/60 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20 rounded-lg"
+                          className="h-11 sm:h-12 text-sm sm:text-base bg-gray-800/60 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-orange-500 focus:ring-orange-500/20 rounded-lg"
                           style={{
                             fontSize: "16px",
                             minHeight: "44px",
@@ -290,7 +290,7 @@ const ResetPasswordPage = () => {
 
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 text-sm font-medium transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to login
