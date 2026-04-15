@@ -93,8 +93,12 @@ function ValueStackItem({
       className="flex items-center justify-between py-3 border-b border-white/10 group"
     >
       <div className="flex items-center gap-3">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isBonus ? "bg-orange-500/20" : "bg-purple-600/30"}`}>
-          <Icon className={`w-4 h-4 ${isBonus ? "text-orange-400" : "text-purple-400"}`} />
+        <div
+          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isBonus ? "bg-orange-500/20" : "bg-purple-600/30"}`}
+        >
+          <Icon
+            className={`w-4 h-4 ${isBonus ? "text-orange-400" : "text-purple-400"}`}
+          />
         </div>
         <span className="text-white/90 text-sm sm:text-base">{label}</span>
       </div>
@@ -141,7 +145,14 @@ export default function EnterpriseSalesPage() {
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0A0A0F] via-[#1a0a2e] to-[#0A0A0F]" />
-        <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "url(/marketing/hero-gym-owner.png)", backgroundSize: "cover", backgroundPosition: "center" }} />
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage: "url(/marketing/hero-gym-owner.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[700px] bg-purple-600/15 rounded-full blur-[150px]" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-orange-500/8 rounded-full blur-[120px]" />
         <div className="absolute top-20 right-10 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px]" />
@@ -155,7 +166,7 @@ export default function EnterpriseSalesPage() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-600/30 to-indigo-600/30 border border-purple-400/40 text-purple-200 text-sm font-bold mb-8"
           >
             <Building2 className="w-4 h-4 text-purple-300" />
-            ENTERPRISE — FOR GYMS, TEAMS & AGENCIES
+            ENTERPRISE — FOR GYMS & HIGH-VOLUME TRAINERS
             <Building2 className="w-4 h-4 text-purple-300" />
           </motion.div>
 
@@ -169,7 +180,7 @@ export default function EnterpriseSalesPage() {
           >
             One Payment.{" "}
             <span className="bg-gradient-to-r from-purple-400 via-purple-500 to-orange-400 bg-clip-text text-transparent">
-              Unlimited Trainers. White-Label Everything.
+              Unlimited Clients. White-Label Everything.
             </span>
           </motion.h1>
 
@@ -230,8 +241,8 @@ export default function EnterpriseSalesPage() {
                 className="text-3xl sm:text-4xl md:text-5xl font-black mt-4 leading-tight"
                 style={{ fontFamily: "'Clash Display', 'Satoshi', sans-serif" }}
               >
-                "My 5 Trainers Were Each Paying{" "}
-                <span className="text-red-400">Their Own Subscriptions</span>
+                "My Clients Were Getting Plans From a{" "}
+                <span className="text-red-400">Competitor's Brand</span>
                 ..."
               </h2>
             </div>
@@ -240,44 +251,38 @@ export default function EnterpriseSalesPage() {
           <AnimatedSection delay={0.2}>
             <div className="prose prose-invert prose-lg max-w-none space-y-6 text-white/70 leading-relaxed">
               <p>
-                I own a gym with 5 personal trainers. Every one of them was
-                paying for their own meal planning software. Different tools,
-                different brands, different quality.
+                I had 80 clients and a growing online coaching business. Every
+                meal plan I sent had one problem: it said "EvoFitMeals" at the
+                top, not my brand.
               </p>
               <p>
-                When I finally added it all up, the gym was collectively spending{" "}
-                <span className="text-red-400 font-bold">
-                  $475 per month
-                </span>{" "}
-                on nutrition tools. That's{" "}
-                <span className="text-red-400 font-bold">$5,700 per year</span>{" "}
-                — and none of it was branded to our gym.
+                My clients were associating the nutrition experience with
+                someone else's software — not with{" "}
+                <span className="text-white italic">my coaching brand</span>.
               </p>
               <p>
-                Clients were getting meal plans from "Trainerize" and
-                "MyFitnessPal" — not from{" "}
-                <span className="text-white italic">our brand</span>.
+                I was also bumping up against limits constantly. The 200 meal
+                plan cap on Professional was slowing me down every month.
               </p>
               <p className="text-white/50 italic border-l-2 border-purple-500/50 pl-6">
-                "What if I could give every trainer access to one professional
-                tool, branded to our gym, for less than what one trainer pays per
-                month?"
+                "I need unlimited generation, my logo on everything, and my own
+                domain — without paying another subscription forever."
               </p>
               <p>
-                I consolidated everyone onto EvoFitMeals Enterprise.{" "}
-                <span className="text-white font-semibold">$399. Once.</span>{" "}
-                All 5 trainers. Unlimited clients. Our gym logo on every single
-                meal plan.
+                I upgraded to Enterprise.{" "}
+                <span className="text-white font-semibold">
+                  $100 more. Once.
+                </span>{" "}
+                Unlimited clients. Unlimited meal plans. White-label on. Custom
+                domain set up in 10 minutes.
               </p>
               <p>
-                In the first month alone, we saved $76. By end of year one, we
-                saved{" "}
-                <span className="text-green-400 font-bold">$5,301</span>. And
-                now every client sees our brand, not some third-party app.
+                Now every client sees my brand on every plan. Not a third-party
+                app's name. Mine.
               </p>
               <p className="text-xl text-white font-semibold">
-                Enterprise isn't an expense. It's the last tool investment
-                you'll ever make.
+                Enterprise is a $100 upgrade that looks like you spent $10,000
+                on custom software.
               </p>
             </div>
           </AnimatedSection>
@@ -312,29 +317,31 @@ export default function EnterpriseSalesPage() {
                 <div className="w-12 h-12 rounded-full bg-purple-600/30 flex items-center justify-center mx-auto mb-3">
                   <Users className="w-6 h-6 text-purple-400" />
                 </div>
-                <div className="text-3xl font-black text-white">5</div>
-                <div className="text-white/50 text-sm mt-1">Trainers</div>
+                <div className="text-3xl font-black text-white">50</div>
+                <div className="text-white/50 text-sm mt-1">Clients</div>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
                 <div className="w-12 h-12 rounded-full bg-purple-600/30 flex items-center justify-center mx-auto mb-3">
                   <UserCog className="w-6 h-6 text-purple-400" />
                 </div>
-                <div className="text-3xl font-black text-white">10</div>
-                <div className="text-white/50 text-sm mt-1">Clients Each</div>
+                <div className="text-3xl font-black text-white">$50</div>
+                <div className="text-white/50 text-sm mt-1">Per Plan/Month</div>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
                 <div className="w-12 h-12 rounded-full bg-purple-600/30 flex items-center justify-center mx-auto mb-3">
                   <DollarSign className="w-6 h-6 text-purple-400" />
                 </div>
-                <div className="text-3xl font-black text-white">$50</div>
-                <div className="text-white/50 text-sm mt-1">Per Plan</div>
+                <div className="text-3xl font-black text-white">$399</div>
+                <div className="text-white/50 text-sm mt-1">One-Time Cost</div>
               </div>
               <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-2xl p-6 text-center">
                 <div className="w-12 h-12 rounded-full bg-green-600/30 flex items-center justify-center mx-auto mb-3">
                   <TrendingUp className="w-6 h-6 text-green-400" />
                 </div>
                 <div className="text-3xl font-black text-green-400">$2,500</div>
-                <div className="text-green-300/50 text-sm mt-1">Monthly Revenue</div>
+                <div className="text-green-300/50 text-sm mt-1">
+                  Monthly Revenue
+                </div>
               </div>
             </div>
 
@@ -347,16 +354,24 @@ export default function EnterpriseSalesPage() {
                   <div className="text-white/40 text-sm">one time</div>
                 </div>
                 <div>
-                  <div className="text-white/50 text-sm mb-1">Monthly Revenue</div>
-                  <div className="text-3xl font-black text-green-400">$2,500</div>
-                  <div className="text-green-300/40 text-sm">from nutrition services</div>
+                  <div className="text-white/50 text-sm mb-1">
+                    Monthly Revenue
+                  </div>
+                  <div className="text-3xl font-black text-green-400">
+                    $2,500
+                  </div>
+                  <div className="text-green-300/40 text-sm">
+                    from nutrition services
+                  </div>
                 </div>
                 <div>
                   <div className="text-white/50 text-sm mb-1">ROI</div>
                   <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
                     6,266%
                   </div>
-                  <div className="text-green-300/40 text-sm">first year return</div>
+                  <div className="text-green-300/40 text-sm">
+                    first year return
+                  </div>
                 </div>
               </div>
 
@@ -403,15 +418,60 @@ export default function EnterpriseSalesPage() {
                 </span>
               </div>
             </div>
-            <ValueStackItem icon={Crown} label="Everything in Professional Plan" value="$13,500/yr" delay={0} />
-            <ValueStackItem icon={InfinityIcon} label="Unlimited Clients" value="$5,000/yr" delay={0.04} />
-            <ValueStackItem icon={Layers} label="Unlimited Meal Plans" value="$3,000/yr" delay={0.08} />
-            <ValueStackItem icon={Globe} label="White-Label + Custom Domain" value="$3,000/yr" delay={0.12} />
-            <ValueStackItem icon={Users} label="Team Accounts" value="$1,500/yr" delay={0.16} />
-            <ValueStackItem icon={Code2} label="API Access" value="$2,000/yr" delay={0.2} />
-            <ValueStackItem icon={PackageOpen} label="Bulk Operations" value="$1,000/yr" delay={0.24} />
-            <ValueStackItem icon={Salad} label="Specialized Protocols" value="$1,000/yr" delay={0.28} />
-            <ValueStackItem icon={Headphones} label="Dedicated Support" value="$2,000/yr" delay={0.32} />
+            <ValueStackItem
+              icon={Crown}
+              label="Everything in Professional Plan"
+              value="$13,500/yr"
+              delay={0}
+            />
+            <ValueStackItem
+              icon={InfinityIcon}
+              label="Unlimited Clients"
+              value="$5,000/yr"
+              delay={0.04}
+            />
+            <ValueStackItem
+              icon={Layers}
+              label="Unlimited Meal Plans"
+              value="$3,000/yr"
+              delay={0.08}
+            />
+            <ValueStackItem
+              icon={Globe}
+              label="White-Label + Custom Domain"
+              value="$3,000/yr"
+              delay={0.12}
+            />
+            <ValueStackItem
+              icon={Code2}
+              label="API Access"
+              value="$2,000/yr"
+              delay={0.16}
+            />
+            <ValueStackItem
+              icon={PackageOpen}
+              label="Bulk Operations"
+              value="$1,000/yr"
+              delay={0.2}
+            />
+            <ValueStackItem
+              icon={Salad}
+              label="17 Meal Type Categories"
+              value="$800/yr"
+              delay={0.24}
+            />
+            <ValueStackItem
+              icon={Download}
+              label="All Export Formats (PDF, CSV, Excel)"
+              value="$600/yr"
+              delay={0.28}
+            />
+            <ValueStackItem
+              icon={Headphones}
+              label="Dedicated Support"
+              value="$2,000/yr"
+              delay={0.32}
+            />
 
             {/* Bonuses */}
             <div className="mt-6 pt-6 border-t border-purple-500/30">
@@ -421,9 +481,20 @@ export default function EnterpriseSalesPage() {
                   FREE BONUSES
                 </span>
               </div>
-              <ValueStackItem icon={Timer} label="Custom Fasting Plans" value="$500/yr" delay={0.36} isBonus />
-              <ValueStackItem icon={Sparkles} label="White-Glove Onboarding" value="$500/yr" delay={0.4} isBonus />
-              <ValueStackItem icon={ImageIcon} label="Priority Image Generation" value="$500/yr" delay={0.44} isBonus />
+              <ValueStackItem
+                icon={BarChart3}
+                label="Full Analytics Dashboard"
+                value="$500/yr"
+                delay={0.36}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Sparkles}
+                label="Onboarding Support"
+                value="$300/yr"
+                delay={0.4}
+                isBonus
+              />
             </div>
 
             {/* Total */}
@@ -440,7 +511,8 @@ export default function EnterpriseSalesPage() {
                   $399
                 </div>
                 <div className="text-white/50 mt-2 text-lg">
-                  One time. Not per year. <span className="font-bold text-white">Forever.</span>
+                  One time. Not per year.{" "}
+                  <span className="font-bold text-white">Forever.</span>
                 </div>
               </div>
             </AnimatedSection>
@@ -473,48 +545,48 @@ export default function EnterpriseSalesPage() {
             {[
               {
                 icon: Globe,
-                title: "White-Label Everything",
-                desc: "Your domain, your logo, your colors. Clients see your brand — never ours. Full customization of PDFs, links, and the client portal.",
-              },
-              {
-                icon: Users,
-                title: "Team Accounts",
-                desc: "Add unlimited trainers under one account. Each trainer gets their own login, client roster, and workspace — all managed by you.",
+                title: "White-Label + Custom Domain",
+                desc: "Your domain, your logo, your colors. Clients see your brand on every meal plan PDF and shareable link — never ours.",
               },
               {
                 icon: Code2,
-                title: "API Access",
-                desc: "Integrate meal planning into your existing systems. Our REST API lets you programmatically generate plans, manage clients, and pull data.",
+                title: "API Access (Coming Soon)",
+                desc: "Programmatic access to your EvoFitMeals data — coming soon for Enterprise.",
               },
               {
                 icon: PackageOpen,
                 title: "Bulk Operations",
-                desc: "Generate meal plans for 50 clients at once. Import/export client data in bulk. CSV uploads for rapid onboarding.",
+                desc: "Bulk assign meal plans across your entire client roster. Import up to 100 meal plan templates at once.",
               },
               {
                 icon: Salad,
-                title: "Specialized Protocols",
-                desc: "Medical-grade dietary protocols including renal, cardiac, diabetic, pre/post-surgery, and pregnancy nutrition plans.",
+                title: "All 17 Meal Type Categories",
+                desc: "Every meal type category unlocked — from standard meals to specialized nutritional profiles. Starter gets 5; Enterprise gets all 17.",
               },
               {
                 icon: Headphones,
                 title: "Dedicated Support",
-                desc: "Priority support with a dedicated account manager. Get help within hours, not days. Includes custom onboarding for your team.",
+                desc: "Priority support response for Enterprise accounts. Get help faster when you're running a high-volume operation.",
               },
               {
                 icon: InfinityIcon,
                 title: "Unlimited Clients",
-                desc: "No caps. No per-client fees. Whether you have 50 clients or 5,000, your price is the same: $399.",
+                desc: "No caps. No per-client fees. Whether you have 50 clients or 500, your price is the same: $399. One time.",
               },
               {
                 icon: Layers,
                 title: "Unlimited Meal Plans",
-                desc: "Generate as many meal plans as you need. No monthly limits, no throttling, no per-plan charges.",
+                desc: "Generate as many meal plans as you need. No monthly generation limits, no throttling, no per-plan charges.",
               },
               {
-                icon: Timer,
-                title: "Custom Fasting Plans",
-                desc: "Intermittent fasting, OMAD, 5:2, and custom fasting windows. Fully integrated with meal timing and macro calculations.",
+                icon: Download,
+                title: "All Export Formats",
+                desc: "PDF, CSV, and Excel exports all unlocked. Starter gets PDF only. Professional adds CSV. Enterprise adds Excel for advanced data workflows.",
+              },
+              {
+                icon: BarChart3,
+                title: "Full Analytics Dashboard",
+                desc: "Enhanced analytics across your entire client base. Track engagement, meal plan adoption rates, and client progress at scale.",
               },
             ].map((feature, i) => (
               <AnimatedSection key={feature.title} delay={i * 0.05}>
@@ -564,7 +636,7 @@ export default function EnterpriseSalesPage() {
                 </div>
                 <div className="inline-flex items-center gap-2 px-5 py-3 bg-purple-500/10 border border-purple-500/30 rounded-full text-purple-400 font-semibold text-sm">
                   <Sparkles className="w-4 h-4" />
-                  White-Glove Onboarding Included
+                  Priority Support Included
                 </div>
               </div>
             </div>
@@ -594,24 +666,24 @@ export default function EnterpriseSalesPage() {
 
           <div className="space-y-4">
             <FAQItem
-              question="How many trainers can I add to one account?"
-              answer="Unlimited. Enterprise includes unlimited team accounts. Each trainer gets their own login, client list, and workspace. You control everything from a central admin dashboard — add trainers, remove them, or reassign clients at any time."
-            />
-            <FAQItem
               question="What does 'white-label' actually mean?"
-              answer="It means your clients never see 'EvoFitMeals' anywhere. Your gym name, your logo, your colors appear on every meal plan PDF, every client link, and every piece of communication. You can even use your own domain. It looks like you built the software yourself."
+              answer="It means your clients never see 'EvoFitMeals' anywhere. Your logo, your colors, and your custom domain appear on every meal plan PDF and shareable link. It looks like you built the software yourself — because to your clients, you did."
             />
             <FAQItem
-              question="We have 200+ members. Can the system handle that?"
-              answer="Absolutely. Enterprise has no client limits, no plan generation limits, and no throttling. Whether you're generating 10 plans or 10,000 plans per month, your cost is the same: $399, once. Our infrastructure scales to handle any volume."
+              question="I have 200+ clients. Can the system handle that?"
+              answer="Absolutely. Enterprise has no client limits and no meal plan generation limits. Whether you're managing 50 clients or 500, your cost is the same: $399, once."
             />
             <FAQItem
-              question="How does the API work?"
-              answer="Our REST API gives you programmatic access to everything — client management, meal plan generation, recipe data, and exports. Documentation and examples are included. Common use cases: integrating with your gym management software, building custom client portals, or automating plan delivery."
+              question="How does API access work?"
+              answer="API access is on the Enterprise roadmap. Enterprise subscribers will get early access when it launches. Your subscription locks in that access at no extra cost."
             />
             <FAQItem
-              question="What's included in white-glove onboarding?"
-              answer="A dedicated onboarding specialist will help your team get set up. This includes: importing your existing client data, configuring your brand settings, training your trainers on the platform, setting up team accounts, and a 30-day check-in to ensure everything is running smoothly."
+              question="What's the difference between Professional and Enterprise branding?"
+              answer="Professional gives you logo upload and custom colors on your meal plan PDFs. Enterprise adds white-label mode (removes EvoFitMeals branding entirely) and lets you connect your own custom domain so client-facing links use your URL."
+            />
+            <FAQItem
+              question="Can I upgrade from Professional to Enterprise later?"
+              answer="Yes. You pay only the $100 difference between Professional ($299) and Enterprise ($399). All your clients, meal plans, and branding settings carry over seamlessly."
             />
           </div>
         </div>
@@ -641,10 +713,11 @@ export default function EnterpriseSalesPage() {
               <span className="text-purple-400">One Payment.</span>
             </h2>
             <p className="text-xl text-white/60 mb-4 max-w-xl mx-auto">
-              Unlimited trainers. Unlimited clients. Your brand everywhere.
+              Unlimited clients. White-label branding. Your brand everywhere.
             </p>
             <p className="text-lg text-white/40 mb-10">
-              Replace $5,700+/year in team subscriptions with a single $399 investment.
+              Replace recurring subscription costs with a single $399 one-time
+              investment.
             </p>
 
             <a
@@ -661,8 +734,8 @@ export default function EnterpriseSalesPage() {
                 14-day money-back guarantee
               </div>
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                White-glove onboarding
+                <Headphones className="w-4 h-4" />
+                Priority support
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4" />

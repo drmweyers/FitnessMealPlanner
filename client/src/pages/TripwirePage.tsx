@@ -73,20 +73,28 @@ export default function TripwirePage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      {/* Urgency Bar */}
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 shadow-lg shadow-red-900/30">
-        <div className="max-w-5xl mx-auto px-4 py-2.5 sm:py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-yellow-200 animate-pulse" />
-            <span className="text-xs sm:text-sm font-bold tracking-wide text-white uppercase">
-              One-Time Offer — This page will not be shown again
-            </span>
-          </div>
-          <div className="flex items-center gap-2 bg-black/20 rounded-lg px-3 py-1">
-            <Clock className="w-4 h-4 text-yellow-200" />
-            <span className="font-mono text-lg sm:text-xl font-extrabold tabular-nums text-white">
-              {countdown.minutes}:{countdown.seconds}
-            </span>
+      {/* Coming Soon Banner */}
+      <div className="bg-yellow-100 border-b border-yellow-300 text-center py-2 px-4 text-sm text-yellow-800 font-medium">
+        This offer is coming soon — template pack in production. Join the
+        waitlist below.
+      </div>
+
+      {/* Urgency Bar — hidden until product is available */}
+      <div className="hidden">
+        <div className="sticky top-0 z-50 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 shadow-lg shadow-red-900/30">
+          <div className="max-w-5xl mx-auto px-4 py-2.5 sm:py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-yellow-200 animate-pulse" />
+              <span className="text-xs sm:text-sm font-bold tracking-wide text-white uppercase">
+                One-Time Offer — This page will not be shown again
+              </span>
+            </div>
+            <div className="flex items-center gap-2 bg-black/20 rounded-lg px-3 py-1">
+              <Clock className="w-4 h-4 text-yellow-200" />
+              <span className="font-mono text-lg sm:text-xl font-extrabold tabular-nums text-white">
+                {countdown.minutes}:{countdown.seconds}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -258,7 +266,11 @@ export default function TripwirePage() {
 
                     {/* Bottom */}
                     <div className="flex items-center gap-1 text-white/40">
-                      <img src="/logo.png" alt="EvoFitMeals" className="w-3 h-3" />
+                      <img
+                        src="/logo.png"
+                        alt="EvoFitMeals"
+                        className="w-3 h-3"
+                      />
                       <span className="text-[9px] sm:text-[10px] font-medium tracking-wide">
                         EvoFitMeals
                       </span>
@@ -280,9 +292,13 @@ export default function TripwirePage() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
+          {/* TODO: Wire to Stripe product for $17 template pack when product ID is available */}
           <Button
             className="w-full sm:w-auto px-10 sm:px-14 py-5 sm:py-6 h-auto text-base sm:text-lg font-extrabold bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/25 transition-all duration-200 hover:shadow-orange-500/40 hover:scale-[1.02] rounded-xl"
-            onClick={() => {}}
+            onClick={() => {
+              // Route to pricing while template pack checkout is not yet configured
+              window.location.href = "/pricing";
+            }}
           >
             <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
             Yes! Add the 50 Templates for Just $17
@@ -290,7 +306,7 @@ export default function TripwirePage() {
 
           <div className="mt-4">
             <Link
-              href="/get-started"
+              href="/pricing"
               className="text-sm text-gray-600 hover:text-gray-400 transition-colors underline underline-offset-4"
             >
               No thanks, I'll build my own templates from scratch

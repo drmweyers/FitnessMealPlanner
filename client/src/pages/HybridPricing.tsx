@@ -51,7 +51,7 @@ const PRICING_TIERS: PricingTier[] = [
       { name: "Progress tracking", included: true },
       { name: "Priority support", included: true },
       { name: "Custom branding", included: true },
-      { name: "Team accounts", included: false },
+      { name: "White-label + custom domain", included: false },
       { name: "API access", included: false },
     ],
     cta: "Start Growing",
@@ -59,18 +59,18 @@ const PRICING_TIERS: PricingTier[] = [
   {
     name: "Enterprise",
     id: "ENTERPRISE",
-    tagline: "For teams and gyms",
+    tagline: "For gyms and high-volume trainers",
     price: 399,
     clientLimit: "Unlimited clients",
     features: [
       { name: "Unlimited clients", included: true },
-      { name: "Unlimited recipes", included: true },
-      { name: "Team accounts", included: true },
-      { name: "API access", included: true },
-      { name: "White label options", included: true },
+      { name: "6,000+ recipes (all meal types)", included: true },
+      { name: "White-label + custom domain", included: true },
+      { name: "Bulk operations", included: true },
+      { name: "All export formats (PDF, CSV, Excel)", included: true },
+      { name: "Full analytics dashboard", included: true },
       { name: "Dedicated support", included: true },
-      { name: "Custom integrations", included: true },
-      { name: "SLA guarantee", included: true },
+      { name: "API access (Coming Soon)", included: true },
     ],
     cta: "Get Enterprise",
   },
@@ -238,6 +238,35 @@ export default function HybridPricing() {
         </div>
       </div>
 
+      {/* Enterprise Highlight Block */}
+      <div className="max-w-7xl mx-auto mt-12 mb-8">
+        <div className="rounded-2xl border-2 border-amber-500 bg-gradient-to-r from-amber-50 to-orange-50 p-8 text-center">
+          <div className="inline-block bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 uppercase tracking-wider">
+            Best Value
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            Own the Complete Platform for $399
+          </h3>
+          <p className="text-gray-600 mb-6 max-w-xl mx-auto">
+            Unlimited clients, white-label branding, all 17 meal type
+            categories, and bulk operations — for $100 more than Professional.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 mb-6 text-sm text-gray-700">
+            <span>✓ Unlimited clients</span>
+            <span>✓ White-label mode</span>
+            <span>✓ 6,000+ recipes</span>
+            <span>✓ All export formats</span>
+            <span>✓ Bulk operations</span>
+          </div>
+          <button
+            onClick={() => handleCheckout("ENTERPRISE")}
+            className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8 py-3 rounded-lg transition-colors"
+          >
+            Get Enterprise — $399
+          </button>
+        </div>
+      </div>
+
       {/* FAQ Section */}
       <div className="max-w-4xl mx-auto mt-20">
         <h2 className="text-3xl font-bold text-center mb-12">
@@ -300,7 +329,7 @@ export default function HybridPricing() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href="/get-started"
+            href="/api/login"
             className="bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition"
           >
             Get Started

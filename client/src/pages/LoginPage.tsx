@@ -198,17 +198,16 @@ const LoginPage = () => {
       className="min-h-screen relative overflow-hidden"
       style={{
         fontFamily: "'Satoshi', sans-serif",
-        background:
-          "linear-gradient(135deg, #1a0533 0%, #0A0A0F 40%, #0A0A0F 60%, #0f0a1a 100%)",
+        background: "#0f172a",
       }}
     >
       {/* Background effects */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Purple glow top-left */}
+        {/* Orange glow top-left */}
         <div
-          className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full opacity-20"
+          className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full opacity-10"
           style={{
-            background: "radial-gradient(circle, #9333EA 0%, transparent 70%)",
+            background: "radial-gradient(circle, #F97316 0%, transparent 70%)",
           }}
         />
         {/* Orange glow bottom-right */}
@@ -241,7 +240,7 @@ const LoginPage = () => {
           >
             {/* Headline */}
             <motion.div variants={fadeUp} className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-medium tracking-wide uppercase">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-300 text-xs font-medium tracking-wide uppercase">
                 <Sparkles className="w-3.5 h-3.5" />
                 For Fitness Professionals
               </div>
@@ -249,10 +248,7 @@ const LoginPage = () => {
                 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
-                Welcome{" "}
-                <span className="bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent">
-                  Back.
-                </span>
+                Welcome <span className="text-orange-400">Back.</span>
               </h1>
               <p className="text-gray-400 text-base sm:text-lg max-w-md leading-relaxed">
                 Sign in to keep delivering branded, professional meal plans to
@@ -264,8 +260,8 @@ const LoginPage = () => {
             <motion.div variants={fadeUp} className="space-y-5">
               {benefits.map((benefit, i) => (
                 <div key={i} className="flex items-start gap-4 group">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-500/15 border border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/25 transition-colors">
-                    <benefit.icon className="w-5 h-5 text-purple-400" />
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-500/15 border border-orange-500/20 flex items-center justify-center group-hover:bg-orange-500/25 transition-colors">
+                    <benefit.icon className="w-5 h-5 text-orange-400" />
                   </div>
                   <div>
                     <h3 className="text-white font-semibold text-sm sm:text-base">
@@ -284,14 +280,14 @@ const LoginPage = () => {
               variants={fadeUp}
               className="hidden lg:block rounded-xl bg-white/[0.03] border border-white/[0.06] p-5"
             >
-              <Quote className="w-5 h-5 text-purple-500/50 mb-3" />
+              <Quote className="w-5 h-5 text-orange-500/50 mb-3" />
               <p className="text-gray-300 text-sm italic leading-relaxed">
                 "EvoFitMeals cut my meal-planning time by 80%. My clients love
                 the branded PDFs, and the shareable links mean zero onboarding
                 friction."
               </p>
               <div className="flex items-center gap-3 mt-4">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center text-white text-xs font-bold">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
                   JM
                 </div>
                 <div>
@@ -315,10 +311,7 @@ const LoginPage = () => {
                 className="text-2xl sm:text-3xl font-bold text-white mb-2"
                 style={{ fontFamily: "'Clash Display', sans-serif" }}
               >
-                Welcome{" "}
-                <span className="bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent">
-                  Back.
-                </span>
+                Welcome <span className="text-orange-400">Back.</span>
               </h1>
               <p className="text-gray-400 text-sm sm:text-base">
                 Your personalized nutrition companion
@@ -326,7 +319,7 @@ const LoginPage = () => {
             </div>
 
             {/* Form card */}
-            <div className="rounded-2xl border border-purple-500/20 bg-gray-900/80 backdrop-blur-xl shadow-2xl shadow-purple-500/5 p-6 sm:p-8">
+            <div className="rounded-2xl border border-orange-500/20 bg-gray-900/80 backdrop-blur-xl shadow-2xl shadow-orange-500/5 p-6 sm:p-8">
               {/* Header */}
               <div className="mb-6">
                 <h2
@@ -359,7 +352,7 @@ const LoginPage = () => {
                             type="email"
                             autoComplete="email"
                             {...field}
-                            className="h-11 sm:h-12 text-sm sm:text-base bg-gray-800/60 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20 rounded-lg"
+                            className="h-11 sm:h-12 text-sm sm:text-base bg-gray-800/60 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-orange-500 focus:ring-orange-500/20 rounded-lg"
                             style={{
                               fontSize: "16px",
                               minHeight: "44px",
@@ -385,7 +378,7 @@ const LoginPage = () => {
                             type="password"
                             autoComplete="current-password"
                             {...field}
-                            className="h-11 sm:h-12 text-sm sm:text-base bg-gray-800/60 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20 rounded-lg"
+                            className="h-11 sm:h-12 text-sm sm:text-base bg-gray-800/60 border-gray-700/50 text-white placeholder:text-gray-500 focus:border-orange-500 focus:ring-orange-500/20 rounded-lg"
                             style={{
                               fontSize: "16px",
                               minHeight: "44px",
@@ -438,7 +431,7 @@ const LoginPage = () => {
                   Don't have an account?{" "}
                   <Link
                     href="/register"
-                    className="font-medium text-purple-400 hover:text-purple-300 transition-colors"
+                    className="font-medium text-orange-400 hover:text-orange-300 transition-colors"
                   >
                     Create one here
                   </Link>
@@ -446,7 +439,7 @@ const LoginPage = () => {
 
                 <Link
                   href="/forgot-password"
-                  className="text-xs sm:text-sm text-purple-400 hover:text-purple-300 font-medium transition-colors"
+                  className="text-xs sm:text-sm text-orange-400 hover:text-orange-300 font-medium transition-colors"
                 >
                   Forgot your password?
                 </Link>
@@ -459,14 +452,14 @@ const LoginPage = () => {
                 By signing in, you agree to our{" "}
                 <a
                   href="/terms"
-                  className="text-purple-400 hover:text-purple-300 hover:underline"
+                  className="text-orange-400 hover:text-orange-300 hover:underline"
                 >
                   Terms
                 </a>{" "}
                 and{" "}
                 <a
                   href="/privacy"
-                  className="text-purple-400 hover:text-purple-300 hover:underline"
+                  className="text-orange-400 hover:text-orange-300 hover:underline"
                 >
                   Privacy Policy
                 </a>

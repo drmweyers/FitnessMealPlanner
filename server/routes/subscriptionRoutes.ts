@@ -62,8 +62,8 @@ router.post("/create-checkout", async (req: Request, res: Response) => {
       .set({ stripeCustomerId: stripeCustomer.id })
       .where(eq(users.id, user.id));
 
-    const successUrl = `${process.env.FRONTEND_URL || "http://localhost:4000"}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${process.env.FRONTEND_URL || "http://localhost:4000"}/pricing`;
+    const successUrl = `${process.env.FRONTEND_URL || "http://localhost:4000"}/payment/success?session_id={CHECKOUT_SESSION_ID}&tier=${tier.toUpperCase()}`;
+    const cancelUrl = `${process.env.FRONTEND_URL || "http://localhost:4000"}/checkout/cancel`;
 
     if (paymentType === "subscription") {
       // Get the Stripe price ID from environment variables

@@ -18,13 +18,14 @@ export default function Landing() {
               AI-Powered Fitness Meal Plan Generator
             </p>
             <p className="text-sm sm:text-base lg:text-lg mb-8 sm:mb-10 lg:mb-12 text-primary-foreground/80 max-w-xs sm:max-w-lg lg:max-w-2xl mx-auto leading-relaxed">
-              Discover thousands of healthy, delicious recipes tailored to your fitness goals. 
-              Powered by advanced AI to create personalized meal plans that fuel your success.
+              Discover thousands of healthy, delicious recipes tailored to your
+              fitness goals. Powered by advanced AI to create personalized meal
+              plans that fuel your success.
             </p>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-white text-primary hover:bg-white/90 text-sm sm:text-base lg:text-lg px-6 sm:px-8 py-3 sm:py-4 h-auto font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => (window.location.href = "/api/login")}
             >
               <i className="fas fa-sign-in-alt mr-2"></i>
               <span className="hidden sm:inline">Get Started Today</span>
@@ -42,7 +43,8 @@ export default function Landing() {
               Why Choose EvoFitMeals?
             </h2>
             <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-xs sm:max-w-lg lg:max-w-2xl mx-auto leading-relaxed">
-              Everything you need to plan, prepare, and enjoy healthy meals that support your fitness journey.
+              Everything you need to plan, prepare, and enjoy healthy meals that
+              support your fitness journey.
             </p>
           </div>
 
@@ -56,7 +58,8 @@ export default function Landing() {
                   AI-Generated Recipes
                 </h3>
                 <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                  Thousands of unique, healthy recipes created by advanced AI technology and reviewed by nutrition experts.
+                  Thousands of unique, healthy recipes created by advanced AI
+                  technology and reviewed by nutrition experts.
                 </p>
               </CardContent>
             </Card>
@@ -70,7 +73,8 @@ export default function Landing() {
                   Smart Filtering
                 </h3>
                 <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                  Find perfect recipes with advanced filters for dietary restrictions, prep time, calories, and macros.
+                  Find perfect recipes with advanced filters for dietary
+                  restrictions, prep time, calories, and macros.
                 </p>
               </CardContent>
             </Card>
@@ -84,7 +88,8 @@ export default function Landing() {
                   Nutrition Tracking
                 </h3>
                 <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                  Detailed nutrition information for every recipe to help you meet your fitness and health goals.
+                  Detailed nutrition information for every recipe to help you
+                  meet your fitness and health goals.
                 </p>
               </CardContent>
             </Card>
@@ -98,7 +103,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
             <div className="p-4 sm:p-6">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2">
-                2,000+
+                1,500+
               </div>
               <div className="text-sm sm:text-base text-slate-600 font-medium">
                 Healthy Recipes
@@ -131,12 +136,13 @@ export default function Landing() {
             Ready to Transform Your Nutrition?
           </h2>
           <p className="text-sm sm:text-base lg:text-xl mb-6 sm:mb-8 text-slate-300 max-w-xs sm:max-w-lg lg:max-w-2xl mx-auto leading-relaxed">
-            Join thousands of fitness enthusiasts who trust EvoFitMeals for their meal planning needs.
+            Join thousands of fitness enthusiasts who trust EvoFitMeals for
+            their meal planning needs.
           </p>
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             className="bg-primary hover:bg-primary/90 text-white text-sm sm:text-base lg:text-lg px-6 sm:px-8 py-3 sm:py-4 h-auto font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => (window.location.href = "/api/login")}
           >
             <i className="fas fa-rocket mr-2"></i>
             <span className="hidden sm:inline">Start Your Journey Today</span>

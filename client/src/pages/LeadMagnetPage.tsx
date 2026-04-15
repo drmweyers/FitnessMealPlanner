@@ -42,6 +42,10 @@ const bulletPoints = [
 ];
 
 export default function LeadMagnetPage() {
+  // NOTE: Before deploying, place the blueprint PDF at:
+  // public/downloads/EvoFitMeals-AI-Blueprint.pdf
+  // Without this file, the download button will 404 silently.
+  // Alternative: wire the form submission to POST /api/email/lead-magnet
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
@@ -166,9 +170,9 @@ export default function LeadMagnetPage() {
                   className="w-full h-12 text-base font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:shadow-orange-500/40 hover:scale-[1.01]"
                   onClick={() => {
                     // Direct download — no email gate for now
-                    const link = document.createElement('a');
-                    link.href = '/downloads/EvoFitMeals-AI-Blueprint.pdf';
-                    link.download = 'AI-Meal-Planning-Blueprint.pdf';
+                    const link = document.createElement("a");
+                    link.href = "/downloads/EvoFitMeals-AI-Blueprint.pdf";
+                    link.download = "AI-Meal-Planning-Blueprint.pdf";
                     link.click();
                   }}
                 >
@@ -209,7 +213,11 @@ export default function LeadMagnetPage() {
                   {/* Main content */}
                   <div className="flex-1 flex flex-col items-center justify-center gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
-                      <img src="/logo.png" alt="EvoFitMeals" className="w-7 h-7" />
+                      <img
+                        src="/logo.png"
+                        alt="EvoFitMeals"
+                        className="w-7 h-7"
+                      />
                     </div>
 
                     <div>
@@ -234,7 +242,11 @@ export default function LeadMagnetPage() {
 
                   {/* Bottom logo */}
                   <div className="flex items-center gap-1.5 text-purple-300/70">
-                    <img src="/logo.png" alt="EvoFitMeals" className="w-3.5 h-3.5" />
+                    <img
+                      src="/logo.png"
+                      alt="EvoFitMeals"
+                      className="w-3.5 h-3.5"
+                    />
                     <span className="text-[10px] sm:text-xs font-semibold tracking-wide">
                       EvoFitMeals
                     </span>
@@ -258,7 +270,7 @@ export default function LeadMagnetPage() {
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
           >
-            {/* Stat */}
+            {/* Value prop (replaces unverified social proof stat) */}
             <motion.div
               className="flex flex-col items-center gap-2"
               custom={0}
@@ -268,10 +280,7 @@ export default function LeadMagnetPage() {
                 <Star className="w-5 h-5 text-purple-400" />
               </div>
               <p className="text-sm font-semibold text-white">
-                Join 500+ fitness professionals
-              </p>
-              <p className="text-xs text-gray-500">
-                who have downloaded the blueprint
+                Built for fitness professionals who want to scale.
               </p>
             </motion.div>
 
@@ -287,9 +296,7 @@ export default function LeadMagnetPage() {
               <p className="text-sm font-semibold text-white">
                 Your information is secure
               </p>
-              <p className="text-xs text-gray-500">
-                256-bit SSL encrypted
-              </p>
+              <p className="text-xs text-gray-500">256-bit SSL encrypted</p>
             </motion.div>
 
             {/* Testimonial */}
@@ -302,7 +309,8 @@ export default function LeadMagnetPage() {
                 <Star className="w-5 h-5 text-orange-400" />
               </div>
               <p className="text-sm font-medium text-gray-300 italic max-w-xs">
-                "This blueprint completely changed how I approach meal planning for my clients."
+                "This blueprint completely changed how I approach meal planning
+                for my clients."
               </p>
               <p className="text-xs text-gray-500">
                 — Sarah M., Certified Personal Trainer

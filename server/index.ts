@@ -401,10 +401,10 @@ if (process.env.NODE_ENV === "production") {
   // favicon, sw.js, icon-*.png, etc.). MUST come before the project-root public
   // fallback so Vite-built assets win, and before the SPA catch-all so they
   // don't get rewritten to index.html.
-  app.use(express.static(path.join(__dirname, "public")));
+  app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
   // Serve landing page assets (from project root public/, NOT dist/public/)
-  app.use(express.static(resolveProjectPath("public")));
+  app.use(express.static(resolveProjectPath("public"), { index: false }));
 
   // Serve landing page static assets (CSS, JS, images)
   app.use("/landing", express.static(resolveProjectPath("public", "landing")));

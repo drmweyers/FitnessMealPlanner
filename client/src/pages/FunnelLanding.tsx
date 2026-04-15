@@ -25,6 +25,7 @@ import {
   Globe,
   BarChart3,
   Layers,
+  ChefHat,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -124,6 +125,70 @@ function Reveal({
   );
 }
 
+/* ──────────────────────────────────────────────
+   NAVBAR
+   ────────────────────────────────────────────── */
+function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled ? "bg-white shadow-sm" : "bg-white/95 backdrop-blur-sm"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link href="/">
+            <div className="flex items-center gap-2 cursor-pointer">
+              <ChefHat className="w-6 h-6 text-orange-500" />
+              <span className="font-clash font-bold text-xl text-gray-900">
+                EvoFit Meals
+              </span>
+            </div>
+          </Link>
+
+          {/* Nav links */}
+          <div className="hidden md:flex items-center gap-8">
+            <a
+              href="#features"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#pricing"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Pricing
+            </a>
+            <Link
+              href="/login"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Sign In
+            </Link>
+          </div>
+
+          {/* Right CTA */}
+          <Link href="/pricing">
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white font-clash font-semibold text-sm px-5 py-2 h-auto rounded-lg transition-all duration-200">
+              Get Lifetime Access
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 /* ══════════════════════════════════════════════
    MAIN COMPONENT
    ══════════════════════════════════════════════ */
@@ -138,6 +203,7 @@ export default function FunnelLanding() {
       `}</style>
 
       <div className="font-satoshi min-h-screen bg-white text-gray-900 overflow-x-hidden">
+        <Navbar />
         <HeroSection />
         <ProblemSection />
         <SolutionSection />
@@ -158,29 +224,17 @@ export default function FunnelLanding() {
    ────────────────────────────────────────────── */
 function HeroSection() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-gray-950 to-gray-950" />
-      {/* Grid overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-      {/* Radial glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-600/20 rounded-full blur-[160px]" />
-      {/* Hero background image */}
-      <div
-        className="absolute inset-0 opacity-[0.12]"
-        style={{
-          backgroundImage: "url(/marketing/hero-trainer.png)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
+    <section
+      className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16"
+      style={{
+        backgroundImage:
+          "url(https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1920&q=80)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-slate-900/75" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20 sm:py-28">
         <motion.div
@@ -190,39 +244,38 @@ function HeroSection() {
         >
           {/* Trust badge */}
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8">
-            <Shield className="w-4 h-4 text-purple-400" />
-            <span className="text-sm text-purple-200 font-medium">
-              Trusted by fitness professionals worldwide
+            <Shield className="w-4 h-4 text-orange-400" />
+            <span className="text-sm text-gray-200 font-medium">
+              Built for nutrition-focused fitness professionals
             </span>
           </div>
 
           <h1 className="font-clash font-bold text-5xl sm:text-6xl md:text-7xl lg:text-[80px] leading-[1.05] text-white mb-6 tracking-tight">
-            Pay Once.
+            Grow Your Nutrition Business
             <br />
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-              Plan Forever.
-            </span>
+            <span className="text-orange-500">Without the Guesswork.</span>
           </h1>
 
           <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed">
-            AI-powered meal plans, shareable client links, grocery lists, and
-            progress tracking — all for a single payment.{" "}
+            Stop building meal plans from scratch. EvoFitMeals gives you
+            everything you need to serve more clients in less time — from
+            AI-generated plans to branded PDFs.{" "}
             <span className="text-white font-semibold">
-              No monthly fees. Ever.
+              One payment. No monthly fees.
             </span>
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/pricing">
               <Button className="bg-orange-500 hover:bg-orange-600 text-white font-clash font-semibold text-lg px-8 py-6 h-auto rounded-xl shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300 group">
-                Get Lifetime Access
+                Get Lifetime Access →
                 <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <a href="#how-it-works">
               <Button
                 variant="outline"
-                className="border-white/20 text-white hover:bg-white/10 font-clash font-medium text-lg px-8 py-6 h-auto rounded-xl backdrop-blur-sm"
+                className="border-white/30 text-white hover:bg-white/10 font-clash font-medium text-lg px-8 py-6 h-auto rounded-xl backdrop-blur-sm"
               >
                 See How It Works
               </Button>
@@ -230,7 +283,7 @@ function HeroSection() {
           </div>
         </motion.div>
 
-        {/* Floating stats */}
+        {/* Floating stats — factual only */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -238,9 +291,9 @@ function HeroSection() {
           className="mt-16 grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto"
         >
           {[
-            { value: "500+", label: "Trainers" },
-            { value: "50K+", label: "Meal Plans Created" },
-            { value: "99%", label: "Satisfaction" },
+            { value: "1,500+", label: "Recipes" },
+            { value: "8+", label: "Dietary Protocols" },
+            { value: "14-Day", label: "Money-Back Guarantee" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="font-clash font-bold text-2xl sm:text-3xl text-white">
@@ -268,13 +321,15 @@ function ProblemSection() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-16">
-            <span className="inline-block text-sm font-semibold text-red-500 uppercase tracking-widest mb-3">
+            <span className="inline-block text-sm font-semibold text-orange-600 uppercase tracking-widest mb-3">
               The Problem
             </span>
             <h2 className="font-clash font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900 leading-tight">
-              Subscription Fatigue Is
+              Still Building Meal Plans Manually?
               <br />
-              <span className="text-red-500">Killing Your Margins</span>
+              <span className="text-red-500">
+                That's Hours You're Not Getting Back.
+              </span>
             </h2>
           </div>
         </Reveal>
@@ -384,22 +439,22 @@ function ProblemSection() {
               {/* EvoFitMeals */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold text-purple-700">
+                  <span className="font-semibold text-orange-700">
                     EvoFitMeals
                   </span>
                   <span
                     ref={evofit.ref}
-                    className="font-clash font-bold text-purple-700 text-lg"
+                    className="font-clash font-bold text-orange-700 text-lg"
                   >
                     ${evofit.count}{" "}
-                    <span className="text-sm font-normal text-purple-500">
+                    <span className="text-sm font-normal text-orange-500">
                       (one-time)
                     </span>
                   </span>
                 </div>
                 <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full"
+                    className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"
                     initial={{ width: 0 }}
                     whileInView={{ width: "1.25%" }}
                     viewport={{ once: true }}
@@ -456,13 +511,13 @@ function SolutionSection() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-16">
-            <span className="inline-block text-sm font-semibold text-purple-600 uppercase tracking-widest mb-3">
+            <span className="inline-block text-sm font-semibold text-orange-600 uppercase tracking-widest mb-3">
               How It Works
             </span>
             <h2 className="font-clash font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900 leading-tight">
               What If You Could Pay Once
               <br />
-              and <span className="text-purple-600">Own It Forever?</span>
+              and <span className="text-orange-600">Own It Forever?</span>
             </h2>
           </div>
         </Reveal>
@@ -473,7 +528,7 @@ function SolutionSection() {
               <div className="flex gap-5 group">
                 {/* Number circle */}
                 <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white font-clash font-bold text-lg shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-shadow">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-clash font-bold text-lg shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-shadow">
                     {step.num}
                   </div>
                 </div>
@@ -555,7 +610,7 @@ function FeatureBlock({
           {badge && (
             <motion.div
               variants={fadeUp}
-              className="inline-block px-3 py-1 mb-5 text-[11px] uppercase tracking-widest bg-[#9333EA] text-white rounded-full font-semibold"
+              className="inline-block px-3 py-1 mb-5 text-[11px] uppercase tracking-widest bg-[#F97316] text-white rounded-full font-semibold"
             >
               {badge}
             </motion.div>
@@ -594,9 +649,9 @@ function FeatureGrid() {
             Everything You Need
           </span>
           <h2 className="font-clash font-black uppercase tracking-tight leading-none text-white text-[clamp(2.25rem,6vw,4.5rem)]">
-            Built for Trainers
+            Everything You Need to Run
             <br />
-            <span className="text-[#9333EA]">Who Mean Business</span>
+            <span className="text-[#F97316]">a Nutrition Business</span>
           </h2>
         </Reveal>
       </div>
@@ -699,16 +754,14 @@ function TierComparison() {
       price: 199,
       popular: false,
       features: [
-        "Up to 9 clients",
-        "50 meal plans/month",
-        "Essential recipe library",
+        "Up to 5 active clients",
         "AI meal plan generation",
+        "1,500+ recipes",
         "PDF exports",
         "Grocery lists",
-        "Shareable links",
+        "Shareable client links",
         "Progress tracking",
         "8+ dietary protocols",
-        "Email support",
       ],
       cta: "Get Starter",
       accent: "border-gray-200",
@@ -721,17 +774,15 @@ function TierComparison() {
       popular: true,
       extras: "Everything in Starter, PLUS:",
       features: [
-        "Up to 20 clients",
-        "200 meal plans/month",
-        "Complete + seasonal recipes",
+        "Unlimited active clients",
         "Custom branding (logo + colors)",
         "Natural language AI input",
         "Recipe collections & templates",
         "CSV + PDF analytics",
-        "Priority support",
+        "Bulk client operations",
       ],
       cta: "Get Professional",
-      accent: "border-purple-500 ring-2 ring-purple-500/20",
+      accent: "border-orange-500 ring-2 ring-orange-500/20",
       btnClass:
         "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25",
     },
@@ -743,13 +794,11 @@ function TierComparison() {
       extras: "Everything in Professional, PLUS:",
       features: [
         "Unlimited clients",
-        "Unlimited meal plans",
-        "White-label + custom domain",
-        "Team accounts",
-        "API access",
+        "Admin dashboard",
         "Bulk operations",
-        "Specialized protocols",
-        "Dedicated support",
+        "All 17 meal type categories",
+        "All export formats (PDF, CSV)",
+        "Security audit trail",
       ],
       cta: "Get Enterprise",
       accent: "border-gray-200",
@@ -762,12 +811,12 @@ function TierComparison() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-16">
-            <span className="inline-block text-sm font-semibold text-purple-600 uppercase tracking-widest mb-3">
+            <span className="inline-block text-sm font-semibold text-orange-600 uppercase tracking-widest mb-3">
               Pricing
             </span>
             <h2 className="font-clash font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-4">
               Choose Your Plan.{" "}
-              <span className="text-purple-600">Pay Once.</span> Own It Forever.
+              <span className="text-orange-600">Pay Once.</span> Own It Forever.
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
               No subscriptions. No hidden fees. One payment and the platform is
@@ -791,13 +840,13 @@ function TierComparison() {
                 }`}
               >
                 {tier.popular && (
-                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-center text-xs font-bold uppercase tracking-widest py-2">
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-center text-xs font-bold uppercase tracking-widest py-2">
                     Most Popular
                   </div>
                 )}
                 <CardContent className={`p-8 ${tier.popular ? "pt-12" : ""}`}>
                   {/* Tagline */}
-                  <span className="text-xs font-bold uppercase tracking-widest text-purple-600">
+                  <span className="text-xs font-bold uppercase tracking-widest text-orange-600">
                     {tier.tagline}
                   </span>
 
@@ -816,7 +865,7 @@ function TierComparison() {
 
                   {/* Extras label */}
                   {tier.extras && (
-                    <p className="text-sm font-semibold text-purple-700 mb-3">
+                    <p className="text-sm font-semibold text-orange-700 mb-3">
                       {tier.extras}
                     </p>
                   )}
@@ -890,7 +939,7 @@ function SocialProof() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-16">
-            <span className="inline-block text-sm font-semibold text-purple-600 uppercase tracking-widest mb-3">
+            <span className="inline-block text-sm font-semibold text-orange-600 uppercase tracking-widest mb-3">
               Testimonials
             </span>
             <h2 className="font-clash font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900">
@@ -927,7 +976,7 @@ function SocialProof() {
 
                   {/* Author */}
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
                       {t.name.charAt(0)}
                     </div>
                     <div>
@@ -1053,7 +1102,7 @@ function CompetitorTable() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-16">
-            <span className="inline-block text-sm font-semibold text-purple-600 uppercase tracking-widest mb-3">
+            <span className="inline-block text-sm font-semibold text-orange-600 uppercase tracking-widest mb-3">
               Comparison
             </span>
             <h2 className="font-clash font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900">
@@ -1070,7 +1119,7 @@ function CompetitorTable() {
                   <th className="text-left px-6 py-4 font-clash font-semibold text-gray-700">
                     Feature
                   </th>
-                  <th className="text-center px-4 py-4 font-clash font-semibold text-purple-700 bg-purple-50">
+                  <th className="text-center px-4 py-4 font-clash font-semibold text-orange-700 bg-orange-50">
                     EvoFitMeals
                   </th>
                   <th className="text-center px-4 py-4 font-clash font-semibold text-gray-500">
@@ -1095,7 +1144,7 @@ function CompetitorTable() {
                     <td className="px-6 py-3.5 font-medium text-gray-800">
                       {row.feature}
                     </td>
-                    <td className="px-4 py-3.5 text-center bg-purple-50/50">
+                    <td className="px-4 py-3.5 text-center bg-orange-50/50">
                       <CellIcon val={row.evo} />
                     </td>
                     <td className="px-4 py-3.5 text-center">
@@ -1129,7 +1178,7 @@ function FAQSection() {
     },
     {
       q: "What if I need more clients?",
-      a: "Simply upgrade to the next tier and pay only the difference. Going from Starter (9 clients) to Professional (20 clients) is just $100. Enterprise gives you unlimited clients for $399 total. All upgrades are one-time payments too.",
+      a: "Simply upgrade to the next tier and pay only the difference. Going from Starter (5 clients) to Professional (unlimited clients) is just $100. Enterprise gives you admin tools and advanced features for $399 total. All upgrades are one-time payments too.",
     },
     {
       q: "Can my clients access plans without signing up?",
@@ -1162,7 +1211,7 @@ function FAQSection() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center mb-16">
-            <span className="inline-block text-sm font-semibold text-purple-600 uppercase tracking-widest mb-3">
+            <span className="inline-block text-sm font-semibold text-orange-600 uppercase tracking-widest mb-3">
               FAQ
             </span>
             <h2 className="font-clash font-bold text-3xl sm:text-4xl md:text-5xl text-gray-900">
@@ -1201,7 +1250,7 @@ function FinalCTA() {
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-purple-950 to-gray-950" />
+      <div className="absolute inset-0 bg-slate-900" />
       <div
         className="absolute inset-0 opacity-[0.05]"
         style={{
@@ -1210,28 +1259,27 @@ function FinalCTA() {
           backgroundSize: "60px 60px",
         }}
       />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/15 rounded-full blur-[140px]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-[140px]" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <Reveal>
           <h2 className="font-clash font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white mb-6 leading-tight">
-            Ready to Stop
+            Ready to Scale Your
             <br />
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-              Paying Monthly?
-            </span>
+            <span className="text-orange-500">Nutrition Business?</span>
           </h2>
 
           <p className="text-lg sm:text-xl text-gray-300 mb-4 max-w-2xl mx-auto">
-            14-Day Money-Back Guarantee. No questions asked.
+            Join fitness professionals who've stopped building plans manually.
           </p>
 
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-10">
             <Shield className="w-4 h-4 text-green-400" />
             <span className="text-sm text-gray-300">
-              Join{" "}
-              <span className="text-white font-semibold">500+ trainers</span>{" "}
-              who already own their tools
+              14-day money-back guarantee.{" "}
+              <span className="text-white font-semibold">
+                No questions asked.
+              </span>
             </span>
           </div>
 

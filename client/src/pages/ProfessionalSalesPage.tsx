@@ -86,8 +86,12 @@ function ValueStackItem({
       className="flex items-center justify-between py-3 border-b border-white/10 group"
     >
       <div className="flex items-center gap-3">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isBonus ? "bg-orange-500/20" : "bg-purple-600/30"}`}>
-          <Icon className={`w-4 h-4 ${isBonus ? "text-orange-400" : "text-purple-400"}`} />
+        <div
+          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isBonus ? "bg-orange-500/20" : "bg-purple-600/30"}`}
+        >
+          <Icon
+            className={`w-4 h-4 ${isBonus ? "text-orange-400" : "text-purple-400"}`}
+          />
         </div>
         <span className="text-white/90 text-sm sm:text-base">{label}</span>
       </div>
@@ -161,7 +165,14 @@ export default function ProfessionalSalesPage() {
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0A0A0F] via-[#1a0a2e] to-[#0A0A0F]" />
-        <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "url(/marketing/hero-online-coach.png)", backgroundSize: "cover", backgroundPosition: "center" }} />
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage: "url(/marketing/hero-online-coach.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-purple-600/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-orange-500/10 rounded-full blur-[100px]" />
 
@@ -267,10 +278,22 @@ export default function ProfessionalSalesPage() {
                 up every subscription I was paying for as a trainer:
               </p>
               <ul className="text-red-300/80 space-y-2">
-                <li>Meal planning software: <span className="font-semibold">$47/month</span></li>
-                <li>Client management CRM: <span className="font-semibold">$29/month</span></li>
-                <li>Email/messaging tool: <span className="font-semibold">$19/month</span></li>
-                <li>Scheduling app: <span className="font-semibold">$50/month</span></li>
+                <li>
+                  Meal planning software:{" "}
+                  <span className="font-semibold">$47/month</span>
+                </li>
+                <li>
+                  Client management CRM:{" "}
+                  <span className="font-semibold">$29/month</span>
+                </li>
+                <li>
+                  Email/messaging tool:{" "}
+                  <span className="font-semibold">$19/month</span>
+                </li>
+                <li>
+                  Scheduling app:{" "}
+                  <span className="font-semibold">$50/month</span>
+                </li>
               </ul>
               <p>
                 I was spending{" "}
@@ -278,8 +301,8 @@ export default function ProfessionalSalesPage() {
                   $147 per month
                 </span>{" "}
                 on tools. That's{" "}
-                <span className="text-red-400 font-bold">$1,764 per year</span>
-                . And every single one of those subscriptions was going up in
+                <span className="text-red-400 font-bold">$1,764 per year</span>.
+                And every single one of those subscriptions was going up in
                 price.
               </p>
               <p className="text-white/50 italic border-l-2 border-purple-500/50 pl-6">
@@ -317,8 +340,8 @@ export default function ProfessionalSalesPage() {
                 className="text-3xl sm:text-4xl md:text-5xl font-black mt-4"
                 style={{ fontFamily: "'Clash Display', 'Satoshi', sans-serif" }}
               >
-                How Much Are You{" "}
-                <span className="text-red-400">Really</span> Paying?
+                How Much Are You <span className="text-red-400">Really</span>{" "}
+                Paying?
               </h2>
             </div>
           </AnimatedSection>
@@ -336,23 +359,43 @@ export default function ProfessionalSalesPage() {
                   </h3>
                 </div>
 
-                <CostRow label="Meal planning software" amount="$47/mo" delay={0} />
-                <CostRow label="Client management CRM" amount="$29/mo" delay={0.05} />
-                <CostRow label="Email/messaging tool" amount="$19/mo" delay={0.1} />
+                <CostRow
+                  label="Meal planning software"
+                  amount="$47/mo"
+                  delay={0}
+                />
+                <CostRow
+                  label="Client management CRM"
+                  amount="$29/mo"
+                  delay={0.05}
+                />
+                <CostRow
+                  label="Email/messaging tool"
+                  amount="$19/mo"
+                  delay={0.1}
+                />
                 <CostRow label="Scheduling app" amount="$50/mo" delay={0.15} />
 
                 <div className="mt-6 pt-4 border-t border-red-500/20">
                   <div className="flex justify-between items-center">
-                    <span className="text-red-300 font-semibold">Monthly Total</span>
-                    <span className="text-red-400 font-black text-2xl">$145/mo</span>
+                    <span className="text-red-300 font-semibold">
+                      Monthly Total
+                    </span>
+                    <span className="text-red-400 font-black text-2xl">
+                      $145/mo
+                    </span>
                   </div>
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-red-300/60">Annual Cost</span>
-                    <span className="text-red-400/80 font-bold text-xl">$1,740/yr</span>
+                    <span className="text-red-400/80 font-bold text-xl">
+                      $1,740/yr
+                    </span>
                   </div>
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-red-300/60">5-Year Cost</span>
-                    <span className="text-red-400/80 font-bold text-xl">$8,700</span>
+                    <span className="text-red-400/80 font-bold text-xl">
+                      $8,700
+                    </span>
                   </div>
                 </div>
               </div>
@@ -374,26 +417,31 @@ export default function ProfessionalSalesPage() {
                   <div className="text-6xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
                     $299
                   </div>
-                  <div className="text-green-300/60 text-lg mt-2">Once. Forever.</div>
+                  <div className="text-green-300/60 text-lg mt-2">
+                    Once. Forever.
+                  </div>
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-green-500/20 space-y-3">
                   <div className="flex items-center gap-3">
                     <Check className="w-5 h-5 text-green-400 shrink-0" />
                     <span className="text-green-300/80">
-                      Year 1 savings: <span className="font-bold text-green-400">$1,441</span>
+                      Year 1 savings:{" "}
+                      <span className="font-bold text-green-400">$1,441</span>
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Check className="w-5 h-5 text-green-400 shrink-0" />
                     <span className="text-green-300/80">
-                      5-Year savings: <span className="font-bold text-green-400">$8,401</span>
+                      5-Year savings:{" "}
+                      <span className="font-bold text-green-400">$8,401</span>
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Check className="w-5 h-5 text-green-400 shrink-0" />
                     <span className="text-green-300/80">
-                      10-Year savings: <span className="font-bold text-green-400">$17,101</span>
+                      10-Year savings:{" "}
+                      <span className="font-bold text-green-400">$17,101</span>
                     </span>
                   </div>
                 </div>
@@ -433,16 +481,66 @@ export default function ProfessionalSalesPage() {
                 </span>
               </div>
             </div>
-            <ValueStackItem icon={Zap} label="Everything in Starter Plan" value="$5,200/yr" delay={0} />
-            <ValueStackItem icon={Users} label="20 Client Slots" value="$1,000/yr" delay={0.05} />
-            <ValueStackItem icon={ChefHat} label="Complete Recipe Library + Seasonal" value="$1,500/yr" delay={0.1} />
-            <ValueStackItem icon={Palette} label="Custom Branding" value="$2,000/yr" delay={0.15} />
-            <ValueStackItem icon={Sparkles} label="Advanced Natural Language AI" value="$800/yr" delay={0.2} />
-            <ValueStackItem icon={BookOpen} label="Recipe Collections" value="$300/yr" delay={0.25} />
-            <ValueStackItem icon={Layout} label="Meal Plan Templates" value="$300/yr" delay={0.3} />
-            <ValueStackItem icon={BarChart3} label="CSV + PDF Analytics" value="$400/yr" delay={0.35} />
-            <ValueStackItem icon={Heart} label="Longevity Plans" value="$500/yr" delay={0.4} />
-            <ValueStackItem icon={Headphones} label="Priority Support" value="$600/yr" delay={0.45} />
+            <ValueStackItem
+              icon={Zap}
+              label="Everything in Starter Plan"
+              value="$5,200/yr"
+              delay={0}
+            />
+            <ValueStackItem
+              icon={Users}
+              label="20 Client Slots"
+              value="$1,000/yr"
+              delay={0.05}
+            />
+            <ValueStackItem
+              icon={ChefHat}
+              label="Complete Recipe Library + Seasonal"
+              value="$1,500/yr"
+              delay={0.1}
+            />
+            <ValueStackItem
+              icon={Palette}
+              label="Custom Branding"
+              value="$2,000/yr"
+              delay={0.15}
+            />
+            <ValueStackItem
+              icon={Sparkles}
+              label="Advanced Natural Language AI"
+              value="$800/yr"
+              delay={0.2}
+            />
+            <ValueStackItem
+              icon={BookOpen}
+              label="Recipe Collections"
+              value="$300/yr"
+              delay={0.25}
+            />
+            <ValueStackItem
+              icon={Layout}
+              label="Meal Plan Templates"
+              value="$300/yr"
+              delay={0.3}
+            />
+            <ValueStackItem
+              icon={BarChart3}
+              label="CSV + PDF Analytics"
+              value="$400/yr"
+              delay={0.35}
+            />
+            <ValueStackItem
+              icon={Download}
+              label="CSV + Excel Data Exports"
+              value="$400/yr"
+              delay={0.4}
+            />
+            <ValueStackItem
+              icon={Headphones}
+              label="Priority Support"
+              value="$600/yr"
+              delay={0.45}
+            />
 
             {/* Bonuses */}
             <div className="mt-6 pt-6 border-t border-purple-500/30">
@@ -452,8 +550,20 @@ export default function ProfessionalSalesPage() {
                   FREE BONUSES
                 </span>
               </div>
-              <ValueStackItem icon={CalendarDays} label="Seasonal Recipe Updates (Forever)" value="$500/yr" delay={0.5} isBonus />
-              <ValueStackItem icon={Layout} label="Premium Template Library" value="$400/yr" delay={0.55} isBonus />
+              <ValueStackItem
+                icon={CalendarDays}
+                label="Seasonal Recipe Updates (Forever)"
+                value="$500/yr"
+                delay={0.5}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Layout}
+                label="Premium Template Library"
+                value="$400/yr"
+                delay={0.55}
+                isBonus
+              />
             </div>
 
             {/* Total */}
@@ -470,7 +580,8 @@ export default function ProfessionalSalesPage() {
                   $299
                 </div>
                 <div className="text-white/50 mt-2 text-lg">
-                  One time. Not per year. <span className="font-bold text-white">Forever.</span>
+                  One time. Not per year.{" "}
+                  <span className="font-bold text-white">Forever.</span>
                 </div>
               </div>
             </AnimatedSection>
@@ -506,43 +617,109 @@ export default function ProfessionalSalesPage() {
                     <th className="text-left p-4 text-white/50 font-medium text-sm"></th>
                     <th className="p-4 text-center">
                       <div className="bg-gradient-to-br from-purple-600/30 to-orange-500/20 border border-purple-500/40 rounded-xl p-4">
-                        <div className="text-purple-300 font-bold text-lg">EvoFitMeals</div>
-                        <div className="text-white font-black text-2xl">$299</div>
-                        <div className="text-green-400 text-xs font-semibold">ONE TIME</div>
+                        <div className="text-purple-300 font-bold text-lg">
+                          EvoFitMeals
+                        </div>
+                        <div className="text-white font-black text-2xl">
+                          $299
+                        </div>
+                        <div className="text-green-400 text-xs font-semibold">
+                          ONE TIME
+                        </div>
                       </div>
                     </th>
                     <th className="p-4 text-center">
                       <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="text-white/60 font-bold text-lg">Trainerize</div>
-                        <div className="text-white/80 font-black text-2xl">$45/mo</div>
-                        <div className="text-red-400 text-xs font-semibold">RECURRING</div>
+                        <div className="text-white/60 font-bold text-lg">
+                          Trainerize
+                        </div>
+                        <div className="text-white/80 font-black text-2xl">
+                          $45/mo
+                        </div>
+                        <div className="text-red-400 text-xs font-semibold">
+                          RECURRING
+                        </div>
                       </div>
                     </th>
                     <th className="p-4 text-center">
                       <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="text-white/60 font-bold text-lg">TrueCoach</div>
-                        <div className="text-white/80 font-black text-2xl">$29/mo</div>
-                        <div className="text-red-400 text-xs font-semibold">RECURRING</div>
+                        <div className="text-white/60 font-bold text-lg">
+                          TrueCoach
+                        </div>
+                        <div className="text-white/80 font-black text-2xl">
+                          $29/mo
+                        </div>
+                        <div className="text-red-400 text-xs font-semibold">
+                          RECURRING
+                        </div>
                       </div>
                     </th>
                     <th className="p-4 text-center hidden lg:table-cell">
                       <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="text-white/60 font-bold text-lg">My PT Hub</div>
-                        <div className="text-white/80 font-black text-2xl">$55/mo</div>
-                        <div className="text-red-400 text-xs font-semibold">RECURRING</div>
+                        <div className="text-white/60 font-bold text-lg">
+                          My PT Hub
+                        </div>
+                        <div className="text-white/80 font-black text-2xl">
+                          $55/mo
+                        </div>
+                        <div className="text-red-400 text-xs font-semibold">
+                          RECURRING
+                        </div>
                       </div>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { feature: "2-Year Cost", evo: "$299", t1: "$1,080", t2: "$696", t3: "$1,320" },
-                    { feature: "10-Year Cost", evo: "$299", t1: "$5,400", t2: "$3,480", t3: "$6,600" },
-                    { feature: "AI Meal Generation", evo: true, t1: false, t2: false, t3: false },
-                    { feature: "Custom Branding", evo: true, t1: true, t2: false, t3: true },
-                    { feature: "Recipe Library", evo: "3,000+", t1: "Limited", t2: "None", t3: "Basic" },
-                    { feature: "Grocery Lists", evo: true, t1: false, t2: false, t3: false },
-                    { feature: "One-Time Payment", evo: true, t1: false, t2: false, t3: false },
+                    {
+                      feature: "2-Year Cost",
+                      evo: "$299",
+                      t1: "$1,080",
+                      t2: "$696",
+                      t3: "$1,320",
+                    },
+                    {
+                      feature: "10-Year Cost",
+                      evo: "$299",
+                      t1: "$5,400",
+                      t2: "$3,480",
+                      t3: "$6,600",
+                    },
+                    {
+                      feature: "AI Meal Generation",
+                      evo: true,
+                      t1: false,
+                      t2: false,
+                      t3: false,
+                    },
+                    {
+                      feature: "Custom Branding",
+                      evo: true,
+                      t1: true,
+                      t2: false,
+                      t3: true,
+                    },
+                    {
+                      feature: "Recipe Library",
+                      evo: "3,000+",
+                      t1: "Limited",
+                      t2: "None",
+                      t3: "Basic",
+                    },
+                    {
+                      feature: "Grocery Lists",
+                      evo: true,
+                      t1: false,
+                      t2: false,
+                      t3: false,
+                    },
+                    {
+                      feature: "One-Time Payment",
+                      evo: true,
+                      t1: false,
+                      t2: false,
+                      t3: false,
+                    },
                   ].map((row, i) => (
                     <tr key={i} className="border-t border-white/5">
                       <td className="p-4 text-white/70 font-medium text-sm">
@@ -556,7 +733,9 @@ export default function ProfessionalSalesPage() {
                             <Minus className="w-5 h-5 text-white/20 mx-auto" />
                           )
                         ) : (
-                          <span className={`font-bold ${row.feature.includes("Cost") ? "text-green-400" : "text-white"}`}>
+                          <span
+                            className={`font-bold ${row.feature.includes("Cost") ? "text-green-400" : "text-white"}`}
+                          >
                             {row.evo}
                           </span>
                         )}
@@ -569,7 +748,9 @@ export default function ProfessionalSalesPage() {
                             <Minus className="w-5 h-5 text-white/20 mx-auto" />
                           )
                         ) : (
-                          <span className={`${row.feature.includes("Cost") ? "text-red-400" : "text-white/50"}`}>
+                          <span
+                            className={`${row.feature.includes("Cost") ? "text-red-400" : "text-white/50"}`}
+                          >
                             {row.t1}
                           </span>
                         )}
@@ -582,7 +763,9 @@ export default function ProfessionalSalesPage() {
                             <Minus className="w-5 h-5 text-white/20 mx-auto" />
                           )
                         ) : (
-                          <span className={`${row.feature.includes("Cost") ? "text-red-400" : "text-white/50"}`}>
+                          <span
+                            className={`${row.feature.includes("Cost") ? "text-red-400" : "text-white/50"}`}
+                          >
                             {row.t2}
                           </span>
                         )}
@@ -595,7 +778,9 @@ export default function ProfessionalSalesPage() {
                             <Minus className="w-5 h-5 text-white/20 mx-auto" />
                           )
                         ) : (
-                          <span className={`${row.feature.includes("Cost") ? "text-red-400" : "text-white/50"}`}>
+                          <span
+                            className={`${row.feature.includes("Cost") ? "text-red-400" : "text-white/50"}`}
+                          >
                             {row.t3}
                           </span>
                         )}
@@ -624,7 +809,7 @@ export default function ProfessionalSalesPage() {
                 className="text-3xl sm:text-4xl md:text-5xl font-black mt-4"
                 style={{ fontFamily: "'Clash Display', 'Satoshi', sans-serif" }}
               >
-                White-Label PDFs That Look{" "}
+                Branded PDFs That Look{" "}
                 <span className="text-purple-400">100% Yours</span>
               </h2>
             </div>
@@ -650,16 +835,24 @@ export default function ProfessionalSalesPage() {
                   <div className="h-2 w-3/4 bg-gray-200 rounded mb-4" />
                   <div className="grid grid-cols-2 gap-3">
                     <div className="h-20 bg-gradient-to-br from-green-100 to-green-50 rounded-lg flex items-center justify-center">
-                      <span className="text-green-600 text-xs font-bold">BREAKFAST</span>
+                      <span className="text-green-600 text-xs font-bold">
+                        BREAKFAST
+                      </span>
                     </div>
                     <div className="h-20 bg-gradient-to-br from-orange-100 to-orange-50 rounded-lg flex items-center justify-center">
-                      <span className="text-orange-600 text-xs font-bold">LUNCH</span>
+                      <span className="text-orange-600 text-xs font-bold">
+                        LUNCH
+                      </span>
                     </div>
                     <div className="h-20 bg-gradient-to-br from-purple-100 to-purple-50 rounded-lg flex items-center justify-center">
-                      <span className="text-purple-600 text-xs font-bold">DINNER</span>
+                      <span className="text-purple-600 text-xs font-bold">
+                        DINNER
+                      </span>
                     </div>
                     <div className="h-20 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg flex items-center justify-center">
-                      <span className="text-blue-600 text-xs font-bold">SNACKS</span>
+                      <span className="text-blue-600 text-xs font-bold">
+                        SNACKS
+                      </span>
                     </div>
                   </div>
                   <div className="mt-4 text-center">
@@ -672,17 +865,33 @@ export default function ProfessionalSalesPage() {
               {/* Description */}
               <div className="space-y-6">
                 {[
-                  { icon: Palette, title: "Your Logo & Colors", desc: "Upload your logo and set your brand colors. Every PDF looks like it came from your own custom software." },
-                  { icon: FileText, title: "Professional PDF Layout", desc: "Clean, modern layouts with macro breakdowns, ingredient lists, and prep instructions." },
-                  { icon: LinkIcon, title: "Shareable Client Links", desc: "Send branded links to clients. They see your brand, not ours." },
+                  {
+                    icon: Palette,
+                    title: "Your Logo & Colors",
+                    desc: "Upload your logo and set your brand colors. Every PDF looks like it came from your own custom software.",
+                  },
+                  {
+                    icon: FileText,
+                    title: "Professional PDF Layout",
+                    desc: "Clean, modern layouts with macro breakdowns, ingredient lists, and prep instructions.",
+                  },
+                  {
+                    icon: LinkIcon,
+                    title: "Shareable Client Links",
+                    desc: "Send branded links to clients. They see your brand, not ours.",
+                  },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-4">
                     <div className="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center shrink-0">
                       <item.icon className="w-6 h-6 text-purple-400" />
                     </div>
                     <div>
-                      <h3 className="text-white font-bold text-lg">{item.title}</h3>
-                      <p className="text-white/60 mt-1 leading-relaxed">{item.desc}</p>
+                      <h3 className="text-white font-bold text-lg">
+                        {item.title}
+                      </h3>
+                      <p className="text-white/60 mt-1 leading-relaxed">
+                        {item.desc}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -754,7 +963,7 @@ export default function ProfessionalSalesPage() {
             />
             <FAQItem
               question="Can I put my own logo on everything?"
-              answer="Yes. Professional includes full custom branding — your logo, your colors, your business name on every PDF, client link, and report. Your clients will never see the EvoFitMeals brand."
+              answer="Yes. Professional includes custom branding — upload your logo and set your brand colors, and they appear on every meal plan PDF and client link. For full white-label mode (hiding EvoFitMeals branding entirely) and a custom domain, upgrade to Enterprise for $100 more."
             />
             <FAQItem
               question="What happens when you release new features?"
@@ -769,7 +978,62 @@ export default function ProfessionalSalesPage() {
       </section>
 
       {/* ════════════════════════════════════════════════════════════════
-          SECTION 9: FINAL CTA
+          SECTION 9: UPSELL TO ENTERPRISE
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 sm:py-20 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0F] via-[#0d0d1a] to-[#0A0A0F]" />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AnimatedSection>
+            <div className="bg-indigo-600/10 border border-indigo-500/30 rounded-2xl p-8 sm:p-10">
+              <div className="flex items-center gap-2 mb-4">
+                <Crown className="w-5 h-5 text-orange-400" />
+                <span className="text-orange-400 font-bold text-sm tracking-widest uppercase">
+                  Running High Volume? Consider Enterprise
+                </span>
+              </div>
+              <h3
+                className="text-2xl sm:text-3xl font-black text-white mb-4"
+                style={{ fontFamily: "'Clash Display', 'Satoshi', sans-serif" }}
+              >
+                Need More Than 20 Clients or Full White-Label? It's $100 More.
+              </h3>
+              <p className="text-white/60 mb-6 leading-relaxed">
+                Enterprise removes all limits: unlimited clients, unlimited meal
+                plans, white-label mode with custom domain, all export formats,
+                and dedicated support. Pay $100 over Professional, one time.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-sm">
+                {[
+                  "Unlimited clients (no cap ever)",
+                  "Unlimited meal plans",
+                  "Full white-label + custom domain",
+                  "API access — coming soon (Enterprise only)",
+                  "Bulk operations across all clients",
+                  "All 17 meal type categories",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-2 text-white/70"
+                  >
+                    <Check className="w-4 h-4 text-indigo-400 shrink-0" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+              <a
+                href="/enterprise"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600/30 border border-indigo-500/40 hover:bg-indigo-600/50 text-indigo-200 font-semibold rounded-lg transition-all duration-200"
+              >
+                See Enterprise Plan — $399
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          SECTION 10: FINAL CTA
           ════════════════════════════════════════════════════════════════ */}
       <section className="py-20 sm:py-32 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0F] via-[#1a0a2e] to-[#0A0A0F]" />

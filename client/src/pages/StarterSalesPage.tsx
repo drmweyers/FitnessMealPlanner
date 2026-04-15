@@ -124,7 +124,14 @@ export default function StarterSalesPage() {
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0A0A0F] via-[#1a0a2e] to-[#0A0A0F]" />
-        <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "url(/marketing/hero-trainer.png)", backgroundSize: "cover", backgroundPosition: "center" }} />
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage: "url(/marketing/hero-trainer.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-purple-600/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-orange-500/10 rounded-full blur-[100px]" />
 
@@ -248,8 +255,8 @@ export default function StarterSalesPage() {
                 hours per client per week on meal plans and still train people."
               </p>
               <p>
-                That's when I discovered what AI could do for nutrition planning.
-                Within a week, I built a system that could generate
+                That's when I discovered what AI could do for nutrition
+                planning. Within a week, I built a system that could generate
                 professionally designed, macro-calculated meal plans in{" "}
                 <span className="text-purple-400 font-semibold">
                   under 2 minutes
@@ -291,15 +298,60 @@ export default function StarterSalesPage() {
           </AnimatedSection>
 
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-sm">
-            <ValueStackItem icon={Zap} label="AI Meal Plan Generation" value="$2,000/yr" delay={0} />
-            <ValueStackItem icon={Users} label="9 Client Slots" value="$500/yr" delay={0.05} />
-            <ValueStackItem icon={FileText} label="PDF Exports" value="$300/yr" delay={0.1} />
-            <ValueStackItem icon={ShoppingCart} label="Auto Grocery Lists" value="$200/yr" delay={0.15} />
-            <ValueStackItem icon={TrendingUp} label="Progress Tracking" value="$400/yr" delay={0.2} />
-            <ValueStackItem icon={LinkIcon} label="Shareable Links" value="$300/yr" delay={0.25} />
-            <ValueStackItem icon={Salad} label="8+ Dietary Protocols" value="$500/yr" delay={0.3} />
-            <ValueStackItem icon={PenTool} label="Manual Plan Creation" value="$200/yr" delay={0.35} />
-            <ValueStackItem icon={BookOpen} label="Meal Prep Guides" value="$300/yr" delay={0.4} />
+            <ValueStackItem
+              icon={Zap}
+              label="AI Meal Plan Generation"
+              value="$2,000/yr"
+              delay={0}
+            />
+            <ValueStackItem
+              icon={Users}
+              label="9 Client Slots"
+              value="$500/yr"
+              delay={0.05}
+            />
+            <ValueStackItem
+              icon={FileText}
+              label="PDF Exports"
+              value="$300/yr"
+              delay={0.1}
+            />
+            <ValueStackItem
+              icon={ShoppingCart}
+              label="Auto Grocery Lists"
+              value="$200/yr"
+              delay={0.15}
+            />
+            <ValueStackItem
+              icon={TrendingUp}
+              label="Progress Tracking"
+              value="$400/yr"
+              delay={0.2}
+            />
+            <ValueStackItem
+              icon={LinkIcon}
+              label="Shareable Links"
+              value="$300/yr"
+              delay={0.25}
+            />
+            <ValueStackItem
+              icon={Salad}
+              label="8+ Dietary Protocols"
+              value="$500/yr"
+              delay={0.3}
+            />
+            <ValueStackItem
+              icon={PenTool}
+              label="Manual Plan Creation"
+              value="$200/yr"
+              delay={0.35}
+            />
+            <ValueStackItem
+              icon={BookOpen}
+              label="Meal Prep Guides"
+              value="$300/yr"
+              delay={0.4}
+            />
 
             {/* Bonus */}
             <div className="mt-6 pt-6 border-t border-purple-500/30">
@@ -309,7 +361,12 @@ export default function StarterSalesPage() {
                   FREE BONUS
                 </span>
               </div>
-              <ValueStackItem icon={ImageIcon} label="Recipe Image Library" value="$500/yr" delay={0.45} />
+              <ValueStackItem
+                icon={ImageIcon}
+                label="Recipe Image Library"
+                value="$500/yr"
+                delay={0.45}
+              />
             </div>
 
             {/* Total */}
@@ -326,7 +383,8 @@ export default function StarterSalesPage() {
                   $199
                 </div>
                 <div className="text-white/50 mt-2 text-lg">
-                  One time. Not per year. <span className="font-bold text-white">Forever.</span>
+                  One time. Not per year.{" "}
+                  <span className="font-bold text-white">Forever.</span>
                 </div>
               </div>
             </AnimatedSection>
@@ -349,8 +407,7 @@ export default function StarterSalesPage() {
                 className="text-3xl sm:text-4xl md:text-5xl font-black mt-4"
                 style={{ fontFamily: "'Clash Display', 'Satoshi', sans-serif" }}
               >
-                Paid Off In{" "}
-                <span className="text-green-400">Month One</span>
+                Paid Off In <span className="text-green-400">Month One</span>
               </h2>
             </div>
           </AnimatedSection>
@@ -372,7 +429,10 @@ export default function StarterSalesPage() {
                   <DollarSign className="w-7 h-7 text-purple-400" />
                 </div>
                 <div className="text-3xl font-black text-white mb-2">
-                  $100<span className="text-lg font-normal text-white/50">/mo each</span>
+                  $100
+                  <span className="text-lg font-normal text-white/50">
+                    /mo each
+                  </span>
                 </div>
                 <div className="text-white/60">Per Client Revenue</div>
               </div>
@@ -382,7 +442,9 @@ export default function StarterSalesPage() {
                 <div className="w-14 h-14 rounded-full bg-green-600/30 flex items-center justify-center mx-auto mb-4">
                   <TrendingUp className="w-7 h-7 text-green-400" />
                 </div>
-                <div className="text-3xl font-black text-green-400 mb-2">$200</div>
+                <div className="text-3xl font-black text-green-400 mb-2">
+                  $200
+                </div>
                 <div className="text-white/60">Month 1 Revenue</div>
               </div>
             </div>
@@ -391,7 +453,8 @@ export default function StarterSalesPage() {
               <div className="inline-flex items-center gap-3 px-8 py-4 bg-green-500/10 border border-green-500/30 rounded-xl">
                 <BadgeCheck className="w-6 h-6 text-green-400" />
                 <span className="text-green-400 font-bold text-lg">
-                  $199 investment paid off in Month 1. Everything after is pure profit.
+                  $199 investment paid off in Month 1. Everything after is pure
+                  profit.
                 </span>
               </div>
             </div>
@@ -421,23 +484,63 @@ export default function StarterSalesPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Zap, title: "AI Meal Plan Generation", desc: "Generate complete, macro-calculated meal plans in under 2 minutes with our AI engine." },
-              { icon: Users, title: "9 Client Slots", desc: "Manage up to 9 nutrition clients with individual profiles, preferences, and goals." },
-              { icon: FileText, title: "PDF Exports", desc: "Export beautiful, branded PDF meal plans your clients will love showing off." },
-              { icon: ShoppingCart, title: "Auto Grocery Lists", desc: "Every meal plan automatically generates a consolidated grocery list. No manual work." },
-              { icon: TrendingUp, title: "Progress Tracking", desc: "Monitor client adherence and progress over time with built-in tracking tools." },
-              { icon: Salad, title: "8+ Dietary Protocols", desc: "Keto, vegan, paleo, Mediterranean, gluten-free, and more — all built in." },
-              { icon: PenTool, title: "Manual Plan Creation", desc: "Want full control? Build plans manually with our drag-and-drop meal builder." },
-              { icon: BookOpen, title: "Meal Prep Guides", desc: "Step-by-step prep instructions so your clients actually follow through." },
-              { icon: ImageIcon, title: "Recipe Image Library", desc: "Every recipe comes with a professional food photo. No stock photo hunting." },
+              {
+                icon: Zap,
+                title: "AI Meal Plan Generation",
+                desc: "Generate complete, macro-calculated meal plans in under 2 minutes with our AI engine.",
+              },
+              {
+                icon: Users,
+                title: "9 Client Slots",
+                desc: "Manage up to 9 nutrition clients with individual profiles, preferences, and goals.",
+              },
+              {
+                icon: FileText,
+                title: "PDF Exports",
+                desc: "Export beautiful, branded PDF meal plans your clients will love showing off.",
+              },
+              {
+                icon: ShoppingCart,
+                title: "Auto Grocery Lists",
+                desc: "Every meal plan automatically generates a consolidated grocery list. No manual work.",
+              },
+              {
+                icon: TrendingUp,
+                title: "Progress Tracking",
+                desc: "Monitor client adherence and progress over time with built-in tracking tools.",
+              },
+              {
+                icon: Salad,
+                title: "8+ Dietary Protocols",
+                desc: "Keto, vegan, paleo, Mediterranean, gluten-free, and more — all built in.",
+              },
+              {
+                icon: PenTool,
+                title: "Manual Plan Creation",
+                desc: "Want full control? Build plans manually with our drag-and-drop meal builder.",
+              },
+              {
+                icon: BookOpen,
+                title: "Meal Prep Guides",
+                desc: "Step-by-step prep instructions so your clients actually follow through.",
+              },
+              {
+                icon: ImageIcon,
+                title: "Recipe Image Library",
+                desc: "Every recipe comes with a professional food photo. No stock photo hunting.",
+              },
             ].map((feature, i) => (
               <AnimatedSection key={feature.title} delay={i * 0.05}>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-purple-500/30 transition-all duration-300 h-full group">
                   <div className="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center mb-4 group-hover:bg-purple-600/30 transition-colors">
                     <feature.icon className="w-6 h-6 text-purple-400" />
                   </div>
-                  <h3 className="text-white font-bold text-lg mb-2">{feature.title}</h3>
-                  <p className="text-white/60 leading-relaxed text-sm">{feature.desc}</p>
+                  <h3 className="text-white font-bold text-lg mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-white/60 leading-relaxed text-sm">
+                    {feature.desc}
+                  </p>
                 </div>
               </AnimatedSection>
             ))}
@@ -522,7 +625,63 @@ export default function StarterSalesPage() {
       </section>
 
       {/* ════════════════════════════════════════════════════════════════
-          SECTION 8: FINAL CTA
+          SECTION 8: UPSELL TO PROFESSIONAL
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 sm:py-20 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0F] via-[#0d0d1a] to-[#0A0A0F]" />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AnimatedSection>
+            <div className="bg-purple-600/10 border border-purple-500/30 rounded-2xl p-8 sm:p-10">
+              <div className="flex items-center gap-2 mb-4">
+                <Star className="w-5 h-5 text-orange-400" />
+                <span className="text-orange-400 font-bold text-sm tracking-widest uppercase">
+                  Growing Fast? Consider Professional
+                </span>
+              </div>
+              <h3
+                className="text-2xl sm:text-3xl font-black text-white mb-4"
+                style={{ fontFamily: "'Clash Display', 'Satoshi', sans-serif" }}
+              >
+                When You Hit 9 Clients, the Next Step Is $100
+              </h3>
+              <p className="text-white/60 mb-6 leading-relaxed">
+                Professional unlocks 20 clients, custom branding on your PDFs,
+                seasonal recipes, natural language AI input, and priority
+                support. You pay the $100 difference — your data transfers
+                instantly.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-sm">
+                {[
+                  "20 client slots (vs 9 on Starter)",
+                  "Custom logo + brand colors on PDFs",
+                  "Complete + seasonal recipe library",
+                  "Natural language AI meal generation",
+                  "CSV + PDF analytics reports",
+                  "Priority support",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-2 text-white/70"
+                  >
+                    <Check className="w-4 h-4 text-purple-400 shrink-0" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+              <a
+                href="/professional"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600/30 border border-purple-500/40 hover:bg-purple-600/50 text-purple-200 font-semibold rounded-lg transition-all duration-200"
+              >
+                See Professional Plan — $299
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          SECTION 9: FINAL CTA
           ════════════════════════════════════════════════════════════════ */}
       <section className="py-20 sm:py-32 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0F] via-[#1a0a2e] to-[#0A0A0F]" />
