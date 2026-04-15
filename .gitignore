@@ -26,6 +26,7 @@ test-results.json
 *.png
 !public/landing/images/screenshots/*.png
 !client/public/images/meals-feature-*.png
+!client/public/marketing/*.png
 *.log
 
 # Temporary data scripts
