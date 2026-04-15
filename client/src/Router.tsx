@@ -35,6 +35,8 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import CheckoutCancel from "./pages/CheckoutCancel";
+import ComparisonPage from "./pages/ComparisonPage";
+import ROICalculatorPage from "./pages/ROICalculatorPage";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -80,6 +82,8 @@ export default function Router() {
         <Route path="/special-offer" component={TripwirePage} />
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:slug" component={BlogPost} />
+        <Route path="/comparison" component={ComparisonPage} />
+        <Route path="/roi-calculator" component={ROICalculatorPage} />
         <Route path="/payment/success" component={CheckoutSuccess} />
         <Route path="/checkout/cancel" component={CheckoutCancel} />
         <Route path="/">
@@ -104,6 +108,8 @@ export default function Router() {
       <Route path="/pricing" component={HybridPricing} />
       <Route path="/blog" component={Blog} />
       <Route path="/blog/:slug" component={BlogPost} />
+      <Route path="/comparison" component={ComparisonPage} />
+      <Route path="/roi-calculator" component={ROICalculatorPage} />
       <Route path="/payment/success" component={CheckoutSuccess} />
       <Route path="/checkout/cancel" component={CheckoutCancel} />
 

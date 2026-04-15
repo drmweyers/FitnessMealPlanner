@@ -1,19 +1,31 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
-import type { User, UserRole, LoginCredentials, RegisterCredentials, AuthContextValue } from '../types/auth';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import type {
+  User,
+  UserRole,
+  LoginCredentials,
+  RegisterCredentials,
+  AuthContextValue,
+} from "../types/auth";
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = "/api";
 
 // Custom event for cross-tab auth state synchronization
-const AUTH_STATE_CHANGE_EVENT = 'authStateChange';
+const AUTH_STATE_CHANGE_EVENT = "authStateChange";
 
 interface LocalRegisterCredentials extends RegisterCredentials {
-  role: 'customer' | 'trainer' | 'admin';
+  role: "customer" | "trainer" | "admin";
 }
 
 interface AuthResponse {
-  status: 'success' | 'error';
+  status: "success" | "error";
   data?: {
     accessToken: string;
     user: {
@@ -33,51 +45,60 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-function normalizeAuthResponse(response: AuthResponse): { token: string; user: User } {
-  if (response.status === 'error' || !response.data) {
-    throw new Error(response.message || 'Authentication failed');
+function normalizeAuthResponse(response: AuthResponse): {
+  token: string;
+  user: User;
+} {
+  if (response.status === "error" || !response.data) {
+    throw new Error(response.message || "Authentication failed");
   }
   return { token: response.data.accessToken, user: response.data.user };
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const queryClient = useQueryClient();
-  const [authToken, setAuthToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [authToken, setAuthToken] = useState<string | null>(() =>
+    localStorage.getItem("token"),
+  );
   const [, navigate] = useLocation();
 
   // Handle token refresh
   const refreshToken = async (): Promise<string | null> => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/refresh_token`, {
-        method: 'POST',
-        credentials: 'include', // Important for cookies
+        method: "POST",
+        credentials: "include", // Important for cookies
       });
 
       if (!response.ok) {
         if (response.status === 401) {
           // Clear invalid auth state
-          localStorage.removeItem('token');
+          localStorage.removeItem("token");
           setAuthToken(null);
           return null;
         }
-        throw new Error('Token refresh failed');
+        throw new Error("Token refresh failed");
       }
 
       const data = await response.json();
-      if (data.status === 'success' && data.data?.accessToken) {
-        localStorage.setItem('token', data.data.accessToken);
+      if (data.status === "success" && data.data?.accessToken) {
+        localStorage.setItem("token", data.data.accessToken);
         setAuthToken(data.data.accessToken);
         return data.data.accessToken;
       }
       return null;
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
       return null;
     }
   };
 
   // IMPORTANT: useQuery must come BEFORE any useEffect that uses its variables
-  const { data: user, isLoading, error } = useQuery({
+  const {
+    data: user,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: [`${API_BASE_URL}/auth/me`],
     queryFn: async () => {
       try {
@@ -86,15 +107,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-            credentials: 'include',
+            credentials: "include",
           });
 
           // Handle 401 Unauthorized - token invalid or expired
           if (response.status === 401) {
             // Clear invalid token immediately
-            localStorage.removeItem('token');
+            localStorage.removeItem("token");
             setAuthToken(null);
-            throw new Error('Session expired. Please login again.');
+            throw new Error("Session expired. Please login again.");
           }
 
           if (!response.ok) {
@@ -109,25 +130,58 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Try with current token
           response = await makeRequest(authToken!);
         } catch (error) {
-          if (error instanceof Error && error.message.includes('401')) {
+          if (error instanceof Error && error.message.includes("401")) {
             // Try to refresh token
             const newToken = await refreshToken();
             if (!newToken) {
               // Clear everything and redirect to login
-              localStorage.removeItem('token');
+              localStorage.removeItem("token");
               setAuthToken(null);
-              const publicPaths = ['/get-started', '/starter', '/professional', '/enterprise', '/free-blueprint', '/special-offer', '/pricing', '/login', '/register'];
-              const isPublic = publicPaths.some(p => window.location.pathname.startsWith(p));
-              if (!isPublic) navigate('/login');
-              throw new Error('Session expired. Please login again.');
+              const publicPaths = [
+                "/get-started",
+                "/starter",
+                "/professional",
+                "/enterprise",
+                "/free-blueprint",
+                "/special-offer",
+                "/pricing",
+                "/login",
+                "/register",
+                "/comparison",
+                "/roi-calculator",
+                "/blog",
+              ];
+              const isPublic = publicPaths.some((p) =>
+                window.location.pathname.startsWith(p),
+              );
+              if (!isPublic) navigate("/login");
+              throw new Error("Session expired. Please login again.");
             }
             // Retry with new token
             response = await makeRequest(newToken);
-          } else if (error instanceof Error && error.message.includes('Session expired')) {
+          } else if (
+            error instanceof Error &&
+            error.message.includes("Session expired")
+          ) {
             // Session expired - redirect to login
-            const publicPaths = ['/get-started', '/starter', '/professional', '/enterprise', '/free-blueprint', '/special-offer', '/pricing', '/login', '/register'];
-            const isPublic = publicPaths.some(p => window.location.pathname.startsWith(p));
-            if (!isPublic) navigate('/login');
+            const publicPaths = [
+              "/get-started",
+              "/starter",
+              "/professional",
+              "/enterprise",
+              "/free-blueprint",
+              "/special-offer",
+              "/pricing",
+              "/login",
+              "/register",
+              "/comparison",
+              "/roi-calculator",
+              "/blog",
+            ];
+            const isPublic = publicPaths.some((p) =>
+              window.location.pathname.startsWith(p),
+            );
+            if (!isPublic) navigate("/login");
             throw error;
           } else {
             throw error;
@@ -138,15 +192,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const normalized = normalizeAuthResponse(data);
         return normalized.user;
       } catch (error) {
-        if (error instanceof Error && error.message.includes('Session expired')) {
+        if (
+          error instanceof Error &&
+          error.message.includes("Session expired")
+        ) {
           // Ensure we're logged out and redirected
-          localStorage.removeItem('token');
+          localStorage.removeItem("token");
           setAuthToken(null);
           // Don't redirect if on a public funnel/marketing page
-          const publicPaths = ['/get-started', '/starter', '/professional', '/enterprise', '/free-blueprint', '/special-offer', '/pricing', '/login', '/register', '/forgot-password', '/reset-password'];
-          const isPublic = publicPaths.some(p => window.location.pathname.startsWith(p));
+          const publicPaths = [
+            "/get-started",
+            "/starter",
+            "/professional",
+            "/enterprise",
+            "/free-blueprint",
+            "/special-offer",
+            "/pricing",
+            "/login",
+            "/register",
+            "/forgot-password",
+            "/reset-password",
+            "/comparison",
+            "/roi-calculator",
+            "/blog",
+          ];
+          const isPublic = publicPaths.some((p) =>
+            window.location.pathname.startsWith(p),
+          );
           if (!isPublic) {
-            navigate('/login');
+            navigate("/login");
           }
         }
         throw error;
@@ -154,9 +228,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
     retry: (failureCount, error) => {
       // Don't retry on auth errors
-      if (error instanceof Error &&
-         (error.message.includes('Session expired') ||
-          error.message.includes('401'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes("Session expired") ||
+          error.message.includes("401"))
+      ) {
         return false;
       }
       return failureCount < 1;
@@ -164,47 +240,65 @@ export function AuthProvider({ children }: AuthProviderProps) {
     retryDelay: 1000,
     staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: !!authToken,
-    throwOnError: false
+    throwOnError: false,
   });
 
   // Storage change listener
   useEffect(() => {
     const handleStorageChange = () => {
-      setAuthToken(localStorage.getItem('token'));
+      setAuthToken(localStorage.getItem("token"));
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
     window.addEventListener(AUTH_STATE_CHANGE_EVENT, handleStorageChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener(AUTH_STATE_CHANGE_EVENT, handleStorageChange);
     };
   }, []);
 
   // Effect to handle session expiration - redirect to login when user becomes null
   useEffect(() => {
-    const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/shared/', '/get-started', '/starter', '/professional', '/enterprise', '/free-blueprint', '/special-offer', '/pricing'];
-    const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+    const publicRoutes = [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+      "/shared/",
+      "/get-started",
+      "/starter",
+      "/professional",
+      "/enterprise",
+      "/free-blueprint",
+      "/special-offer",
+      "/pricing",
+      "/comparison",
+      "/roi-calculator",
+      "/blog",
+    ];
+    const isPublicRoute = publicRoutes.some((route) =>
+      window.location.pathname.startsWith(route),
+    );
 
     // If user is null, not loading, and we're not on a public route, redirect to login
     if (!user && !isLoading && !isPublicRoute && !authToken) {
-      console.log('Session expired - redirecting to login');
-      navigate('/login');
+      console.log("Session expired - redirecting to login");
+      navigate("/login");
     }
   }, [user, isLoading, authToken, navigate]);
 
   const handleLogout = async () => {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
       });
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     } finally {
       // Clear auth state and notify other tabs
-      localStorage.removeItem('token');
+      localStorage.removeItem("token");
       window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
       setAuthToken(null);
 
@@ -215,35 +309,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
       queryClient.setQueryData([`${API_BASE_URL}/auth/me`], null);
 
       // Navigate to login
-      navigate('/login');
+      navigate("/login");
     }
   };
 
   const login = async (credentials: LoginCredentials): Promise<User> => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(credentials),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error(errorData.message || "Login failed");
       }
 
       const data: AuthResponse = await response.json();
       const { token, user } = normalizeAuthResponse(data);
-      
+
       if (!token || !user || !user.role) {
-        throw new Error('Invalid response from server');
+        throw new Error("Invalid response from server");
       }
 
       // Store the token and notify other tabs
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
       window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
       setAuthToken(token);
 
@@ -252,36 +346,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return user;
     } catch (error) {
-      console.error('Login error:', error);
-      throw error instanceof Error ? error : new Error('Login failed');
+      console.error("Login error:", error);
+      throw error instanceof Error ? error : new Error("Login failed");
     }
   };
 
-  const register = async (credentials: LocalRegisterCredentials): Promise<User> => {
+  const register = async (
+    credentials: LocalRegisterCredentials,
+  ): Promise<User> => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(credentials),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+        throw new Error(errorData.message || "Registration failed");
       }
 
       const data: AuthResponse = await response.json();
       const { token, user } = normalizeAuthResponse(data);
 
       if (!token || !user || !user.role) {
-        throw new Error('Invalid response from server');
+        throw new Error("Invalid response from server");
       }
 
       // Store the token and notify other tabs
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
       window.dispatchEvent(new Event(AUTH_STATE_CHANGE_EVENT));
       setAuthToken(token);
 
@@ -290,8 +386,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       return user;
     } catch (error) {
-      console.error('Registration error:', error);
-      throw error instanceof Error ? error : new Error('Registration failed');
+      console.error("Registration error:", error);
+      throw error instanceof Error ? error : new Error("Registration failed");
     }
   };
 
@@ -316,7 +412,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
