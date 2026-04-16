@@ -1398,8 +1398,17 @@
     <div class="cover-content">
       <!-- Brand -->
       <div class="cover-brand">
-        <div class="cover-logo-icon"></div>
-        <div class="cover-brand-name"><span><%= brandInfo.name %></span></div>
+        <% if (brandInfo.logoUrl) { %>
+          <img src="<%= brandInfo.logoUrl %>" alt="Logo" style="width:52px;height:52px;object-fit:contain;border-radius:8px;" />
+        <% } else { %>
+          <div class="cover-logo-icon"></div>
+        <% } %>
+        <div>
+          <div class="cover-brand-name"><span><%= brandInfo.companyName || brandInfo.name %></span></div>
+          <% if (brandInfo.trainerName) { %>
+            <div style="font-size:10pt;color:rgba(255,255,255,0.6);font-family:'Inter',sans-serif;margin-top:2px;">by <%= brandInfo.trainerName %></div>
+          <% } %>
+        </div>
       </div>
 
       <!-- Plan Title -->

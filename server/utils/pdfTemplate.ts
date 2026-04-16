@@ -1,16 +1,16 @@
 /**
  * PDF Template Utilities
- * 
+ *
  * Handles HTML template compilation and data transformation for PDF generation
  */
 
-import ejs from 'ejs';
-import path from 'path';
-import dayjs from 'dayjs';
-import { readFileSync } from 'fs';
+import ejs from "ejs";
+import path from "path";
+import dayjs from "dayjs";
+import { readFileSync } from "fs";
 
 // Get current module directory - use relative path approach for compatibility
-const __dirname = path.join(process.cwd(), 'server', 'utils');
+const __dirname = path.join(process.cwd(), "server", "utils");
 
 export interface MealPlanPdfData {
   mealPlan: {
@@ -53,13 +53,16 @@ export interface MealPlanPdfData {
     includeShoppingList?: boolean;
     includeMacroSummary?: boolean;
     includeRecipePhotos?: boolean;
-    orientation?: 'portrait' | 'landscape';
-    pageSize?: 'A4' | 'Letter';
+    orientation?: "portrait" | "landscape";
+    pageSize?: "A4" | "Letter";
   };
   brandInfo: {
     name: string;
     tagline: string;
     website: string;
+    logoUrl?: string | null;
+    trainerName?: string | null;
+    companyName?: string | null;
     colors: {
       primary: string;
       accent: string;
@@ -72,16 +75,18 @@ export interface MealPlanPdfData {
 /**
  * Compile HTML template with meal plan data
  */
-export async function compileHtmlTemplate(data: MealPlanPdfData): Promise<string> {
+export async function compileHtmlTemplate(
+  data: MealPlanPdfData,
+): Promise<string> {
   try {
     // Handle different paths for development vs production
     // In production, the compiled JS is at /app/dist/index.js
     // and views are at /app/server/views
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === "production";
     const templatePath = isProduction
-      ? path.join(process.cwd(), 'server', 'views', 'pdfTemplate.ejs')
-      : path.join(__dirname, '..', 'views', 'pdfTemplate.ejs');
-    
+      ? path.join(process.cwd(), "server", "views", "pdfTemplate.ejs")
+      : path.join(__dirname, "..", "views", "pdfTemplate.ejs");
+
     // Enhance data with calculated values
     const enhancedData = {
       ...data,
@@ -90,44 +95,49 @@ export async function compileHtmlTemplate(data: MealPlanPdfData): Promise<string
       // Calculate nutritional totals
       nutritionTotals: calculateNutritionTotals(data.mealPlan.meals),
       // Generate shopping list if requested
-      shoppingList: data.options.includeShoppingList 
-        ? generateShoppingList(data.mealPlan.meals) 
+      shoppingList: data.options.includeShoppingList
+        ? generateShoppingList(data.mealPlan.meals)
         : null,
       // Generate table of contents
       tableOfContents: generateTableOfContents(data.mealPlan),
       // Helper functions for template
       helpers: {
         formatNumber: (num: number) => num.toFixed(1),
-        formatDate: (date: string) => dayjs(date).format('MMMM D, YYYY'),
+        formatDate: (date: string) => dayjs(date).format("MMMM D, YYYY"),
         capitalize: (str: string) => str.charAt(0).toUpperCase() + str.slice(1),
-        formatMealType: (type: string) => type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        formatFitnessGoal: (goal: string) => goal.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        generateRecipeId: (day: number, mealNumber: number) => `recipe-day-${day}-meal-${mealNumber}`
+        formatMealType: (type: string) =>
+          type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+        formatFitnessGoal: (goal: string) =>
+          goal.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+        generateRecipeId: (day: number, mealNumber: number) =>
+          `recipe-day-${day}-meal-${mealNumber}`,
       },
       // Add the macro chart data function to global scope for EJS
-      generateMacroChartData: generateMacroChartData
+      generateMacroChartData: generateMacroChartData,
     };
 
     // Render template
     const html = await ejs.renderFile(templatePath, enhancedData, {
       async: true,
-      cache: process.env.NODE_ENV === 'production'
+      cache: process.env.NODE_ENV === "production",
     });
 
     return html;
   } catch (error) {
-    console.error('Template compilation error:', error);
-    throw new Error(`Failed to compile PDF template: ${(error as Error).message}`);
+    console.error("Template compilation error:", error);
+    throw new Error(
+      `Failed to compile PDF template: ${(error as Error).message}`,
+    );
   }
 }
 
 /**
  * Group meals by day for easier template iteration
  */
-function groupMealsByDay(meals: MealPlanPdfData['mealPlan']['meals']) {
+function groupMealsByDay(meals: MealPlanPdfData["mealPlan"]["meals"]) {
   const mealsByDay: { [day: number]: typeof meals } = {};
-  
-  meals.forEach(meal => {
+
+  meals.forEach((meal) => {
     if (!mealsByDay[meal.day]) {
       mealsByDay[meal.day] = [];
     }
@@ -135,7 +145,7 @@ function groupMealsByDay(meals: MealPlanPdfData['mealPlan']['meals']) {
   });
 
   // Sort meals within each day by meal number
-  Object.keys(mealsByDay).forEach(day => {
+  Object.keys(mealsByDay).forEach((day) => {
     mealsByDay[parseInt(day)].sort((a, b) => a.mealNumber - b.mealNumber);
   });
 
@@ -145,7 +155,7 @@ function groupMealsByDay(meals: MealPlanPdfData['mealPlan']['meals']) {
 /**
  * Calculate total nutritional values for the meal plan
  */
-function calculateNutritionTotals(meals: MealPlanPdfData['mealPlan']['meals']) {
+function calculateNutritionTotals(meals: MealPlanPdfData["mealPlan"]["meals"]) {
   const totals = {
     totalCalories: 0,
     totalProtein: 0,
@@ -154,10 +164,10 @@ function calculateNutritionTotals(meals: MealPlanPdfData['mealPlan']['meals']) {
     avgCaloriesPerDay: 0,
     avgProteinPerDay: 0,
     avgCarbsPerDay: 0,
-    avgFatPerDay: 0
+    avgFatPerDay: 0,
   };
 
-  meals.forEach(meal => {
+  meals.forEach((meal) => {
     totals.totalCalories += meal.recipe.caloriesKcal;
     totals.totalProtein += parseFloat(meal.recipe.proteinGrams) || 0;
     totals.totalCarbs += parseFloat(meal.recipe.carbsGrams) || 0;
@@ -165,7 +175,7 @@ function calculateNutritionTotals(meals: MealPlanPdfData['mealPlan']['meals']) {
   });
 
   // Calculate daily averages
-  const uniqueDays = new Set(meals.map(meal => meal.day));
+  const uniqueDays = new Set(meals.map((meal) => meal.day));
   const numDays = uniqueDays.size;
 
   if (numDays > 0) {
@@ -181,11 +191,13 @@ function calculateNutritionTotals(meals: MealPlanPdfData['mealPlan']['meals']) {
 /**
  * Generate consolidated shopping list from all recipes
  */
-function generateShoppingList(meals: MealPlanPdfData['mealPlan']['meals']) {
-  const ingredientMap: { [key: string]: { amount: number; unit: string; name: string } } = {};
+function generateShoppingList(meals: MealPlanPdfData["mealPlan"]["meals"]) {
+  const ingredientMap: {
+    [key: string]: { amount: number; unit: string; name: string };
+  } = {};
 
-  meals.forEach(meal => {
-    meal.recipe.ingredientsJson.forEach(ingredient => {
+  meals.forEach((meal) => {
+    meal.recipe.ingredientsJson.forEach((ingredient) => {
       const key = `${ingredient.name.toLowerCase()}-${ingredient.unit.toLowerCase()}`;
       const amount = parseFloat(ingredient.amount) || 0;
 
@@ -195,7 +207,7 @@ function generateShoppingList(meals: MealPlanPdfData['mealPlan']['meals']) {
         ingredientMap[key] = {
           name: ingredient.name,
           amount: amount,
-          unit: ingredient.unit
+          unit: ingredient.unit,
         };
       }
     });
@@ -204,21 +216,22 @@ function generateShoppingList(meals: MealPlanPdfData['mealPlan']['meals']) {
   // Convert to array and sort alphabetically
   return Object.values(ingredientMap)
     .sort((a, b) => a.name.localeCompare(b.name))
-    .map(ingredient => ({
+    .map((ingredient) => ({
       ...ingredient,
-      formattedAmount: ingredient.amount % 1 === 0 
-        ? ingredient.amount.toString() 
-        : ingredient.amount.toFixed(2).replace(/\.?0+$/, '')
+      formattedAmount:
+        ingredient.amount % 1 === 0
+          ? ingredient.amount.toString()
+          : ingredient.amount.toFixed(2).replace(/\.?0+$/, ""),
     }));
 }
 
 /**
  * Generate table of contents for the PDF
  */
-function generateTableOfContents(mealPlan: MealPlanPdfData['mealPlan']) {
+function generateTableOfContents(mealPlan: MealPlanPdfData["mealPlan"]) {
   const contents = [
-    { title: 'Overview', page: 2 },
-    { title: 'Weekly Meal Schedule', page: 3 }
+    { title: "Overview", page: 2 },
+    { title: "Weekly Meal Schedule", page: 3 },
   ];
 
   let currentPage = 4;
@@ -227,28 +240,28 @@ function generateTableOfContents(mealPlan: MealPlanPdfData['mealPlan']) {
   for (let day = 1; day <= mealPlan.days; day++) {
     contents.push({
       title: `Day ${day} Meals`,
-      page: currentPage
+      page: currentPage,
     });
     currentPage++;
   }
 
   // Add recipe detail pages
   contents.push({
-    title: 'Recipe Details',
-    page: currentPage
+    title: "Recipe Details",
+    page: currentPage,
   });
   currentPage += mealPlan.meals.length;
 
   // Add optional sections
   contents.push({
-    title: 'Shopping List',
-    page: currentPage
+    title: "Shopping List",
+    page: currentPage,
   });
   currentPage++;
 
   contents.push({
-    title: 'Nutrition Summary',
-    page: currentPage
+    title: "Nutrition Summary",
+    page: currentPage,
   });
 
   return contents;
@@ -266,7 +279,9 @@ export function getAssetUrl(assetPath: string): string {
 /**
  * Generate macro distribution data for charts
  */
-export function generateMacroChartData(nutritionTotals: ReturnType<typeof calculateNutritionTotals>) {
+export function generateMacroChartData(
+  nutritionTotals: ReturnType<typeof calculateNutritionTotals>,
+) {
   const proteinCalories = nutritionTotals.avgProteinPerDay * 4;
   const carbCalories = nutritionTotals.avgCarbsPerDay * 4;
   const fatCalories = nutritionTotals.avgFatPerDay * 9;
@@ -276,13 +291,13 @@ export function generateMacroChartData(nutritionTotals: ReturnType<typeof calcul
     return {
       protein: 0,
       carbs: 0,
-      fat: 0
+      fat: 0,
     };
   }
 
   return {
     protein: Math.round((proteinCalories / totalCalories) * 100),
     carbs: Math.round((carbCalories / totalCalories) * 100),
-    fat: Math.round((fatCalories / totalCalories) * 100)
+    fat: Math.round((fatCalories / totalCalories) * 100),
   };
 }

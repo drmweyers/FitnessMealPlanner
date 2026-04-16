@@ -216,7 +216,10 @@ const tableFeatures: { label: string; values: CellValue[] }[] = [
     label: "Progress Tracking",
     values: ["Photos + Measurements", "Basic", false, false],
   },
-  { label: "PDF Export", values: ["Branded", "Branded", "Generic", false] },
+  {
+    label: "PDF Export",
+    values: ["EvoFit branded", "Custom branded", "Generic", false],
+  },
   {
     label: "Grocery Lists",
     values: ["Auto-generated", true, true, true],

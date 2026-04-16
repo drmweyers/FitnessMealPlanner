@@ -86,6 +86,9 @@ export default function TrainerProfile() {
   const [showInvitationForm, setShowInvitationForm] = useState(false);
   const [customerEmail, setCustomerEmail] = useState("");
   const [invitationMessage, setInvitationMessage] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   // Fetch trainer statistics
   const { data: stats, isLoading: statsLoading } = useQuery<TrainerStats>({
@@ -120,6 +123,48 @@ export default function TrainerProfile() {
       }));
     }
   }, [profile]);
+
+  // Fetch branding settings
+  const { data: brandingSettings, refetch: refetchBranding } = useQuery<{
+    logoUrl: string | null;
+    companyName: string | null;
+  }>({
+    queryKey: ["trainerBranding"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/branding");
+      const json = await res.json();
+      return json.data;
+    },
+    enabled: !!user,
+  });
+
+  React.useEffect(() => {
+    if (brandingSettings?.companyName) {
+      setCompanyName(brandingSettings.companyName);
+    }
+  }, [brandingSettings]);
+
+  // Save company name mutation
+  const saveBrandingMutation = useMutation({
+    mutationFn: async (data: { companyName: string | null }) => {
+      const res = await apiRequest("PUT", "/api/branding", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Branding saved",
+        description: "Company name updated successfully.",
+      });
+      refetchBranding();
+    },
+    onError: () => {
+      toast({
+        title: "Save failed",
+        description: "Could not save branding settings.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Fetch invitations
   const { data: invitations, isLoading: invitationsLoading } = useQuery<
@@ -259,6 +304,48 @@ export default function TrainerProfile() {
       });
     },
   });
+
+  const handleLogoUpload = async () => {
+    if (!logoFile) return;
+    setLogoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("logo", logoFile);
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/branding/logo", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      toast({
+        title: "Logo uploaded",
+        description: "Your logo will appear on exported PDFs.",
+      });
+      setLogoFile(null);
+      refetchBranding();
+    } catch {
+      toast({
+        title: "Upload failed",
+        description: "Could not upload logo.",
+        variant: "destructive",
+      });
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    const token = localStorage.getItem("token");
+    const res = await fetch("/api/branding/logo", {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      toast({ title: "Logo removed" });
+      refetchBranding();
+    }
+  };
 
   const handleSaveProfile = () => {
     if (
@@ -717,6 +804,113 @@ export default function TrainerProfile() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* PDF Branding */}
+          <Card>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <span>PDF Branding</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 space-y-4">
+              <p className="text-sm text-slate-600">
+                Your company name and logo will appear on the cover page of
+                every exported PDF meal plan.
+              </p>
+
+              {/* Company Name */}
+              <div>
+                <Label
+                  htmlFor="companyName"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Company Name
+                </Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    id="companyName"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="e.g. Peak Performance Nutrition"
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      saveBrandingMutation.mutate({
+                        companyName: companyName || null,
+                      })
+                    }
+                    disabled={saveBrandingMutation.isPending}
+                  >
+                    <Save className="w-4 h-4 mr-1" />
+                    Save
+                  </Button>
+                </div>
+              </div>
+
+              {/* Logo Upload */}
+              <div>
+                <Label className="text-sm font-medium text-slate-700">
+                  Logo
+                </Label>
+                {brandingSettings?.logoUrl ? (
+                  <div className="mt-2 flex items-center gap-3">
+                    <img
+                      src={brandingSettings.logoUrl}
+                      alt="Logo"
+                      className="w-12 h-12 object-contain rounded-lg border border-slate-200"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-600 truncate">
+                        Logo uploaded
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRemoveLogo}
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                      id="logoUpload"
+                      className="hidden"
+                      onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                    />
+                    <label htmlFor="logoUpload" className="cursor-pointer">
+                      <div className="border-2 border-dashed border-slate-200 rounded-lg p-4 text-center hover:border-orange-400 transition-colors">
+                        <Download className="w-6 h-6 mx-auto mb-1 text-slate-400" />
+                        <p className="text-sm text-slate-600">
+                          {logoFile
+                            ? logoFile.name
+                            : "Click to upload logo (PNG, JPG, SVG — max 2MB)"}
+                        </p>
+                      </div>
+                    </label>
+                    {logoFile && (
+                      <Button
+                        size="sm"
+                        onClick={handleLogoUpload}
+                        disabled={logoUploading}
+                        className="w-full"
+                      >
+                        {logoUploading ? "Uploading..." : "Upload Logo"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 

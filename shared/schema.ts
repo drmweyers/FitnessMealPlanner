@@ -1817,10 +1817,11 @@ export const trainerBrandingSettings = pgTable(
       .notNull()
       .unique(),
 
-    // Logo (Professional+)
+    // Logo & identity (Professional+)
     logoUrl: text("logo_url"),
     logoFileSize: bigint("logo_file_size", { mode: "number" }).default(0),
     logoUploadedAt: timestamp("logo_uploaded_at"),
+    companyName: varchar("company_name", { length: 255 }),
 
     // Color customization (Professional+)
     primaryColor: varchar("primary_color", { length: 7 }), // Hex color

@@ -14,6 +14,7 @@ import {
 } from "../utils/pdfTemplate";
 import { validateMealPlanData } from "../utils/pdfValidation";
 import { storage } from "../storage";
+import { brandingService } from "../services/BrandingService";
 
 interface ExportOptions {
   includeShoppingList?: boolean;
@@ -66,17 +67,43 @@ export async function exportPdfController(
       ...options,
     };
 
+    // Fetch trainer branding settings
+    const trainerId = (req.user as any)?.id;
+    const trainerUser = req.user as any;
+    const trainerName =
+      trainerUser?.name ||
+      trainerUser?.email?.split("@")[0] ||
+      "EvoFit Trainer";
+    let logoUrl: string | null = null;
+    let companyName: string | null = null;
+
+    if (trainerId) {
+      try {
+        const branding = await brandingService.getBrandingSettings(trainerId);
+        logoUrl = branding?.logoUrl || null;
+        companyName = branding?.companyName || null;
+      } catch (err) {
+        console.warn(
+          "[PDF Export] Could not fetch branding settings, using defaults:",
+          err,
+        );
+      }
+    }
+
     // Prepare data for template
     const templateData: MealPlanPdfData = {
       mealPlan: validatedData,
       customerName: customerName || "Valued Client",
       generatedDate: dayjs().format("MMMM D, YYYY"),
-      generatedBy: (req.user as any)?.email || "EvoFit Trainer",
+      generatedBy: trainerName,
       options: exportOptions,
       brandInfo: {
-        name: "EvoFit Meals",
+        name: companyName || "EvoFit Meals",
         tagline: "Transform Your Nutrition, Transform Your Life",
         website: "evofitmeals.com",
+        logoUrl,
+        trainerName,
+        companyName,
         colors: {
           primary: "#9333EA",
           accent: "#F97316",

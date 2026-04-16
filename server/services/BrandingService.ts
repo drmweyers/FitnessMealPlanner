@@ -6,11 +6,16 @@
  * - Enterprise: White-label mode + custom domains
  */
 
-import { db } from '../db';
-import { trainerBrandingSettings, brandingAuditLog, trainerSubscriptions, users } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
-import { Request } from 'express';
-import crypto from 'crypto';
+import { db } from "../db";
+import {
+  trainerBrandingSettings,
+  brandingAuditLog,
+  trainerSubscriptions,
+  users,
+} from "@shared/schema";
+import { eq, and } from "drizzle-orm";
+import { Request } from "express";
+import crypto from "crypto";
 
 export interface BrandingSettings {
   id: string;
@@ -18,6 +23,7 @@ export interface BrandingSettings {
   logoUrl: string | null;
   logoFileSize: number;
   logoUploadedAt: Date | null;
+  companyName: string | null;
   primaryColor: string | null;
   secondaryColor: string | null;
   accentColor: string | null;
@@ -31,6 +37,7 @@ export interface BrandingSettings {
 }
 
 export interface UpdateBrandingInput {
+  companyName?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
   accentColor?: string | null;
@@ -48,8 +55,10 @@ class BrandingService {
   /**
    * Get branding settings for a trainer (creates default if not exists)
    */
-  async getBrandingSettings(trainerId: string): Promise<BrandingSettings | null> {
-    let settings = await db
+  async getBrandingSettings(
+    trainerId: string,
+  ): Promise<BrandingSettings | null> {
+    const settings = await db
       .select()
       .from(trainerBrandingSettings)
       .where(eq(trainerBrandingSettings.trainerId, trainerId))
@@ -73,7 +82,7 @@ class BrandingService {
   async updateBrandingSettings(
     trainerId: string,
     updates: UpdateBrandingInput,
-    req: Request
+    req: Request,
   ): Promise<BrandingSettings> {
     const oldSettings = await this.getBrandingSettings(trainerId);
 
@@ -87,7 +96,13 @@ class BrandingService {
       .returning();
 
     // Audit log
-    await this.logBrandingChange(trainerId, 'branding_updated', updates, oldSettings, req);
+    await this.logBrandingChange(
+      trainerId,
+      "branding_updated",
+      updates,
+      oldSettings,
+      req,
+    );
 
     return updatedSettings as BrandingSettings;
   }
@@ -98,7 +113,7 @@ class BrandingService {
   async updateLogo(
     trainerId: string,
     logoUpload: LogoUploadResult,
-    req: Request
+    req: Request,
   ): Promise<BrandingSettings> {
     const [updatedSettings] = await db
       .update(trainerBrandingSettings)
@@ -112,7 +127,13 @@ class BrandingService {
       .returning();
 
     // Audit log
-    await this.logBrandingChange(trainerId, 'logo_uploaded', { logoUrl: logoUpload.logoUrl }, null, req);
+    await this.logBrandingChange(
+      trainerId,
+      "logo_uploaded",
+      { logoUrl: logoUpload.logoUrl },
+      null,
+      req,
+    );
 
     return updatedSettings as BrandingSettings;
   }
@@ -120,7 +141,11 @@ class BrandingService {
   /**
    * Enable white-label mode (Enterprise only)
    */
-  async enableWhiteLabel(trainerId: string, enabled: boolean, req: Request): Promise<BrandingSettings> {
+  async enableWhiteLabel(
+    trainerId: string,
+    enabled: boolean,
+    req: Request,
+  ): Promise<BrandingSettings> {
     const [updatedSettings] = await db
       .update(trainerBrandingSettings)
       .set({
@@ -133,10 +158,10 @@ class BrandingService {
     // Audit log
     await this.logBrandingChange(
       trainerId,
-      enabled ? 'white_label_enabled' : 'white_label_disabled',
+      enabled ? "white_label_enabled" : "white_label_disabled",
       { whiteLabelEnabled: enabled },
       null,
-      req
+      req,
     );
 
     return updatedSettings as BrandingSettings;
@@ -145,12 +170,16 @@ class BrandingService {
   /**
    * Set custom domain (Enterprise only)
    */
-  async setCustomDomain(trainerId: string, customDomain: string, req: Request): Promise<{
+  async setCustomDomain(
+    trainerId: string,
+    customDomain: string,
+    req: Request,
+  ): Promise<{
     settings: BrandingSettings;
     verificationToken: string;
   }> {
     // Generate verification token for DNS TXT record
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
     const [updatedSettings] = await db
       .update(trainerBrandingSettings)
@@ -165,7 +194,13 @@ class BrandingService {
       .returning();
 
     // Audit log
-    await this.logBrandingChange(trainerId, 'custom_domain_set', { customDomain }, null, req);
+    await this.logBrandingChange(
+      trainerId,
+      "custom_domain_set",
+      { customDomain },
+      null,
+      req,
+    );
 
     return {
       settings: updatedSettings as BrandingSettings,
@@ -215,7 +250,7 @@ class BrandingService {
       .returning();
 
     // Audit log
-    await this.logBrandingChange(trainerId, 'logo_deleted', {}, null, req);
+    await this.logBrandingChange(trainerId, "logo_deleted", {}, null, req);
 
     return updatedSettings as BrandingSettings;
   }
@@ -228,15 +263,15 @@ class BrandingService {
     action: string,
     newValues: any,
     oldValues: any,
-    req: Request
+    req: Request,
   ): Promise<void> {
     const ipAddress = req.ip || req.socket.remoteAddress || null;
-    const userAgent = req.get('user-agent') || null;
+    const userAgent = req.get("user-agent") || null;
 
     await db.insert(brandingAuditLog).values({
       trainerId,
       action,
-      fieldChanged: Object.keys(newValues).join(', '),
+      fieldChanged: Object.keys(newValues).join(", "),
       oldValue: oldValues ? JSON.stringify(oldValues) : null,
       newValue: JSON.stringify(newValues),
       ipAddress,
