@@ -30,7 +30,7 @@ const PRICING_TIERS: PricingTier[] = [
     features: [
       { name: "Up to 9 clients", included: true },
       { name: "50 meal plans/month", included: true },
-      { name: "Essential recipe library", included: true },
+      { name: "1,500+ recipes", included: true },
       { name: "AI meal plan generation", included: true },
       { name: "PDF exports", included: true },
       { name: "Grocery lists", included: true },
