@@ -1589,25 +1589,22 @@
       <h2 class="section-title">Weekly Meal Schedule</h2>
 
       <% if (mealPlan.days <= 7) { %>
-        <div class="week-grid">
+        <% const activeDayCount = Object.keys(mealsByDay).length; %>
+        <div class="week-grid" style="grid-template-columns: repeat(<%= activeDayCount %>, 1fr);">
           <% for (let day = 1; day <= mealPlan.days; day++) { %>
+            <% if (mealsByDay[day]) { %>
             <div class="day-column no-break">
               <div class="day-header">Day <%= day %></div>
               <div class="day-meals">
-                <% if (mealsByDay[day]) { %>
                   <% mealsByDay[day].forEach(meal => { %>
                     <div class="day-meal-item">
                       <div class="day-meal-type"><%= helpers.formatMealType(meal.mealType) %></div>
                       <div class="day-meal-name"><%= meal.recipe.name %></div>
                     </div>
                   <% }); %>
-                <% } else { %>
-                  <div class="day-meal-item">
-                    <div class="day-meal-name" style="color: var(--mid-grey); font-style: italic;">Rest day</div>
-                  </div>
-                <% } %>
               </div>
             </div>
+            <% } %>
           <% } %>
         </div>
       <% } else { %>
@@ -1616,25 +1613,27 @@
         <% for (let week = 0; week < totalWeeks; week++) { %>
           <% if (week > 0) { %><div style="margin-top: var(--sp-xl);"></div><% } %>
           <h3 style="color: var(--brand-primary); margin-bottom: var(--sp-md);">Week <%= week + 1 %></h3>
-          <div class="week-grid" style="grid-template-columns: repeat(<%= Math.min(7, mealPlan.days - week * 7) %>, 1fr);">
+          <%
+            let weekActiveDays = 0;
+            for (let wd = week * 7 + 1; wd <= Math.min((week + 1) * 7, mealPlan.days); wd++) {
+              if (mealsByDay[wd]) weekActiveDays++;
+            }
+          %>
+          <div class="week-grid" style="grid-template-columns: repeat(<%= weekActiveDays || 1 %>, 1fr);">
             <% for (let d = week * 7 + 1; d <= Math.min((week + 1) * 7, mealPlan.days); d++) { %>
+              <% if (mealsByDay[d]) { %>
               <div class="day-column no-break">
                 <div class="day-header">Day <%= d %></div>
                 <div class="day-meals">
-                  <% if (mealsByDay[d]) { %>
                     <% mealsByDay[d].forEach(meal => { %>
                       <div class="day-meal-item">
                         <div class="day-meal-type"><%= helpers.formatMealType(meal.mealType) %></div>
                         <div class="day-meal-name"><%= meal.recipe.name %></div>
                       </div>
                     <% }); %>
-                  <% } else { %>
-                    <div class="day-meal-item">
-                      <div class="day-meal-name" style="color: var(--mid-grey); font-style: italic;">Rest day</div>
-                    </div>
-                  <% } %>
                 </div>
               </div>
+              <% } %>
             <% } %>
           </div>
         <% } %>
@@ -1804,7 +1803,7 @@
   <!-- ============================================================
        SHOPPING LIST
        ============================================================ -->
-  <% if (options.includeShoppingList && shoppingList) { %>
+  <% if (options.includeShoppingList && shoppingList && shoppingList.length > 0) { %>
     <div class="page-break"></div>
     <div class="shopping-page">
       <div class="container">
