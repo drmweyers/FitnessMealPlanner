@@ -276,7 +276,7 @@ function HeroSection() {
             <a href="#how-it-works">
               <Button
                 variant="outline"
-                className="border-white/30 text-white hover:bg-white/10 font-clash font-medium text-lg px-8 py-6 h-auto rounded-xl backdrop-blur-sm"
+                className="bg-transparent border-white/30 text-white hover:bg-white/10 font-clash font-medium text-lg px-8 py-6 h-auto rounded-xl backdrop-blur-sm"
               >
                 See How It Works
               </Button>
