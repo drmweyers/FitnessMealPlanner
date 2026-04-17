@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "wouter";
 import { motion, useInView, useAnimation } from "framer-motion";
 import {
   ChefHat,
@@ -77,7 +78,7 @@ function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="/get-started" className="flex items-center gap-2">
+          <Link href="/get-started" className="flex items-center gap-2">
             <ChefHat className="w-6 h-6 text-orange-500" />
             <span
               className="font-bold text-xl text-white"
@@ -85,39 +86,39 @@ function Navbar() {
             >
               EvoFit Meals
             </span>
-          </a>
+          </Link>
 
           {/* Nav links */}
           <div className="hidden md:flex items-center gap-8">
-            <a
+            <Link
               href="/get-started"
               className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
             >
               Features
-            </a>
-            <a
+            </Link>
+            <Link
               href="/pricing"
               className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
             >
               Pricing
-            </a>
-            <a
+            </Link>
+            <Link
               href="/comparison"
               className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
             >
               Compare
-            </a>
+            </Link>
           </div>
 
           {/* CTA */}
-          <a href="/get-started">
+          <Link href="/get-started">
             <button
               className="bg-orange-500 hover:bg-orange-600 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] text-white font-semibold text-sm px-5 py-2 rounded-lg transition-all duration-200"
               style={{ fontFamily: "'Clash Display', Outfit, sans-serif" }}
             >
               Get Started
             </button>
-          </a>
+          </Link>
         </div>
       </div>
     </nav>
@@ -476,7 +477,7 @@ export default function ROICalculatorPage() {
                   <p className="text-gray-400 mb-4 text-sm">
                     Ready to reclaim those hours and savings?
                   </p>
-                  <a href="/get-started">
+                  <Link href="/get-started">
                     <button
                       className="bg-orange-500 hover:bg-orange-600 hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] text-white font-bold text-lg px-8 py-4 rounded-xl transition-all duration-200"
                       style={{
@@ -485,7 +486,7 @@ export default function ROICalculatorPage() {
                     >
                       Start Free Trial
                     </button>
-                  </a>
+                  </Link>
                   <p className="mt-3 text-xs text-gray-500">
                     🛡️ 14-day money-back guarantee · No credit card required
                   </p>
@@ -565,24 +566,24 @@ export default function ROICalculatorPage() {
               © {new Date().getFullYear()} EvoFit Meals. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <a
+              <Link
                 href="/get-started"
                 className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
               >
                 Features
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/comparison"
                 className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
               >
                 Compare
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/pricing"
                 className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
               >
                 Pricing
-              </a>
+              </Link>
             </div>
           </div>
         </footer>
