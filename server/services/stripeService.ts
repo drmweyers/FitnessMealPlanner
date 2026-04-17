@@ -44,7 +44,7 @@ export const SUBSCRIPTION_TIERS = {
     maxClients: 50,
     features: [
       "Up to 50 clients",
-      "Unlimited recipes",
+      "6,000 recipes",
       "Team accounts",
       "API access",
       "White label options",
@@ -94,7 +94,7 @@ export const ONETIME_TIERS = {
     features: [
       "Up to 50 clients",
       "500 meal plans/month",
-      "Unlimited recipes",
+      "6,000 recipes",
       "Team accounts",
       "API access",
       "White label options",
