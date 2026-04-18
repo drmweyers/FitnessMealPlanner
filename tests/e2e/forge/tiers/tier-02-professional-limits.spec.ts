@@ -11,15 +11,34 @@ import { test, expect } from "@playwright/test";
 import { ROUTES, API, TIER_LIMITS, TIMEOUTS } from "../../helpers/constants.js";
 import { ForgeApiClient } from "../../helpers/api-client.js";
 
+/**
+ * Mock entitlements matching the real /api/entitlements response shape.
+ */
 const PROFESSIONAL_ENTITLEMENTS = {
+  success: true,
   tier: "professional",
+  status: "active",
   features: {
     recipeCount: TIER_LIMITS.professional.recipes,
-    maxCustomers: TIER_LIMITS.professional.customers,
-    maxMealPlans: TIER_LIMITS.professional.mealPlans,
-    analytics: true,
-    branding: true,
-    whiteLabel: false,
+    mealTypeCount: 10,
+    canUploadLogo: true,
+    canCustomizeColors: true,
+    canEnableWhiteLabel: false,
+    canSetCustomDomain: false,
+  },
+  currentPeriodEnd: {},
+  cancelAtPeriodEnd: false,
+  limits: {
+    customers: {
+      max: TIER_LIMITS.professional.customers,
+      used: 5,
+      percentage: 25,
+    },
+    mealPlans: {
+      max: TIER_LIMITS.professional.mealPlans,
+      used: 20,
+      percentage: 10,
+    },
   },
 };
 
@@ -64,7 +83,7 @@ test.describe("TIER-02 — Professional Tier Limits", () => {
     expect(pageText).toMatch(/\b20\b/);
   });
 
-  test("professional entitlements enable analytics feature", async ({
+  test("professional entitlements enable branding features", async ({
     page,
   }) => {
     let capturedBody: unknown = null;
@@ -83,11 +102,11 @@ test.describe("TIER-02 — Professional Tier Limits", () => {
 
     expect(capturedBody).not.toBeNull();
     expect(
-      (capturedBody as typeof PROFESSIONAL_ENTITLEMENTS).features.analytics,
+      (capturedBody as typeof PROFESSIONAL_ENTITLEMENTS).features.canUploadLogo,
     ).toBe(true);
   });
 
-  test("professional entitlements enable branding feature", async ({
+  test("professional entitlements enable color customization", async ({
     page,
   }) => {
     let capturedBody: unknown = null;
@@ -106,7 +125,8 @@ test.describe("TIER-02 — Professional Tier Limits", () => {
 
     expect(capturedBody).not.toBeNull();
     expect(
-      (capturedBody as typeof PROFESSIONAL_ENTITLEMENTS).features.branding,
+      (capturedBody as typeof PROFESSIONAL_ENTITLEMENTS).features
+        .canCustomizeColors,
     ).toBe(true);
   });
 
@@ -142,9 +162,16 @@ test.describe("TIER-02 — Professional Tier Limits", () => {
     const res = await api.raw("GET", API.tiers.publicPricing);
 
     expect(res.status).toBe(200);
-    const body = res.body as unknown[];
-    expect(Array.isArray(body)).toBe(true);
-    expect(body.length).toBeGreaterThanOrEqual(3);
+    const body = res.body as Record<string, unknown>;
+
+    // Response is { tiers: { starter: {...}, professional: {...}, enterprise: {...} } }
+    const tiers = body.tiers as Record<string, unknown>;
+    expect(tiers).toBeTruthy();
+    const tierNames = Object.keys(tiers);
+    expect(tierNames.length).toBeGreaterThanOrEqual(3);
+    expect(tierNames).toContain("starter");
+    expect(tierNames).toContain("professional");
+    expect(tierNames).toContain("enterprise");
   });
 
   test("API /api/v1/tiers/public/pricing includes prices $199, $299, $399", async () => {
@@ -154,6 +181,7 @@ test.describe("TIER-02 — Professional Tier Limits", () => {
     expect(res.status).toBe(200);
     const bodyStr = JSON.stringify(res.body);
 
+    // Prices are in cents: 19900, 29900, 39900
     expect(bodyStr).toContain("199");
     expect(bodyStr).toContain("299");
     expect(bodyStr).toContain("399");
@@ -164,14 +192,13 @@ test.describe("TIER-02 — Professional Tier Limits", () => {
     const res = await api.raw("GET", API.tiers.publicPricing);
 
     expect(res.status).toBe(200);
-    const tiers = res.body as Array<Record<string, unknown>>;
+    const body = res.body as Record<string, unknown>;
 
-    const professional = tiers.find(
-      (t) =>
-        String(t.name || t.tier || t.tierName || "").toLowerCase() ===
-        "professional",
-    );
-    expect(professional).not.toBeUndefined();
+    // Response is { tiers: { professional: { limits: { customers: 20 }, ... } } }
+    const tiers = body.tiers as Record<string, Record<string, unknown>>;
+    const professional = tiers.professional;
+    expect(professional).toBeTruthy();
+
     const bodyStr = JSON.stringify(professional);
     expect(bodyStr).toContain("20");
   });

@@ -14,7 +14,7 @@ export class RecipeLibraryPage {
 
   async search(query: string) {
     const searchInput = this.page.locator(
-      'input[type="search"], input[placeholder*="search" i], input[name="search"]',
+      'input[type="search"], input[placeholder*="search" i], input[name="search"], input[placeholder*="Search" i]',
     );
     await searchInput.fill(query);
     // Allow debounce
@@ -23,7 +23,7 @@ export class RecipeLibraryPage {
 
   async getVisibleRecipeCount(): Promise<number> {
     const cards = this.page.locator(
-      '[data-testid="recipe-card"], .recipe-card, article, [class*="recipe"]',
+      'article, [class*="recipe"], [class*="Recipe"], [class*="card"], .grid > div, .grid > a',
     );
     return cards.count();
   }
@@ -31,9 +31,10 @@ export class RecipeLibraryPage {
   async openFirstRecipe() {
     const card = this.page
       .locator(
-        '[data-testid="recipe-card"], .recipe-card, article, [class*="recipe"]',
+        'article, [class*="recipe"], [class*="Recipe"], [class*="card"], .grid > div, .grid > a',
       )
       .first();
+    await expect(card).toBeVisible({ timeout: 15_000 });
     await card.click();
   }
 

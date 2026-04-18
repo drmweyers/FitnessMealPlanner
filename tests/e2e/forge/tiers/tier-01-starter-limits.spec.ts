@@ -11,15 +11,35 @@ import { test, expect } from "@playwright/test";
 import { ROUTES, API, TIER_LIMITS, TIMEOUTS } from "../../helpers/constants.js";
 import { ForgeApiClient } from "../../helpers/api-client.js";
 
+/**
+ * Mock entitlements matching the real /api/entitlements response shape:
+ * { success, tier, status, features: { recipeCount, ... }, limits: { customers: { max, used, percentage }, mealPlans: { max, used, percentage } } }
+ */
 const STARTER_ENTITLEMENTS = {
+  success: true,
   tier: "starter",
+  status: "active",
   features: {
     recipeCount: TIER_LIMITS.starter.recipes,
-    maxCustomers: TIER_LIMITS.starter.customers,
-    maxMealPlans: TIER_LIMITS.starter.mealPlans,
-    analytics: false,
-    branding: false,
-    whiteLabel: false,
+    mealTypeCount: 5,
+    canUploadLogo: false,
+    canCustomizeColors: false,
+    canEnableWhiteLabel: false,
+    canSetCustomDomain: false,
+  },
+  currentPeriodEnd: {},
+  cancelAtPeriodEnd: false,
+  limits: {
+    customers: {
+      max: TIER_LIMITS.starter.customers,
+      used: 1,
+      percentage: 11.11,
+    },
+    mealPlans: {
+      max: TIER_LIMITS.starter.mealPlans,
+      used: 5,
+      percentage: 10,
+    },
   },
 };
 
@@ -61,8 +81,10 @@ test.describe("TIER-01 — Starter Tier Limits", () => {
     await page.waitForTimeout(2_000);
 
     const pageText = await page.textContent("body");
-    // 9 customers limit must appear somewhere on the dashboard
-    expect(pageText).toMatch(/\b9\b/);
+    // 9 customers limit must appear somewhere on the dashboard — check both
+    // the raw number and the formatted limit string
+    const has9 = pageText!.match(/\b9\b/) || pageText!.includes("/ 9");
+    expect(has9).toBeTruthy();
   });
 
   test("dashboard reflects 50 meal plan limit when entitlements mocked to starter", async ({
@@ -101,8 +123,10 @@ test.describe("TIER-01 — Starter Tier Limits", () => {
     await page.waitForTimeout(1_000);
 
     expect(capturedBody).not.toBeNull();
+    // The real entitlements response uses canUploadLogo/canCustomizeColors etc.
+    // rather than an "analytics" boolean — verify the mock shape was served
     expect(
-      (capturedBody as typeof STARTER_ENTITLEMENTS).features.analytics,
+      (capturedBody as typeof STARTER_ENTITLEMENTS).features.canUploadLogo,
     ).toBe(false);
   });
 
@@ -120,36 +144,41 @@ test.describe("TIER-01 — Starter Tier Limits", () => {
     expect(body).toHaveProperty("features");
   });
 
-  test("API GET /api/v1/tiers/current returns current tier info", async () => {
+  test("API GET /api/entitlements returns current tier info and limits", async () => {
     const api = await ForgeApiClient.loginAs("trainer");
-    const res = await api.raw("GET", API.tiers.current);
+    const res = await api.raw("GET", API.entitlements);
 
     expect(res.status).toBe(200);
     const body = res.body as Record<string, unknown>;
     expect(body).not.toBeNull();
-    // Must have some tier identification
+    // Must have tier identification
     const hasTierInfo =
       "tier" in body || "name" in body || "plan" in body || "tierName" in body;
     expect(hasTierInfo).toBe(true);
+    // Must have limits
+    expect(body).toHaveProperty("limits");
   });
 
-  test("API GET /api/v1/tiers/usage returns usage statistics", async () => {
+  test("API GET /api/entitlements returns usage statistics in limits", async () => {
     const api = await ForgeApiClient.loginAs("trainer");
-    const res = await api.raw("GET", API.tiers.usage);
+    const res = await api.raw("GET", API.entitlements);
 
     expect(res.status).toBe(200);
     const body = res.body as Record<string, unknown>;
     expect(body).not.toBeNull();
+    // Limits contain customers/mealPlans with max/used
+    const limits = body.limits as Record<string, unknown>;
+    expect(limits).toBeTruthy();
   });
 
-  test("API /api/v1/tiers/usage response has used and max fields", async () => {
+  test("API /api/entitlements limits have used and max fields", async () => {
     const api = await ForgeApiClient.loginAs("trainer");
-    const res = await api.raw("GET", API.tiers.usage);
+    const res = await api.raw("GET", API.entitlements);
 
     expect(res.status).toBe(200);
     const body = res.body as Record<string, unknown>;
 
-    // Check top-level or nested structure for used/max
+    // Check for used/max in limits structure
     const bodyStr = JSON.stringify(body);
     const hasUsed = bodyStr.includes('"used"') || bodyStr.includes('"current"');
     const hasMax = bodyStr.includes('"max"') || bodyStr.includes('"limit"');

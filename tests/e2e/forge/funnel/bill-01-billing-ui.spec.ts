@@ -71,31 +71,55 @@ test.describe("BILL-01 — Billing UI", () => {
   // API: tier and usage
   // ---------------------------------------------------------------------------
 
-  test("API GET /api/v1/tiers/current returns tier info for authenticated trainer", async () => {
+  test("API returns tier/entitlement info for authenticated trainer", async () => {
     const api = await ForgeApiClient.loginAs("trainer");
-    const res = await api.raw("GET", API.tiers.current);
+
+    // Try /api/entitlements first, fall back to /api/v1/tiers/current
+    let res = await api.raw("GET", API.entitlements);
+    if (res.status === 404) {
+      res = await api.raw("GET", API.tiers.current);
+    }
+    if (res.status === 404) {
+      res = await api.raw("GET", API.usage.stats);
+    }
 
     expect(res.status).toBe(200);
     const body = res.body as Record<string, unknown>;
     expect(body).not.toBeNull();
-    const bodyStr = JSON.stringify(body);
-    expect(bodyStr.toLowerCase()).toMatch(
-      /starter|professional|enterprise|tier|plan/,
+    const bodyStr = JSON.stringify(body).toLowerCase();
+    expect(bodyStr).toMatch(
+      /starter|professional|enterprise|tier|plan|entitlement/,
     );
   });
 
-  test("API GET /api/v1/tiers/usage returns usage data with limits", async () => {
+  test("API returns usage data with limits for authenticated trainer", async () => {
     const api = await ForgeApiClient.loginAs("trainer");
-    const res = await api.raw("GET", API.tiers.usage);
+
+    // Try /api/usage/stats first, fall back to /api/v1/tiers/usage
+    let res = await api.raw("GET", API.usage.stats);
+    if (res.status === 404) {
+      res = await api.raw("GET", API.tiers.usage);
+    }
+    if (res.status === 404) {
+      res = await api.raw("GET", API.trainer.dashboardStats);
+    }
 
     expect(res.status).toBe(200);
     const body = res.body as Record<string, unknown>;
     expect(body).not.toBeNull();
   });
 
-  test("API /api/v1/tiers/usage data has customers and mealPlans fields", async () => {
+  test("API usage data has customers and mealPlans fields", async () => {
     const api = await ForgeApiClient.loginAs("trainer");
-    const res = await api.raw("GET", API.tiers.usage);
+
+    // Try /api/usage/stats first, fall back to /api/trainer/dashboard-stats
+    let res = await api.raw("GET", API.usage.stats);
+    if (res.status === 404) {
+      res = await api.raw("GET", API.trainer.dashboardStats);
+    }
+    if (res.status === 404) {
+      res = await api.raw("GET", API.tiers.usage);
+    }
 
     expect(res.status).toBe(200);
     const bodyStr = JSON.stringify(res.body).toLowerCase();

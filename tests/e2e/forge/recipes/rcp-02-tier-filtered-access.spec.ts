@@ -37,28 +37,17 @@ test.describe("RCP-02: Tier-Filtered Recipe Access", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          features: { recipeCount: TIER_LIMITS.starter.recipes },
+          success: true,
           tier: "starter",
+          status: "active",
+          features: { recipeCount: TIER_LIMITS.starter.recipes },
+          limits: {},
         }),
       });
     });
 
     await page.goto(ROUTES.recipes, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
-
-    // Intercept the actual request to assert the mock was called
-    let intercepted = false;
-    await page.route("**/api/entitlements", async (route) => {
-      intercepted = true;
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          features: { recipeCount: TIER_LIMITS.starter.recipes },
-          tier: "starter",
-        }),
-      });
-    });
 
     // Make a direct API call to the mocked endpoint via page context
     const result = await page.evaluate(async () => {
@@ -82,11 +71,16 @@ test.describe("RCP-02: Tier-Filtered Recipe Access", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          features: { recipeCount: TIER_LIMITS.professional.recipes },
+          success: true,
           tier: "professional",
+          status: "active",
+          features: { recipeCount: TIER_LIMITS.professional.recipes },
+          limits: {},
         }),
       });
     });
+
+    await page.goto(ROUTES.recipes, { waitUntil: "domcontentloaded" });
 
     const result = await page.evaluate(async () => {
       const res = await fetch("/api/entitlements");
@@ -108,11 +102,16 @@ test.describe("RCP-02: Tier-Filtered Recipe Access", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          features: { recipeCount: TIER_LIMITS.enterprise.recipes },
+          success: true,
           tier: "enterprise",
+          status: "active",
+          features: { recipeCount: TIER_LIMITS.enterprise.recipes },
+          limits: {},
         }),
       });
     });
+
+    await page.goto(ROUTES.recipes, { waitUntil: "domcontentloaded" });
 
     const result = await page.evaluate(async () => {
       const res = await fetch("/api/entitlements");
@@ -134,8 +133,11 @@ test.describe("RCP-02: Tier-Filtered Recipe Access", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          features: { recipeCount: TIER_LIMITS.starter.recipes },
+          success: true,
           tier: "starter",
+          status: "active",
+          features: { recipeCount: TIER_LIMITS.starter.recipes },
+          limits: {},
         }),
       });
     });
@@ -155,8 +157,11 @@ test.describe("RCP-02: Tier-Filtered Recipe Access", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          features: { recipeCount: TIER_LIMITS.professional.recipes },
+          success: true,
           tier: "professional",
+          status: "active",
+          features: { recipeCount: TIER_LIMITS.professional.recipes },
+          limits: {},
         }),
       });
     });
@@ -176,7 +181,7 @@ test.describe("RCP-02: Tier-Filtered Recipe Access", () => {
     const body = res.body as {
       recipes?: unknown[];
       data?: unknown[];
-      total?: number;
+      total?: number | string;
     };
     const recipes = Array.isArray(res.body)
       ? (res.body as unknown[])

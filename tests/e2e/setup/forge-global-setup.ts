@@ -93,6 +93,9 @@ async function forgeGlobalSetup(config: FullConfig) {
 
       await page.waitForURL(account.expectUrl, { timeout: 15_000 });
 
+      // Wait for cookies to be fully set (JWT auth cookie)
+      await page.waitForTimeout(2_000);
+
       await context.storageState({ path: account.file });
       console.log(`  ✓ ${account.role} — state saved`);
     } catch (err) {

@@ -11,15 +11,35 @@ import { test, expect } from "@playwright/test";
 import { ROUTES, API, TIER_LIMITS, TIMEOUTS } from "../../helpers/constants.js";
 import { ForgeApiClient } from "../../helpers/api-client.js";
 
+/**
+ * Mock entitlements matching the real /api/entitlements response shape.
+ * Enterprise uses -1 for unlimited customers and meal plans.
+ */
 const ENTERPRISE_ENTITLEMENTS = {
+  success: true,
   tier: "enterprise",
+  status: "active",
   features: {
     recipeCount: TIER_LIMITS.enterprise.recipes,
-    maxCustomers: TIER_LIMITS.enterprise.customers, // -1 = unlimited
-    maxMealPlans: TIER_LIMITS.enterprise.mealPlans, // -1 = unlimited
-    analytics: true,
-    branding: true,
-    whiteLabel: true,
+    mealTypeCount: 15,
+    canUploadLogo: true,
+    canCustomizeColors: true,
+    canEnableWhiteLabel: true,
+    canSetCustomDomain: true,
+  },
+  currentPeriodEnd: {},
+  cancelAtPeriodEnd: false,
+  limits: {
+    customers: {
+      max: TIER_LIMITS.enterprise.customers, // -1 = unlimited
+      used: 10,
+      percentage: 0,
+    },
+    mealPlans: {
+      max: TIER_LIMITS.enterprise.mealPlans, // -1 = unlimited
+      used: 50,
+      percentage: 0,
+    },
   },
 };
 
@@ -61,6 +81,7 @@ test.describe("TIER-03 — Enterprise Tier Limits", () => {
     await page.waitForTimeout(2_000);
 
     const pageText = await page.textContent("body");
+    // Dashboard may render "Unlimited", the infinity symbol, or show -1
     expect(pageText).toMatch(/unlimited|∞|-1/i);
   });
 
@@ -83,11 +104,12 @@ test.describe("TIER-03 — Enterprise Tier Limits", () => {
 
     expect(capturedBody).not.toBeNull();
     expect(
-      (capturedBody as typeof ENTERPRISE_ENTITLEMENTS).features.whiteLabel,
+      (capturedBody as typeof ENTERPRISE_ENTITLEMENTS).features
+        .canEnableWhiteLabel,
     ).toBe(true);
   });
 
-  test("enterprise entitlements include all professional features (analytics + branding)", async ({
+  test("enterprise entitlements include all professional features (logo + colors)", async ({
     page,
   }) => {
     let capturedBody: unknown = null;
@@ -106,8 +128,8 @@ test.describe("TIER-03 — Enterprise Tier Limits", () => {
 
     expect(capturedBody).not.toBeNull();
     const ent = capturedBody as typeof ENTERPRISE_ENTITLEMENTS;
-    expect(ent.features.analytics).toBe(true);
-    expect(ent.features.branding).toBe(true);
+    expect(ent.features.canUploadLogo).toBe(true);
+    expect(ent.features.canCustomizeColors).toBe(true);
   });
 
   // ---------------------------------------------------------------------------
@@ -125,21 +147,21 @@ test.describe("TIER-03 — Enterprise Tier Limits", () => {
     expect(body.features).not.toBeNull();
   });
 
-  test("API GET /api/v1/tiers/usage returns numeric or -1 max values", async () => {
+  test("API GET /api/entitlements returns limits with numeric max values", async () => {
     const api = await ForgeApiClient.loginAs("trainer");
-    const res = await api.raw("GET", API.tiers.usage);
+    const res = await api.raw("GET", API.entitlements);
 
     expect(res.status).toBe(200);
     const body = res.body as Record<string, unknown>;
     const bodyStr = JSON.stringify(body);
 
-    // Usage must contain numeric values (including -1 for unlimited)
+    // Limits must contain numeric values (including -1 for unlimited)
     expect(bodyStr).toMatch(/\d+|-1/);
   });
 
-  test("API /api/v1/tiers/usage usage percentage fields handle -1 unlimited without error", async () => {
+  test("API /api/entitlements limits do not contain division-by-zero artifacts", async () => {
     const api = await ForgeApiClient.loginAs("trainer");
-    const res = await api.raw("GET", API.tiers.usage);
+    const res = await api.raw("GET", API.entitlements);
 
     expect(res.status).toBe(200);
     const body = res.body as Record<string, unknown>;
@@ -155,14 +177,13 @@ test.describe("TIER-03 — Enterprise Tier Limits", () => {
     const res = await api.raw("GET", API.tiers.publicPricing);
 
     expect(res.status).toBe(200);
-    const tiers = res.body as Array<Record<string, unknown>>;
+    const body = res.body as Record<string, unknown>;
 
-    const enterprise = tiers.find(
-      (t) =>
-        String(t.name || t.tier || t.tierName || "").toLowerCase() ===
-        "enterprise",
-    );
-    expect(enterprise).not.toBeUndefined();
+    // Response is { tiers: { enterprise: { amount: 39900, ... } } }
+    const tiers = body.tiers as Record<string, Record<string, unknown>>;
+    const enterprise = tiers.enterprise;
+    expect(enterprise).toBeTruthy();
+
     const bodyStr = JSON.stringify(enterprise);
     expect(bodyStr).toContain("399");
   });

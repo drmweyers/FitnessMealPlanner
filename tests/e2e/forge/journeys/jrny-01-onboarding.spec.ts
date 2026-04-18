@@ -60,9 +60,23 @@ test.describe("JRNY-01 — Trainer-Customer Onboarding Journey", () => {
   });
 
   test("trainer dashboard loads and shows client count", async ({ page }) => {
+    test.setTimeout(45_000);
     await loginAsTrainer(page);
-    await page.goto(ROUTES.trainerDashboard, { waitUntil: "domcontentloaded" });
+
+    // Navigate to dashboard — SPA may already be on it after login redirect
+    const currentUrl = page.url();
+    if (!currentUrl.includes("/trainer")) {
+      await page.goto(ROUTES.trainerDashboard, {
+        waitUntil: "domcontentloaded",
+      });
+    }
+
+    // Wait for page content to load
+    await page.waitForTimeout(3_000);
+
+    // Verify we're not on login page
     await expect(page).not.toHaveURL(/\/login/);
+
     // Dashboard should have content
     const bodyText = await page.textContent("body");
     expect(bodyText!.length).toBeGreaterThan(100);
@@ -103,16 +117,31 @@ test.describe("JRNY-01 — Trainer-Customer Onboarding Journey", () => {
   test("full journey: login as trainer then switch to customer view", async ({
     page,
   }) => {
+    test.setTimeout(45_000);
+
     // Trainer view
     await loginAsTrainer(page);
+
+    // Navigate to customers page — wait for SPA to settle
     await page.goto(ROUTES.trainerCustomers, { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(2_000);
     await expect(page).not.toHaveURL(/\/login/);
 
-    // Switch to customer
+    // Switch to customer — need to logout first or clear cookies
+    await page.context().clearCookies();
+    await page.evaluate(() => localStorage.clear());
+
     await loginAsCustomer(page);
-    await page.goto(ROUTES.customerDashboard, {
-      waitUntil: "domcontentloaded",
-    });
+
+    // Navigate to customer dashboard
+    const currentUrl = page.url();
+    if (!currentUrl.includes("/customer")) {
+      await page.goto(ROUTES.customerDashboard, {
+        waitUntil: "domcontentloaded",
+      });
+    }
+
+    await page.waitForTimeout(2_000);
     await expect(page).not.toHaveURL(/\/login/);
   });
 });

@@ -52,10 +52,19 @@ test.describe("JRNY-03 — Trainer Progress Monitoring Journey", () => {
   });
 
   test("step 3: customer progress page shows data", async ({ page }) => {
+    test.setTimeout(45_000);
     await loginAsCustomer(page);
+
+    // Navigate to progress page
     await page.goto(ROUTES.customerProgress, { waitUntil: "domcontentloaded" });
+
+    // Wait for content to load — SPA may take a moment
+    await page.waitForTimeout(3_000);
+
+    // Verify we're not redirected to login
     await expect(page).not.toHaveURL(/\/login/);
-    // Page should have weight-related content
+
+    // Page should have content (progress data, charts, or measurement entries)
     const body = await page.textContent("body");
     expect(body!.length).toBeGreaterThan(50);
   });
