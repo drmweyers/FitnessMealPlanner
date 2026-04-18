@@ -119,7 +119,7 @@ export const API = {
     send: "/api/invitations/send",
     accept: "/api/invitations/accept",
     validate: (token: string) => `/api/invitations/validate/${token}`,
-    list: "/api/invitations/list",
+    list: "/api/invitations",
   },
 
   // Trainer

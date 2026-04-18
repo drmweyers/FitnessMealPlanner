@@ -13,32 +13,41 @@ import { ForgeApiClient } from "../../helpers/api-client.js";
 import { loadSeedState } from "../../helpers/auth-helpers.js";
 
 test.describe("SHARE-01 — Meal Plan Sharing", () => {
+  test.describe.configure({ mode: "serial" });
+
   let trainerApi: ForgeApiClient;
   let activeShareToken: string;
 
   test.beforeAll(async () => {
     trainerApi = await ForgeApiClient.loginAs("trainer");
 
-    // Always create a fresh share token since seed-state shareToken may be empty
     const seedState = loadSeedState();
-    const planId = seedState.planIds.balanced;
 
-    try {
-      const res = await trainerApi.raw("POST", API.mealPlans.share(planId), {
-        mealPlanId: planId,
-      });
+    // Try each plan until we get a share token
+    const planIds = [
+      seedState.planIds.balanced,
+      seedState.planIds.weightLoss,
+      seedState.planIds.muscleGain,
+    ];
 
-      if ([200, 201].includes(res.status)) {
-        const body = res.body as Record<string, unknown>;
-        activeShareToken =
-          (body?.shareToken as string) || (body?.token as string) || "";
+    for (const planId of planIds) {
+      if (activeShareToken) break;
+      try {
+        const res = await trainerApi.raw("POST", API.mealPlans.share(planId), {
+          mealPlanId: planId,
+        });
+        if (res.status >= 200 && res.status < 300) {
+          const body = res.body as Record<string, unknown>;
+          activeShareToken =
+            (body?.shareToken as string) || (body?.token as string) || "";
+        }
+      } catch {
+        // Try next plan
       }
-    } catch {
-      // Share creation may fail — tests that need it will skip
     }
 
-    // Fallback to seed-state token if creation failed
-    if (!activeShareToken) {
+    // Fallback to seed-state token
+    if (!activeShareToken && seedState.shareToken) {
       activeShareToken = seedState.shareToken;
     }
   });
@@ -63,6 +72,8 @@ test.describe("SHARE-01 — Meal Plan Sharing", () => {
     expect(token).toBeTruthy();
     expect(typeof token).toBe("string");
     expect(token!.length).toBeGreaterThan(0);
+    // Update activeShareToken for downstream tests
+    activeShareToken = token!;
   });
 
   // ---------------------------------------------------------------------------

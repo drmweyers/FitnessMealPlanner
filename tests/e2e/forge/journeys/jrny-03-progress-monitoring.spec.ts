@@ -37,15 +37,16 @@ test.describe("JRNY-03 — Trainer Progress Monitoring Journey", () => {
       bodyFatPercentage: 20.0,
       waistCm: 84,
     });
-    expect(res).toHaveProperty("id");
-    createdMeasurementId = res.id;
+    createdMeasurementId = res.id || res.data?.id;
+    expect(createdMeasurementId).toBeTruthy();
   });
 
   test("step 2: customer sees measurement in their list", async () => {
     const res = await customerApi.get<any>(API.progress.measurements);
-    const measurements = Array.isArray(res)
-      ? res
-      : res.measurements || res.data || [];
+    const rawData = Array.isArray(res) ? res : res.data;
+    const measurements = Array.isArray(rawData)
+      ? rawData
+      : rawData?.measurements || [];
     expect(measurements.length).toBeGreaterThan(0);
     const found = measurements.some((m: any) => m.id === createdMeasurementId);
     expect(found).toBe(true);

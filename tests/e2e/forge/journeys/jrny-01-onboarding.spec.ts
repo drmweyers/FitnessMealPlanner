@@ -23,19 +23,18 @@ test.describe("JRNY-01 — Trainer-Customer Onboarding Journey", () => {
   test("trainer can send invitation to new email", async () => {
     const testEmail = `forge-invite-${Date.now()}@test.evofitmeals.com`;
     const res = await trainerApi.raw("POST", API.invitations.send, {
-      email: testEmail,
+      customerEmail: testEmail,
     });
-    // 201 = created, 200 = success variant
-    expect([200, 201]).toContain(res.status);
+    // 200 = success, 201 = created, 207 = created but email failed to send
+    expect([200, 201, 207]).toContain(res.status);
   });
 
   test("invitation appears in trainer invite list", async () => {
     const res = await trainerApi.get<any>(API.invitations.list);
     const invites = Array.isArray(res)
       ? res
-      : res.invitations || res.data || [];
+      : res.data?.invitations || res.invitations || res.data || [];
     expect(invites.length).toBeGreaterThan(0);
-    // Most recent invite should have our test email pattern
     const hasForgeInvite = invites.some(
       (i: any) =>
         i.customerEmail?.includes("forge-invite") ||

@@ -71,8 +71,8 @@ test.describe("JRNY-02 — Meal Plan to Grocery List Pipeline", () => {
       notes: "FORGE journey test",
       tags: ["forge-qa"],
     });
-    expect(res).toHaveProperty("id");
-    createdPlanId = res.id;
+    createdPlanId = res.id || res.mealPlan?.id || res.plan?.id;
+    expect(createdPlanId).toBeTruthy();
   });
 
   test("step 2: trainer assigns plan to customer", async () => {

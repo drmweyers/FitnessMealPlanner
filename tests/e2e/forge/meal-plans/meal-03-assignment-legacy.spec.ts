@@ -22,6 +22,7 @@ let seedState: ReturnType<typeof loadSeedState>;
 let createdAssignmentId: string | null = null;
 
 test.describe("MEAL-03 — Legacy Meal Plan Assignment", () => {
+  test.describe.configure({ mode: "serial" });
   test.beforeAll(async () => {
     seedState = loadSeedState();
     trainerClient = await ForgeApiClient.loginAs("trainer");

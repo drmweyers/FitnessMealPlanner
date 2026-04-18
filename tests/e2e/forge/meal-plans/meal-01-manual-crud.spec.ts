@@ -14,29 +14,11 @@ import { API, ROUTES, TIMEOUTS } from "../../helpers/constants.js";
 
 const PLAN_NAME = `FORGE-TEST-Manual-${Date.now()}`;
 
-let trainerClient: ForgeApiClient;
-let createdPlanId: string;
+// ---------------------------------------------------------------------------
+// UI — Page structure (parallel, independent of API tests)
+// ---------------------------------------------------------------------------
 
-test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
-  test.beforeAll(async () => {
-    trainerClient = await ForgeApiClient.loginAs("trainer");
-  });
-
-  test.afterAll(async () => {
-    // Cleanup — delete the plan created during this run if it still exists
-    if (createdPlanId) {
-      try {
-        await trainerClient.delete(API.trainer.mealPlan(createdPlanId));
-      } catch {
-        // Best-effort cleanup
-      }
-    }
-  });
-
-  // ---------------------------------------------------------------------------
-  // UI — Page structure
-  // ---------------------------------------------------------------------------
-
+test.describe("MEAL-01 — Manual Meal Plan CRUD — UI", () => {
   test("navigate to /trainer/manual-meal-plan — page loads", async ({
     page,
   }) => {
@@ -51,7 +33,6 @@ test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
     await page.goto(ROUTES.manualMealPlan, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
 
-    // Broad selector: any text input, textarea, or named input on the form
     const nameInput = page.locator(
       'input[name="planName"], input[placeholder*="name" i], input[placeholder*="plan" i], ' +
         'input[id*="name" i], input[id*="plan" i], ' +
@@ -66,7 +47,6 @@ test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
     await page.goto(ROUTES.manualMealPlan, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
 
-    // Look for any numeric input or input with calorie/macro-related names
     const macroInput = page.locator(
       'input[name*="calorie" i], input[placeholder*="calorie" i], ' +
         'input[name*="protein" i], input[name*="carb" i], input[name*="fat" i], ' +
@@ -86,10 +66,31 @@ test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
     expect(page.url()).not.toMatch(/\/login/);
     await expect(page.locator("body")).toBeVisible();
   });
+});
 
-  // ---------------------------------------------------------------------------
-  // API — CRUD operations
-  // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// API — CRUD operations (serial, each step depends on the previous)
+// ---------------------------------------------------------------------------
+
+test.describe("MEAL-01 — Manual Meal Plan CRUD — API", () => {
+  test.describe.configure({ mode: "serial" });
+
+  let trainerClient: ForgeApiClient;
+  let createdPlanId: string;
+
+  test.beforeAll(async () => {
+    trainerClient = await ForgeApiClient.loginAs("trainer");
+  });
+
+  test.afterAll(async () => {
+    if (createdPlanId) {
+      try {
+        await trainerClient.delete(API.trainer.mealPlan(createdPlanId));
+      } catch {
+        // Best-effort cleanup
+      }
+    }
+  });
 
   test("API: POST /api/trainer/meal-plans creates a plan — returns 201 with id", async () => {
     const result = await trainerClient.raw("POST", API.trainer.mealPlans, {
@@ -123,7 +124,6 @@ test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
     const body = result.body as Record<string, unknown>;
     expect(body).toBeDefined();
 
-    // Extract the created plan ID — may be at top level or nested
     createdPlanId =
       (body?.id as string) ||
       ((body?.plan as Record<string, unknown>)?.id as string) ||
@@ -140,7 +140,6 @@ test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
     expect(result.status).toBe(200);
 
     const rawBody = result.body as Record<string, unknown>;
-    // Server returns { mealPlans: [...], total: N } — extract the array
     const plans: Record<string, unknown>[] = Array.isArray(rawBody)
       ? (rawBody as Record<string, unknown>[])
       : (rawBody.mealPlans as Record<string, unknown>[]) ||
@@ -166,13 +165,17 @@ test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
 
     expect(result.status).toBe(200);
 
-    const body = result.body as Record<string, unknown>;
-    expect(body.id || body.planId).toBeTruthy();
+    const rawBody = result.body as Record<string, unknown>;
+    const body =
+      (rawBody.mealPlan as Record<string, unknown>) ||
+      (rawBody.plan as Record<string, unknown>) ||
+      rawBody;
+    expect(body.id || body.planId || rawBody.id).toBeTruthy();
 
     const planName =
       (body.planName as string) ||
       (body.name as string) ||
-      ((body.plan as Record<string, unknown>)?.planName as string);
+      (rawBody.planName as string);
     expect(planName).toBe(PLAN_NAME);
   });
 
@@ -197,11 +200,9 @@ test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
       (body.name as string) ||
       ((body.plan as Record<string, unknown>)?.planName as string);
 
-    // Either the response reflects the update OR a subsequent GET does
     if (returnedName) {
       expect(returnedName).toBe(updatedName);
     } else {
-      // Verify via GET
       const getResult = await trainerClient.raw(
         "GET",
         API.trainer.mealPlan(createdPlanId),
@@ -233,7 +234,6 @@ test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
     expect(result.status).toBe(200);
 
     const rawBody = result.body as Record<string, unknown>;
-    // Server returns { mealPlans: [...], total: N }
     const plans: Record<string, unknown>[] = Array.isArray(rawBody)
       ? (rawBody as Record<string, unknown>[])
       : (rawBody.mealPlans as Record<string, unknown>[]) ||
@@ -247,7 +247,6 @@ test.describe("MEAL-01 — Manual Meal Plan CRUD", () => {
     );
     expect(stillPresent).toBe(false);
 
-    // Mark as cleaned so afterAll does not double-delete
     createdPlanId = "";
   });
 });

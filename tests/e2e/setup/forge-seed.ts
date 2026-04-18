@@ -183,7 +183,12 @@ async function seed() {
 
   const trainerProfilePayload = {
     bio: "FORGE QA trainer profile — 8+ years coaching busy professionals on sustainable fat loss and lean-mass nutrition.",
-    specializations: ["Weight Loss", "Muscle Gain", "Sports Nutrition", "Habit Coaching"],
+    specializations: [
+      "Weight Loss",
+      "Muscle Gain",
+      "Sports Nutrition",
+      "Habit Coaching",
+    ],
     certifications: ["NASM-CPT", "Precision Nutrition L1", "ACE-CPT"],
     yearsExperience: 8,
   };
@@ -454,7 +459,9 @@ async function seed() {
       const shared = await trainerClient.post<{
         shareToken?: string;
         token?: string;
-      }>(API.mealPlans.share(planIds.balanced));
+      }>(API.mealPlans.share(planIds.balanced), {
+        mealPlanId: planIds.balanced,
+      });
       shareToken = shared.shareToken || shared.token || "";
       console.log(`  ✓ Share token: ${shareToken}`);
     } catch (e: any) {
