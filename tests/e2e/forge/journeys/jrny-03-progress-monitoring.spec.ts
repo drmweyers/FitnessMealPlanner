@@ -12,6 +12,8 @@ import {
 import { API, BASE_URL, ROUTES } from "../../helpers/constants.js";
 
 test.describe("JRNY-03 — Trainer Progress Monitoring Journey", () => {
+  test.describe.configure({ mode: "serial" });
+
   let trainerApi: ForgeApiClient;
   let customerApi: ForgeApiClient;
   let createdMeasurementId: string | null = null;
@@ -30,14 +32,20 @@ test.describe("JRNY-03 — Trainer Progress Monitoring Journey", () => {
   });
 
   test("step 1: customer logs a new weight measurement", async () => {
-    const today = new Date().toISOString().split("T")[0];
-    const res = await customerApi.post<any>(API.progress.measurements, {
-      measurementDate: today,
+    // Server requires ISO 8601 datetime, not just a date
+    const now = new Date().toISOString();
+    const res = await customerApi.raw("POST", API.progress.measurements, {
+      measurementDate: now,
       weightKg: 80.5,
       bodyFatPercentage: 20.0,
       waistCm: 84,
     });
-    createdMeasurementId = res.id || res.data?.id;
+
+    expect([200, 201]).toContain(res.status);
+    const body = res.body as Record<string, unknown>;
+    // Response is { status, data: { id, ... } }
+    const data = (body.data as Record<string, unknown>) || body;
+    createdMeasurementId = (data.id as string) || (body.id as string) || null;
     expect(createdMeasurementId).toBeTruthy();
   });
 

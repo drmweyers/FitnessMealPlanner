@@ -173,39 +173,25 @@ test.describe("AUTH-01 — Login Flows", () => {
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/trainer/, { timeout: TIMEOUTS.navigation });
 
-    // Try multiple strategies to find and click logout
+    // The sidebar has a "Sign Out" button. Use getByText for exact match.
+    const signOutBtn = page.getByText("Sign Out", { exact: true });
+    const signOutVisible = await signOutBtn
+      .first()
+      .isVisible({ timeout: 5_000 })
+      .catch(() => false);
 
-    // Strategy 1: Look for a visible logout button/link directly
-    const directLogout = page.locator(
-      'button:has-text("Logout"), button:has-text("Log Out"), button:has-text("Sign Out"), a:has-text("Logout"), a:has-text("Log Out"), a:has-text("Sign Out"), [data-testid="logout"]',
-    );
-    if (
-      (await directLogout.count()) > 0 &&
-      (await directLogout
-        .first()
-        .isVisible()
-        .catch(() => false))
-    ) {
-      await directLogout.first().click();
+    if (signOutVisible) {
+      await signOutBtn.first().click();
     } else {
-      // Strategy 2: Open user/avatar menu first
-      const menuBtn = page.locator(
-        '[data-testid="user-menu"], button[class*="avatar"], [class*="user-menu"], [aria-label="User menu"], [aria-label="Account"], button:has(svg), .avatar, img[alt*="avatar"], img[alt*="profile"]',
-      );
-      if ((await menuBtn.count()) > 0) {
-        await menuBtn.first().click();
-        await page.waitForTimeout(1_000);
-      }
-
-      // Strategy 3: Try dropdown menu items
+      // Fallback: try other logout patterns
       const logoutBtn = page.locator(
-        'button:has-text("Logout"), button:has-text("Log Out"), button:has-text("Sign Out"), a:has-text("Logout"), a:has-text("Log Out"), a:has-text("Sign Out"), [data-testid="logout"], [role="menuitem"]:has-text("Log")',
+        'button:has-text("Logout"), button:has-text("Log Out"), ' +
+          'a:has-text("Logout"), a:has-text("Log Out"), [data-testid="logout"]',
       );
-
       if ((await logoutBtn.count()) > 0) {
         await logoutBtn.first().click();
       } else {
-        // Strategy 4: Call logout API directly and navigate
+        // Last resort: clear session manually
         await page.evaluate(() => {
           localStorage.clear();
           sessionStorage.clear();

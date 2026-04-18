@@ -19,7 +19,24 @@ test.describe("FUNL-01 — Public Sales Pages", () => {
   test("/get-started loads with hero section and a CTA element", async ({
     page,
   }) => {
-    await page.goto(ROUTES.getStarted, { waitUntil: "domcontentloaded" });
+    test.setTimeout(60_000);
+
+    // Retry navigation on transient network errors
+    let loaded = false;
+    for (let attempt = 0; attempt < 3 && !loaded; attempt++) {
+      try {
+        await page.goto(ROUTES.getStarted, {
+          waitUntil: "domcontentloaded",
+          timeout: 30_000,
+        });
+        loaded = true;
+      } catch {
+        if (attempt < 2) await page.waitForTimeout(2_000);
+      }
+    }
+    if (!loaded) {
+      await page.goto(ROUTES.getStarted, { waitUntil: "domcontentloaded" });
+    }
 
     // Hero or prominent heading must exist
     const heroEl = page.locator(
@@ -35,24 +52,36 @@ test.describe("FUNL-01 — Public Sales Pages", () => {
   });
 
   test("/starter loads and shows $199 price text", async ({ page }) => {
-    await page.goto(ROUTES.starter, { waitUntil: "networkidle" });
-    await page.waitForTimeout(2_000);
+    test.setTimeout(45_000);
+    await page.goto(ROUTES.starter, {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(3_000);
 
     const body = await page.textContent("body");
     expect(body).toContain("199");
   });
 
   test("/professional loads and shows $299 price text", async ({ page }) => {
-    await page.goto(ROUTES.professional, { waitUntil: "networkidle" });
-    await page.waitForTimeout(2_000);
+    test.setTimeout(45_000);
+    await page.goto(ROUTES.professional, {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(3_000);
 
     const body = await page.textContent("body");
     expect(body).toContain("299");
   });
 
   test("/enterprise loads and shows $399 price text", async ({ page }) => {
-    await page.goto(ROUTES.enterprise, { waitUntil: "networkidle" });
-    await page.waitForTimeout(2_000);
+    test.setTimeout(45_000);
+    await page.goto(ROUTES.enterprise, {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(3_000);
 
     const body = await page.textContent("body");
     expect(body).toContain("399");

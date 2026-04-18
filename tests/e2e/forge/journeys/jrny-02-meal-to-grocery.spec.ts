@@ -8,6 +8,8 @@ import { loginAsCustomer, loadSeedState } from "../../helpers/auth-helpers.js";
 import { API, BASE_URL } from "../../helpers/constants.js";
 
 test.describe("JRNY-02 — Meal Plan to Grocery List Pipeline", () => {
+  test.describe.configure({ mode: "serial" });
+
   let trainerApi: ForgeApiClient;
   let customerApi: ForgeApiClient;
   let createdPlanId: string | null = null;
@@ -71,7 +73,7 @@ test.describe("JRNY-02 — Meal Plan to Grocery List Pipeline", () => {
       notes: "FORGE journey test",
       tags: ["forge-qa"],
     });
-    createdPlanId = res.id || res.mealPlan?.id || res.plan?.id;
+    createdPlanId = res.id || res.mealPlan?.id || res.plan?.id || null;
     expect(createdPlanId).toBeTruthy();
   });
 
@@ -109,12 +111,12 @@ test.describe("JRNY-02 — Meal Plan to Grocery List Pipeline", () => {
     const items = [
       {
         name: "Chicken Breast",
-        category: "Protein",
-        quantity: "2",
+        category: "meat",
+        quantity: 2,
         unit: "lbs",
       },
-      { name: "Brown Rice", category: "Grains", quantity: "1", unit: "bag" },
-      { name: "Salmon Fillet", category: "Protein", quantity: "1", unit: "lb" },
+      { name: "Brown Rice", category: "pantry", quantity: 1, unit: "pcs" },
+      { name: "Salmon Fillet", category: "meat", quantity: 1, unit: "lbs" },
     ];
     for (const item of items) {
       const res = await customerApi.raw(
