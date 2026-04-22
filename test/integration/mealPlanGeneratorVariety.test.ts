@@ -84,13 +84,13 @@ describe("Meal plan generator — dedup + variety (Phase B+C regression)", () =>
       }
     }
 
-    // 40% of 9 meals = 3.6, so cap is 4 occurrences (inclusive).
-    // Variety enforcement makes it very unlikely any tag exceeds 4.
+    // 40% of 9 meals = 3.6 → cap is 4 occurrences (inclusive). In a balanced
+    // plan with no narrow filters, variety enforcement should hold strictly.
     const maxCount = Math.max(0, ...Array.from(tagCounts.values()));
     expect(
       maxCount,
       `Variety violated: top tag appears ${maxCount}/9 times. Counts: ${JSON.stringify(Object.fromEntries(tagCounts))}`,
-    ).toBeLessThanOrEqual(5);
+    ).toBeLessThanOrEqual(4);
   });
 
   it("muscle_gain with high protein constraint still has varied recipes", async () => {
@@ -103,11 +103,16 @@ describe("Meal plan generator — dedup + variety (Phase B+C regression)", () =>
       minProtein: 25,
     });
     const meals: any[] = data?.mealPlan?.meals || [];
-    if (meals.length === 0) {
-      console.warn("no meals — dev DB may lack high-protein recipes, skipping");
-      return;
-    }
-    expect(meals.length).toBe(9);
+    // 2026-04-22 QA tightening: was a silent `return` if pool empty, which
+    // let the test vacuously pass on an under-seeded DB. Now fails loudly
+    // with a fixable message so CI catches it.
+    expect(
+      meals.length,
+      `DB under-seeded: no high-protein recipes matched minProtein:25. ` +
+        `Run \`docker exec fitnessmealplanner-postgres psql -U postgres -d fitmeal ` +
+        `-c "SELECT COUNT(*) FROM recipes WHERE is_approved=true AND protein_grams::numeric >= 25"\` ` +
+        `to check. Seed more recipes if count is 0.`,
+    ).toBe(9);
     const uniqueRecipes = new Set(meals.map((m: any) => m.recipe.id)).size;
     // Before Phase B+C, this test returned 9 identical ribeye meals.
     // Now we expect at least 4 unique recipes even under a tight filter.
@@ -131,14 +136,16 @@ describe("Meal plan generator — dedup + variety (Phase B+C regression)", () =>
       maxIngredients: 3,
     });
     const meals: any[] = data?.mealPlan?.meals || [];
-    if (meals.length === 0) {
-      // Acceptable: dev DB may not have enough ≤3-ingredient recipes
-      console.warn(
-        "no meals for maxIngredients=3 — dev DB too small, skipping",
-      );
-      return;
-    }
-    expect(meals.length).toBe(9);
+    // With the 2026-04-22 soft-filter fix, the generator falls back to the
+    // wider 2000-recipe pool when < totalMeals match maxIngredients≤3. So
+    // meals.length === 0 would indicate the generator is broken OR the DB
+    // has fewer than 9 approved recipes total — either way we want a loud
+    // failure, not a silent skip.
+    expect(
+      meals.length,
+      `maxIngredients=3 returned 0 meals — soft-filter fallback is broken ` +
+        `or DB has <9 approved recipes. Check generator log for pool size.`,
+    ).toBe(9);
     const uniqueRecipes = new Set(meals.map((m: any) => m.recipe.id)).size;
     // Prod returned 1 unique recipe x9 before the fix. Even with a tight
     // filter, generator must surface at least 5 distinct recipes.
@@ -159,11 +166,11 @@ describe("Meal plan generator — dedup + variety (Phase B+C regression)", () =>
       maxCalories: 800,
     });
     const meals: any[] = data?.mealPlan?.meals || [];
-    if (meals.length === 0) {
-      console.warn("no meals — dev DB lacks matching recipes, skipping");
-      return;
-    }
-    expect(meals.length).toBe(9);
+    expect(
+      meals.length,
+      `minProtein:30 maxCalories:800 returned 0 meals — DB under-seeded. ` +
+        `Expected ≥200 recipes matching those constraints (prod has ~1500).`,
+    ).toBe(9);
 
     const tagCounts = new Map<string, number>();
     for (const m of meals) {

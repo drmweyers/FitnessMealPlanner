@@ -68,6 +68,53 @@ recipeRouter.get("/personalized", requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/recipes/dietary-tags - Public content catalogue of every distinct
+// dietary tag on approved recipes. Normalized (lowercase + hyphenated),
+// deduped, and sorted. Powers the MealPlanGenerator dietary tag dropdown
+// so it never drifts from the real DB catalogue. In-memory cached for 5min.
+// NOTE: Must be registered BEFORE the "/:id" route to avoid param collision.
+let dietaryTagsCache: { tags: string[]; expiresAt: number } | null = null;
+const DIETARY_TAGS_TTL_MS = 5 * 60 * 1000;
+
+const normalizeTag = (raw: string): string =>
+  raw.toLowerCase().trim().replace(/\s+/g, "-");
+
+recipeRouter.get("/dietary-tags", async (_req, res) => {
+  try {
+    const now = Date.now();
+    if (dietaryTagsCache && dietaryTagsCache.expiresAt > now) {
+      res.set("Cache-Control", "public, max-age=300");
+      return res.json({ tags: dietaryTagsCache.tags });
+    }
+
+    const result = await db.execute(sql`
+      SELECT DISTINCT jsonb_array_elements_text(dietary_tags) AS tag
+      FROM recipes
+      WHERE is_approved = true
+        AND jsonb_typeof(dietary_tags) = 'array'
+    `);
+
+    const rawTags: string[] =
+      (result as any).rows?.map((r: any) => r.tag) || [];
+
+    const normalized = new Set<string>();
+    for (const raw of rawTags) {
+      if (typeof raw !== "string") continue;
+      const clean = normalizeTag(raw);
+      if (clean) normalized.add(clean);
+    }
+
+    const tags = Array.from(normalized).sort();
+
+    dietaryTagsCache = { tags, expiresAt: now + DIETARY_TAGS_TTL_MS };
+    res.set("Cache-Control", "public, max-age=300");
+    return res.json({ tags });
+  } catch (error) {
+    console.error("Failed to fetch dietary tags:", error);
+    return res.status(500).json({ error: "Failed to fetch dietary tags" });
+  }
+});
+
 // GET /api/recipes/:id - Fetch a single public recipe by ID
 // Story 2.14: Apply tier filtering - trainers see only their tier's recipes
 recipeRouter.get(

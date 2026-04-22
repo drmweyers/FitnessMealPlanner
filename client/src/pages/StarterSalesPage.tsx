@@ -533,7 +533,7 @@ export default function StarterSalesPage() {
               {
                 icon: Zap,
                 title: "AI Meal Plan Generation",
-                desc: "Generate complete, macro-calculated meal plans in under 2 minutes with our AI engine.",
+                desc: "Generate complete meal plans in under 2 minutes — calorie targets, dietary preferences, and fitness goals. (Advanced macro/nutrition filters: Professional tier.)",
               },
               {
                 icon: Users,
@@ -623,6 +623,7 @@ export default function StarterSalesPage() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {[
+                  "Advanced macro & nutrition filters",
                   "All specialized plan drops (12+/year)",
                   "Competition prep protocols",
                   "Advanced marketing playbooks",
