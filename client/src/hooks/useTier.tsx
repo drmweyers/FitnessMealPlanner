@@ -19,6 +19,7 @@ export interface TierInfo {
     canCustomizeColors: boolean;
     canEnableWhiteLabel: boolean;
     canSetCustomDomain: boolean;
+    advancedFilters: boolean;
   };
 }
 
@@ -30,6 +31,7 @@ const TIER_FEATURES: Record<TierLevel, TierInfo["features"]> = {
     canCustomizeColors: false,
     canEnableWhiteLabel: false,
     canSetCustomDomain: false,
+    advancedFilters: false,
   },
   professional: {
     recipeCount: 3000,
@@ -38,6 +40,7 @@ const TIER_FEATURES: Record<TierLevel, TierInfo["features"]> = {
     canCustomizeColors: true,
     canEnableWhiteLabel: false,
     canSetCustomDomain: false,
+    advancedFilters: true,
   },
   enterprise: {
     recipeCount: 6000,
@@ -46,6 +49,7 @@ const TIER_FEATURES: Record<TierLevel, TierInfo["features"]> = {
     canCustomizeColors: true,
     canEnableWhiteLabel: true,
     canSetCustomDomain: true,
+    advancedFilters: true,
   },
 };
 

@@ -26,6 +26,7 @@ const ENTERPRISE_ENTITLEMENTS = {
     canCustomizeColors: true,
     canEnableWhiteLabel: true,
     canSetCustomDomain: true,
+    advancedFilters: true,
   },
   currentPeriodEnd: {},
   cancelAtPeriodEnd: false,

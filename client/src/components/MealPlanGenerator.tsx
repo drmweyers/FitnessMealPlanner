@@ -156,7 +156,7 @@ export default function MealPlanGenerator({
   const [showMacroFilters, setShowMacroFilters] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [upgradeFeatureMessage, setUpgradeFeatureMessage] = useState("");
-  const { tier, canAccess } = useTier();
+  const { tier, canAccess, isStarter, isLoading: isTierLoading } = useTier();
 
   /**
    * Recipe Modal Handlers
@@ -1976,21 +1976,44 @@ export default function MealPlanGenerator({
                   />
                 </div>
 
-                {/* Advanced Recipe Filters (Collapsible) */}
+                {/* Advanced Recipe Filters (Collapsible)
+                  Tier-gated: Pro+ only. Starter trainers see the accordion
+                  button but clicking it surfaces the upgrade prompt instead
+                  of expanding the panel. Server-side also silent-strips the
+                  advanced fields in case a stale client gets through. */}
                 <div className="space-y-4">
                   <button
                     type="button"
-                    onClick={() => setShowMacroFilters(!showMacroFilters)}
-                    className="flex items-center gap-2 text-sm sm:text-base font-medium text-purple-700 hover:text-purple-900 transition-colors w-full"
+                    onClick={() => {
+                      if (isTierLoading) return; // wait for tier to resolve
+                      if (isStarter) {
+                        setUpgradeFeatureMessage(
+                          "Advanced Macro & Nutrition Filters are included in Professional and Enterprise. Upgrade to constrain recipes by protein, carbs, fat, calories, and prep time.",
+                        );
+                        setShowUpgradePrompt(true);
+                        return;
+                      }
+                      setShowMacroFilters(!showMacroFilters);
+                    }}
+                    className={`flex items-center gap-2 text-sm sm:text-base font-medium transition-colors w-full ${
+                      isStarter && !isTierLoading
+                        ? "text-gray-500 hover:text-purple-700"
+                        : "text-purple-700 hover:text-purple-900"
+                    }`}
                   >
                     <SlidersHorizontal className="h-4 w-4" />
                     Advanced Recipe Filters
+                    {isStarter && !isTierLoading && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-800">
+                        🔒 Pro
+                      </span>
+                    )}
                     <ChevronDown
-                      className={`h-4 w-4 ml-auto transition-transform ${showMacroFilters ? "rotate-180" : ""}`}
+                      className={`h-4 w-4 ml-auto transition-transform ${showMacroFilters && !isStarter ? "rotate-180" : ""}`}
                     />
                   </button>
 
-                  {showMacroFilters && (
+                  {showMacroFilters && !isStarter && (
                     <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-4 space-y-5">
                       <p className="text-xs text-gray-500">
                         Constrain recipe selection by nutrition and prep time.

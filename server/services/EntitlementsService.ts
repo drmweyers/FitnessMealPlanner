@@ -38,6 +38,7 @@ export interface TierFeatures {
   bulkOperations: boolean;
   customBranding: boolean;
   exportFormats: ("pdf" | "csv" | "excel")[];
+  advancedFilters: boolean;
 }
 
 export interface CheckAccessResult {
@@ -103,6 +104,7 @@ export class EntitlementsService {
         bulkOperations: false,
         customBranding: false,
         exportFormats: ["pdf"],
+        advancedFilters: false,
       },
       professional: {
         analytics: true,
@@ -110,6 +112,7 @@ export class EntitlementsService {
         bulkOperations: true,
         customBranding: true,
         exportFormats: ["pdf", "csv"],
+        advancedFilters: true,
       },
       enterprise: {
         analytics: true,
@@ -117,6 +120,7 @@ export class EntitlementsService {
         bulkOperations: true,
         customBranding: true,
         exportFormats: ["pdf", "csv", "excel"],
+        advancedFilters: true,
       },
     };
 

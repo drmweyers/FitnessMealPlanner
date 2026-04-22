@@ -26,6 +26,7 @@ const STARTER_ENTITLEMENTS = {
     canCustomizeColors: false,
     canEnableWhiteLabel: false,
     canSetCustomDomain: false,
+    advancedFilters: false,
   },
   currentPeriodEnd: {},
   cancelAtPeriodEnd: false,
