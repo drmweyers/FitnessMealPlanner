@@ -55,6 +55,7 @@ tierRouter.get("/public/pricing", async (req: Request, res: Response) => {
           features: [
             "9 customers",
             "50 meal plans",
+            "Basic meal plan filters",
             "PDF export only",
             "Basic support",
           ],
@@ -74,6 +75,7 @@ tierRouter.get("/public/pricing", async (req: Request, res: Response) => {
           features: [
             "20 customers",
             "200 meal plans",
+            "Advanced macro & nutrition filters",
             "CSV & PDF export",
             "Analytics dashboard",
             "Bulk operations",
@@ -95,6 +97,7 @@ tierRouter.get("/public/pricing", async (req: Request, res: Response) => {
           features: [
             "Unlimited customers",
             "Unlimited meal plans",
+            "Advanced macro & nutrition filters",
             "All export formats",
             "Advanced analytics",
             "API access",

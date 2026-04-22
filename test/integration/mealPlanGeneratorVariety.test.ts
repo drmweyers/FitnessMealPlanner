@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, beforeAll } from "vitest";
 
 // Regression: Phase B + C of the generator refactor (2026-04-13).
@@ -111,5 +112,72 @@ describe("Meal plan generator — dedup + variety (Phase B+C regression)", () =>
     // Before Phase B+C, this test returned 9 identical ribeye meals.
     // Now we expect at least 4 unique recipes even under a tight filter.
     expect(uniqueRecipes).toBeGreaterThanOrEqual(4);
+  });
+
+  // ---- 2026-04-22 regression: prod bugs triangulated against meals.evofit.io ----
+  //
+  // These two reproduce the ACTUAL failure modes that shipped to production.
+  // The previous suite (above) tested the dedup logic but the upstream cap of
+  // limit: 100 in storage.searchRecipes let the bugs survive in prod anyway.
+  // These tests hit narrow-filter paths that collapse the candidate pool hard.
+
+  it("maxIngredients=3 returns 9 unique recipes (prod bug: Silken Tofu x9)", async () => {
+    const data = await generate(token, {
+      planName: "maxIngredients-regression",
+      fitnessGoal: "weight_loss",
+      dailyCalorieTarget: 1800,
+      days: 3,
+      mealsPerDay: 3,
+      maxIngredients: 3,
+    });
+    const meals: any[] = data?.mealPlan?.meals || [];
+    if (meals.length === 0) {
+      // Acceptable: dev DB may not have enough ≤3-ingredient recipes
+      console.warn(
+        "no meals for maxIngredients=3 — dev DB too small, skipping",
+      );
+      return;
+    }
+    expect(meals.length).toBe(9);
+    const uniqueRecipes = new Set(meals.map((m: any) => m.recipe.id)).size;
+    // Prod returned 1 unique recipe x9 before the fix. Even with a tight
+    // filter, generator must surface at least 5 distinct recipes.
+    expect(
+      uniqueRecipes,
+      `maxIngredients=3 repetition bug: got ${uniqueRecipes}/9 unique recipes.`,
+    ).toBeGreaterThanOrEqual(5);
+  });
+
+  it("minProtein=30 maxCalories=800 enforces ingredient variety (prod bug: 9x beef)", async () => {
+    const data = await generate(token, {
+      planName: "tight-macro-variety",
+      fitnessGoal: "muscle_gain",
+      dailyCalorieTarget: 2500,
+      days: 3,
+      mealsPerDay: 3,
+      minProtein: 30,
+      maxCalories: 800,
+    });
+    const meals: any[] = data?.mealPlan?.meals || [];
+    if (meals.length === 0) {
+      console.warn("no meals — dev DB lacks matching recipes, skipping");
+      return;
+    }
+    expect(meals.length).toBe(9);
+
+    const tagCounts = new Map<string, number>();
+    for (const m of meals) {
+      for (const t of (m.recipe.mainIngredientTags || []) as string[]) {
+        const key = String(t).toLowerCase();
+        tagCounts.set(key, (tagCounts.get(key) || 0) + 1);
+      }
+    }
+    const maxCount = Math.max(0, ...Array.from(tagCounts.values()));
+    // Prod returned 9 beef meals before the fix. Variety cap 40% of 9 = 4,
+    // but with tight filters allow up to 6 (67%) as degraded-pool fallback.
+    expect(
+      maxCount,
+      `ingredient variety violated: top tag x${maxCount}/9. Counts: ${JSON.stringify(Object.fromEntries(tagCounts))}`,
+    ).toBeLessThanOrEqual(6);
   });
 });

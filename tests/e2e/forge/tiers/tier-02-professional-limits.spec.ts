@@ -25,6 +25,7 @@ const PROFESSIONAL_ENTITLEMENTS = {
     canCustomizeColors: true,
     canEnableWhiteLabel: false,
     canSetCustomDomain: false,
+    advancedFilters: true,
   },
   currentPeriodEnd: {},
   cancelAtPeriodEnd: false,

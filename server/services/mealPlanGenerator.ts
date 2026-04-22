@@ -63,10 +63,19 @@ export class MealPlanGeneratorService {
      * 3. Ensure minimum viable recipe pool
      */
 
-    // Build initial filter with user preferences
+    // Build initial filter with user preferences.
+    //
+    // 2026-04-22 fix: bumped limit from 100 → 2000. The old limit:100 combined
+    // with ORDER BY creation_timestamp DESC caused the candidate pool to be
+    // dominated by whatever batch was generated most recently (often a single
+    // ingredient like beef). After narrow user filters (maxIngredients,
+    // minProtein + maxCalories), the pool collapsed to 1-3 recipes and the
+    // variety logic had nothing to choose from. Bumping the limit lets the
+    // generator see the full distribution. Then the in-process variety +
+    // dedup scoring does the real work.
     const recipeFilter: RecipeFilter = {
       approved: true, // Security: Only use approved recipes
-      limit: 100, // Get enough recipes for variety
+      limit: 2000, // Large pool so narrow filters have variety to choose from
       page: 1,
     };
 
@@ -134,6 +143,15 @@ export class MealPlanGeneratorService {
     console.log("Searching for recipes with filter:", recipeFilter);
     let { recipes } = await storage.searchRecipes(recipeFilter);
     console.log("Found", recipes.length, "recipes with filters");
+
+    // Shuffle the candidate pool. `searchRecipes` orders by creation_timestamp
+    // DESC, which clusters same-batch recipes (e.g. all the beef recipes from
+    // a single BMAD run). Without shuffling, the per-meal filtering + variety
+    // scoring saw the same biased slice for every meal. Fisher-Yates is O(n).
+    for (let i = recipes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [recipes[i], recipes[j]] = [recipes[j], recipes[i]];
+    }
 
     // Filter by description keywords if provided - STRICT: only use recipes that match
     if (descriptionKeywords.length > 0) {
@@ -212,47 +230,52 @@ export class MealPlanGeneratorService {
       }
     }
 
-    // Apply maxIngredients filter at the initial search level (STRICT)
+    // Apply maxIngredients filter at the initial search level.
+    //
+    // 2026-04-22 fix: before, this was a HARD filter that collapsed the pool
+    // to e.g. 1 recipe when users set maxIngredients=3 against a library
+    // whose simplest recipes have 4-5 ingredients. The generator then had
+    // no variety left and returned the same recipe 9 times (prod bug:
+    // "Silken Tofu and Berry Puree" x 9).
+    //
+    // New behavior: maxIngredients is a SOFT preference. If the strictly
+    // filtered pool has fewer recipes than totalMeals (plan size), fall back
+    // to the full pool and let `selectRecipeWithIngredientLimit` below rank
+    // by ingredient-reuse score — it already handles ingredient budgets and
+    // will still prefer low-ingredient recipes from the wider pool.
     if (maxIngredients && maxIngredients > 0) {
+      const totalMealsInPlan = days * mealsPerDay;
       const beforeCount = recipes.length;
-      recipes = recipes.filter((recipe) => {
+      const strictPool = recipes.filter((recipe) => {
         const ingredientCount = (recipe.ingredientsJson || []).length;
         return ingredientCount <= maxIngredients;
       });
-      if (recipes.length === 0) {
-        console.warn(
-          `[Meal Plan Generator] ⚠️  WARNING: No recipes found with ${maxIngredients} or fewer ingredients.`,
-        );
-        // Get ingredient counts from original recipes before filtering
-        const originalRecipes = await storage.searchRecipes({
-          approved: true,
-          limit: 100,
-          page: 1,
-        });
-        if (originalRecipes.recipes.length > 0) {
-          const ingredientCounts = originalRecipes.recipes.map(
-            (r) => (r.ingredientsJson || []).length,
-          );
-          const minIngredients = Math.min(...ingredientCounts);
-          const maxIngredientsFound = Math.max(...ingredientCounts);
-          console.warn(
-            `[Meal Plan Generator] Available recipes have ${minIngredients} to ${maxIngredientsFound} ingredients.`,
-          );
-        }
-        // Don't throw error, but log warning - will relax constraint per meal if needed
-      } else {
+
+      if (strictPool.length >= totalMealsInPlan) {
+        recipes = strictPool;
         console.log(
           `[Meal Plan Generator] ✅ Filtered to ${recipes.length} recipes with ${maxIngredients} or fewer ingredients (from ${beforeCount} available).`,
         );
+      } else {
+        // Pool too small for a full plan. Keep the wider pool; per-meal
+        // scorer will still prefer lower-ingredient recipes.
+        console.warn(
+          `[Meal Plan Generator] ⚠️  Only ${strictPool.length} recipe(s) with ≤${maxIngredients} ingredients — not enough for ${totalMealsInPlan} varied meals. Using wider pool (${recipes.length}); generator will prefer low-ingredient recipes.`,
+        );
+        // recipes unchanged — still 2000
       }
     }
 
     // STRICT: If no recipes match all requirements, provide helpful error message
     if (recipes.length === 0) {
-      // Check what dietary tags are actually available in the database
+      // Check what dietary tags are actually available in the database.
+      // 2026-04-22 fix: sample size bumped to 2000 so the error message
+      // reflects the real distribution of dietary tags across all approved
+      // recipes, not just the 100 most-recently-created. Otherwise rare tags
+      // like "paleo" / "keto" triggered a false "not available" error.
       const allRecipesResult = await storage.searchRecipes({
         approved: true,
-        limit: 100,
+        limit: 2000,
         page: 1,
       });
       const availableTags = new Set<string>();
@@ -900,7 +923,10 @@ export class MealPlanGeneratorService {
     mealPlan.meals.forEach((meal: any) => {
       if (meal.recipe.ingredientsJson) {
         meal.recipe.ingredientsJson.forEach((ingredient: any) => {
-          const name = ingredient.name.toLowerCase();
+          // Guard: some recipes in older batches have ingredients missing
+          // a name field. Before, this threw and 500'd the entire request.
+          if (!ingredient?.name) return;
+          const name = String(ingredient.name).toLowerCase();
           const amount = parseFloat(ingredient.amount) || 0;
           const unit = ingredient.unit || "";
 

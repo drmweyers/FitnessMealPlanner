@@ -49,6 +49,7 @@ entitlementsRouter.get("/", requireAuth, async (req, res) => {
           canCustomizeColors: false,
           canEnableWhiteLabel: false,
           canSetCustomDomain: false,
+          advancedFilters: false,
         },
         limits: {
           customers: { max: 0, used: 0, percentage: 0 },
@@ -110,6 +111,7 @@ entitlementsRouter.get("/", requireAuth, async (req, res) => {
           canCustomizeColors: false,
           canEnableWhiteLabel: false,
           canSetCustomDomain: false,
+          advancedFilters: false,
         },
         limits: {
           customers: {
@@ -135,6 +137,7 @@ entitlementsRouter.get("/", requireAuth, async (req, res) => {
         canCustomizeColors: false,
         canEnableWhiteLabel: false,
         canSetCustomDomain: false,
+        advancedFilters: false,
       },
       professional: {
         recipeCount: 3000,
@@ -143,6 +146,7 @@ entitlementsRouter.get("/", requireAuth, async (req, res) => {
         canCustomizeColors: true,
         canEnableWhiteLabel: false,
         canSetCustomDomain: false,
+        advancedFilters: true,
       },
       enterprise: {
         recipeCount: 6000,
@@ -151,6 +155,7 @@ entitlementsRouter.get("/", requireAuth, async (req, res) => {
         canCustomizeColors: true,
         canEnableWhiteLabel: true,
         canSetCustomDomain: true,
+        advancedFilters: true,
       },
     };
 
