@@ -37,6 +37,7 @@ import CheckoutSuccess from "./pages/CheckoutSuccess";
 import CheckoutCancel from "./pages/CheckoutCancel";
 import ComparisonPage from "./pages/ComparisonPage";
 import ROICalculatorPage from "./pages/ROICalculatorPage";
+import Vault from "./pages/Vault";
 
 export default function Router() {
   const { user, isLoading } = useAuth();
@@ -335,6 +336,18 @@ export default function Router() {
                   );
                 }
                 return <Trainer />;
+              }}
+            />
+
+            <Route
+              path="/vault"
+              component={() => {
+                if (user.role !== "trainer") {
+                  return (
+                    <AccessDenied message="Trainer access required. The Business Vault is available to trainers only." />
+                  );
+                }
+                return <Vault />;
               }}
             />
 

@@ -19,6 +19,7 @@ import {
   Utensils,
   BarChart2,
   ShieldCheck,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import MobileNavigation from "./MobileNavigation";
@@ -58,6 +59,7 @@ const Layout = ({ children }: LayoutProps) => {
             href: "/meal-plan-generator",
             icon: Utensils,
           },
+          { name: "Business Vault", href: "/vault", icon: BookOpen },
           { name: "Billing", href: "/billing", icon: BarChart2 },
           { name: "Profile", href: "/profile", icon: User },
         ]

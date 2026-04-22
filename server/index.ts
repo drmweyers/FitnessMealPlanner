@@ -16,6 +16,7 @@ import { recipeRouter } from "./routes/recipes";
 import { mealTypeRouter } from "./routes/mealTypes";
 import { brandingRouter } from "./routes/branding";
 import { entitlementsRouter } from "./routes/entitlements";
+import { vaultRouter } from "./routes/vault";
 import { mealPlanRouter } from "./routes/mealPlan";
 import { mealPlanSharingRouter } from "./routes/mealPlanSharing";
 import authRouter from "./authRoutes";
@@ -303,6 +304,7 @@ app.use("/api/recipes", recipeRouter); // Remove requireAuth to allow public acc
 app.use("/api/meal-types", mealTypeRouter); // Story 2.15: Meal type tier filtering
 app.use("/api/branding", brandingRouter); // Story 2.12: Branding & customization (Professional+)
 app.use("/api/entitlements", entitlementsRouter); // Tier and feature entitlements
+app.use("/api/vault", vaultRouter); // Business Vault — tier-gated PDF downloads
 // app.use('/api/ratings', ratingsRouter); // Recipe rating endpoints REMOVED - feature deleted
 
 // CRITICAL: Register more specific admin routes BEFORE the catch-all /api/admin route
