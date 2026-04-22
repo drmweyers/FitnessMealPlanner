@@ -504,6 +504,12 @@ export default function ProfessionalSalesPage() {
               delay={0.1}
             />
             <ValueStackItem
+              icon={Sparkles}
+              label="Advanced Macro & Nutrition Filters"
+              value="$600/yr"
+              delay={0.12}
+            />
+            <ValueStackItem
               icon={Palette}
               label="Custom Branding"
               value="$2,000/yr"

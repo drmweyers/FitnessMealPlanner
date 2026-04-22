@@ -18,7 +18,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -157,6 +157,48 @@ export default function MealPlanGenerator({
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [upgradeFeatureMessage, setUpgradeFeatureMessage] = useState("");
   const { tier, canAccess, isStarter, isLoading: isTierLoading } = useTier();
+
+  // Dietary tags come from the server so they never drift from the real
+  // recipe catalogue. Falls back to the canonical hardcoded list if the
+  // request fails so trainers never see an empty dropdown.
+  const DIETARY_TAG_FALLBACK = [
+    "vegetarian",
+    "vegan",
+    "keto",
+    "paleo",
+    "gluten-free",
+    "low-carb",
+    "high-protein",
+    "mediterranean",
+    "pescatarian",
+  ];
+
+  const {
+    data: dietaryTagsData,
+    isLoading: isDietaryTagsLoading,
+    isError: isDietaryTagsError,
+  } = useQuery<{ tags: string[] }>({
+    queryKey: ["recipe-dietary-tags"],
+    queryFn: async () => {
+      const res = await fetch("/api/recipes/dietary-tags", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const dietaryTagOptions: string[] =
+    isDietaryTagsLoading || isDietaryTagsError || !dietaryTagsData?.tags?.length
+      ? DIETARY_TAG_FALLBACK
+      : dietaryTagsData.tags;
+
+  const toDietaryLabel = (value: string): string =>
+    value
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
 
   /**
    * Recipe Modal Handlers
@@ -1741,25 +1783,11 @@ export default function MealPlanGenerator({
                               <SelectItem value="none">
                                 No Restriction
                               </SelectItem>
-                              <SelectItem value="vegetarian">
-                                Vegetarian
-                              </SelectItem>
-                              <SelectItem value="vegan">Vegan</SelectItem>
-                              <SelectItem value="keto">Keto</SelectItem>
-                              <SelectItem value="paleo">Paleo</SelectItem>
-                              <SelectItem value="gluten-free">
-                                Gluten Free
-                              </SelectItem>
-                              <SelectItem value="low-carb">Low Carb</SelectItem>
-                              <SelectItem value="high-protein">
-                                High Protein
-                              </SelectItem>
-                              <SelectItem value="mediterranean">
-                                Mediterranean
-                              </SelectItem>
-                              <SelectItem value="pescatarian">
-                                Pescatarian
-                              </SelectItem>
+                              {dietaryTagOptions.map((tag) => (
+                                <SelectItem key={tag} value={tag}>
+                                  {toDietaryLabel(tag)}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>
