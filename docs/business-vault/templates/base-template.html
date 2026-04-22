@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #9333EA;
+      --primary-light: #A855F7;
+      --primary-dark: #7E22CE;
+      --accent: #F97316;
+      --accent-light: #FB923C;
+      --dark: #0A0A0F;
+      --dark-card: #111118;
+      --dark-surface: #1a1a2e;
+      --light: #FFFFFF;
+      --light-card: #F8FAFC;
+      --light-border: #E2E8F0;
+      --text-white: #FFFFFF;
+      --text-muted: #9CA3AF;
+      --text-dark: #1E293B;
+      --text-body: #475569;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text-body);
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+    }
+    .page:last-child { page-break-after: auto; }
+
+    .page-inner {
+      padding: 18mm 16mm;
+      min-height: 297mm;
+    }
+
+    /* Cover page — EvoFit Meals dark premium */
+    .cover {
+      background: linear-gradient(135deg, var(--dark) 0%, #1a0a2e 50%, var(--primary-dark) 100%);
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .cover-content {
+      padding: 40mm 20mm;
+    }
+    .cover-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .cover-title {
+      font-family: var(--font-heading);
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .cover-subtitle {
+      font-size: 18px;
+      color: var(--primary-light);
+      max-width: 400px;
+      margin: 0 auto 32px;
+      line-height: 1.4;
+    }
+    .cover-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 40px;
+    }
+    .cover-brand-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 20px;
+      color: white;
+    }
+    .cover-brand-name {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    /* Content pages */
+    .page-light { background: var(--light); }
+    .page-dark { background: var(--dark); color: var(--text-white); }
+
+    /* Back cover */
+    .back-cover {
+      background: linear-gradient(135deg, var(--dark) 0%, #1a0a2e 100%);
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4 {
+      font-family: var(--font-heading);
+      color: var(--text-dark);
+      line-height: 1.2;
+    }
+    .page-dark h1, .page-dark h2, .page-dark h3, .page-dark h4 { color: var(--text-white); }
+    h1 { font-size: 32px; font-weight: 800; margin-bottom: 16px; }
+    h2 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+    h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    p { margin-bottom: 12px; font-size: 13px; }
+
+    .section-header {
+      border-left: 4px solid var(--primary);
+      padding-left: 16px;
+      margin-bottom: 20px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--light-card);
+      border: 1px solid var(--light-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-accent { border-left: 4px solid var(--primary); }
+    .page-dark .card { background: var(--dark-card); border-color: var(--dark-surface); }
+
+    /* Dialogue formatting */
+    .dialogue {
+      margin: 12px 0;
+      padding: 12px 16px;
+      border-radius: 8px;
+    }
+    .dialogue-them { background: #FEF3C7; border-left: 3px solid #F59E0B; }
+    .dialogue-you { background: #F3E8FF; border-left: 3px solid var(--primary); }
+    .dialogue-label {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .dialogue-them .dialogue-label { color: #92400E; }
+    .dialogue-you .dialogue-label { color: var(--primary-dark); }
+    .dialogue-text { font-size: 13px; line-height: 1.5; }
+
+    /* Checklist */
+    .checklist { list-style: none; padding: 0; }
+    .checklist li {
+      padding: 8px 0 8px 28px;
+      position: relative;
+      font-size: 13px;
+      border-bottom: 1px solid var(--light-border);
+    }
+    .checklist li::before {
+      content: '\2610';
+      position: absolute;
+      left: 0;
+      font-size: 16px;
+      color: var(--primary);
+    }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; }
+    th {
+      background: var(--primary);
+      color: white;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 12px;
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--light-border); }
+    tr:nth-child(even) td { background: var(--light-card); }
+
+    /* Callout */
+    .callout {
+      background: linear-gradient(135deg, #F3E8FF 0%, #FAF5FF 100%);
+      border: 1px solid var(--primary-light);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 16px 0;
+    }
+    .callout-title {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+    }
+
+    /* Quick reference card */
+    .quick-ref {
+      background: var(--dark);
+      color: var(--text-white);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+    }
+    .quick-ref h3 { color: var(--accent); }
+    .quick-ref table th { background: var(--dark-surface); }
+    .quick-ref table td { border-bottom-color: var(--dark-surface); color: var(--text-muted); }
+
+    /* Page footer */
+    .page-footer {
+      position: absolute;
+      bottom: 12mm;
+      left: 16mm;
+      right: 16mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .page-dark .page-footer { color: var(--dark-surface); }
+
+    /* Day/step markers */
+    .day-marker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .metric {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    @media print {
+      .page { width: 210mm; height: 297mm; margin: 0; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <!-- COVER PAGE -->
+  <div class="page cover">
+    <div class="cover-content">
+      <div class="cover-badge">EvoFit Meals Business Vault</div>
+      <h1 class="cover-title">{{TITLE}}</h1>
+      <p class="cover-subtitle">{{SUBTITLE}}</p>
+      <div class="cover-brand">
+        <div class="cover-brand-icon">E</div>
+        <span class="cover-brand-name">EvoFit Meals</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT PAGES GO HERE -->
+  {{CONTENT}}
+
+  <!-- BACK COVER -->
+  <div class="page back-cover">
+    <div class="cover-content">
+      <div class="cover-brand" style="margin-bottom: 32px;">
+        <div class="cover-brand-icon">E</div>
+        <span class="cover-brand-name">EvoFit Meals</span>
+      </div>
+      <h2 style="color: white; font-size: 28px; margin-bottom: 12px;">
+        Build Your Nutrition Coaching Business
+      </h2>
+      <p style="color: var(--primary-light); font-size: 16px; max-width: 380px; margin: 0 auto 32px;">
+        Access your full Business Vault at<br>
+        <strong style="color: var(--accent);">meals.evofit.io/vault</strong>
+      </p>
+      <p style="color: var(--text-muted); font-size: 12px;">
+        &copy; 2026 EvoFit Meals. All rights reserved.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

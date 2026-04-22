@@ -1,0 +1,15 @@
+{
+  "name": "EvoFit Meals",
+  "domain": "meals.evofit.io",
+  "primary": "#9333EA",
+  "primaryLight": "#A855F7",
+  "primaryDark": "#7E22CE",
+  "accent": "#F97316",
+  "dark": "#0A0A0F",
+  "darkCard": "#111118",
+  "darkSurface": "#1a1a2e",
+  "fontHeading": "Outfit",
+  "fontBody": "Inter",
+  "coverBadge": "EvoFit Meals Business Vault",
+  "backCoverCta": "meals.evofit.io/vault"
+}

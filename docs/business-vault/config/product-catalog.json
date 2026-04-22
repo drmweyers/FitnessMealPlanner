@@ -1,0 +1,81 @@
+{
+  "items": [
+    {
+      "slug": "nutrition-revenue-accelerator",
+      "type": "playbook",
+      "title": "The Nutrition Revenue Accelerator",
+      "subtitle": "Your 14-Day Action Plan to Add Meal Planning Revenue and Land Your First 3 Nutrition Clients",
+      "tiers": ["starter", "professional", "enterprise"]
+    },
+    {
+      "slug": "nutrition-sales-scripts",
+      "type": "scripts",
+      "title": "Nutrition Sales & Objection Scripts",
+      "subtitle": "The 8 Conversations That Close Nutrition Coaching Clients",
+      "tiers": ["starter", "professional", "enterprise"]
+    },
+    {
+      "slug": "adherence-protocol",
+      "type": "protocol",
+      "title": "90-Day Nutrition Adherence Protocol",
+      "subtitle": "A Week-by-Week System to Keep Clients Following Their Meal Plans Past the Drop-Off Window",
+      "tiers": ["starter", "professional", "enterprise"]
+    },
+    {
+      "slug": "nutrition-client-acquisition",
+      "type": "playbook",
+      "title": "Nutrition Client Acquisition Playbook",
+      "subtitle": "How to Upsell Training Clients on Meal Plans and Attract Nutrition-Only Clients",
+      "tiers": ["starter", "professional", "enterprise"]
+    },
+    {
+      "slug": "nutrition-onboarding-pack",
+      "type": "email-pack",
+      "title": "Nutrition Client Onboarding Pack",
+      "subtitle": "Dietary Questionnaires, Food Preference Surveys, Allergy Forms, and Welcome Sequences",
+      "tiers": ["starter", "professional", "enterprise"]
+    },
+    {
+      "slug": "meal-plan-pricing-guide",
+      "type": "playbook",
+      "title": "Meal Plan Pricing & Packaging Guide",
+      "subtitle": "How to Price Nutrition Coaching, Bundle with Training, and Create Recurring Revenue",
+      "tiers": ["starter", "professional", "enterprise"]
+    },
+    {
+      "slug": "dietary-consultation-scripts",
+      "type": "scripts",
+      "title": "Dietary Consultation Scripts",
+      "subtitle": "How to Discuss Nutrition Without Crossing Scope — From Allergies to Emotional Eating",
+      "tiers": ["starter", "professional", "enterprise"]
+    },
+    {
+      "slug": "nutrition-retention-kit",
+      "type": "email-pack",
+      "title": "Nutrition Retention & Re-engagement Kit",
+      "subtitle": "Win-Back Scripts and Re-engagement Sequences for Clients Who Stopped Following Plans",
+      "tiers": ["starter", "professional", "enterprise"]
+    },
+    {
+      "slug": "meal-plan-launch-templates",
+      "type": "email-pack",
+      "title": "Meal Plan Launch Templates",
+      "subtitle": "Launch Nutrition Challenges, Seasonal Meal Plans, and Group Nutrition Programs",
+      "tiers": ["professional", "enterprise"]
+    },
+    {
+      "slug": "nutrition-business-sops",
+      "type": "sop",
+      "title": "Nutrition Business SOPs",
+      "subtitle": "20 Standard Operating Procedures for Team-Based Nutrition Coaching Operations",
+      "tiers": ["enterprise"]
+    },
+    {
+      "slug": "nutrition-financial-pack",
+      "type": "spreadsheet",
+      "title": "Nutrition Business Financial Pack",
+      "subtitle": "P&L Templates, Revenue Projections, and Pricing Calculators for Nutrition Services",
+      "tiers": ["enterprise"]
+    }
+  ]
+}
