@@ -23,6 +23,11 @@ import {
   resolveItem,
   resolvePdfTier,
 } from "../../shared/vault-catalog";
+import {
+  DIETARY_QUESTIONNAIRE,
+  EMAIL_TEMPLATES,
+  MEAL_PLAN_TEMPLATES,
+} from "../../shared/vault-templates";
 
 export const vaultRouter = Router();
 
@@ -87,6 +92,29 @@ vaultRouter.get("/items", requireAuth, async (req, res) => {
       error: "Failed to load vault items.",
     });
   }
+});
+
+/**
+ * GET /api/vault/templates
+ * Returns email templates, dietary questionnaire, and meal-plan template
+ * references — the in-app resources that the Business Vault PDFs point
+ * trainers toward.
+ */
+vaultRouter.get("/templates", requireAuth, (req, res) => {
+  if (req.user!.role !== "trainer") {
+    return res.status(403).json({
+      success: false,
+      error: "Business Vault is available to trainers only.",
+      code: "TRAINER_ONLY",
+    });
+  }
+
+  res.json({
+    success: true,
+    emailTemplates: EMAIL_TEMPLATES,
+    questionnaire: DIETARY_QUESTIONNAIRE,
+    mealPlanTemplates: MEAL_PLAN_TEMPLATES,
+  });
 });
 
 /**

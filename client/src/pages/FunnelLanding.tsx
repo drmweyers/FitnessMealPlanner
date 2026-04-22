@@ -968,9 +968,10 @@ function BonusSection() {
       headerClass: "bg-gray-100 text-gray-700",
       bonuses: [
         "2 new specialized meal plan packs per year (weight loss + muscle gain variants)",
+        "EvoFit Business Vault — 8 PDFs: Revenue Accelerator, Sales Scripts, 90-Day Adherence Protocol, Client Acquisition Playbook, Onboarding Pack, Pricing Guide, Consultation Scripts, Retention Kit",
       ],
-      bonusValues: ["$197 value"],
-      total: "$2,488 total value",
+      bonusValues: ["$197 value", "$1,497 value"],
+      total: "$3,985 total value",
       price: "$199",
     },
     {
@@ -980,9 +981,10 @@ function BonusSection() {
       bonuses: [
         "ALL new specialized meal plan drops as released — competition prep, menopause, injury recovery, sports-specific, 12+ protocols/year",
         "Advanced Marketing Playbooks — funnel templates, ad copy swipe file, referral system playbook",
+        "EvoFit Business Vault — 9 PDFs (Professional Editions): Revenue Accelerator, Sales Scripts, Adherence Protocol, Client Acquisition, Onboarding Pack, Pricing Guide, Consultation Scripts, Retention Kit + Meal Plan Launch Templates",
       ],
-      bonusValues: ["$997 value", "$497 value"],
-      total: "$4,982 total value",
+      bonusValues: ["$997 value", "$497 value", "$2,497 value"],
+      total: "$7,479 total value",
       price: "$299",
     },
     {
@@ -993,9 +995,10 @@ function BonusSection() {
         "1 custom protocol request per year — request a specialized plan type and we build it for you",
         "Team & Gym Marketing SOPs — staff onboarding marketing kit, white-label client-facing marketing collateral",
         "White-labeled Trainer Toolkit — all 8 calculators embeddable on your own domain with your branding",
+        "EvoFit Business Vault — 11 PDFs (Enterprise Editions): All 9 Professional vault items + 20 Nutrition Business SOPs + Financial Pack (P&L, projections, pricing calculators)",
       ],
-      bonusValues: ["$1,997 value", "$997 value", "$597 value"],
-      total: "$7,976 total value",
+      bonusValues: ["$1,997 value", "$997 value", "$597 value", "$6,079 value"],
+      total: "$14,055 total value",
       price: "$399",
     },
   ];

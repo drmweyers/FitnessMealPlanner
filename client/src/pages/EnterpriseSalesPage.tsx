@@ -539,14 +539,66 @@ export default function EnterpriseSalesPage() {
               />
             </div>
 
+            {/* Business Vault Bonus — Enterprise Editions */}
+            <div className="mt-6 pt-6 border-t border-purple-500/30">
+              <div className="flex items-center gap-2 mb-4">
+                <BookOpen className="w-5 h-5 text-orange-400" />
+                <span className="text-orange-400 font-bold text-sm tracking-widest uppercase">
+                  EvoFit Business Vault — 11 PDFs (Enterprise Editions)
+                </span>
+              </div>
+              <ValueStackItem
+                icon={TrendingUp}
+                label="Revenue Playbooks — Accelerator + Client Acquisition + Pricing Guide"
+                value="$1,297"
+                delay={0.68}
+                isBonus
+              />
+              <ValueStackItem
+                icon={PenTool}
+                label="Scripts & Protocols — Sales + Consultation + 90-Day Adherence"
+                value="$897"
+                delay={0.72}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Users}
+                label="Client Kits — Onboarding + Retention & Re-engagement"
+                value="$697"
+                delay={0.76}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Salad}
+                label="Meal Plan Launch Templates — Challenges + Seasonal + Group"
+                value="$697"
+                delay={0.8}
+                isBonus
+              />
+              <ValueStackItem
+                icon={Building2}
+                label="Nutrition Business SOPs — 20 Standard Operating Procedures"
+                value="$1,497"
+                delay={0.84}
+                isBonus
+              />
+              <ValueStackItem
+                icon={DollarSign}
+                label="Financial Pack — P&L Templates, Revenue Projections, Pricing Calculators"
+                value="$997"
+                delay={0.88}
+                isBonus
+              />
+            </div>
+
             {/* Total */}
-            <AnimatedSection delay={0.7}>
+            <AnimatedSection delay={0.92}>
               <div className="mt-8 pt-8 border-t border-white/20 text-center">
                 <div className="text-white/50 text-lg mb-2">
                   Total Package Value
                 </div>
                 <div className="text-4xl sm:text-5xl font-black text-white/30 line-through mb-4">
-                  $7,976
+                  $14,055
                 </div>
                 <div className="text-sm text-white/50 mb-2">YOUR PRICE</div>
                 <div className="text-5xl sm:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
