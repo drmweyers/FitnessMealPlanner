@@ -1,29 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Checkbox } from '../components/ui/checkbox';
-import { Progress } from '../components/ui/progress';
-import { Badge } from '../components/ui/badge';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { 
-  ChefHat, 
-  Loader2, 
-  CheckCircle2, 
-  XCircle, 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../hooks/use-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { Checkbox } from "../components/ui/checkbox";
+import { Progress } from "../components/ui/progress";
+import { Badge } from "../components/ui/badge";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import {
+  ChefHat,
+  Loader2,
+  CheckCircle2,
+  XCircle,
   AlertTriangle,
   Play,
   Square,
   RefreshCw,
   Download,
-  Info
-} from 'lucide-react';
-import { Textarea } from '../components/ui/textarea';
+  Info,
+} from "lucide-react";
+import { Textarea } from "../components/ui/textarea";
 
 interface GenerationProgress {
   phase: string;
@@ -48,75 +65,79 @@ interface GenerationStats {
 }
 
 const BULK_SIZES = [
-  { value: 100, label: '100 Recipes' },
-  { value: 500, label: '500 Recipes' },
-  { value: 1000, label: '1,000 Recipes' },
-  { value: 2000, label: '2,000 Recipes' },
-  { value: 4000, label: '4,000 Recipes' },
-  { value: 5000, label: '5,000 Recipes' },
+  { value: 100, label: "100 Recipes" },
+  { value: 500, label: "500 Recipes" },
+  { value: 1000, label: "1,000 Recipes" },
+  { value: 2000, label: "2,000 Recipes" },
+  { value: 4000, label: "4,000 Recipes" },
+  { value: 5000, label: "5,000 Recipes" },
 ];
 
-const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
+const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert"];
 const DIETARY_RESTRICTIONS = [
-  'Vegetarian',
-  'Vegan',
-  'Gluten-Free',
-  'Dairy-Free',
-  'Nut-Free',
-  'Keto',
-  'Paleo',
-  'Low-Carb',
-  'High-Protein',
-  'Low-Fat',
+  "Vegetarian",
+  "Vegan",
+  "Gluten-Free",
+  "Dairy-Free",
+  "Nut-Free",
+  "Keto",
+  "Paleo",
+  "Low-Carb",
+  "High-Protein",
+  "Low-Fat",
 ];
 
 const FITNESS_GOALS = [
-  'Muscle Gain',
-  'Weight Loss',
-  'Maintenance',
-  'Endurance',
-  'General Health',
+  "Muscle Gain",
+  "Weight Loss",
+  "Maintenance",
+  "Endurance",
+  "General Health",
 ];
 
 const TIER_LEVELS = [
-  { value: 'starter', label: 'Starter' },
-  { value: 'professional', label: 'Professional' },
-  { value: 'enterprise', label: 'Enterprise' },
+  { value: "starter", label: "Starter" },
+  { value: "professional", label: "Professional" },
+  { value: "enterprise", label: "Enterprise" },
 ];
 
 export default function BulkRecipeGeneration() {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   // Form state
   const [batchSize, setBatchSize] = useState<number>(100);
-  const [customBatchSize, setCustomBatchSize] = useState<string>('');
+  const [customBatchSize, setCustomBatchSize] = useState<string>("");
   const [mealTypes, setMealTypes] = useState<string[]>([]);
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
-  const [fitnessGoal, setFitnessGoal] = useState<string>('');
-  const [mainIngredient, setMainIngredient] = useState<string>('');
-  const [targetCalories, setTargetCalories] = useState<string>('');
-  const [maxCalories, setMaxCalories] = useState<string>('');
-  const [minProtein, setMinProtein] = useState<string>('');
-  const [maxProtein, setMaxProtein] = useState<string>('');
-  const [minCarbs, setMinCarbs] = useState<string>('');
-  const [maxCarbs, setMaxCarbs] = useState<string>('');
-  const [minFat, setMinFat] = useState<string>('');
-  const [maxFat, setMaxFat] = useState<string>('');
-  const [maxPrepTime, setMaxPrepTime] = useState<string>('');
-  const [naturalLanguagePrompt, setNaturalLanguagePrompt] = useState<string>('');
+  const [fitnessGoal, setFitnessGoal] = useState<string>("");
+  const [mainIngredient, setMainIngredient] = useState<string>("");
+  const [targetCalories, setTargetCalories] = useState<string>("");
+  const [maxCalories, setMaxCalories] = useState<string>("");
+  const [minProtein, setMinProtein] = useState<string>("");
+  const [maxProtein, setMaxProtein] = useState<string>("");
+  const [minCarbs, setMinCarbs] = useState<string>("");
+  const [maxCarbs, setMaxCarbs] = useState<string>("");
+  const [minFat, setMinFat] = useState<string>("");
+  const [maxFat, setMaxFat] = useState<string>("");
+  const [maxPrepTime, setMaxPrepTime] = useState<string>("");
+  const [naturalLanguagePrompt, setNaturalLanguagePrompt] =
+    useState<string>("");
   const [enableImages, setEnableImages] = useState(true);
   const [enableS3Upload, setEnableS3Upload] = useState(true);
-  const [enableNutritionValidation, setEnableNutritionValidation] = useState(true);
+  const [enableNutritionValidation, setEnableNutritionValidation] =
+    useState(true);
   const [selectedTiers, setSelectedTiers] = useState<string[]>([]);
-  
+
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
   const [batchId, setBatchId] = useState<string | null>(null);
   const [progress, setProgress] = useState<GenerationProgress | null>(null);
   const [stats, setStats] = useState<GenerationStats | null>(null);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
+    null,
+  );
   const [isTabVisible, setIsTabVisible] = useState<boolean>(!document.hidden);
   const [errors, setErrors] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -126,7 +147,7 @@ export default function BulkRecipeGeneration() {
     const handleVisibilityChange = () => {
       const visible = !document.hidden;
       setIsTabVisible(visible);
-      
+
       // If tab becomes visible and we have a batchId, reconnect SSE if not already connected
       if (visible && batchId && isGenerating && !eventSource) {
         connectToSSE(batchId);
@@ -135,15 +156,15 @@ export default function BulkRecipeGeneration() {
       // Polling works even when tab is hidden, so generation continues
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [batchId, isGenerating, eventSource]);
 
   // Check for active batch on mount and restore progress
   useEffect(() => {
-    const savedBatchId = localStorage.getItem('bulk-generation-batch-id');
+    const savedBatchId = localStorage.getItem("bulk-generation-batch-id");
     if (savedBatchId && !batchId) {
       // Try to reconnect to existing batch
       checkBatchStatus(savedBatchId);
@@ -153,9 +174,9 @@ export default function BulkRecipeGeneration() {
   // Save batch ID to localStorage when it changes
   useEffect(() => {
     if (batchId) {
-      localStorage.setItem('bulk-generation-batch-id', batchId);
+      localStorage.setItem("bulk-generation-batch-id", batchId);
     } else {
-      localStorage.removeItem('bulk-generation-batch-id');
+      localStorage.removeItem("bulk-generation-batch-id");
     }
   }, [batchId]);
 
@@ -173,89 +194,88 @@ export default function BulkRecipeGeneration() {
 
   const checkBatchStatus = async (batchIdToCheck: string) => {
     try {
-      const response = await fetch(`/api/admin/generate-bulk/status/${batchIdToCheck}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      const response = await fetch(
+        `/api/admin/generate-bulk/status/${batchIdToCheck}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         },
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
-        if (data.status === 'active') {
+        if (data.status === "active") {
           // Batch is still active, reconnect
           setBatchId(batchIdToCheck);
           setIsGenerating(true);
           connectToSSE(batchIdToCheck);
           toast({
-            title: 'Reconnected to Generation',
-            description: 'Resumed tracking your batch generation progress',
+            title: "Reconnected to Generation",
+            description: "Resumed tracking your batch generation progress",
           });
         } else {
           // Batch is complete or failed, clean up
-          localStorage.removeItem('bulk-generation-batch-id');
+          localStorage.removeItem("bulk-generation-batch-id");
         }
       } else {
         // Batch not found, clean up
-        localStorage.removeItem('bulk-generation-batch-id');
+        localStorage.removeItem("bulk-generation-batch-id");
       }
     } catch (error) {
-      console.error('Failed to check batch status:', error);
-      localStorage.removeItem('bulk-generation-batch-id');
+      console.error("Failed to check batch status:", error);
+      localStorage.removeItem("bulk-generation-batch-id");
     }
   };
 
   const handleMealTypeToggle = (mealType: string) => {
-    setMealTypes(prev => 
+    setMealTypes((prev) =>
       prev.includes(mealType)
-        ? prev.filter(m => m !== mealType)
-        : [...prev, mealType]
+        ? prev.filter((m) => m !== mealType)
+        : [...prev, mealType],
     );
   };
 
   const handleDietaryToggle = (diet: string) => {
-    setDietaryRestrictions(prev => 
-      prev.includes(diet)
-        ? prev.filter(d => d !== diet)
-        : [...prev, diet]
+    setDietaryRestrictions((prev) =>
+      prev.includes(diet) ? prev.filter((d) => d !== diet) : [...prev, diet],
     );
   };
 
   const handleTierToggle = (tier: string) => {
-    setSelectedTiers(prev => 
-      prev.includes(tier)
-        ? prev.filter(t => t !== tier)
-        : [...prev, tier]
+    setSelectedTiers((prev) =>
+      prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier],
     );
   };
 
   const handleStartGeneration = async () => {
-    const finalBatchSize = customBatchSize 
-      ? parseInt(customBatchSize, 10) 
+    const finalBatchSize = customBatchSize
+      ? parseInt(customBatchSize, 10)
       : batchSize;
 
     if (!finalBatchSize || finalBatchSize < 1) {
       toast({
-        title: 'Invalid Batch Size',
-        description: 'Please enter a valid batch size',
-        variant: 'destructive',
+        title: "Invalid Batch Size",
+        description: "Please enter a valid batch size",
+        variant: "destructive",
       });
       return;
     }
 
     if (finalBatchSize > 10000) {
       toast({
-        title: 'Batch Size Too Large',
-        description: 'Maximum batch size is 10,000 recipes',
-        variant: 'destructive',
+        title: "Batch Size Too Large",
+        description: "Maximum batch size is 10,000 recipes",
+        variant: "destructive",
       });
       return;
     }
 
     if (selectedTiers.length === 0) {
       toast({
-        title: 'Tier Selection Required',
-        description: 'Please select at least one tier for recipe access',
-        variant: 'destructive',
+        title: "Tier Selection Required",
+        description: "Please select at least one tier for recipe access",
+        variant: "destructive",
       });
       return;
     }
@@ -270,10 +290,13 @@ export default function BulkRecipeGeneration() {
       const requestBody = {
         count: finalBatchSize,
         mealTypes: mealTypes.length > 0 ? mealTypes : undefined,
-        dietaryRestrictions: dietaryRestrictions.length > 0 ? dietaryRestrictions : undefined,
+        dietaryRestrictions:
+          dietaryRestrictions.length > 0 ? dietaryRestrictions : undefined,
         fitnessGoal: fitnessGoal || undefined,
         mainIngredient: mainIngredient || undefined,
-        targetCalories: targetCalories ? parseInt(targetCalories, 10) : undefined,
+        targetCalories: targetCalories
+          ? parseInt(targetCalories, 10)
+          : undefined,
         maxCalories: maxCalories ? parseInt(maxCalories, 10) : undefined,
         minProtein: minProtein ? parseFloat(minProtein) : undefined,
         maxProtein: maxProtein ? parseFloat(maxProtein) : undefined,
@@ -289,39 +312,39 @@ export default function BulkRecipeGeneration() {
         tierLevels: selectedTiers.length > 0 ? selectedTiers : undefined,
       };
 
-      const response = await fetch('/api/admin/generate-bulk', {
-        method: 'POST',
+      const response = await fetch("/api/admin/generate-bulk", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to start generation');
+        throw new Error(error.message || "Failed to start generation");
       }
 
       const data = await response.json();
       const newBatchId = data.batchId;
 
       setBatchId(newBatchId);
-      
+
       toast({
-        title: 'Generation Started',
+        title: "Generation Started",
         description: `Started generating ${finalBatchSize} recipes. Progress will be shown below.`,
       });
 
       // Connect to SSE for progress updates (with polling fallback)
       connectToSSE(newBatchId);
-
     } catch (error) {
-      console.error('Failed to start generation:', error);
+      console.error("Failed to start generation:", error);
       toast({
-        title: 'Generation Failed',
-        description: error instanceof Error ? error.message : 'Failed to start generation',
-        variant: 'destructive',
+        title: "Generation Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to start generation",
+        variant: "destructive",
       });
       setIsGenerating(false);
     }
@@ -337,42 +360,71 @@ export default function BulkRecipeGeneration() {
     // Poll every 3 seconds (adjust as needed)
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`/api/admin/generate-bulk/status/${batchIdToPoll}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        const response = await fetch(
+          `/api/admin/generate-bulk/status/${batchIdToPoll}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           },
-        });
+        );
 
         if (response.ok) {
           const data = await response.json();
-          
-          if (data.status === 'active' && data.progress) {
+
+          if (data.status === "active" && data.progress) {
             // Update progress from polling
             const progressData = data.progress;
+            const completed =
+              progressData.recipesCompleted || progressData.completed || 0;
+            const total = progressData.totalRecipes || progressData.total || 0;
+            // 2026-04-23 fix: server returns recipesCompleted/totalRecipes but
+            // no `percentage` field. Client was stuck at 0% because the
+            // fallback chain (progressData.percentage || progressData.progress)
+            // resolved to undefined → 0. Compute client-side when missing.
+            const computedPct =
+              total > 0 ? Math.round((completed / total) * 100) : 0;
             setProgress({
-              phase: progressData.phase || progressData.currentStep || 'generating',
-              percentage: progressData.percentage || progressData.progress || 0,
+              phase:
+                progressData.phase || progressData.currentStep || "generating",
+              percentage: progressData.percentage ?? computedPct,
               currentChunk: progressData.currentChunk || 0,
               totalChunks: progressData.totalChunks || 0,
-              recipesCompleted: progressData.recipesCompleted || progressData.completed || 0,
-              totalRecipes: progressData.totalRecipes || progressData.total || 0,
+              recipesCompleted: completed,
+              totalRecipes: total,
               estimatedTimeRemaining: progressData.estimatedTimeRemaining || 0,
               errors: progressData.errors || [],
               warnings: progressData.warnings || [],
             });
 
             if (progressData.errors) {
-              setErrors(prev => [...new Set([...prev, ...(Array.isArray(progressData.errors) ? progressData.errors : [progressData.errors])])]);
+              setErrors((prev) => [
+                ...new Set([
+                  ...prev,
+                  ...(Array.isArray(progressData.errors)
+                    ? progressData.errors
+                    : [progressData.errors]),
+                ]),
+              ]);
             }
             if (progressData.warnings) {
-              setWarnings(prev => [...new Set([...prev, ...(Array.isArray(progressData.warnings) ? progressData.warnings : [progressData.warnings])])]);
+              setWarnings((prev) => [
+                ...new Set([
+                  ...prev,
+                  ...(Array.isArray(progressData.warnings)
+                    ? progressData.warnings
+                    : [progressData.warnings]),
+                ]),
+              ]);
             }
-          } else if (data.status === 'complete' && data.progress) {
+          } else if (data.status === "complete" && data.progress) {
             // Generation complete - stats are in the progress object
             const progressData = data.progress;
             setStats({
-              totalRecipes: progressData.totalRecipes || progressData.total || 0,
-              successful: progressData.successful || progressData.recipesCompleted || 0,
+              totalRecipes:
+                progressData.totalRecipes || progressData.total || 0,
+              successful:
+                progressData.successful || progressData.recipesCompleted || 0,
               failed: progressData.failed || progressData.errors?.length || 0,
               imagesGenerated: progressData.imagesGenerated || 0,
               imagesUploaded: progressData.imagesUploaded || 0,
@@ -382,32 +434,33 @@ export default function BulkRecipeGeneration() {
             setIsGenerating(false);
             clearInterval(interval);
             setPollingInterval(null);
-            localStorage.removeItem('bulk-generation-batch-id');
+            localStorage.removeItem("bulk-generation-batch-id");
             setBatchId(null);
 
-            const successful = progressData.successful || progressData.recipesCompleted || 0;
+            const successful =
+              progressData.successful || progressData.recipesCompleted || 0;
             const total = progressData.totalRecipes || progressData.total || 0;
             toast({
-              title: 'Generation Complete',
+              title: "Generation Complete",
               description: `Successfully generated ${successful}/${total} recipes`,
             });
-          } else if (data.status === 'failed' || data.status === 'error') {
-            setErrors(prev => [...prev, data.message || 'Generation failed']);
+          } else if (data.status === "failed" || data.status === "error") {
+            setErrors((prev) => [...prev, data.message || "Generation failed"]);
             setIsGenerating(false);
             clearInterval(interval);
             setPollingInterval(null);
-            localStorage.removeItem('bulk-generation-batch-id');
+            localStorage.removeItem("bulk-generation-batch-id");
             setBatchId(null);
 
             toast({
-              title: 'Generation Failed',
-              description: data.message || 'Generation failed',
-              variant: 'destructive',
+              title: "Generation Failed",
+              description: data.message || "Generation failed",
+              variant: "destructive",
             });
           }
         }
       } catch (error) {
-        console.error('Polling error:', error);
+        console.error("Polling error:", error);
       }
     }, 3000); // Poll every 3 seconds
 
@@ -427,20 +480,28 @@ export default function BulkRecipeGeneration() {
       setPollingInterval(null);
     }
 
-    const sse = new EventSource(`/api/admin/generate-bulk/progress/${batchIdToConnect}`);
-    
+    // 2026-04-23: withCredentials so the httpOnly token cookie survives CDN/proxy hop
+    const sse = new EventSource(
+      `/api/admin/generate-bulk/progress/${batchIdToConnect}`,
+      { withCredentials: true },
+    );
+
     sse.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
-        if (data.type === 'progress') {
+
+        if (data.type === "progress") {
+          const completed = data.recipesCompleted || 0;
+          const total = data.totalRecipes || 0;
+          const computedPct =
+            total > 0 ? Math.round((completed / total) * 100) : 0;
           setProgress({
-            phase: data.phase || 'starting',
-            percentage: data.percentage || 0,
+            phase: data.phase || "starting",
+            percentage: data.percentage ?? computedPct,
             currentChunk: data.currentChunk || 0,
             totalChunks: data.totalChunks || 0,
-            recipesCompleted: data.recipesCompleted || 0,
-            totalRecipes: data.totalRecipes || 0,
+            recipesCompleted: completed,
+            totalRecipes: total,
             estimatedTimeRemaining: data.estimatedTimeRemaining || 0,
             errors: data.errors || [],
             warnings: data.warnings || [],
@@ -448,12 +509,12 @@ export default function BulkRecipeGeneration() {
 
           // Update errors and warnings
           if (data.errors) {
-            setErrors(prev => [...new Set([...prev, ...data.errors])]);
+            setErrors((prev) => [...new Set([...prev, ...data.errors])]);
           }
           if (data.warnings) {
-            setWarnings(prev => [...new Set([...prev, ...data.warnings])]);
+            setWarnings((prev) => [...new Set([...prev, ...data.warnings])]);
           }
-        } else if (data.type === 'complete') {
+        } else if (data.type === "complete") {
           setStats({
             totalRecipes: data.totalRecipes || 0,
             successful: data.successful || 0,
@@ -463,56 +524,56 @@ export default function BulkRecipeGeneration() {
             totalTime: data.totalTime || 0,
             averageTimePerRecipe: data.averageTimePerRecipe || 0,
           });
-        setIsGenerating(false);
-        sse.close();
-        setEventSource(null);
-        
-        // Stop polling if active
-        if (pollingInterval) {
-          clearInterval(pollingInterval);
-          setPollingInterval(null);
-        }
-        
-        // Clear saved batch ID on completion
-        localStorage.removeItem('bulk-generation-batch-id');
-        setBatchId(null);
+          setIsGenerating(false);
+          sse.close();
+          setEventSource(null);
 
-        toast({
-          title: 'Generation Complete',
-          description: `Successfully generated ${data.successful}/${data.totalRecipes} recipes`,
-        });
-        } else if (data.type === 'error') {
-        setErrors(prev => [...prev, data.message || 'Unknown error']);
-        setIsGenerating(false);
-        sse.close();
-        setEventSource(null);
-        
-        // Stop polling if active
-        if (pollingInterval) {
-          clearInterval(pollingInterval);
-          setPollingInterval(null);
-        }
-        
-        // Clear saved batch ID on error
-        localStorage.removeItem('bulk-generation-batch-id');
-        setBatchId(null);
+          // Stop polling if active
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            setPollingInterval(null);
+          }
 
-        toast({
-          title: 'Generation Failed',
-          description: data.message || 'Generation failed',
-          variant: 'destructive',
-        });
+          // Clear saved batch ID on completion
+          localStorage.removeItem("bulk-generation-batch-id");
+          setBatchId(null);
+
+          toast({
+            title: "Generation Complete",
+            description: `Successfully generated ${data.successful}/${data.totalRecipes} recipes`,
+          });
+        } else if (data.type === "error") {
+          setErrors((prev) => [...prev, data.message || "Unknown error"]);
+          setIsGenerating(false);
+          sse.close();
+          setEventSource(null);
+
+          // Stop polling if active
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            setPollingInterval(null);
+          }
+
+          // Clear saved batch ID on error
+          localStorage.removeItem("bulk-generation-batch-id");
+          setBatchId(null);
+
+          toast({
+            title: "Generation Failed",
+            description: data.message || "Generation failed",
+            variant: "destructive",
+          });
         }
       } catch (error) {
-        console.error('Failed to parse SSE data:', error);
+        console.error("Failed to parse SSE data:", error);
       }
     };
 
     sse.onerror = (error) => {
-      console.error('SSE connection error:', error);
+      console.error("SSE connection error:", error);
       // If SSE fails, fall back to polling
       if (batchIdToConnect && isGenerating) {
-        console.log('Falling back to polling due to SSE error');
+        console.log("Falling back to polling due to SSE error");
         startPolling(batchIdToConnect);
       }
       sse.close();
@@ -520,7 +581,7 @@ export default function BulkRecipeGeneration() {
     };
 
     setEventSource(sse);
-    
+
     // Also start polling as a backup (works even when tab is hidden)
     // This ensures progress continues even if SSE is throttled
     startPolling(batchIdToConnect);
@@ -531,9 +592,9 @@ export default function BulkRecipeGeneration() {
 
     try {
       await fetch(`/api/admin/generate-bulk/stop/${batchId}`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
@@ -541,21 +602,21 @@ export default function BulkRecipeGeneration() {
         eventSource.close();
         setEventSource(null);
       }
-      
+
       if (pollingInterval) {
         clearInterval(pollingInterval);
         setPollingInterval(null);
       }
 
       setIsGenerating(false);
-      localStorage.removeItem('bulk-generation-batch-id');
+      localStorage.removeItem("bulk-generation-batch-id");
       setBatchId(null);
       toast({
-        title: 'Generation Stopped',
-        description: 'Recipe generation has been stopped',
+        title: "Generation Stopped",
+        description: "Recipe generation has been stopped",
       });
     } catch (error) {
-      console.error('Failed to stop generation:', error);
+      console.error("Failed to stop generation:", error);
     }
   };
 
@@ -573,7 +634,7 @@ export default function BulkRecipeGeneration() {
     return formatTime(ms / 1000);
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.role !== "admin") {
     return (
       <div className="container mx-auto p-6">
         <Alert>
@@ -594,7 +655,8 @@ export default function BulkRecipeGeneration() {
           Bulk Recipe Generation
         </h1>
         <p className="text-muted-foreground mt-2">
-          Generate recipes in bulk (100-5,000+) with advanced options and real-time progress tracking
+          Generate recipes in bulk (100-5,000+) with advanced options and
+          real-time progress tracking
         </p>
       </div>
 
@@ -619,14 +681,14 @@ export default function BulkRecipeGeneration() {
               <div className="space-y-2">
                 <Label>Batch Size *</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  {BULK_SIZES.map(size => (
+                  {BULK_SIZES.map((size) => (
                     <Button
                       key={size.value}
                       type="button"
-                      variant={batchSize === size.value ? 'default' : 'outline'}
+                      variant={batchSize === size.value ? "default" : "outline"}
                       onClick={() => {
                         setBatchSize(size.value);
-                        setCustomBatchSize('');
+                        setCustomBatchSize("");
                       }}
                       disabled={isGenerating}
                     >
@@ -662,12 +724,14 @@ export default function BulkRecipeGeneration() {
               <div className="space-y-2">
                 <Label>Meal Types</Label>
                 <div className="flex flex-wrap gap-2">
-                  {MEAL_TYPES.map(type => (
+                  {MEAL_TYPES.map((type) => (
                     <Badge
                       key={type}
-                      variant={mealTypes.includes(type) ? 'default' : 'outline'}
+                      variant={mealTypes.includes(type) ? "default" : "outline"}
                       className="cursor-pointer px-3 py-1"
-                      onClick={() => !isGenerating && handleMealTypeToggle(type)}
+                      onClick={() =>
+                        !isGenerating && handleMealTypeToggle(type)
+                      }
                     >
                       {type}
                     </Badge>
@@ -679,10 +743,14 @@ export default function BulkRecipeGeneration() {
               <div className="space-y-2">
                 <Label>Dietary Restrictions</Label>
                 <div className="flex flex-wrap gap-2">
-                  {DIETARY_RESTRICTIONS.map(diet => (
+                  {DIETARY_RESTRICTIONS.map((diet) => (
                     <Badge
                       key={diet}
-                      variant={dietaryRestrictions.includes(diet) ? 'default' : 'outline'}
+                      variant={
+                        dietaryRestrictions.includes(diet)
+                          ? "default"
+                          : "outline"
+                      }
                       className="cursor-pointer px-3 py-1"
                       onClick={() => !isGenerating && handleDietaryToggle(diet)}
                     >
@@ -696,17 +764,24 @@ export default function BulkRecipeGeneration() {
               <div className="space-y-2">
                 <Label>Tier Access *</Label>
                 <p className="text-sm text-muted-foreground">
-                  Select which tier(s) should have access to these recipes. 
-                  Recipes will be assigned to all selected tiers via progressive access 
-                  (recipes assigned to lower tiers are accessible by higher tiers).
+                  Select which tier(s) should have access to these recipes.
+                  Recipes will be assigned to all selected tiers via progressive
+                  access (recipes assigned to lower tiers are accessible by
+                  higher tiers).
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {TIER_LEVELS.map(tier => (
+                  {TIER_LEVELS.map((tier) => (
                     <Badge
                       key={tier.value}
-                      variant={selectedTiers.includes(tier.value) ? 'default' : 'outline'}
+                      variant={
+                        selectedTiers.includes(tier.value)
+                          ? "default"
+                          : "outline"
+                      }
                       className="cursor-pointer px-3 py-1"
-                      onClick={() => !isGenerating && handleTierToggle(tier.value)}
+                      onClick={() =>
+                        !isGenerating && handleTierToggle(tier.value)
+                      }
                     >
                       {tier.label}
                     </Badge>
@@ -719,9 +794,14 @@ export default function BulkRecipeGeneration() {
                 )}
                 {selectedTiers.length > 0 && (
                   <p className="text-sm text-blue-600">
-                    ✓ Recipes will be accessible to: {selectedTiers.map(t => 
-                      TIER_LEVELS.find(tier => tier.value === t)?.label || t
-                    ).join(', ')}
+                    ✓ Recipes will be accessible to:{" "}
+                    {selectedTiers
+                      .map(
+                        (t) =>
+                          TIER_LEVELS.find((tier) => tier.value === t)?.label ||
+                          t,
+                      )
+                      .join(", ")}
                   </p>
                 )}
               </div>
@@ -732,15 +812,18 @@ export default function BulkRecipeGeneration() {
                   <Label>Fitness Goal</Label>
                   <Select
                     value={fitnessGoal || undefined}
-                    onValueChange={(value) => setFitnessGoal(value || '')}
+                    onValueChange={(value) => setFitnessGoal(value || "")}
                     disabled={isGenerating}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select fitness goal (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      {FITNESS_GOALS.map(goal => (
-                        <SelectItem key={goal} value={goal.toLowerCase().replace(' ', '_')}>
+                      {FITNESS_GOALS.map((goal) => (
+                        <SelectItem
+                          key={goal}
+                          value={goal.toLowerCase().replace(" ", "_")}
+                        >
                           {goal}
                         </SelectItem>
                       ))}
@@ -885,7 +968,9 @@ export default function BulkRecipeGeneration() {
                     <Checkbox
                       id="enableImages"
                       checked={enableImages}
-                      onCheckedChange={(checked) => setEnableImages(checked === true)}
+                      onCheckedChange={(checked) =>
+                        setEnableImages(checked === true)
+                      }
                       disabled={isGenerating}
                     />
                     <Label htmlFor="enableImages" className="cursor-pointer">
@@ -896,7 +981,9 @@ export default function BulkRecipeGeneration() {
                     <Checkbox
                       id="enableS3Upload"
                       checked={enableS3Upload}
-                      onCheckedChange={(checked) => setEnableS3Upload(checked === true)}
+                      onCheckedChange={(checked) =>
+                        setEnableS3Upload(checked === true)
+                      }
                       disabled={isGenerating || !enableImages}
                     />
                     <Label htmlFor="enableS3Upload" className="cursor-pointer">
@@ -907,10 +994,15 @@ export default function BulkRecipeGeneration() {
                     <Checkbox
                       id="enableNutritionValidation"
                       checked={enableNutritionValidation}
-                      onCheckedChange={(checked) => setEnableNutritionValidation(checked === true)}
+                      onCheckedChange={(checked) =>
+                        setEnableNutritionValidation(checked === true)
+                      }
                       disabled={isGenerating}
                     />
-                    <Label htmlFor="enableNutritionValidation" className="cursor-pointer">
+                    <Label
+                      htmlFor="enableNutritionValidation"
+                      className="cursor-pointer"
+                    >
                       Enable Nutrition Validation
                     </Label>
                   </div>
@@ -953,9 +1045,10 @@ export default function BulkRecipeGeneration() {
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Large batches (1000+ recipes):</strong> Generation can take 1-2 hours. 
-                  Progress is tracked in real-time. You can safely close this page and check back later.
-                  All recipes are saved incrementally, so partial progress is preserved.
+                  <strong>Large batches (1000+ recipes):</strong> Generation can
+                  take 1-2 hours. Progress is tracked in real-time. You can
+                  safely close this page and check back later. All recipes are
+                  saved incrementally, so partial progress is preserved.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -982,9 +1075,12 @@ export default function BulkRecipeGeneration() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm text-muted-foreground">Recipes Completed</div>
+                    <div className="text-sm text-muted-foreground">
+                      Recipes Completed
+                    </div>
                     <div className="text-2xl font-bold">
-                      {progress.recipesCompleted.toLocaleString()} / {progress.totalRecipes.toLocaleString()}
+                      {progress.recipesCompleted.toLocaleString()} /{" "}
+                      {progress.totalRecipes.toLocaleString()}
                     </div>
                   </div>
                   <div>
@@ -994,13 +1090,17 @@ export default function BulkRecipeGeneration() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Estimated Time Remaining</div>
+                    <div className="text-sm text-muted-foreground">
+                      Estimated Time Remaining
+                    </div>
                     <div className="text-2xl font-bold">
                       {formatTime(progress.estimatedTimeRemaining)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Batch ID</div>
+                    <div className="text-sm text-muted-foreground">
+                      Batch ID
+                    </div>
                     <div className="text-sm font-mono">{batchId}</div>
                   </div>
                 </div>
@@ -1012,7 +1112,9 @@ export default function BulkRecipeGeneration() {
                       <div className="font-semibold mb-2">Warnings:</div>
                       <ul className="list-disc list-inside space-y-1">
                         {warnings.map((warning, idx) => (
-                          <li key={idx} className="text-sm">{warning}</li>
+                          <li key={idx} className="text-sm">
+                            {warning}
+                          </li>
                         ))}
                       </ul>
                     </AlertDescription>
@@ -1033,11 +1135,17 @@ export default function BulkRecipeGeneration() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm text-muted-foreground">Total Recipes</div>
-                    <div className="text-3xl font-bold">{stats.totalRecipes.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Recipes
+                    </div>
+                    <div className="text-3xl font-bold">
+                      {stats.totalRecipes.toLocaleString()}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Successful</div>
+                    <div className="text-sm text-muted-foreground">
+                      Successful
+                    </div>
                     <div className="text-3xl font-bold text-green-600">
                       {stats.successful.toLocaleString()}
                     </div>
@@ -1049,30 +1157,51 @@ export default function BulkRecipeGeneration() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Success Rate</div>
+                    <div className="text-sm text-muted-foreground">
+                      Success Rate
+                    </div>
                     <div className="text-3xl font-bold">
-                      {((stats.successful / stats.totalRecipes) * 100).toFixed(1)}%
+                      {((stats.successful / stats.totalRecipes) * 100).toFixed(
+                        1,
+                      )}
+                      %
                     </div>
                   </div>
                   {enableImages && (
                     <>
                       <div>
-                        <div className="text-sm text-muted-foreground">Images Generated</div>
-                        <div className="text-2xl font-bold">{stats.imagesGenerated.toLocaleString()}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Images Generated
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {stats.imagesGenerated.toLocaleString()}
+                        </div>
                       </div>
                       <div>
-                        <div className="text-sm text-muted-foreground">Images Uploaded</div>
-                        <div className="text-2xl font-bold">{stats.imagesUploaded.toLocaleString()}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Images Uploaded
+                        </div>
+                        <div className="text-2xl font-bold">
+                          {stats.imagesUploaded.toLocaleString()}
+                        </div>
                       </div>
                     </>
                   )}
                   <div>
-                    <div className="text-sm text-muted-foreground">Total Time</div>
-                    <div className="text-2xl font-bold">{formatDuration(stats.totalTime)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Time
+                    </div>
+                    <div className="text-2xl font-bold">
+                      {formatDuration(stats.totalTime)}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Avg Time/Recipe</div>
-                    <div className="text-2xl font-bold">{formatDuration(stats.averageTimePerRecipe)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      Avg Time/Recipe
+                    </div>
+                    <div className="text-2xl font-bold">
+                      {formatDuration(stats.averageTimePerRecipe)}
+                    </div>
                   </div>
                 </div>
 
@@ -1083,7 +1212,9 @@ export default function BulkRecipeGeneration() {
                       <div className="font-semibold mb-2">Errors:</div>
                       <ul className="list-disc list-inside space-y-1 max-h-48 overflow-y-auto">
                         {errors.map((error, idx) => (
-                          <li key={idx} className="text-sm">{error}</li>
+                          <li key={idx} className="text-sm">
+                            {error}
+                          </li>
                         ))}
                       </ul>
                     </AlertDescription>
@@ -1092,7 +1223,7 @@ export default function BulkRecipeGeneration() {
 
                 <div className="flex gap-4">
                   <Button
-                    onClick={() => window.location.href = '/admin'}
+                    onClick={() => (window.location.href = "/admin")}
                     variant="outline"
                   >
                     View Recipes
@@ -1118,4 +1249,3 @@ export default function BulkRecipeGeneration() {
     </div>
   );
 }
-
