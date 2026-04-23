@@ -23,6 +23,32 @@ import { ExtendedSession } from "./types/auth";
 
 const authRouter = Router();
 
+// 2026-04-23: domain-aware OAuth callback. The legacy GOOGLE_CALLBACK_URL
+// env is hardcoded to evofitmeals.com, which means users who start the
+// Google flow from meals.evofit.io get bounced to the old domain after
+// consent. Derive the callback from the request Host header instead, but
+// restrict to an allowlist so we can't be tricked into an open redirect.
+const OAUTH_ALLOWED_HOSTS = new Set([
+  "evofitmeals.com",
+  "meals.evofit.io",
+  "localhost:4000",
+  "localhost:5001",
+]);
+
+function googleCallbackURL(req: Request): string {
+  const host = (req.get("host") || "").toLowerCase();
+  if (OAUTH_ALLOWED_HOSTS.has(host)) {
+    const proto = host.startsWith("localhost") ? "http" : "https";
+    return `${proto}://${host}/api/auth/google/callback`;
+  }
+  // Fallback to the configured env value (which must exist in Google's
+  // authorized redirect list) if the request Host is unexpected.
+  return (
+    process.env.GOOGLE_CALLBACK_URL ||
+    "https://evofitmeals.com/api/auth/google/callback"
+  );
+}
+
 // Enhanced registration schema with stronger validation
 const registerSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -298,13 +324,11 @@ authRouter.post(
   async (req: Request, res: Response) => {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {
-      return res
-        .status(401)
-        .json({
-          status: "error",
-          message: "Refresh token not found",
-          code: "NO_REFRESH_TOKEN",
-        });
+      return res.status(401).json({
+        status: "error",
+        message: "Refresh token not found",
+        code: "NO_REFRESH_TOKEN",
+      });
     }
 
     try {
@@ -313,13 +337,11 @@ authRouter.post(
       if (!decoded) {
         res.clearCookie("token");
         res.clearCookie("refreshToken");
-        return res
-          .status(403)
-          .json({
-            status: "error",
-            message: "Invalid refresh token",
-            code: "INVALID_REFRESH_TOKEN",
-          });
+        return res.status(403).json({
+          status: "error",
+          message: "Invalid refresh token",
+          code: "INVALID_REFRESH_TOKEN",
+        });
       }
 
       // Validate refresh token in storage or grace period
@@ -355,13 +377,11 @@ authRouter.post(
       if (!user) {
         res.clearCookie("token");
         res.clearCookie("refreshToken");
-        return res
-          .status(404)
-          .json({
-            status: "error",
-            message: "User not found",
-            code: "USER_NOT_FOUND",
-          });
+        return res.status(404).json({
+          status: "error",
+          message: "User not found",
+          code: "USER_NOT_FOUND",
+        });
       }
 
       // Use token refresh manager for proper token rotation and deduplication
@@ -401,13 +421,11 @@ authRouter.post(
       console.error("Refresh token error:", error);
       res.clearCookie("token");
       res.clearCookie("refreshToken");
-      res
-        .status(500)
-        .json({
-          status: "error",
-          message: "Internal server error",
-          code: "SERVER_ERROR",
-        });
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+        code: "SERVER_ERROR",
+      });
     }
   },
 );
@@ -497,16 +515,24 @@ authRouter.get("/me", requireAuth, async (req: AuthRequest, res: Response) => {
 // they were removed 2026-04-12 to fix the broken Edit Profile feature.
 
 // Google OAuth Routes
-authRouter.get(
-  "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] }),
-);
+// Note: passport-google-oauth20 accepts `callbackURL` at authenticate-time
+// (docs: https://github.com/jaredhanson/passport-google-oauth2#re-ask-for-permissions)
+// but @types/passport-google-oauth20 doesn't expose it, hence the `as any` casts.
+authRouter.get("/google", (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    callbackURL: googleCallbackURL(req),
+  } as any)(req, res, next);
+});
 
 authRouter.get(
   "/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: "/login?error=oauth_failed",
-  }),
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("google", {
+      failureRedirect: "/login?error=oauth_failed",
+      callbackURL: googleCallbackURL(req),
+    } as any)(req, res, next);
+  },
   async (req: Request, res: Response) => {
     try {
       const user = req.user as {
@@ -528,7 +554,9 @@ authRouter.get(
       }
 
       // Generate JWT tokens for the user
-      const { accessToken, refreshToken } = generateTokens(user as unknown as import("@shared/schema").User);
+      const { accessToken, refreshToken } = generateTokens(
+        user as unknown as import("@shared/schema").User,
+      );
       console.log("Generated tokens for user:", user.email, "role:", user.role);
 
       // Set refresh token in HTTP-only cookie
@@ -591,11 +619,10 @@ authRouter.get(
       | "trainer"
       | "customer";
 
-    passport.authenticate("google", { scope: ["profile", "email"] })(
-      req,
-      res,
-      next,
-    );
+    passport.authenticate("google", {
+      scope: ["profile", "email"],
+      callbackURL: googleCallbackURL(req),
+    } as any)(req, res, next);
   },
 );
 

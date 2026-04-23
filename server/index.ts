@@ -116,6 +116,13 @@ function resolveProjectPath(...segments: string[]): string {
 
 const app = express();
 
+// 2026-04-23: trust the DO App Platform / Cloudflare proxy so `req.protocol`
+// reflects the real HTTPS scheme and `req.ip` uses the client IP from
+// X-Forwarded-For. Needed for domain-aware OAuth callback URLs and to quiet
+// the express-rate-limit X-Forwarded-For validation warning that was
+// appearing in prod logs.
+app.set("trust proxy", 1);
+
 // Configure CORS based on environment
 // Accepts both the legacy evofitmeals.com domain and the new meals.evofit.io subdomain
 const productionOrigins = [
