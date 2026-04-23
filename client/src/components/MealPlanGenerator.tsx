@@ -1468,10 +1468,42 @@ export default function MealPlanGenerator({
     parseNaturalLanguage.mutate(naturalLanguageInput);
   };
 
+  // 2026-04-22: "Generate Plan Directly" previously did `onSubmit(form.getValues())`
+  // which sent empty planName/fitnessGoal when only NL input was populated. Server
+  // then 400'd with a ~250-item ingredient dump. Now we parse NL first, then
+  // immediately generate with the parsed params — matches user intent.
+  const handleDirectGenerate = async () => {
+    if (!naturalLanguageInput.trim()) {
+      toast({
+        title: "Input Required",
+        description:
+          "Please describe your meal plan first, or use the form below.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const parsed =
+        await parseNaturalLanguage.mutateAsync(naturalLanguageInput);
+      // Now that form is populated from the parse, send the merged values.
+      // Merge form.getValues() (picks up any manual edits) over parsed.
+      const merged: MealPlanGeneration = {
+        ...parsed,
+        ...form.getValues(),
+        description: parsed.description || form.getValues().description || "",
+      };
+      generateMealPlan.mutate(merged);
+    } catch {
+      // parseNaturalLanguage.onError already shows a toast; nothing to do here
+    }
+  };
+
   const onSubmit = (data: MealPlanGeneration) => {
-    // If we have natural language input, add it to the description
-    if (naturalLanguageInput.trim() && !data.description) {
-      data.description = `Generated from prompt: "${naturalLanguageInput.trim()}"`;
+    // Safety net: if form is empty but NL input exists, delegate to the
+    // direct-generate path so we never send planName="" to the backend.
+    if (naturalLanguageInput.trim() && (!data.planName || !data.fitnessGoal)) {
+      handleDirectGenerate();
+      return;
     }
     generateMealPlan.mutate(data);
   };
@@ -1593,13 +1625,16 @@ export default function MealPlanGenerator({
                 </Button>
                 <Button
                   type="button"
-                  onClick={() => onSubmit(form.getValues())}
+                  onClick={handleDirectGenerate}
                   disabled={
-                    generateMealPlan.isPending || !naturalLanguageInput.trim()
+                    generateMealPlan.isPending ||
+                    parseNaturalLanguage.isPending ||
+                    !naturalLanguageInput.trim()
                   }
                   className="bg-green-600 hover:bg-green-700 text-sm sm:text-base py-2 sm:py-3 flex-1 sm:flex-none"
                 >
-                  {generateMealPlan.isPending ? (
+                  {generateMealPlan.isPending ||
+                  parseNaturalLanguage.isPending ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                       <span className="hidden sm:inline">Generating...</span>
@@ -1940,14 +1975,14 @@ export default function MealPlanGenerator({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 text-sm sm:text-base">
                           <Target className="h-4 w-4" />
-                          Max Ingredients (Optional)
+                          Max Ingredients per Recipe (Optional)
                         </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            min="5"
+                            min="1"
                             max="50"
-                            placeholder="25"
+                            placeholder="e.g. 5 for simple recipes"
                             className="text-sm sm:text-base"
                             {...field}
                             onChange={(e) =>
@@ -1960,8 +1995,9 @@ export default function MealPlanGenerator({
                           />
                         </FormControl>
                         <FormDescription className="text-xs">
-                          Limit ingredient variety across the entire plan to
-                          reduce shopping complexity
+                          Cap ingredients per recipe for clients who prefer
+                          low-prep meals. Generator softens this constraint if
+                          the pool is too narrow.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

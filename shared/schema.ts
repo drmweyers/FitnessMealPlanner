@@ -481,7 +481,7 @@ export const mealPlanGenerationSchema = z.object({
   clientName: z.string().optional(), // For personal trainers/nutritionists
 
   // NEW FEATURES
-  maxIngredients: z.number().min(5).max(50).optional(), // Limit ingredient variety across the entire plan
+  maxIngredients: z.number().min(1).max(50).optional(), // Limit ingredients per recipe. Lowered from 5→1 on 2026-04-22 — the old floor silently refused customers asking for low-prep plans (1-4 ingredients). Generator softens the constraint if pool too narrow.
   generateMealPrep: z.boolean().default(true), // Whether to generate meal prep instructions
 
   // Recipe filtering constraints (inherited from recipeFilterSchema)
