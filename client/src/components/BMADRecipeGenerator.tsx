@@ -150,8 +150,11 @@ export default function BMADRecipeGenerator() {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectAttemptsRef = useRef<number>(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // 2026-04-23: polling fallback when SSE fails (safety net behind Cloudflare / DO proxy)
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const maxReconnectAttempts = 5;
   const reconnectDelayMs = 3000; // 3 seconds
+  const pollingIntervalMs = 2000;
 
   const form = useForm<BMADGeneration>({
     resolver: zodResolver(bmadGenerationSchema),
@@ -203,6 +206,12 @@ export default function BMADRecipeGenerator() {
         reconnectTimeoutRef.current = null;
       }
 
+      // Clear polling fallback
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+
       // Note: We DON'T clear localStorage here - batch may still be running
     };
   }, []);
@@ -226,6 +235,11 @@ export default function BMADRecipeGenerator() {
         ) {
           setIsGenerating(false);
           localStorage.removeItem("bmad-active-batch");
+          // Stop polling — nothing left to poll
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
         } else {
           setIsGenerating(true);
         }
@@ -250,9 +264,22 @@ export default function BMADRecipeGenerator() {
     localStorage.setItem("bmad-active-batch", batchId);
     console.log("[BMAD] Stored active batch in localStorage:", batchId);
 
+    // 2026-04-23: pass withCredentials so browser sends the httpOnly `token`
+    // cookie set on login. Without this, EventSource sometimes drops the cookie
+    // at the CDN/proxy layer and the server returns 401, triggering the
+    // "SSE connection error: Event" observed in prod.
     const eventSource = new EventSource(
       `/api/admin/bmad-progress-stream/${batchId}`,
+      { withCredentials: true },
     );
+
+    // Start a 2s polling fallback in parallel. If SSE delivers updates, we
+    // just overwrite with the same state. If SSE fails silently (Cloudflare
+    // buffering, connection drops), polling still updates the UI.
+    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+    pollingIntervalRef.current = setInterval(() => {
+      fetchCurrentProgress(batchId);
+    }, pollingIntervalMs);
 
     eventSource.addEventListener("connected", (event) => {
       const data = JSON.parse(event.data);
@@ -285,6 +312,12 @@ export default function BMADRecipeGenerator() {
       // Clear active batch from localStorage
       localStorage.removeItem("bmad-active-batch");
       console.log("[BMAD] Cleared active batch from localStorage");
+
+      // Stop polling fallback — generation is done
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
 
       // CRITICAL FIX: Invalidate ALL recipe queries to refresh UI
       invalidateRecipeQueries(queryClient, "BMAD-Generation-Complete");
