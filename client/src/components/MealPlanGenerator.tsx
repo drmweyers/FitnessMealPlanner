@@ -384,43 +384,47 @@ export default function MealPlanGenerator({
 
   const generateMealPlan = useMutation({
     mutationFn: async (data: MealPlanGeneration): Promise<MealPlanResult> => {
-      const response = await fetch("/api/meal-plan/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        credentials: "include",
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        // Try to extract user-friendly error message from JSON response
-        let errorMessage = `Failed to generate meal plan (${response.status})`;
-        try {
-          const errorData = await response.json();
-          console.log("[Meal Plan Generator] Error response data:", errorData);
-          errorMessage = errorData.message || errorData.error || errorMessage;
-
-          // Tier-gating: show upgrade prompt on 403
-          if (response.status === 403 && errorData.upgradeRequired) {
-            const nextTier: TierLevel =
-              errorData.requiredTier ||
-              (tier === "starter" ? "professional" : "enterprise");
-            setUpgradeFeatureMessage(errorMessage);
-            setShowUpgradePrompt(true);
+      // 2026-04-23: was raw fetch with `Authorization: Bearer <localStorage token>`,
+      // which gave no auto-refresh on 401. If the trainer left the tab open
+      // >15 min, the generate button returned "Invalid token" with no
+      // recovery. apiRequest() wraps the same call in a refresh-and-retry
+      // loop (see client/src/lib/queryClient.ts:73).
+      //
+      // apiRequest() throws on non-OK responses (including after a failed
+      // refresh). We catch here to surface a user-friendly message and to
+      // keep the 403-tier-upgrade handling hook intact in case the server
+      // ever flips back to hard-gating.
+      try {
+        const response = await apiRequest(
+          "POST",
+          "/api/meal-plan/generate",
+          data,
+        );
+        return response.json();
+      } catch (err) {
+        const raw = err instanceof Error ? err.message : String(err);
+        // apiRequest throws `"<status>: <body>"` — try to parse the body JSON
+        const match = /^(\d{3}):\s*([\s\S]*)$/.exec(raw);
+        if (match) {
+          const status = parseInt(match[1], 10);
+          const body = match[2];
+          try {
+            const parsed = JSON.parse(body);
+            if (status === 403 && parsed.upgradeRequired) {
+              setUpgradeFeatureMessage(parsed.message || parsed.error || "");
+              setShowUpgradePrompt(true);
+            }
+            throw new Error(
+              parsed.message ||
+                parsed.error ||
+                `Failed to generate (${status})`,
+            );
+          } catch {
+            throw new Error(body || `Failed to generate (${status})`);
           }
-        } catch (parseError) {
-          console.error(
-            "[Meal Plan Generator] Failed to parse error response:",
-            parseError,
-          );
-          errorMessage = response.statusText || errorMessage;
         }
-        throw new Error(errorMessage);
+        throw err;
       }
-
-      return response.json();
     },
     onSuccess: (data) => {
       setGeneratedPlan(data);
