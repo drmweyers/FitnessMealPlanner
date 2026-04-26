@@ -65,7 +65,11 @@ export function useTier() {
         return { tier: "starter" as TierLevel };
       }
 
-      const response = await fetch("/api/entitlements");
+      const response = await fetch("/api/entitlements", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       if (!response.ok) {
         // Default to starter if API fails
         return { tier: "starter" as TierLevel };

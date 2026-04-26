@@ -119,7 +119,11 @@ export default function Admin() {
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const response = await fetch("/api/admin/stats");
+      const response = await fetch("/api/admin/stats", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       if (!response.ok) throw new Error("Failed to fetch stats");
       return response.json();
     },

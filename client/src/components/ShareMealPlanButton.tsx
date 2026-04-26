@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,14 +16,29 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { Share2, Copy, ExternalLink, Eye, Calendar, Trash2, Settings, Link, ChevronDown, Facebook, Twitter, Mail, MessageCircle, Instagram } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Share2,
+  Copy,
+  ExternalLink,
+  Eye,
+  Calendar,
+  Trash2,
+  Settings,
+  Link,
+  ChevronDown,
+  Facebook,
+  Twitter,
+  Mail,
+  MessageCircle,
+  Instagram,
+} from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
 
 interface ShareInfo {
   shareToken: string;
@@ -39,8 +54,14 @@ interface ShareMealPlanButtonProps {
   mealPlanId: string;
   mealPlanName: string;
   disabled?: boolean;
-  variant?: 'default' | 'outline' | 'ghost' | 'link' | 'destructive' | 'secondary';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
+  variant?:
+    | "default"
+    | "outline"
+    | "ghost"
+    | "link"
+    | "destructive"
+    | "secondary";
+  size?: "default" | "sm" | "lg" | "icon";
   className?: string;
 }
 
@@ -48,23 +69,24 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
   mealPlanId,
   mealPlanName,
   disabled = false,
-  variant = 'outline',
-  size = 'default',
-  className = '',
+  variant = "outline",
+  size = "default",
+  className = "",
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [shareInfo, setShareInfo] = useState<ShareInfo | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [expirationDate, setExpirationDate] = useState('');
+  const [expirationDate, setExpirationDate] = useState("");
   const { toast } = useToast();
 
   const createShare = async (customExpirationDate?: string) => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/meal-plans/${mealPlanId}/share`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           mealPlanId,
@@ -74,21 +96,26 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create share link');
+        throw new Error(errorData.error || "Failed to create share link");
       }
 
       const data = await response.json();
       setShareInfo(data);
 
       toast({
-        title: 'Share link created!',
-        description: data.message || 'Your meal plan share link has been created successfully.',
+        title: "Share link created!",
+        description:
+          data.message ||
+          "Your meal plan share link has been created successfully.",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create share link',
-        variant: 'destructive',
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create share link",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -99,27 +126,27 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
     try {
       await navigator.clipboard.writeText(text);
       toast({
-        title: 'Copied!',
-        description: 'Share link copied to clipboard',
+        title: "Copied!",
+        description: "Share link copied to clipboard",
       });
     } catch (error) {
       // Fallback for browsers that don't support clipboard API
-      const textArea = document.createElement('textarea');
+      const textArea = document.createElement("textarea");
       textArea.value = text;
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
       try {
-        document.execCommand('copy');
+        document.execCommand("copy");
         toast({
-          title: 'Copied!',
-          description: 'Share link copied to clipboard',
+          title: "Copied!",
+          description: "Share link copied to clipboard",
         });
       } catch (fallbackError) {
         toast({
-          title: 'Error',
-          description: 'Failed to copy to clipboard',
-          variant: 'destructive',
+          title: "Error",
+          description: "Failed to copy to clipboard",
+          variant: "destructive",
         });
       }
       document.body.removeChild(textArea);
@@ -128,45 +155,50 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
 
   const openShareLink = () => {
     if (shareInfo) {
-      window.open(shareInfo.shareUrl, '_blank', 'noopener,noreferrer');
+      window.open(shareInfo.shareUrl, "_blank", "noopener,noreferrer");
     }
   };
 
   const shareToSocial = (platform: string) => {
     if (!shareInfo) return;
-    
+
     const shareText = `Check out my meal plan: "${mealPlanName}"`;
     const shareUrl = shareInfo.shareUrl;
-    
-    let socialUrl = '';
-    
+
+    let socialUrl = "";
+
     switch (platform) {
-      case 'facebook':
+      case "facebook":
         socialUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
         break;
-      case 'twitter':
+      case "twitter":
         socialUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}&hashtags=mealplanning,fitness,health`;
         break;
-      case 'whatsapp':
+      case "whatsapp":
         socialUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
         break;
-      case 'email':
+      case "email":
         socialUrl = `mailto:?subject=${encodeURIComponent(`Meal Plan: ${mealPlanName}`)}&body=${encodeURIComponent(`Hi!\n\nI wanted to share my meal plan with you: "${mealPlanName}"\n\nYou can view it here: ${shareUrl}\n\nEnjoy!\n`)}`;
         break;
-      case 'instagram': {
+      case "instagram": {
         // Instagram doesn't allow direct sharing, so copy to clipboard with instructions
         const instagramText = `${shareText}\n\n${shareUrl}\n\n#mealplanning #fitness #health`;
         copyToClipboard(instagramText);
         toast({
-          title: 'Copied for Instagram!',
-          description: 'Text copied to clipboard. Paste it in your Instagram post or story.',
+          title: "Copied for Instagram!",
+          description:
+            "Text copied to clipboard. Paste it in your Instagram post or story.",
         });
         return;
       }
     }
-    
+
     if (socialUrl) {
-      window.open(socialUrl, '_blank', 'noopener,noreferrer,width=600,height=500');
+      window.open(
+        socialUrl,
+        "_blank",
+        "noopener,noreferrer,width=600,height=500",
+      );
     }
   };
 
@@ -174,24 +206,31 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
     setIsLoading(true);
     try {
       const response = await fetch(`/api/meal-plans/${mealPlanId}/share`, {
-        method: 'DELETE',
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to revoke share link');
+        throw new Error(errorData.error || "Failed to revoke share link");
       }
 
       setShareInfo(null);
       toast({
-        title: 'Share revoked',
-        description: 'The share link has been deactivated and is no longer accessible.',
+        title: "Share revoked",
+        description:
+          "The share link has been deactivated and is no longer accessible.",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to revoke share link',
-        variant: 'destructive',
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to revoke share link",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -199,19 +238,21 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
   };
 
   const handleCreateShare = () => {
-    const expiration = expirationDate ? new Date(expirationDate).toISOString() : undefined;
+    const expiration = expirationDate
+      ? new Date(expirationDate).toISOString()
+      : undefined;
     createShare(expiration);
   };
 
   const formatExpirationDate = (dateString: string | null) => {
-    if (!dateString) return 'Never expires';
+    if (!dateString) return "Never expires";
     const date = new Date(dateString);
     const now = new Date();
-    
+
     if (date < now) {
       return `Expired ${formatDistanceToNow(date)} ago`;
     }
-    
+
     return `Expires ${formatDistanceToNow(date)} from now`;
   };
 
@@ -236,7 +277,8 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
             Share Meal Plan
           </DialogTitle>
           <DialogDescription>
-            Create a shareable link for "{mealPlanName}" that others can view without logging in.
+            Create a shareable link for "{mealPlanName}" that others can view
+            without logging in.
           </DialogDescription>
         </DialogHeader>
 
@@ -263,7 +305,7 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
                 disabled={isLoading}
                 className="w-full"
               >
-                {isLoading ? 'Creating...' : 'Create Share Link'}
+                {isLoading ? "Creating..." : "Create Share Link"}
               </Button>
             </>
           ) : (
@@ -306,12 +348,14 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
               <div className="space-y-3">
                 {/* Social Media Sharing */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Share on Social Media</Label>
+                  <Label className="text-sm font-medium">
+                    Share on Social Media
+                  </Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => shareToSocial('facebook')}
+                      onClick={() => shareToSocial("facebook")}
                       className="justify-start"
                     >
                       <Facebook className="h-4 w-4 mr-2 text-blue-600" />
@@ -320,7 +364,7 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => shareToSocial('twitter')}
+                      onClick={() => shareToSocial("twitter")}
                       className="justify-start"
                     >
                       <Twitter className="h-4 w-4 mr-2 text-sky-500" />
@@ -329,7 +373,7 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => shareToSocial('whatsapp')}
+                      onClick={() => shareToSocial("whatsapp")}
                       className="justify-start"
                     >
                       <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
@@ -338,7 +382,7 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => shareToSocial('email')}
+                      onClick={() => shareToSocial("email")}
                       className="justify-start"
                     >
                       <Mail className="h-4 w-4 mr-2 text-gray-600" />
@@ -347,7 +391,7 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => shareToSocial('instagram')}
+                      onClick={() => shareToSocial("instagram")}
                       className="justify-start col-span-2"
                     >
                       <Instagram className="h-4 w-4 mr-2 text-pink-600" />
@@ -357,7 +401,7 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
                 </div>
 
                 <Separator />
-                
+
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -368,7 +412,7 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Preview
                   </Button>
-                  
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
@@ -381,7 +425,9 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
                       <DropdownMenuLabel>Share Options</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={() => copyToClipboard(shareInfo.shareUrl)}>
+                        <DropdownMenuItem
+                          onClick={() => copyToClipboard(shareInfo.shareUrl)}
+                        >
                           <Copy className="mr-2 h-4 w-4" />
                           Copy Link
                         </DropdownMenuItem>
@@ -391,8 +437,8 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
                         </DropdownMenuItem>
                       </DropdownMenuGroup>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={revokeShare} 
+                      <DropdownMenuItem
+                        onClick={revokeShare}
                         className="text-red-600 focus:text-red-600"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
@@ -404,8 +450,14 @@ const ShareMealPlanButton: React.FC<ShareMealPlanButtonProps> = ({
               </div>
 
               <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
-                <p><strong>Created:</strong> {format(new Date(shareInfo.createdAt), 'PPp')}</p>
-                <p className="mt-1">Anyone with this link can view the meal plan without logging in.</p>
+                <p>
+                  <strong>Created:</strong>{" "}
+                  {format(new Date(shareInfo.createdAt), "PPp")}
+                </p>
+                <p className="mt-1">
+                  Anyone with this link can view the meal plan without logging
+                  in.
+                </p>
               </div>
             </div>
           )}
