@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion, useInView, useAnimation } from "framer-motion";
 import {
   Sparkles,
@@ -192,7 +192,27 @@ function Navbar() {
 /* ══════════════════════════════════════════════
    MAIN COMPONENT
    ══════════════════════════════════════════════ */
+/** Deep-dive sales page per tier — honors ?tier= from homepage CTAs. */
+const TIER_PAGES: Record<string, string> = {
+  starter: "/starter",
+  professional: "/professional",
+  enterprise: "/enterprise",
+};
+
 export default function FunnelLanding() {
+  const [, navigate] = useLocation();
+
+  // Tier carry-over: homepage tier CTAs link to /get-started?tier=...
+  // Buyers who already picked a tier go straight to its sales page.
+  useEffect(() => {
+    const tier = new URLSearchParams(window.location.search)
+      .get("tier")
+      ?.toLowerCase();
+    if (tier && TIER_PAGES[tier]) {
+      navigate(TIER_PAGES[tier], { replace: true });
+    }
+  }, [navigate]);
+
   return (
     <>
       {/* Font injection */}
@@ -772,6 +792,7 @@ function TierComparison() {
         "2 specialized plan packs/year",
       ],
       cta: "Get Starter",
+      href: "/starter",
       accent: "border-gray-200",
       btnClass: "bg-gray-900 hover:bg-gray-800 text-white",
     },
@@ -797,6 +818,7 @@ function TierComparison() {
         "Lifetime platform updates",
       ],
       cta: "Get Professional",
+      href: "/professional",
       accent: "border-orange-500 ring-2 ring-orange-500/20",
       btnClass:
         "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25",
@@ -822,6 +844,7 @@ function TierComparison() {
         "Lifetime platform updates",
       ],
       cta: "Get Enterprise",
+      href: "/enterprise",
       accent: "border-gray-200",
       btnClass: "bg-gray-900 hover:bg-gray-800 text-white",
     },
@@ -916,7 +939,7 @@ function TierComparison() {
                   </div>
 
                   {/* CTA */}
-                  <Link href="/pricing">
+                  <Link href={tier.href}>
                     <Button
                       className={`w-full font-clash font-semibold text-base py-5 h-auto rounded-xl ${tier.btnClass} transition-all duration-300`}
                     >
@@ -1505,18 +1528,18 @@ function FinalCTA() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/pricing">
+            <Link href="/starter">
               <Button className="bg-white/10 hover:bg-white/15 border border-white/20 text-white font-clash font-semibold text-base px-8 py-5 h-auto rounded-xl transition-all duration-300">
                 Starter — $199
               </Button>
             </Link>
-            <Link href="/pricing">
+            <Link href="/professional">
               <Button className="bg-orange-500 hover:bg-orange-600 text-white font-clash font-bold text-lg px-10 py-6 h-auto rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all duration-300 group">
                 Professional — $299
                 <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Link href="/pricing">
+            <Link href="/enterprise">
               <Button className="bg-white/10 hover:bg-white/15 border border-white/20 text-white font-clash font-semibold text-base px-8 py-5 h-auto rounded-xl transition-all duration-300">
                 Enterprise — $399
               </Button>

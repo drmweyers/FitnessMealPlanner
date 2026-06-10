@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { motion, useInView, useAnimation } from "framer-motion";
+import { startTierCheckout, type CheckoutTier } from "../lib/startTierCheckout";
 import {
   Check,
   ChevronRight,
@@ -639,10 +640,18 @@ export default function HybridPricing() {
         body: JSON.stringify({ tier, paymentType: "onetime" }),
       });
 
+      // Not logged in — use the public no-auth funnel checkout instead
+      if (response.status === 401) {
+        await startTierCheckout(tier.toLowerCase() as CheckoutTier);
+        return;
+      }
+
       const data = await response.json();
 
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        throw new Error(data.error || "No checkout URL returned");
       }
     } catch (error) {
       console.error("Error creating checkout:", error);
