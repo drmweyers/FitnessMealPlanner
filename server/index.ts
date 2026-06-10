@@ -75,6 +75,7 @@ import {
 import { RouteFailoverSystem } from "./route-failover";
 import { HealthMonitor } from "./health-monitor";
 import { SelfHealingSystem } from "./self-healing";
+import { canonicalHostRedirect } from "./middleware/canonicalHost";
 
 // ES module compatible dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -122,6 +123,11 @@ const app = express();
 // the express-rate-limit X-Forwarded-For validation warning that was
 // appearing in prod logs.
 app.set("trust proxy", 1);
+
+// 2026-06-10: 301 the legacy evofitmeals.com host to the canonical
+// meals.evofit.io — both domains were serving identical content with no
+// redirect (duplicate-content SEO split). Must run before all routes.
+app.use(canonicalHostRedirect);
 
 // Configure CORS based on environment
 // Accepts both the legacy evofitmeals.com domain and the new meals.evofit.io subdomain
