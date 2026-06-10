@@ -1,13 +1,17 @@
 # FitnessMealPlanner - Quick Reference
+
 **Version:** 2.0.0 (Optimized - Jan 2026)
-**Production:** https://evofitmeals.com
+**Production:** https://meals.evofit.io (CANONICAL per Mark 2026-06-10; evofitmeals.com 301s to it via `server/middleware/canonicalHost.ts` — DNS for www.evofitmeals.com still missing at registrar)
 
 ## 🧪 PHASE 5: VERIFY — POST-DEPLOY SIMULATION (MANDATORY)
+
 After every production deploy, run the FORGE User Simulation via **Zara** (QA agent):
+
 ```bash
 cd ~/.openclaw/workspace/FitnessMealPlanner
 npx tsx scripts/seed-demo-data.ts && npx playwright test --config=playwright.simulation.config.ts --reporter=list
 ```
+
 Skill: `~/.openclaw/workspace/skills/evofit-user-simulation/SKILL.md`
 Agent: `.claude/agents/evofit-meals-simulator.md`
 Training: `~/.openclaw/workspace/skills/evofit-user-simulation/docs/agent-training.md`
@@ -15,6 +19,7 @@ Training: `~/.openclaw/workspace/skills/evofit-user-simulation/docs/agent-traini
 ---
 
 ## BCI Claude Code Standard
+
 This project follows BCCS v1.0.0. All tasks use: Brainstorm → Plan → TDD → Spec Review → Quality Review → Verify → Finish.
 See: `~/Claude/second-brain/resources/BCI-CLAUDE-CODE-STANDARD.md`
 
@@ -25,28 +30,31 @@ See: `~/Claude/second-brain/resources/BCI-CLAUDE-CODE-STANDARD.md`
 **Every page, component, PDF, and email MUST follow these brand rules.**
 
 ### Colors
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--brand-primary` | `#9333EA` | Purple — headings, accents, borders |
-| `--brand-accent` | `#F97316` | Orange — CTAs, buttons, highlights |
-| `--brand-dark` | `#0A0A0F` | Near-black — hero backgrounds, dark sections |
-| `--brand-dark-card` | `#111118` | Card backgrounds on dark pages |
-| `--brand-surface` | `#1a1a2e` | Elevated surface on dark backgrounds |
-| `--brand-text` | `#FFFFFF` | Primary text on dark backgrounds |
-| `--brand-text-muted` | `#9CA3AF` | Secondary text |
-| `--brand-success` | `#3CDBB1` | Success green (in-app) |
-| `--brand-gradient` | `from-purple-950 via-gray-950 to-gray-950` | Hero gradients |
+
+| Token                | Value                                      | Usage                                        |
+| -------------------- | ------------------------------------------ | -------------------------------------------- |
+| `--brand-primary`    | `#9333EA`                                  | Purple — headings, accents, borders          |
+| `--brand-accent`     | `#F97316`                                  | Orange — CTAs, buttons, highlights           |
+| `--brand-dark`       | `#0A0A0F`                                  | Near-black — hero backgrounds, dark sections |
+| `--brand-dark-card`  | `#111118`                                  | Card backgrounds on dark pages               |
+| `--brand-surface`    | `#1a1a2e`                                  | Elevated surface on dark backgrounds         |
+| `--brand-text`       | `#FFFFFF`                                  | Primary text on dark backgrounds             |
+| `--brand-text-muted` | `#9CA3AF`                                  | Secondary text                               |
+| `--brand-success`    | `#3CDBB1`                                  | Success green (in-app)                       |
+| `--brand-gradient`   | `from-purple-950 via-gray-950 to-gray-950` | Hero gradients                               |
 
 ### Typography
-| Element | Font | Weight | Size |
-|---------|------|--------|------|
-| Display | Clash Display / Outfit | 700 | 48-80px |
-| Headings | Clash Display / Outfit | 600 | 24-40px |
-| Body | Satoshi / Inter | 400 | 16-18px |
-| Small | Inter | 400 | 14px |
-| CTA Buttons | Clash Display / Outfit | 600 | 18-20px |
+
+| Element     | Font                   | Weight | Size    |
+| ----------- | ---------------------- | ------ | ------- |
+| Display     | Clash Display / Outfit | 700    | 48-80px |
+| Headings    | Clash Display / Outfit | 600    | 24-40px |
+| Body        | Satoshi / Inter        | 400    | 16-18px |
+| Small       | Inter                  | 400    | 14px    |
+| CTA Buttons | Clash Display / Outfit | 600    | 18-20px |
 
 ### Design Rules
+
 - **Public pages** (funnel, pricing, login, register): Dark premium aesthetic
 - **In-app pages** (dashboard, trainer, customer): Light/white with purple accents
 - **PDFs**: Dark purple cover page, white content pages with purple accent borders
@@ -58,6 +66,7 @@ See: `~/Claude/second-brain/resources/BCI-CLAUDE-CODE-STANDARD.md`
 - **Never use**: Generic purple-on-white gradients, Inter-only typography, cookie-cutter layouts
 
 ### Consistency Checklist (Before Shipping UI)
+
 - [ ] Uses brand colors from the table above
 - [ ] Headings use Clash Display / Outfit font
 - [ ] CTAs are orange with hover glow
@@ -70,26 +79,28 @@ See: `~/Claude/second-brain/resources/BCI-CLAUDE-CODE-STANDARD.md`
 
 ## Sales Funnel (Live)
 
-| Page | Route | Purpose |
-|------|-------|---------|
-| Main Landing | `/get-started` | Stack slide overview, default for visitors |
-| Starter ($199) | `/starter` | New trainer sales page |
-| Professional ($299) | `/professional` | Established trainer sales page |
-| Enterprise ($399) | `/enterprise` | Gym owner/team sales page |
-| Lead Magnet | `/free-blueprint` | Email capture squeeze page |
-| Tripwire ($17) | `/special-offer` | One-time offer for templates |
-| Pricing (in-app) | `/pricing` | Hybrid pricing page |
+| Page                | Route             | Purpose                                    |
+| ------------------- | ----------------- | ------------------------------------------ |
+| Main Landing        | `/get-started`    | Stack slide overview, default for visitors |
+| Starter ($199)      | `/starter`        | New trainer sales page                     |
+| Professional ($299) | `/professional`   | Established trainer sales page             |
+| Enterprise ($399)   | `/enterprise`     | Gym owner/team sales page                  |
+| Lead Magnet         | `/free-blueprint` | Email capture squeeze page                 |
+| Tripwire ($17)      | `/special-offer`  | One-time offer for templates               |
+| Pricing (in-app)    | `/pricing`        | Hybrid pricing page                        |
 
 ### Canonical Pricing (ONE-TIME, Lifetime Access)
-| Tier | Price | Clients | Plans/Month |
-|------|-------|---------|-------------|
-| Starter | $199 | 9 | 50 |
-| Professional | $299 | 20 | 200 |
-| Enterprise | $399 | Unlimited | Unlimited |
+
+| Tier         | Price | Clients   | Plans/Month |
+| ------------ | ----- | --------- | ----------- |
+| Starter      | $199  | 9         | 50          |
+| Professional | $299  | 20        | 200         |
+| Enterprise   | $399  | Unlimited | Unlimited   |
 
 ---
 
 ## PWA Support
+
 - Manifest: `client/public/manifest.json`
 - Service Worker: `client/public/sw.js`
 - Install Prompt: `client/src/components/InstallPrompt.tsx`
@@ -99,11 +110,11 @@ See: `~/Claude/second-brain/resources/BCI-CLAUDE-CODE-STANDARD.md`
 
 ## Project Overview
 
-| Item | Value |
-|------|-------|
-| Stack | React, TypeScript, Node.js, Express, PostgreSQL, Drizzle ORM |
-| Branch | main (production) |
-| Port | 4000 (frontend + API) |
+| Item   | Value                                                        |
+| ------ | ------------------------------------------------------------ |
+| Stack  | React, TypeScript, Node.js, Express, PostgreSQL, Drizzle ORM |
+| Branch | main (production)                                            |
+| Port   | 4000 (frontend + API)                                        |
 
 ---
 
@@ -121,6 +132,7 @@ docker-compose --profile dev down
 ```
 
 **Access:**
+
 - Frontend: http://localhost:4000
 - API: http://localhost:4000/api
 - PostgreSQL: localhost:5432
@@ -171,164 +183,193 @@ npm run test:coverage       # With coverage
 
 ## CTO Triggers
 
-| Say | Action |
-|-----|--------|
-| "start dev" | Launch Docker containers |
-| "run tests" | Execute test suite |
-| "marketing strategy" | Load Hormozi constraint analysis |
-| "what's next" | Show current priorities |
-| "create task for [feature]" | Generate Auto-Claude task |
-| "bmad to auto-claude" | Convert story to spec |
+| Say                         | Action                           |
+| --------------------------- | -------------------------------- |
+| "start dev"                 | Launch Docker containers         |
+| "run tests"                 | Execute test suite               |
+| "marketing strategy"        | Load Hormozi constraint analysis |
+| "what's next"               | Show current priorities          |
+| "create task for [feature]" | Generate Auto-Claude task        |
+| "bmad to auto-claude"       | Convert story to spec            |
 
 ---
 
 ## Auto-Claude Task Templates (FitnessMealPlanner)
 
 ### Meal Planning Feature Task
+
 ```markdown
 ## Task
+
 Add [Feature] to meal planning system
 
 ## Requirements
+
 - [Feature description]
 - Integrate with existing meal/recipe data
 - Update UI to display new functionality
 - Add appropriate validation
 
 ## Acceptance Criteria
+
 - [ ] Feature works as expected
 - [ ] Integrates with existing meal data
 - [ ] UI updates correctly
 - [ ] Input validation prevents errors
 
 ## Technical Context
+
 - Stack: React, TypeScript, Express, PostgreSQL, Drizzle ORM
 - Patterns: Follow `server/controllers/` structure
 - Frontend: Use existing components in `client/src/components/`
 
 ## Files to Reference
+
 - server/controllers/meals.controller.ts
 - server/db/schema.ts
 - client/src/pages/MealPlan.tsx
 
 ## Complexity
+
 Standard
 ```
 
 ### API Endpoint Task
+
 ```markdown
 ## Task
+
 Create [Resource] API endpoints
 
 ## Requirements
+
 - RESTful CRUD operations
 - Input validation
 - Error handling with proper status codes
 - Database integration with Drizzle
 
 ## Acceptance Criteria
+
 - [ ] All endpoints return correct data
 - [ ] Validation rejects invalid input
 - [ ] Errors return appropriate status codes
 - [ ] Tests cover happy path and edge cases
 
 ## Technical Context
+
 - Stack: Express, Drizzle ORM, PostgreSQL
 - Patterns: Follow `server/routes/` and `server/controllers/`
 - Validation: Use existing patterns
 
 ## Files to Reference
+
 - server/routes/index.ts
 - server/controllers/meals.controller.ts
 - server/db/schema.ts
 
 ## Complexity
+
 Standard
 ```
 
 ### React Component Task
+
 ```markdown
 ## Task
+
 Build [Component] component
 
 ## Requirements
+
 - React functional component with TypeScript
 - Responsive design
 - Loading and error states
 - Proper prop types
 
 ## Acceptance Criteria
+
 - [ ] Component renders correctly
 - [ ] Responsive across screen sizes
 - [ ] Handles loading/error states
 - [ ] Props are properly typed
 
 ## Technical Context
+
 - Stack: React, TypeScript, TailwindCSS
 - Patterns: Follow `client/src/components/`
 - State: Use React hooks and context
 
 ## Files to Reference
+
 - client/src/components/
 - client/src/contexts/
 - client/src/hooks/
 
 ## Complexity
+
 Simple
 ```
 
 ### Database Migration Task
+
 ```markdown
 ## Task
+
 Add [Table/Column] to database schema
 
 ## Requirements
+
 - Update Drizzle schema
 - Create migration
 - Update related models/types
 - Seed data if needed
 
 ## Acceptance Criteria
+
 - [ ] Schema updated correctly
 - [ ] Migration runs without errors
 - [ ] Related code updated
 - [ ] Existing data preserved
 
 ## Technical Context
+
 - ORM: Drizzle
 - Database: PostgreSQL
 - Patterns: Follow existing schema structure
 
 ## Files to Reference
+
 - server/db/schema.ts
 - server/db/migrations/
 - server/db/seed.ts
 
 ## Complexity
+
 Simple
 ```
 
 ### Common FitnessMealPlanner Patterns
-| Task Type | Complexity | Key Files |
-|-----------|------------|-----------|
-| Meal feature | Standard | `controllers/meals`, `pages/MealPlan` |
-| Recipe feature | Standard | `controllers/recipes`, `pages/Recipes` |
-| API endpoint | Standard | `routes/`, `controllers/` |
-| UI component | Simple | `client/src/components/` |
-| Database change | Simple | `server/db/schema.ts` |
-| Test suite | Simple | `test/`, existing tests |
+
+| Task Type       | Complexity | Key Files                              |
+| --------------- | ---------- | -------------------------------------- |
+| Meal feature    | Standard   | `controllers/meals`, `pages/MealPlan`  |
+| Recipe feature  | Standard   | `controllers/recipes`, `pages/Recipes` |
+| API endpoint    | Standard   | `routes/`, `controllers/`              |
+| UI component    | Simple     | `client/src/components/`               |
+| Database change | Simple     | `server/db/schema.ts`                  |
+| Test suite      | Simple     | `test/`, existing tests                |
 
 ---
 
 ## Marketing Skills
 
-| Skill | Purpose |
-|-------|---------|
-| `hormozi-constraint-analysis` | Identify growth constraint (USE FIRST) |
-| `paid-media-creative-testing` | Ad campaigns |
-| `seo-answer-engine-optimization` | Organic traffic |
-| `content-repurposing-flywheel` | 70+ posts/week |
-| `outreach-automation` | Lead generation |
+| Skill                            | Purpose                                |
+| -------------------------------- | -------------------------------------- |
+| `hormozi-constraint-analysis`    | Identify growth constraint (USE FIRST) |
+| `paid-media-creative-testing`    | Ad campaigns                           |
+| `seo-answer-engine-optimization` | Organic traffic                        |
+| `content-repurposing-flywheel`   | 70+ posts/week                         |
+| `outreach-automation`            | Lead generation                        |
 
 **Reference:** `docs/marketing/MARKETING_STRATEGY_REFERENCE.md`
 
@@ -336,34 +377,34 @@ Simple
 
 ## Branch Structure
 
-| Branch | Purpose |
-|--------|---------|
-| **main** | Production (deploy target) |
-| qa-ready | Development/testing |
-| qa-ready-clean | Legacy (archived) |
+| Branch         | Purpose                    |
+| -------------- | -------------------------- |
+| **main**       | Production (deploy target) |
+| qa-ready       | Development/testing        |
+| qa-ready-clean | Legacy (archived)          |
 
 ---
 
 ## Key Files
 
-| Purpose | Location |
-|---------|----------|
-| Tasks | TASKS.md |
-| Planning | PLANNING.md |
-| Marketing | docs/marketing/ |
+| Purpose   | Location                  |
+| --------- | ------------------------- |
+| Tasks     | TASKS.md                  |
+| Planning  | PLANNING.md               |
+| Marketing | docs/marketing/           |
 | Full docs | CLAUDE.md.backup-20260121 |
 
 ---
 
 ## Detailed Documentation
 
-| Topic | Location |
-|-------|----------|
-| Development workflow | .claude/rules/development-workflow.md |
-| Testing protocols | .claude/rules/testing-protocols.md |
-| Marketing system | .claude/rules/marketing-system.md |
-| Features status | .claude/rules/features-status.md |
-| **Agent Teams Reference** | **docs/AGENT-TEAMS-REFERENCE.md** |
+| Topic                     | Location                              |
+| ------------------------- | ------------------------------------- |
+| Development workflow      | .claude/rules/development-workflow.md |
+| Testing protocols         | .claude/rules/testing-protocols.md    |
+| Marketing system          | .claude/rules/marketing-system.md     |
+| Features status           | .claude/rules/features-status.md      |
+| **Agent Teams Reference** | **docs/AGENT-TEAMS-REFERENCE.md**     |
 
 ---
 
@@ -375,4 +416,4 @@ Simple
 
 ---
 
-*Backup: CLAUDE.md.backup-20260121 | Rules: .claude/rules/*
+_Backup: CLAUDE.md.backup-20260121 | Rules: .claude/rules/_

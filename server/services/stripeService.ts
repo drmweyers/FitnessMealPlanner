@@ -89,11 +89,11 @@ export const ONETIME_TIERS = {
   ENTERPRISE: {
     name: "Enterprise",
     price: 39900, // $399 in cents
-    maxClients: 50,
-    usageLimit: 500, // meal plans per month
+    maxClients: -1, // unlimited — must match EntitlementsService enforcement
+    usageLimit: -1, // unlimited meal plans — must match EntitlementsService
     features: [
-      "Up to 50 clients",
-      "500 meal plans/month",
+      "Unlimited clients",
+      "Unlimited meal plans",
       "6,000 recipes",
       "Team accounts",
       "API access",
