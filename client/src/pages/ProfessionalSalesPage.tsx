@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link } from "wouter";
+import { startTierCheckout } from "../lib/startTierCheckout";
 import {
   Check,
   Star,
@@ -221,13 +222,14 @@ export default function ProfessionalSalesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            <a
-              href="/api/login"
+            <button
+              type="button"
+              onClick={() => startTierCheckout("professional")}
               className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-lg rounded-xl shadow-[0_0_40px_rgba(249,115,22,0.3)] hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-all duration-300 transform hover:scale-105"
             >
               Get Professional for $299
               <ArrowRight className="w-5 h-5" />
-            </a>
+            </button>
             <p className="mt-4 text-white/40 text-sm">
               One-time payment. No monthly fees. Ever.
             </p>
@@ -1127,13 +1129,14 @@ export default function ProfessionalSalesPage() {
               One payment replaces $1,740+/year in subscriptions.
             </p>
 
-            <a
-              href="/api/login"
+            <button
+              type="button"
+              onClick={() => startTierCheckout("professional")}
               className="inline-flex items-center gap-3 px-12 py-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-xl rounded-xl shadow-[0_0_40px_rgba(249,115,22,0.3)] hover:shadow-[0_0_60px_rgba(249,115,22,0.5)] transition-all duration-300 transform hover:scale-105"
             >
               Get Professional for $299
               <ArrowRight className="w-6 h-6" />
-            </a>
+            </button>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-white/40 text-sm">
               <div className="flex items-center gap-2">
